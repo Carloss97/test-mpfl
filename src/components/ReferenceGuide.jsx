@@ -19,11 +19,12 @@ export default function ReferenceGuide(){
       <div className="panel-heading"><h2>📖 Guía de referencia</h2></div>
       <p className="caption">Documentación de todos los indicadores con sus fuentes académicas y fórmulas de cálculo.</p>
 
-      <Section title="Edge AI v6 — Gradient Boosting + Naive Bayes">
-        <p className="caption"><strong>Fuente:</strong> Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. <em>Annals of Statistics, 29</em>(5).</p>
-        <p>Modelo híbrido: 70% Gradient Boosting (15 árboles, lr=0.08) + 30% Naive Bayes con likelihood ratios empíricos. Un modelo por canal. Features: vector de intensidades de AUs (28 dimensiones). Se re-entrena cada 5 sesiones.</p>
-        <p><strong>Contraste temporal (temporalContrast.js):</strong> Las AUs que cambiaron significativamente vs su historia reciente se amplifican hasta 2.5x. Las estables se atenúan 0.7x. Esto genera variación real en métricas y emociones.</p>
-      </Section>
+      <Section title="Edge AI v8 — Pipeline bayesiano">
+              <p className="caption"><strong>Pipeline:</strong> computeAUs → processAllAUs (baseline subtraction + ganancia adaptativa 1.5-3.0×) → Bayesian scoring por canal (likelihood ratios) → classifyEmotions (softmax Naive Bayes).</p>
+              <p><strong>Canales:</strong> Carga Cognitiva, Valencia Emocional, Control Motor, Engagement, Estrés, Fatiga, Rendimiento. Cada canal usa likelihood ratios empíricos: AUs que aumentan el score tienen ratio &gt;1, las que lo disminuyen tienen ratio &lt;1. El score final es una sigmoide (k=8) sobre el log-odds ratio.</p>
+              <p><strong>Emociones:</strong> Naive Bayes con softmax sobre 8 clases. Likelihood ratios calibrados según FACS (Ekman & Friesen, 1978). Sin double boost.</p>
+              <p><strong>auProcessor.js:</strong> Unifica baseline subtraction + ganancia adaptativa. Reemplaza signalAmplifier + temporalContrast + auEnhancer.</p>
+            </Section>
 
       <Section title="Interpretación de métricas">
         <p className="caption">Todas las métricas van de 0 (mínimo) a 1 (máximo). Se calculan a partir de AUs amplificadas + contraste temporal. Los umbrales son orientativos basados en literatura.</p>

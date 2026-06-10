@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildCameraConstraints, normalizeVideoInputDevices } from './telemetry/cameraDevices.js';
 import { buildGestureInsights, AU_MAP, AU_REGIONS, GROUP_LABELS } from './telemetry/gestureInsights.js';
 import { computeInsightsFromAUs } from './telemetry/insightMetrics.js';
-import { computeEnhancedAUs, setAUBaseline, resetAUCache } from './telemetry/auEnhancer.js';
-import { setEmotionBaseline } from './telemetry/basicEmotions.js';
-import { setAmplifierBaseline } from './telemetry/signalAmplifier.js';
+import { computeEnhancedAUs, resetAUCache } from './telemetry/auEnhancer.js';
+import { setAUBaseline } from './telemetry/auProcessor.js';
+import { estimateGaze } from './telemetry/gazeEstimator.js';
 import { useFaceLandmarkerWorker } from './telemetry/useFaceLandmarkerWorker.js';
 import { buildFusionPayload } from './telemetry/payload.js';
 import { buildCalibrationProfile } from './telemetry/microgestureFeatures.js';
@@ -65,6 +65,7 @@ export default function App() {
   const [calibrationProfile, setCalibrationProfile] = useState(null);
   const [latestFaceSample, setLatestFaceSample] = useState(null);
   const [latestLandmarks, setLatestLandmarks] = useState(null);
+  const [latestGaze, setLatestGaze] = useState(null);
   const [lastQuality, setLastQuality] = useState({});
   const [blendshapeNames, setBlendshapeNames] = useState([]);
   const [activeTab, setActiveTab] = useState('gestures');
@@ -81,6 +82,13 @@ export default function App() {
     faceSamplesRef.current = [...faceSamplesRef.current, sample];
     setLatestFaceSample(sample);
     setLatestLandmarks(landmarks ?? null);
+    if (landmarks) {
+      try {
+        const headPose = null; // could import estimateHeadPose from facialCapturePipeline
+        const gaze = estimateGaze(landmarks, null, window.innerWidth, window.innerHeight);
+        setLatestGaze(gaze);
+      } catch (e) { /* gaze estimation is optional */ }
+    }
     setLastQuality(sample.quality ?? {});
     if (sample.blendshapes) setBlendshapeNames(Object.keys(sample.blendshapes).sort());
   }, []);
@@ -210,7 +218,7 @@ export default function App() {
       const lastTs = samples[samples.length - 1]?.timestamp ?? firstTs + duration;
       const profile = buildCalibrationProfile(samples, { from: firstTs, to: lastTs });
       setCalibrationProfile(profile);
-      if (profile.eligible) { setAUBaseline(profile, computeEnhancedAUs(samples)); setEmotionBaseline(profile.auBaseline ?? {}); setAmplifierBaseline(profile.auBaseline ?? {}); }
+      if (profile.eligible) { setAUBaseline(computeEnhancedAUs(samples)); }
       setIsCalibrating(false);
     }, duration);
   }, []);
@@ -383,7 +391,7 @@ export default function App() {
           calibrationProfile={calibrationProfile} calStatusLabel={calStatusLabel}
           insightItems={insightItems} auEntries={auEntries} activeAUCount={activeAUCount}
           edgeAIResult={edgeAIResult} edgeChannels={edgeChannels} edgeConfidence={edgeConfidence} edgeComposite={edgeComposite}
-          latestLandmarks={latestLandmarks} auRegionSummary={telemetry.insights?.auRegionSummary}
+          latestLandmarks={latestLandmarks} latestGaze={latestGaze} auRegionSummary={telemetry.insights?.auRegionSummary}
           DEVICE_CONFIG={DEVICE_CONFIG}
         />
       ) : (

@@ -20,7 +20,7 @@ export default function Dashboard({
   calibrationProfile,calStatusLabel,
   insightItems,auEntries,activeAUCount,
   edgeAIResult,edgeChannels,edgeConfidence,edgeComposite,
-  latestLandmarks,auRegionSummary,DEVICE_CONFIG,
+  latestLandmarks,latestGaze,auRegionSummary,DEVICE_CONFIG,
 }){
   const camRef=useRef(null), meshRef=useRef(null);
   const emotions=edgeAIResult?.emotions;
@@ -63,7 +63,7 @@ export default function Dashboard({
         <article className="panel dash-mesh-panel">
           <div className="panel-heading"><h2>🧬 Rostro</h2><span className="status ready" style={{fontSize:'0.65rem'}}>{latestLandmarks?'detectado':'sin rostro'}</span></div>
           <div className="mesh-dark-container" ref={meshRef}>
-            <FaceMeshOverlayWrapper containerRef={meshRef} landmarks={latestLandmarks} visible={showMesh} auRegionActivation={auRegionSummary}/>
+            <FaceMeshOverlayWrapper containerRef={meshRef} landmarks={latestLandmarks} visible={showMesh} auRegionActivation={auRegionSummary} gaze={latestGaze}/>
           </div>
 
           {telemetry.recentCount>0&&(
