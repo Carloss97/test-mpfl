@@ -20,7 +20,7 @@ function auVal(aus,code){
   const raw=aus?.[code]?.intensity??0;
   const base=auBaseline[code]??0;
   const net=Math.max(0,raw-base*0.7);
-  return clamp(net*1.25);
+  return clamp(net*1.8); // increased from 1.25 for better sensitivity
 }
 
 export function classifyBasicEmotions(auScores={}){

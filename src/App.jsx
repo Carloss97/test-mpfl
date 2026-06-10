@@ -4,6 +4,7 @@ import { buildGestureInsights, AU_MAP, AU_REGIONS, GROUP_LABELS } from './teleme
 import { computeInsightsFromAUs } from './telemetry/insightMetrics.js';
 import { computeEnhancedAUs, setAUBaseline, resetAUCache } from './telemetry/auEnhancer.js';
 import { setEmotionBaseline } from './telemetry/basicEmotions.js';
+import { setAmplifierBaseline } from './telemetry/signalAmplifier.js';
 import { useFaceLandmarkerWorker } from './telemetry/useFaceLandmarkerWorker.js';
 import { buildFusionPayload } from './telemetry/payload.js';
 import { buildCalibrationProfile } from './telemetry/microgestureFeatures.js';
@@ -209,7 +210,7 @@ export default function App() {
       const lastTs = samples[samples.length - 1]?.timestamp ?? firstTs + duration;
       const profile = buildCalibrationProfile(samples, { from: firstTs, to: lastTs });
       setCalibrationProfile(profile);
-      if (profile.eligible) { setAUBaseline(profile, computeEnhancedAUs(samples)); setEmotionBaseline(profile.auBaseline ?? {}); }
+      if (profile.eligible) { setAUBaseline(profile, computeEnhancedAUs(samples)); setEmotionBaseline(profile.auBaseline ?? {}); setAmplifierBaseline(profile.auBaseline ?? {}); }
       setIsCalibrating(false);
     }, duration);
   }, []);
