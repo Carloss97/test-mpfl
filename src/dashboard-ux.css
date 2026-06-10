@@ -1,0 +1,69 @@
+/* Capture quality bar */
+.capture-quality-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cq-label {
+  color: #9fb0c2;
+  font-size: 0.65rem;
+  min-width: 70px;
+}
+
+.cq-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.cq-fill { height: 100%; border-radius: 99px; transition: width 300ms ease; }
+
+.cq-detail {
+  font-size: 0.6rem;
+  color: #9fb0c2;
+  white-space: nowrap;
+}
+
+/* Emotion badge */
+.emotion-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.emotion-icon { font-size: 1.4rem; }
+.emotion-label { font-size: 0.82rem; font-weight: 800; }
+
+.emotion-mini-probs {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.emotion-mini-chip {
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 6px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Collapsible panel headings */
+.panel-heading.collapsible {
+  user-select: none;
+  padding: 4px 0;
+}
+.panel-heading.collapsible:hover { opacity: 0.85; }

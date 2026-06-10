@@ -1,0 +1,134 @@
+/* ═══ Sticky Header ═══ */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(7, 17, 31, 0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin: -32px calc(-50vw + 50%) 24px;
+  padding: 0 calc(50vw - 50%);
+  width: 100vw;
+}
+
+.sticky-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 0;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.sticky-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.sticky-label {
+  color: #9fb0c2;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.sticky-value {
+  color: #dff8ff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.sticky-badge {
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sticky-badge.strong {
+  background: rgba(77, 212, 172, 0.16);
+  color: #7df0cb;
+}
+
+.sticky-badge.moderate {
+  background: rgba(255, 209, 102, 0.16);
+  color: #ffd166;
+}
+
+.sticky-badge.low {
+  background: rgba(255, 107, 107, 0.16);
+  color: #ffb4b4;
+}
+
+.sticky-confidence {
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sticky-confidence.high {
+  background: rgba(77, 212, 172, 0.16);
+  color: #7df0cb;
+}
+
+.sticky-confidence.medium {
+  background: rgba(255, 209, 102, 0.16);
+  color: #ffd166;
+}
+
+.sticky-confidence.low {
+  background: rgba(255, 107, 107, 0.16);
+  color: #ffb4b4;
+}
+
+.sticky-sub {
+  font-size: 0.6rem;
+  color: #9fb0c2;
+}
+
+.sticky-aus {
+  flex: 1 1 auto;
+  min-width: 200px;
+}
+
+.sticky-au-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.sticky-au-chip {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  font-size: 0.6rem;
+  color: #9fb0c2;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sticky-au-chip.active {
+  border-color: rgba(77, 212, 172, 0.35);
+  color: #7df0cb;
+  background: rgba(77, 212, 172, 0.08);
+}
+
+@media (max-width: 860px) {
+  .sticky-header {
+    margin: -24px -16px 16px;
+    padding: 0 16px;
+  }
+  .sticky-inner {
+    gap: 10px;
+  }
+}

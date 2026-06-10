@@ -1,0 +1,84 @@
+/* ═══ Dashboard v2: webcam + mesh paralelos ═══ */
+.dashboard-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dash-cam-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dash-cam-panel, .dash-mesh-panel {
+  min-height: 360px;
+}
+
+/* Dark mesh background */
+.mesh-dark-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  max-height: 400px;
+  background: #020712;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.mesh-dark-container canvas {
+  border-radius: 16px;
+}
+
+/* Summary grid compact */
+.summary-grid-compact {
+  grid-template-columns: repeat(4,1fr) !important;
+  gap: 6px !important;
+}
+.summary-grid-compact div {
+  padding: 6px 8px !important;
+}
+.summary-grid-compact span { font-size: 0.6rem !important; }
+.summary-grid-compact strong { font-size: 0.75rem !important; }
+
+/* Data row: metrics + edge AI */
+.dash-data-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dash-metrics-panel, .dash-edge-panel {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+/* Metrics grid compact */
+.metrics-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+}
+.metrics-grid-compact .metric-compact {
+  padding: 6px 8px;
+}
+.metrics-grid-compact .metric-label span { font-size: 0.6rem; }
+.metrics-grid-compact .metric-label strong { font-size: 0.72rem; }
+.metrics-grid-compact .metric-bar { height: 4px; }
+
+/* Edge channels compact */
+.edge-channels-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .dash-cam-row, .dash-data-row {
+    grid-template-columns: 1fr;
+  }
+  .dash-cam-panel, .dash-mesh-panel { min-height: 280px; }
+}

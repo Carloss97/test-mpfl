@@ -1,0 +1,133 @@
+/* ═══ Dashboard Layout (camera + metrics + edge AI all visible) ═══ */
+.dashboard {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.dashboard-camera {
+  grid-row: 1 / 3;
+  min-height: 480px;
+}
+
+.dashboard-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  max-height: 480px;
+}
+
+.dashboard-edge {
+  overflow-y: auto;
+  max-height: 260px;
+}
+
+/* Compact metric card */
+.metric-compact {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 12px;
+}
+
+.metric-compact .metric-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.metric-compact .metric-label span {
+  color: #9fb0c2;
+  font-size: 0.7rem;
+}
+
+.metric-compact .metric-label strong {
+  color: #dff8ff;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-compact .metric-bar {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.metric-compact .metric-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 200ms ease;
+}
+
+/* Dashboard AU list compact */
+.dashboard-aus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dashboard-au-chip {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  font-size: 0.65rem;
+  color: #c8d7e8;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dashboard-au-chip.active {
+  border-color: rgba(77, 212, 172, 0.4);
+  color: #7df0cb;
+  background: rgba(77, 212, 172, 0.1);
+}
+
+/* Edge AI compact in dashboard */
+.dashboard-edge .edge-channel-card {
+  padding: 10px 14px;
+}
+
+.dashboard-edge .edge-channel-label {
+  font-size: 0.75rem;
+}
+
+.dashboard-edge .edge-channel-bar-track {
+  height: 6px;
+  margin-bottom: 3px;
+}
+
+.dashboard-edge .edge-channel-score-row strong {
+  font-size: 0.9rem;
+}
+
+.dashboard-edge .edge-channel-evidence {
+  font-size: 0.65rem;
+  line-height: 1.3;
+}
+
+/* Responsive: stack on narrow screens */
+@media (max-width: 900px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  .dashboard-camera {
+    grid-row: auto;
+    min-height: 320px;
+  }
+  .dashboard-metrics {
+    max-height: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .dashboard-metrics .metric-compact {
+    flex: 1 1 140px;
+  }
+}
