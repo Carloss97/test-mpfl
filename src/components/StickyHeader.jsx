@@ -48,13 +48,20 @@ export default function StickyHeader({
         )}
 
         <div className="sticky-item sticky-aus">
-          <span className="sticky-label">AUs activas</span>
+          <span className="sticky-label">Actividad facial</span>
           <div className="sticky-au-chips">
-            {top5AUs.map(([code, au]) => (
-              <span key={code} className={`sticky-au-chip ${au.intensity > 0.05 ? 'active' : ''}`}>
-                {code}:{Math.round(au.intensity * 100)}%
-              </span>
-            ))}
+            {(()=>{
+              const top=top5AUs.filter(([,a])=>a.intensity>0.03);
+              if(!top.length)return<span className="sticky-au-chip">reposo</span>;
+              const hasBrow=top.some(([c])=>c==='AU1'||c==='AU2'||c==='AU4');
+              const hasEye=top.some(([c])=>c==='AU5'||c==='AU6'||c==='AU7'||c==='AU43');
+              const hasMouth=top.some(([c])=>c==='AU12'||c==='AU15'||c==='AU23'||c==='AU26');
+              const parts=[];
+              if(hasBrow)parts.push('cejas');
+              if(hasEye)parts.push('ojos');
+              if(hasMouth)parts.push('boca');
+              return<span className="sticky-au-chip active">{parts.length?parts.join(' · '):'leve'}</span>;
+            })()}
           </div>
         </div>
 

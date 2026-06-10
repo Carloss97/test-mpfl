@@ -21,6 +21,7 @@ import { computeAUs, computeAURegionSummary, computeMicrogestureGroups } from '.
 import { classifyBasicEmotions } from './basicEmotions.js';
 import { assessCaptureQuality } from './facialCapturePipeline.js';
 import { recordSessionScores, normalizeAllChannels } from './edgeCalibration.js';
+import { amplifyAllAUs } from './signalAmplifier.js';
 
 const MODEL_VERSION = 'krumm-edge-ai-v3.0.0';
 const MODEL_KIND = 'aus_driven_multidimensional';
@@ -37,7 +38,12 @@ function clamp(value, min = 0, max = 1) {
   return Math.min(max, Math.max(min, Number.isFinite(value) ? value : min));
 }
 
-function toPercent(value) { return Math.round(clamp(value) * 100); }
+function toPercent(value) {
+  // Aggressive stretch: map [0.15, 0.85] → [5, 95]
+  const v = clamp(value);
+  const stretched = 1 / (1 + Math.exp(-(v - 0.5) * 6.5));
+  return Math.round(stretched * 100);
+}
 
 function levelForScore(score) {
   if (score >= 75) return 'strong';
@@ -341,19 +347,22 @@ export function runEdgeAIInference({
   );
   const aus = computeAUs(usableSamples);
 
-  // Phase 3: Channel scoring with real AUs
+  // Phase 3: Amplify AUs
+  const amplifiedAUs = amplifyAllAUs(aus);
+
+  // Phase 4: Channel scoring with amplified AUs
   const channels = {
-    cognitiveLoad: scoreCognitiveLoad(aus, features),
-    emotionalValence: scoreEmotionalValence(aus, features),
-    motorControl: scoreMotorControl(aus, features),
-    engagement: scoreEngagement(aus, features),
-    stressResponse: scoreStressResponse(aus, features),
-    fatigueIndex: scoreFatigueIndex(aus, features),
+    cognitiveLoad: scoreCognitiveLoad(amplifiedAUs, features),
+    emotionalValence: scoreEmotionalValence(amplifiedAUs, features),
+    motorControl: scoreMotorControl(amplifiedAUs, features),
+    engagement: scoreEngagement(amplifiedAUs, features),
+    stressResponse: scoreStressResponse(amplifiedAUs, features),
+    fatigueIndex: scoreFatigueIndex(amplifiedAUs, features),
     taskPerformance: scoreTaskPerformance(features),
   };
 
-  // Phase 3.5: Basic Emotions (Ekman)
-  const emotions = classifyBasicEmotions(aus);
+  // Phase 5: Basic Emotions (Ekman) — use amplified AUs
+  const emotions = classifyBasicEmotions(amplifiedAUs);
 
   // Phase 3.6: Capture quality
   const captureQuality = assessCaptureQuality(faceSamples);

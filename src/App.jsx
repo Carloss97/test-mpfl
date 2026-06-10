@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { buildCameraConstraints, normalizeVideoInputDevices } from './telemetry/cameraDevices.js';
 import { buildGestureInsights, AU_MAP, AU_REGIONS, GROUP_LABELS } from './telemetry/gestureInsights.js';
+import { computeInsightsFromAUs } from './telemetry/insightMetrics.js';
 import { computeEnhancedAUs, setAUBaseline, resetAUCache } from './telemetry/auEnhancer.js';
 import { setEmotionBaseline } from './telemetry/basicEmotions.js';
 import { useFaceLandmarkerWorker } from './telemetry/useFaceLandmarkerWorker.js';
@@ -14,6 +15,7 @@ import Dashboard from './components/Dashboard.jsx';
 import StickyHeader from './components/StickyHeader.jsx';
 import SimpleRTTask from './tasks/SimpleRTTask.jsx';
 import ReferenceGuide from './components/ReferenceGuide.jsx';
+import TaskImpact from './components/TaskImpact.jsx';
 import { generateReport } from './telemetry/reportGenerator.js';
 import { saveSessionSafe, loadSessionsSafe, clearSessionsSafe } from './telemetry/storageManager.js';
 import { getRecommendedConfig } from './telemetry/deviceCapabilities.js';
@@ -230,6 +232,11 @@ export default function App() {
     const meanConfidence = confidences.length ? confidences.reduce((s, v) => s + v, 0) / confidences.length : 0;
     const fpsEstimate = allSamples.length ? allSamples.length / Math.max(1, (performance.now() - (sessionStartRef.current || performance.now())) / 1000) : 0;
     const insights = buildGestureInsights(recentSamples);
+    // Override metric proxies with AU-based calculations
+    if (recentSamples.length > 0 && insights.auScores) {
+      const auMetrics = computeInsightsFromAUs(insights.auScores, facePresenceRatio);
+      Object.assign(insights, auMetrics);
+    }
     if (recentSamples.length > 0) {
       const enhanced = computeEnhancedAUs(recentSamples);
       insights.enhancedAUs = enhanced;
@@ -242,15 +249,16 @@ export default function App() {
     const samples = faceSamplesRef.current;
     if (!samples.length || samples.length < 2) return null;
     try {
-      return runEdgeAIInference({
+      const result = runEdgeAIInference({
         faceSamples: samples,
         pointerSamples: [],
         taskEvents: taskEventsRef.current,
         calibrationProfile,
         runtime: { delegate: faceWorker.delegate ?? 'CPU' },
       });
-    } catch (e) { console.warn('Edge AI inference failed:', e); return null; }
-  }, [latestFaceSample, calibrationProfile, faceWorker.delegate, taskEventCount]);
+      return result;
+    } catch (e) { console.error('Edge AI inference failed:', e); return null; }
+  }, [latestFaceSample, calibrationProfile, faceWorker.delegate, taskEventCount, faceSamplesRef.current?.length]);
 
   // ─── Pipeline Worker (future: optional, fallback to direct) ───
   // const pipeline = usePipelineWorker({ ... });
@@ -320,7 +328,7 @@ export default function App() {
         <p className="subtitle">Telemetría facial · AUs (FACS) · Edge AI · Tareas cognitivas</p>
       </header>
 
-      {(isCameraActive && edgeAIResult) && (
+      {(isCameraActive) && (
         <StickyHeader
           edgeComposite={edgeComposite}
           edgeConfidence={edgeConfidence}
@@ -400,6 +408,7 @@ export default function App() {
             onComplete={handleTaskComplete}
             width={600} height={400}
           />
+          <TaskImpact edgeAIResult={edgeAIResult} taskActive={taskActive} />
         </section>
       )}
 

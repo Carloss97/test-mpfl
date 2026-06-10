@@ -27,7 +27,7 @@ export default function Dashboard({
   const captureQ=edgeAIResult?.confidence?.captureQuality;
   const sc=`status ${statusClassName}`;
   const [openMetrics,setOpenMetrics]=useState(false);
-  const [openEdge,setOpenEdge]=useState(false);
+  const [openEdge,setOpenEdge]=useState(true); // open by default
   const [openStats,setOpenStats]=useState(false);
   const [openAuBars,setOpenAuBars]=useState(false);
 
@@ -142,7 +142,6 @@ export default function Dashboard({
                     <div className="edge-channel-bar-fill" style={{width:`${ch.score}%`,background:CH_COLORS[name]||'var(--ink-blue)'}}/>
                   </div>
                   <div className="edge-channel-score-row"><strong style={{fontSize:'0.75rem'}}>{ch.score}%</strong></div>
-                  <p className="edge-channel-evidence" style={{fontSize:'0.58rem'}}>{ch.evidence}</p>
                 </div>
               ))}
             </div>
