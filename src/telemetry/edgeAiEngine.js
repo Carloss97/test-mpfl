@@ -105,7 +105,7 @@ export function runEdgeAIInference({
     s => s?.quality?.facePresent &&
     s?.timestamp >= features.windowFrom &&
     s?.timestamp <= features.windowTo
-  );
+  ).slice(-30); // only last 30 samples for responsiveness
   const rawAUs = computeAUs(usableSamples);
   const aus = processAllAUs(rawAUs);
 

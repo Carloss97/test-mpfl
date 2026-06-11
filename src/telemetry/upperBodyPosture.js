@@ -61,23 +61,32 @@ export function estimateUpperBodyPosture(landmarks) {
   // Normalized: 0 = straight, ±1 = 45° tilt
   const headTilt = clamp(Math.abs(tiltDeg) / 30);
 
-  // Head forward: use Z-depth difference between nose tip and ears
-  // When leaning forward, nose gets closer to camera (higher Z relative)
-  const noseZ = landmarks[NOSE_TIP * 3 + 2] ?? 0;
-  const leftEarZ = landmarks[LEFT_EAR * 3 + 2] ?? 0;
-  const rightEarZ = landmarks[RIGHT_EAR * 3 + 2] ?? 0;
-  const avgEarZ = (leftEarZ + rightEarZ) / 2;
-  // Z is relative depth: higher = closer to camera. Forward head → nose Z >> ear Z
-  const zDiff = Math.max(0, noseZ - avgEarZ);
-  const headForward = clamp(zDiff / 0.08); // ~0.08 is typical forward lean range
+  // Head forward: use face aspect ratio as depth proxy.
+  // When leaning forward: face appears taller and narrower (foreshortening).
+  // When upright: face is wider relative to height.
+  const faceHeight = Math.max(0.01, chin.y - forehead.y);
+  const faceWidth = Math.max(0.01, rightCheek.x - leftCheek.x);
+  const aspectRatio = faceHeight / faceWidth;
+  // Typical resting AR: ~1.3-1.5. Forward lean increases AR (taller face).
+  const headForward = clamp((aspectRatio - 1.2) / 0.6); // 1.2→0, 1.8→1.0
 
   // Asymmetry: difference between left and right cheek positions
-  const faceWidth = Math.max(0.01, rightCheek.x - leftCheek.x);
   const midX = (leftCheek.x + rightCheek.x) / 2;
   const asymmetry = clamp(Math.abs(get2D(NOSE_TIP).x - midX) / (faceWidth * 0.3));
 
-  // Stability: placeholder — would need temporal history
-  const stability = 0.8;
+  // Stability: jitter of jaw contour points relative to previous frame
+  let jitterSum = 0, jitterN = 0;
+  for (const idx of JAW_CONTOUR) {
+    const i = idx * 3;
+    if (i + 1 >= landmarks.length) continue;
+    const x = landmarks[i], y = landmarks[i + 1];
+    if (x === 0 && y === 0) continue;
+    jitterSum += Math.abs(x - 0.5) + Math.abs(y - 0.5);
+    jitterN++;
+  }
+  // Normalize: higher deviation → lower stability
+  const meanDev = jitterN > 0 ? jitterSum / jitterN : 0;
+  const stability = clamp(1 - meanDev * 4);
 
   // Composite posture score: higher = better posture
   const postureScore = clamp(

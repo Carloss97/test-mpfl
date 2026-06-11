@@ -33,7 +33,7 @@ const EMOTION_LIKELIHOODS = {
     AU1: 0.5, AU2: 0.5, AU26: 0.5,
   },
   sadness: {
-    AU1: 3.0, AU4: 4.0, AU15: 4.5, AU17: 2.0,
+    AU1: 3.0, AU4: 2.5, AU15: 4.5, AU17: 2.0,
     AU6: 0.2, AU12: 0.2, AU5: 0.5,
   },
   surprise: {
@@ -41,11 +41,11 @@ const EMOTION_LIKELIHOODS = {
     AU4: 0.3, AU7: 0.3, AU12: 0.5,
   },
   fear: {
-    AU1: 2.5, AU2: 2.5, AU4: 2.0, AU5: 3.0, AU7: 2.5,
+    AU1: 2.0, AU2: 2.0, AU4: 1.5, AU5: 2.5, AU7: 1.8,
     AU20: 3.0, AU26: 2.0, AU12: 0.3, AU6: 0.3,
   },
   anger: {
-    AU4: 5.0, AU5: 2.0, AU7: 3.5, AU23: 4.0,
+    AU4: 3.0, AU5: 2.0, AU7: 3.0, AU23: 3.5,
     AU6: 0.2, AU12: 0.2, AU26: 0.5,
   },
   disgust: {

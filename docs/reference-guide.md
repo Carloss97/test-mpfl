@@ -74,8 +74,9 @@ Estimación de dirección de mirada usando iris landmarks (índices 468-477).
 
 | Componente | Descripción |
 |-----------|-------------|
-| Método | Centroide del iris vs centroide del ojo → vector de mirada |
-| Suavizado | EMA (α=0.15) para reducir jitter |
+| Método | Centroide del iris vs nose bridge (landmark 6) como referencia fija |
+| Calibración | Auto-calibración en primeros 60 frames (baseline personal) |
+| Suavizado | EMA (α=0.12) para reducir jitter |
 | Precisión | ~2-5° error angular con webcam estándar |
 | Métricas | screenFocusRatio, gazeStability, attentionScore |
 | Visualización | Círculo amarillo/gris en el FaceMesh |
@@ -88,10 +89,11 @@ Detección de postura corporal con MediaPipe Pose Landmarker (33 landmarks).
 
 | Componente | Descripción |
 |-----------|-------------|
-| Modelo | pose_landmarker_lite.task (~5MB). GPU delegate |
-| Métricas | postureScore, shoulderAngle, headForward, bodyStability |
-| Visualización | Silueta corporal con 33 puntos + conexiones anatómicas |
-| Referencia | MediaPipe Pose (Google Research, 2020) |
+| Método | upperBodyPosture.js — estimación desde landmarks faciales (orejas, nariz, mentón) |
+| headTilt | Ángulo oreja-oreja vs horizontal |
+| headForward | Aspect ratio facial (altura/ancho) como proxy de forward head posture |
+| Métricas | postureScore, headTilt, headForward, asymmetry, stability |
+| Visualización | Panel colapsable en Dashboard. Keypoints naranja en FaceMesh |
 
 ---
 

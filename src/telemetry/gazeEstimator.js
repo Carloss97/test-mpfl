@@ -1,20 +1,16 @@
 /**
- * Gaze Estimator v3 — simplificado y robusto
+ * Gaze Estimator v4 — auto-calibrado
  *
- * Fixes:
- *  - Ignora coordenada Z en centroides (evita skew por landmarks sin profundidad)
- *  - Escala calibrada empíricamente: iris movement ~0.015 → screen displacement ~0.35
- *  - Sin head pose compensation (demasiado ruidosa con webcam)
- *  - EMA fuerte (α=0.15) para máxima estabilidad
+ * Los primeros N frames se usan para establecer la baseline
+ * de la relación iris-nariz. Luego se trabaja con deltas.
  */
 
 function clamp(v, l = 0, h = 1) { return Math.min(h, Math.max(l, Number.isFinite(v) ? v : l)); }
 function round(v, d = 4) { if (!Number.isFinite(v)) return 0; const f = 10 ** d; return Math.round(v * f) / f; }
 
-const LEFT_EYE_CONTOUR = [33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7];
-const RIGHT_EYE_CONTOUR = [362, 398, 384, 385, 386, 387, 388, 466, 263, 249, 390, 373, 374, 380, 381, 382];
 const LEFT_IRIS = [469, 470, 471, 472];
 const RIGHT_IRIS = [474, 475, 476, 477];
+const NOSE_BRIDGE = 6;
 
 function centroid2D(landmarks, indices) {
   let sx = 0, sy = 0, count = 0;
@@ -23,40 +19,55 @@ function centroid2D(landmarks, indices) {
     if (i + 1 >= landmarks.length) continue;
     const x = landmarks[i], y = landmarks[i + 1];
     if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-    if (x === 0 && y === 0) continue; // invalid landmark
+    if (x === 0 && y === 0) continue;
     sx += x; sy += y; count++;
   }
   return count ? { x: sx / count, y: sy / count } : { x: 0.5, y: 0.5 };
 }
 
-// EMA state
-let smoothed = { x: 0.5, y: 0.5, conf: 0 };
-const ALPHA = 0.15; // strong smoothing
+// Auto-calibration
+let baselineX = null, baselineY = null;
+let calibrationFrames = 0;
+const CALIBRATION_WINDOW = 60;
 
-export function estimateGaze(landmarks, _headPose = null, _sw = 1920, _sh = 1080) {
+// EMA
+let smoothed = { x: 0.5, y: 0.5, conf: 0 };
+const ALPHA = 0.12;
+
+export function estimateGaze(landmarks) {
   if (!landmarks || landmarks.length < 478 * 3) {
     return { screenX: 0.5, screenY: 0.5, lookingAtScreen: false, confidence: 0 };
   }
 
   const leftIris = centroid2D(landmarks, LEFT_IRIS);
   const rightIris = centroid2D(landmarks, RIGHT_IRIS);
-  const leftEye = centroid2D(landmarks, LEFT_EYE_CONTOUR);
-  const rightEye = centroid2D(landmarks, RIGHT_EYE_CONTOUR);
+  const ref = centroid2D(landmarks, [NOSE_BRIDGE]);
 
-  // Iris offset from eye center (normalized coords)
-  const dx = ((leftIris.x - leftEye.x) + (rightIris.x - rightEye.x)) / 2;
-  const dy = ((leftIris.y - leftEye.y) + (rightIris.y - rightEye.y)) / 2;
+  const dx = ((leftIris.x - ref.x) + (rightIris.x - ref.x)) / 2;
+  const dy = ((leftIris.y - ref.y) + (rightIris.y - ref.y)) / 2;
 
-  // Empirically calibrated: iris horizontal movement ~0.015 → ~0.35 screen displacement
-  // Vertical movement is smaller due to eyelid constraints → use higher scale
-  const SCALE_X = 24;
-  const SCALE_Y = 38; // higher gain for vertical to compensate limited range
-  let sx = 0.5 + dx * SCALE_X;
-  let sy = 0.5 + dy * SCALE_Y;
+  // Auto-calibrate baseline
+  if (calibrationFrames < CALIBRATION_WINDOW) {
+    if (baselineX === null) { baselineX = dx; baselineY = dy; }
+    else {
+      baselineX = baselineX * 0.9 + dx * 0.1;
+      baselineY = baselineY * 0.9 + dy * 0.1;
+    }
+    calibrationFrames++;
+  }
 
-  // Clamp + EMA
+  // Delta from personal baseline
+  const ddx = baselineX !== null ? dx - baselineX : 0;
+  const ddy = baselineY !== null ? dy - baselineY : 0;
+
+  // Map delta to screen: typical eye movement ~0.01-0.03 units
+  const SCALE = 30;
+  let sx = 0.5 + ddx * SCALE;
+  let sy = 0.5 + ddy * SCALE;
+
   sx = clamp(sx);
   sy = clamp(sy);
+
   smoothed.x = smoothed.x * ALPHA + sx * (1 - ALPHA);
   smoothed.y = smoothed.y * ALPHA + sy * (1 - ALPHA);
 

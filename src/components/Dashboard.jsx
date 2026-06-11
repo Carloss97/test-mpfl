@@ -30,6 +30,7 @@ export default function Dashboard({
   const [openMetrics,setOpenMetrics]=useState(false);
   const [openEdge,setOpenEdge]=useState(true); // open by default
   const [openStats,setOpenStats]=useState(false);
+  const [openPosture,setOpenPosture]=useState(true);
   const [openAuBars,setOpenAuBars]=useState(false);
 
   return(
@@ -97,29 +98,29 @@ export default function Dashboard({
         </article>
       </div>
 
-      {/* Upper body posture — from face landmarks */}
-      <div className="dash-cam-row" style={{marginTop:'12px'}}>
-        <article className="panel" style={{gridColumn:'1/-1'}}>
-          <div className="panel-heading"><h2>🧍 Postura (upper body)</h2><span className="status ready" style={{fontSize:'0.65rem'}}>{latestPose?'detectado':'calculando...'}</span></div>
+      {/* Upper body posture — collapsible */}
+      <div className="dash-section">
+        <div className="dash-section-hdr" onClick={()=>setOpenPosture(!openPosture)} style={{cursor:'pointer',userSelect:'none'}}>
+          <span className="dash-section-arrow">{openPosture?'▼':'▶'}</span>
+          <span className="dash-section-title">🧍 Postura (upper body)</span>
+          <span className="dash-section-badge">{latestPose?Math.round(latestPose.postureScore*100)+'%':'—'}</span>
+        </div>
+        {openPosture&&<div className="dash-section-body">
           {latestPose ? (
-            <div style={{display:'flex',gap:'12px',padding:'8px 0'}}>
-              <div style={{fontSize:'0.72rem',color:'#c8d7e8',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'4px 16px'}}>
-                <span>Postura:</span><strong>{Math.round(latestPose.postureScore*100)}%</strong>
-                <span>Inclinación cabeza:</span><strong>{latestPose.headTiltDeg.toFixed(1)}°</strong>
-                <span>Inclinación frontal:</span><strong>{Math.round(latestPose.headForward*100)}%</strong>
-                <span>Asimetría:</span><strong>{Math.round(latestPose.asymmetry*100)}%</strong>
-                <span>Estabilidad:</span><strong>{Math.round(latestPose.stability*100)}%</strong>
-              </div>
-              <p className="caption" style={{flex:1,fontSize:'0.65rem'}}>
-                Estimado desde landmarks faciales (orejas, nariz, mentón).<br/>
-                Detecta inclinación lateral, forward head posture y asimetría.<br/>
-                Sin requerir Pose Landmarker ni ver el torso.
-              </p>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 2fr',gap:'4px 16px',fontSize:'0.72rem',color:'#c8d7e8'}}>
+              <span className="caption">Postura general</span><strong>{Math.round(latestPose.postureScore*100)}%</strong>
+              <span className="caption">Inclinación lateral</span><strong>{latestPose.headTiltDeg.toFixed(1)}°</strong>
+              <span className="caption">Inclinación frontal</span><strong>{Math.round(latestPose.headForward*100)}%</strong>
+              <span className="caption">Asimetría facial</span><strong>{Math.round(latestPose.asymmetry*100)}%</strong>
+              <span className="caption">Estabilidad</span><strong>{Math.round(latestPose.stability*100)}%</strong>
+              <span className="caption" style={{gridColumn:'1/-1',marginTop:'8px'}}>
+                Estimado desde landmarks faciales (orejas, nariz, mentón). Detecta head tilt, forward head posture (aspect ratio) y asimetría.
+              </span>
             </div>
           ) : (
-            <p className="caption">Esperando landmarks faciales para estimar postura...</p>
+            <p className="caption">Esperando landmarks faciales...</p>
           )}
-        </article>
+        </div>}
       </div>
 
       {/* Collapsible sections */}
