@@ -7,6 +7,7 @@ import { setAUBaseline } from './telemetry/auProcessor.js';
 import { estimateGaze } from './telemetry/gazeEstimator.js';
 import { useFaceLandmarkerWorker } from './telemetry/useFaceLandmarkerWorker.js';
 import { estimateUpperBodyPosture } from './telemetry/upperBodyPosture.js';
+import { estimateShoulders } from './telemetry/shoulderEstimator.js';
 import { buildFusionPayload } from './telemetry/payload.js';
 import { buildCalibrationProfile } from './telemetry/microgestureFeatures.js';
 import { requestCameraWithFallback, stopStream } from './telemetry/adaptiveCapture.js';
@@ -68,6 +69,7 @@ export default function App() {
   const [latestLandmarks, setLatestLandmarks] = useState(null);
   const [latestGaze, setLatestGaze] = useState(null);
   const [latestPose, setLatestPose] = useState(null);
+  const [latestShoulders, setLatestShoulders] = useState(null);
   const [lastQuality, setLastQuality] = useState({});
   const [blendshapeNames, setBlendshapeNames] = useState([]);
   const [activeTab, setActiveTab] = useState('gestures');
@@ -90,6 +92,8 @@ export default function App() {
         setLatestGaze(gaze);
         const posture = estimateUpperBodyPosture(landmarks);
         setLatestPose(posture);
+        const shoulders = estimateShoulders(landmarks);
+        setLatestShoulders(shoulders);
       } catch (e) { /* optional */ }
     }
     setLastQuality(sample.quality ?? {});
@@ -394,7 +398,7 @@ export default function App() {
           calibrationProfile={calibrationProfile} calStatusLabel={calStatusLabel}
           insightItems={insightItems} auEntries={auEntries} activeAUCount={activeAUCount}
           edgeAIResult={edgeAIResult} edgeChannels={edgeChannels} edgeConfidence={edgeConfidence} edgeComposite={edgeComposite}
-          latestLandmarks={latestLandmarks} latestGaze={latestGaze} latestPose={latestPose} auRegionSummary={telemetry.insights?.auRegionSummary}
+          latestLandmarks={latestLandmarks} latestGaze={latestGaze} latestPose={latestPose} latestShoulders={latestShoulders} auRegionSummary={telemetry.insights?.auRegionSummary}
           DEVICE_CONFIG={DEVICE_CONFIG}
         />
       ) : (

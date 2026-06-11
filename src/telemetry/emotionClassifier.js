@@ -112,9 +112,10 @@ export function classifyEmotions(aus = {}) {
   }
 
   // If dominant is very weak, default to neutral
-  if (dominantScore < 0.20) {
+  probs.neutral = round(Math.max(0, 1 - sumExp / (sumExp + 1))); // neutral gets remaining probability mass
+  if (dominantScore < 0.25) {
     dominant = 'neutral';
-    dominantScore = probs.neutral ?? 0.5;
+    dominantScore = probs.neutral;
   }
 
   return {

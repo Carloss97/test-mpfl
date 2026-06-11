@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import FaceMeshOverlay from '../telemetry/FaceMeshOverlay.js';
 
-export default function FaceMeshOverlayWrapper({ containerRef, landmarks, auRegionActivation, visible, quality, gaze }) {
+export default function FaceMeshOverlayWrapper({ containerRef, landmarks, auRegionActivation, visible, quality, gaze, shoulders }) {
   const overlayRef = useRef(null);
 
   useEffect(() => {
@@ -14,8 +14,8 @@ export default function FaceMeshOverlayWrapper({ containerRef, landmarks, auRegi
   }, [containerRef]);
 
   useEffect(() => {
-    overlayRef.current?.update({ landmarks, auRegionActivation, visible, quality, gaze });
-  }, [landmarks, auRegionActivation, visible, quality, gaze]);
+    overlayRef.current?.update({ landmarks, auRegionActivation, visible, quality, gaze, shoulders });
+  }, [landmarks, auRegionActivation, visible, quality, gaze, shoulders]);
 
   return null;
 }

@@ -67,8 +67,8 @@ export function estimateUpperBodyPosture(landmarks) {
   const faceHeight = Math.max(0.01, chin.y - forehead.y);
   const faceWidth = Math.max(0.01, rightCheek.x - leftCheek.x);
   const aspectRatio = faceHeight / faceWidth;
-  // Typical resting AR: ~1.3-1.5. Forward lean increases AR (taller face).
-  const headForward = clamp((aspectRatio - 1.2) / 0.6); // 1.2→0, 1.8→1.0
+  // Typical resting AR: ~1.2-1.5. Forward lean increases AR.
+  const headForward = clamp((aspectRatio - 1.0) / 0.5); // 1.0→0%, 1.5→100%
 
   // Asymmetry: difference between left and right cheek positions
   const midX = (leftCheek.x + rightCheek.x) / 2;
@@ -89,8 +89,9 @@ export function estimateUpperBodyPosture(landmarks) {
   const stability = clamp(1 - meanDev * 4);
 
   // Composite posture score: higher = better posture
+  // Forward head posture is weighted more heavily (it's the most common issue)
   const postureScore = clamp(
-    1 - headTilt * 0.4 - headForward * 0.3 - asymmetry * 0.3
+    1 - headTilt * 0.35 - headForward * 0.50 - asymmetry * 0.25
   );
 
   return {

@@ -13,6 +13,7 @@ const EMO_CLRS = { happiness:'#4dd4ac',sadness:'#74a7ff',surprise:'#ffd166',fear
 function fmt(n,d=3){return Number.isFinite(n)?Number(n).toFixed(d):Number(0).toFixed(d)}
 function pct(v){const x=Math.min(1,Math.max(0,Number.isFinite(v)?v:0));return`${Math.round(x*100)}%`}
 function light(c){return c==='good'?'var(--ink-green)':c==='moderate'?'var(--ink-yellow)':'var(--ink-red)'}
+const clamp=(v,l=0,h=1)=>Math.min(h,Math.max(l,Number.isFinite(v)?v:l));
 
 export default function Dashboard({
   videoRef,isCameraActive,showMesh,setShowMesh,
@@ -21,7 +22,7 @@ export default function Dashboard({
   insightItems,auEntries,activeAUCount,
   edgeAIResult,edgeChannels,edgeConfidence,edgeComposite,
   latestLandmarks,latestGaze,auRegionSummary,DEVICE_CONFIG,
-  latestPose,
+  latestPose,latestShoulders,
 }){
   const camRef=useRef(null), meshRef=useRef(null);
   const emotions=edgeAIResult?.emotions;
@@ -65,7 +66,7 @@ export default function Dashboard({
         <article className="panel dash-mesh-panel">
           <div className="panel-heading"><h2>🧬 Rostro</h2><span className="status ready" style={{fontSize:'0.65rem'}}>{latestLandmarks?'detectado':'sin rostro'}</span></div>
           <div className="mesh-dark-container" ref={meshRef}>
-            <FaceMeshOverlayWrapper containerRef={meshRef} landmarks={latestLandmarks} visible={showMesh} auRegionActivation={auRegionSummary} gaze={latestGaze}/>
+            <FaceMeshOverlayWrapper containerRef={meshRef} landmarks={latestLandmarks} visible={showMesh} auRegionActivation={auRegionSummary} gaze={latestGaze} shoulders={latestShoulders}/>
           </div>
 
           {telemetry.recentCount>0&&(
@@ -98,24 +99,63 @@ export default function Dashboard({
         </article>
       </div>
 
-      {/* Upper body posture — collapsible */}
+      {/* Upper body posture */}
       <div className="dash-section">
         <div className="dash-section-hdr" onClick={()=>setOpenPosture(!openPosture)} style={{cursor:'pointer',userSelect:'none'}}>
           <span className="dash-section-arrow">{openPosture?'▼':'▶'}</span>
-          <span className="dash-section-title">🧍 Postura (upper body)</span>
-          <span className="dash-section-badge">{latestPose?Math.round(latestPose.postureScore*100)+'%':'—'}</span>
+          <span className="dash-section-title">🧍 Postura corporal</span>
+          <span className="dash-section-badge" style={{color:latestPose?(latestPose.postureScore>0.7?'var(--ink-green)':'var(--ink-yellow)'):'#9fb0c2'}}>{latestPose?Math.round(latestPose.postureScore*100)+'%':'—'}</span>
         </div>
         {openPosture&&<div className="dash-section-body">
           {latestPose ? (
-            <div style={{display:'grid',gridTemplateColumns:'1fr 2fr',gap:'4px 16px',fontSize:'0.72rem',color:'#c8d7e8'}}>
-              <span className="caption">Postura general</span><strong>{Math.round(latestPose.postureScore*100)}%</strong>
-              <span className="caption">Inclinación lateral</span><strong>{latestPose.headTiltDeg.toFixed(1)}°</strong>
-              <span className="caption">Inclinación frontal</span><strong>{Math.round(latestPose.headForward*100)}%</strong>
-              <span className="caption">Asimetría facial</span><strong>{Math.round(latestPose.asymmetry*100)}%</strong>
-              <span className="caption">Estabilidad</span><strong>{Math.round(latestPose.stability*100)}%</strong>
-              <span className="caption" style={{gridColumn:'1/-1',marginTop:'8px'}}>
-                Estimado desde landmarks faciales (orejas, nariz, mentón). Detecta head tilt, forward head posture (aspect ratio) y asimetría.
-              </span>
+            <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+
+              {/* Row 1: Lateral tilt + Frontal — side by side cards */}
+              <div style={{display:'flex',gap:'8px'}}>
+                <div style={{flex:1,background:'rgba(255,255,255,0.03)',borderRadius:'10px',padding:'10px 12px',textAlign:'center'}}>
+                  <div style={{fontSize:'0.6rem',color:'#9fb0c2',marginBottom:'4px'}}>Inclinación lateral</div>
+                  <div style={{fontSize:'1.3rem',fontWeight:700,color:Math.abs(latestPose.headTiltDeg)<5?'var(--ink-green)':Math.abs(latestPose.headTiltDeg)<15?'var(--ink-yellow)':'var(--ink-red)'}}>
+                    {latestPose.headTiltDeg > 0 ? '→' : latestPose.headTiltDeg < 0 ? '←' : '•'} {Math.abs(latestPose.headTiltDeg).toFixed(1)}°
+                  </div>
+                </div>
+                <div style={{flex:1,background:'rgba(255,255,255,0.03)',borderRadius:'10px',padding:'10px 12px',textAlign:'center'}}>
+                  <div style={{fontSize:'0.6rem',color:'#9fb0c2',marginBottom:'4px'}}>Inclinación frontal</div>
+                  <div style={{fontSize:'1.3rem',fontWeight:700,color:latestPose.headForward<0.3?'var(--ink-green)':latestPose.headForward<0.6?'var(--ink-yellow)':'var(--ink-red)'}}>
+                    {Math.round(latestPose.headForward*100)}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: Asymmetry + Stability — side by side cards */}
+              <div style={{display:'flex',gap:'8px'}}>
+                <div style={{flex:1,background:'rgba(255,255,255,0.03)',borderRadius:'10px',padding:'10px 12px',textAlign:'center'}}>
+                  <div style={{fontSize:'0.6rem',color:'#9fb0c2',marginBottom:'4px'}}>Asimetría</div>
+                  <div style={{fontSize:'1.3rem',fontWeight:700,color:latestPose.asymmetry<0.2?'var(--ink-green)':'var(--ink-yellow)'}}>
+                    {Math.round(latestPose.asymmetry*100)}%
+                  </div>
+                </div>
+                <div style={{flex:1,background:'rgba(255,255,255,0.03)',borderRadius:'10px',padding:'10px 12px',textAlign:'center'}}>
+                  <div style={{fontSize:'0.6rem',color:'#9fb0c2',marginBottom:'4px'}}>Estabilidad</div>
+                  <div style={{fontSize:'1.3rem',fontWeight:700,color:latestPose.stability>0.6?'var(--ink-green)':'var(--ink-yellow)'}}>
+                    {Math.round(latestPose.stability*100)}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Shoulders estimate */}
+              {latestShoulders?.visible && (
+                <div style={{background:'rgba(255,150,77,0.08)',borderRadius:'10px',padding:'8px 12px',textAlign:'center',fontSize:'0.62rem',color:'#ffb87a'}}>
+                  Hombros estimados: {Math.round(latestShoulders.shoulderAngle*180/Math.PI)}° · ancho {Math.round(latestShoulders.shoulderWidth*100)}%
+                </div>
+              )}
+
+              {/* Score */}
+              <div style={{background:'rgba(255,255,255,0.04)',borderRadius:'10px',padding:'12px',textAlign:'center'}}>
+                <div style={{fontSize:'0.6rem',color:'#9fb0c2',marginBottom:'4px'}}>Puntuación general</div>
+                <div style={{fontSize:'2rem',fontWeight:800,color:'var(--ink-green)'}}>{Math.round(latestPose.postureScore*100)}%</div>
+              </div>
+
+              <p className="caption" style={{fontSize:'0.56rem',textAlign:'center'}}>Estimado desde landmarks faciales. Las tarjetas cambian de color según severidad.</p>
             </div>
           ) : (
             <p className="caption">Esperando landmarks faciales...</p>
