@@ -1,37 +1,75 @@
 /**
- * Insight Metrics v2 — basadas en literatura de affective computing
+ * Insight Metrics v3 — métricas multimodales basadas en literatura
  *
- * Cada métrica cita su referencia y usa AUs validadas empíricamente.
+ * Mantiene compatibilidad con la versión AU-only cuando no se entrega contexto
+ * multimodal. Si hay gaze/postura/MoveNet, las métricas cognitivas usan esas
+ * señales para evitar depender exclusivamente de AUs faciales.
  *
  * Referencias clave:
- *  - Bartlett, M. S., et al. (2006). Automatic recognition of facial actions in
- *    spontaneous expressions. Journal of Multimedia, 1(6).
- *  - D'Mello, S., & Graesser, A. (2012). Dynamics of affective states during
- *    complex learning. Learning and Instruction, 22(2), 145-157.
- *  - Giannakakis, G., et al. (2017). Stress and anxiety detection using facial
- *    cues from videos. Biomedical Signal Processing and Control, 31, 89-101.
- *  - Ji, Q., et al. (2004). Real-time nonintrusive monitoring and prediction of
- *    driver fatigue. IEEE Trans. Vehicular Technology, 53(4), 1052-1068.
- *  - Dinges, D. F., et al. (1998). PERCLOS: a valid psychophysiological measure
- *    of alertness. Federal Highway Administration Tech Report.
- *  - Palinko, S., et al. (2010). Estimating cognitive load using remote eye
- *    tracking in a driving simulator. ETRA 2010.
- *  - Russell, J. A. (1980). A circumplex model of affect. JPSP, 39(6).
- *  - Mehrabian, A., & Russell, J. A. (1974). An approach to environmental psychology.
+ *  - Bartlett et al. (2006). Automatic recognition of facial actions.
+ *  - D'Mello & Graesser (2012). Dynamics of affective states during learning.
+ *  - Giannakakis et al. (2017). Stress/anxiety detection using facial cues.
+ *  - Dinges et al. (1998). PERCLOS.
+ *  - Ji et al. (2004). Driver fatigue monitoring.
+ *  - Palinko et al. (2010). Cognitive load via remote eye tracking.
+ *  - Russell (1980). Circumplex model of affect.
  */
 
-function clamp(v, l=0, h=1) { return Math.min(h, Math.max(l, Number.isFinite(v) ? v : l)); }
-function round(v, d=4) { if (!Number.isFinite(v)) return 0; const f = 10**d; return Math.round(v*f)/f; }
+function clamp(v, l = 0, h = 1) { return Math.min(h, Math.max(l, Number.isFinite(v) ? v : l)); }
+function round(v, d = 4) { if (!Number.isFinite(v)) return 0; const f = 10 ** d; return Math.round(v * f) / f; }
 function auVal(aus, code) { return aus?.[code]?.intensity ?? 0; }
 
-export function computeInsightsFromAUs(aus = {}, facePresenceRatio = 0) {
-  const AU1  = auVal(aus, 'AU1');
-  const AU2  = auVal(aus, 'AU2');
-  const AU4  = auVal(aus, 'AU4');
-  const AU5  = auVal(aus, 'AU5');
-  const AU6  = auVal(aus, 'AU6');
-  const AU7  = auVal(aus, 'AU7');
-  const AU9  = auVal(aus, 'AU9');
+function normalizeContext(context = {}) {
+  const gaze = context.gaze ?? null;
+  const posture = context.posture ?? null;
+  const upperBody = context.upperBody ?? context.moveNetPose ?? null;
+  const task = context.task ?? null;
+
+  const gazeAvailable = Boolean(gaze?.available ?? gaze?.confidence !== undefined);
+  const gazeConfidence = clamp(gaze?.confidence ?? 0);
+  const lookingAtScreen = Boolean(gaze?.lookingAtScreen);
+  const gazeFocus = gazeAvailable ? (lookingAtScreen ? gazeConfidence : 0) : null;
+  const gazeInstability = gazeAvailable ? clamp(1 - gazeConfidence + (lookingAtScreen ? 0 : 0.35)) : null;
+
+  const postureAvailable = Boolean(posture?.available ?? posture?.postureScore !== undefined);
+  const postureScore = postureAvailable ? clamp(posture?.postureScore ?? 0.5) : null;
+  const headForward = postureAvailable ? clamp(posture?.headForward ?? 0) : null;
+  const headTilt = postureAvailable ? clamp(posture?.headTilt ?? Math.abs(posture?.headTiltDeg ?? 0) / 30) : null;
+  const posturePenalty = postureAvailable ? clamp((1 - postureScore) * 0.55 + headForward * 0.30 + headTilt * 0.15) : null;
+
+  const upperAvailable = Boolean(upperBody?.available ?? upperBody?.confidence !== undefined);
+  const shoulderSymmetry = upperAvailable ? clamp(upperBody?.shoulderSymmetry ?? upperBody?.symmetry ?? 0) : null;
+  const upperConfidence = upperAvailable ? clamp(upperBody?.confidence ?? 0) : null;
+
+  const taskAccuracy = task?.accuracy !== undefined ? clamp(task.accuracy) : null;
+  const taskErrorRate = taskAccuracy !== null ? 1 - taskAccuracy : null;
+
+  return {
+    hasAny: gazeAvailable || postureAvailable || upperAvailable || taskAccuracy !== null,
+    gazeAvailable,
+    gazeFocus,
+    gazeInstability,
+    postureAvailable,
+    postureScore,
+    headForward,
+    headTilt,
+    posturePenalty,
+    upperAvailable,
+    shoulderSymmetry,
+    upperConfidence,
+    taskAccuracy,
+    taskErrorRate,
+  };
+}
+
+export function computeInsightsFromAUs(aus = {}, facePresenceRatio = 0, context = {}) {
+  const AU1 = auVal(aus, 'AU1');
+  const AU2 = auVal(aus, 'AU2');
+  const AU4 = auVal(aus, 'AU4');
+  const AU5 = auVal(aus, 'AU5');
+  const AU6 = auVal(aus, 'AU6');
+  const AU7 = auVal(aus, 'AU7');
+  const AU9 = auVal(aus, 'AU9');
   const AU12 = auVal(aus, 'AU12');
   const AU15 = auVal(aus, 'AU15');
   const AU20 = auVal(aus, 'AU20');
@@ -41,63 +79,48 @@ export function computeInsightsFromAUs(aus = {}, facePresenceRatio = 0) {
   const AU43 = auVal(aus, 'AU43');
   const AU45 = auVal(aus, 'AU45');
 
-  // ─── Cognitive Load ───
-  // Palinko et al. (2010) + Bartlett et al. (2006):
-  // AU4 + AU7 + blink rate (inverse AU5) predict cognitive load.
-  const cognitiveLoad = clamp((AU4 * 0.35 + AU7 * 0.35 + (1 - AU5) * 0.15 + AU23 * 0.15));
+  const ctx = normalizeContext(context);
 
-  // ─── Tension ───
-  // Giannakakis et al. (2017): AU4 + AU7 + AU23
+  // AU-only baselines retained for compatibility.
+  const auCognitiveLoad = clamp(AU4 * 0.35 + AU7 * 0.35 + (1 - AU5) * 0.15 + AU23 * 0.15);
   const tension = clamp((AU4 + AU7 + AU23) / 3);
-
-  // ─── Attention ───
-  // Low blink (AU45) + eyes open (AU5) + face present
-  const attention = clamp((1 - AU45 * 1.8) * 0.55 + AU5 * 0.25 + facePresenceRatio * 0.20);
-
-  // ─── Surprise ───
-  // Ekman FACS: AU1+2+5+26
+  const auAttention = clamp((1 - AU45 * 1.8) * 0.55 + AU5 * 0.25 + facePresenceRatio * 0.20);
   const surprise = clamp((AU1 + AU2 + AU5 + AU26) / 4);
+  const auFatigue = clamp(AU45 * 0.45 + AU7 * 0.25 + AU43 * 0.30);
+  const auStress = clamp(AU4 * 0.25 + AU23 * 0.30 + AU9 * 0.25 + AU27 * 0.20);
+  const auEngagement = clamp(auAttention * 0.55 + (1 - AU45) * 0.25 + facePresenceRatio * 0.20);
 
-  // ─── Fatigue ───
-  // PERCLOS (Dinges et al., 1998; Ji et al., 2004):
-  // AU45 (blink) + AU7 (lid tightener) + AU43 (eye closure)
-  const fatigue = clamp((AU45 * 0.45 + AU7 * 0.25 + AU43 * 0.30));
+  const attention = ctx.gazeAvailable
+    ? clamp((ctx.gazeFocus ?? 0) * 0.45 + (1 - AU45) * 0.15 + AU5 * 0.10 + facePresenceRatio * 0.10 + (ctx.postureScore ?? 0.5) * 0.20)
+    : auAttention;
 
-  // ─── Stress ───
-  // Giannakakis et al. (2017): AU4 + AU23 + AU9 + AU27
-  const stress = clamp((AU4 * 0.25 + AU23 * 0.30 + AU9 * 0.25 + AU27 * 0.20));
+  const fatigue = ctx.hasAny
+    ? clamp(AU45 * 0.35 + AU43 * 0.20 + AU7 * 0.15 + (ctx.headForward ?? 0) * 0.18 + (ctx.gazeInstability ?? 0) * 0.12)
+    : auFatigue;
 
-  // ─── Calmness ───
-  const calmness = clamp(1 - (tension * 0.5 + stress * 0.5));
+  const stress = ctx.hasAny
+    ? clamp(auStress * 0.65 + (ctx.posturePenalty ?? 0) * 0.18 + (ctx.gazeInstability ?? 0) * 0.10 + (ctx.taskErrorRate ?? 0) * 0.07)
+    : auStress;
 
-  // ─── Engagement ───
-  // D'Mello & Graesser (2012): AU1+AU2+AU5 predict engagement
-  // AU45 (blink) negatively correlated
-  const engagement = clamp(attention * 0.55 + (1 - AU45) * 0.25 + facePresenceRatio * 0.20);
+  const postureSupport = ctx.postureAvailable ? (ctx.postureScore ?? 0.5) : 0.5;
+  const shoulderSupport = ctx.upperAvailable ? ((ctx.shoulderSymmetry ?? 0) * (ctx.upperConfidence ?? 0)) : 0.5;
+  const engagement = ctx.hasAny
+    ? clamp(attention * 0.30 + (ctx.gazeFocus ?? auAttention) * 0.35 + postureSupport * 0.15 + shoulderSupport * 0.10 + facePresenceRatio * 0.10)
+    : auEngagement;
 
-  // ─── Boredom ───
-  // Inverse of engagement + high blink rate
-  const boredom = clamp(((1 - engagement) * 0.6 + AU45 * 0.4) * facePresenceRatio);
-
-  // ─── Confusion ───
-  // D'Mello & Graesser (2012): AU4 + AU1 + AU7 (frowning + brow raise = confusion)
+  const calmness = clamp(1 - (tension * 0.35 + stress * 0.40 + fatigue * 0.15 + (ctx.posturePenalty ?? 0) * 0.10));
+  const boredom = clamp(((1 - engagement) * 0.55 + AU45 * 0.25 + (ctx.gazeAvailable ? (1 - (ctx.gazeFocus ?? 0)) * 0.20 : 0)) * facePresenceRatio);
   const confusion = clamp((AU4 * 0.4 + AU1 * 0.3 + AU7 * 0.3) * (1 - AU12 * 0.5));
-
-  // ─── Frustration Tolerance ───
   const frustrationTolerance = clamp(1 - tension);
 
-  // ─── Valence (Russell, 1980 circumplex) ───
-  // Positive: AU6+AU12. Negative: AU4+AU15+AU9
   const posSignal = clamp((AU6 + AU12) / 2);
   const negSignal = clamp((AU4 + AU15 + AU9) / 3);
   const valence = clamp((posSignal - negSignal + 1) / 2);
-
-  // ─── Arousal (Mehrabian & Russell, 1974) ───
   const arousal = clamp((AU1 + AU2 + AU5 + AU26) / 4);
-
-  // ─── Dominance (Mehrabian & Russell, 1974) ───
-  // High: no submission signals (AU4 low, AU15 low)
   const dominance = clamp(((1 - AU4) + (1 - AU15) + (1 - AU20)) / 3);
+  const cognitiveLoad = ctx.hasAny
+    ? clamp(auCognitiveLoad * 0.70 + (ctx.gazeInstability ?? 0) * 0.12 + (ctx.posturePenalty ?? 0) * 0.10 + (ctx.taskErrorRate ?? 0) * 0.08)
+    : auCognitiveLoad;
 
   return {
     cognitiveLoad: round(cognitiveLoad),
@@ -114,5 +137,6 @@ export function computeInsightsFromAUs(aus = {}, facePresenceRatio = 0) {
     valence: round(valence),
     arousal: round(arousal),
     dominance: round(dominance),
+    provenance: ctx.hasAny ? 'multimodal_v3' : 'au_only_v2',
   };
 }

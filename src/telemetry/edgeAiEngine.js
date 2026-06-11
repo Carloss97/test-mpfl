@@ -13,14 +13,10 @@
  * Un solo punto de entrada: runEdgeAIInference()
  */
 
-import { buildFullFeatureVector } from './temporalFeatures.js';
-import { computeAUs } from './gestureInsights.js';
-import { processAllAUs } from './auProcessor.js';
-import { classifyEmotions } from './emotionClassifier.js';
-import { assessCaptureQuality } from './facialCapturePipeline.js';
+import { buildMultimodalFeatures } from './multimodalFeatures.js';
 import { recordSessionScores, normalizeAllChannels } from './edgeCalibration.js';
 
-const MODEL_VERSION = 'krumm-edge-ai-v8.0.0';
+const MODEL_VERSION = 'krumm-edge-ai-v8.1.0-multimodal';
 
 // ─── Helpers ───
 function clamp(v, l = 0, h = 1) { return Math.min(h, Math.max(l, Number.isFinite(v) ? v : l)); }
@@ -41,6 +37,8 @@ const CHANNEL_LABELS = {
   engagement: 'Engagement',
   stressResponse: 'Estrés',
   fatigueIndex: 'Fatiga',
+  visualAttention: 'Atención Visual',
+  postureQuality: 'Calidad Postural',
   taskPerformance: 'Rendimiento',
 };
 
@@ -89,41 +87,139 @@ function scoreTaskPerformance(features) {
   return { score: toPercent(raw), level: levelForScore(toPercent(raw)) };
 }
 
+function channelFromRaw(raw, extras = {}) {
+  const score = Math.round(clamp(raw) * 100);
+  return { score, level: levelForScore(score), ...extras };
+}
+
+function scoreVisualAttention(multimodal) {
+  const gaze = multimodal.gaze ?? {};
+  if (!gaze.available) {
+    return channelFromRaw(0.5, { confidence: 0, caveats: ['gaze_unavailable'] });
+  }
+  const focus = gaze.lookingAtScreen ? (gaze.confidence ?? 0) : 0;
+  const raw = focus * 0.80 + (1 - (gaze.distractionScore ?? 1)) * 0.20;
+  return channelFromRaw(raw, { confidence: round(gaze.confidence ?? 0), source: 'gaze' });
+}
+
+function scorePostureQuality(multimodal) {
+  const posture = multimodal.posture ?? {};
+  const upper = multimodal.upperBody ?? {};
+  if (!posture.available && !upper.available) {
+    return channelFromRaw(0.5, { confidence: 0, caveats: ['posture_unavailable'] });
+  }
+  const postureScore = posture.available ? (posture.postureScore ?? 0.5) : 0.5;
+  const headForwardPenalty = posture.available ? (posture.headForward ?? 0) : 0;
+  const shoulderQuality = upper.available ? (upper.shoulderSymmetry ?? 0) * (upper.confidence ?? 0) : 0.5;
+  const raw = postureScore * 0.55 + shoulderQuality * 0.30 + (1 - headForwardPenalty) * 0.15;
+  const confidence = clamp((posture.confidence ?? 0) * 0.55 + (upper.confidence ?? 0) * 0.45);
+  return channelFromRaw(raw, { confidence: round(confidence), source: upper.available ? 'posture+movenet' : 'posture' });
+}
+
+function applyMultimodalChannelModifiers(channels, multimodal) {
+  const visual = channels.visualAttention?.score ?? 50;
+  const posture = channels.postureQuality?.score ?? 50;
+  const gazeInstability = multimodal.gaze?.available ? (multimodal.gaze.distractionScore ?? 0) * 100 : 0;
+  const headForward = multimodal.posture?.available ? (multimodal.posture.headForward ?? 0) * 100 : 0;
+  const posturePenalty = 100 - posture;
+
+  if (channels.engagement) {
+    const score = Math.round(channels.engagement.score * 0.55 + visual * 0.30 + posture * 0.15);
+    channels.engagement = { ...channels.engagement, score, level: levelForScore(score), multimodalAdjusted: true };
+  }
+  if (channels.fatigueIndex) {
+    const score = Math.round(channels.fatigueIndex.score * 0.70 + headForward * 0.20 + gazeInstability * 0.10);
+    channels.fatigueIndex = { ...channels.fatigueIndex, score, level: levelForScore(score), multimodalAdjusted: true };
+  }
+  if (channels.stressResponse) {
+    const score = Math.round(channels.stressResponse.score * 0.75 + posturePenalty * 0.15 + gazeInstability * 0.10);
+    channels.stressResponse = { ...channels.stressResponse, score, level: levelForScore(score), multimodalAdjusted: true };
+  }
+}
+
+const COMPOSITE_WEIGHTS = {
+  engagement: { weight: 0.18, polarity: 1 },
+  visualAttention: { weight: 0.18, polarity: 1 },
+  postureQuality: { weight: 0.14, polarity: 1 },
+  taskPerformance: { weight: 0.14, polarity: 1 },
+  emotionalValence: { weight: 0.10, polarity: 1 },
+  motorControl: { weight: 0.08, polarity: 1 },
+  cognitiveLoad: { weight: 0.06, polarity: -1 },
+  fatigueIndex: { weight: 0.06, polarity: -1 },
+  stressResponse: { weight: 0.06, polarity: -1 },
+};
+
+function computeWeightedComposite(channels) {
+  let totalWeight = 0;
+  let weighted = 0;
+  const contributors = {};
+  for (const [name, config] of Object.entries(COMPOSITE_WEIGHTS)) {
+    const channel = channels[name];
+    if (!channel) continue;
+    const effectiveScore = config.polarity < 0 ? 100 - channel.score : channel.score;
+    weighted += effectiveScore * config.weight;
+    totalWeight += config.weight;
+    contributors[name] = { weight: config.weight, polarity: config.polarity, effectiveScore };
+  }
+  const score = totalWeight > 0 ? Math.round(weighted / totalWeight) : 0;
+  return { score, level: levelForScore(score), contributors };
+}
+
+function annotateChannelConfidenceAndCaveats(channels, confidence) {
+  const baseConfidence = confidence?.score ?? 0;
+  for (const [name, channel] of Object.entries(channels)) {
+    const caveats = [...(channel.caveats ?? [])];
+    if (baseConfidence < 0.5 && !caveats.includes('low_capture_confidence')) caveats.push('low_capture_confidence');
+    const source = channel.source ?? (name === 'taskPerformance' ? 'task' : 'aus_facs');
+    channels[name] = {
+      ...channel,
+      confidence: round(channel.confidence ?? baseConfidence),
+      source,
+      caveats,
+    };
+  }
+}
+
 // ─── Main ───
 
 export function runEdgeAIInference({
   faceSamples = [], pointerSamples = [], taskEvents = [],
   calibrationProfile = null, runtime = {},
+  latestGaze = null, latestPosture = null, moveNetPose = null,
 } = {}) {
   const generatedAt = new Date().toISOString();
 
-  // Stage 1: Feature extraction
-  const features = buildFullFeatureVector({ faceSamples, pointerSamples, taskEvents, calibrationProfile });
-
-  // Stage 2: AUs → process
-  const usableSamples = faceSamples.filter(
-    s => s?.quality?.facePresent &&
-    s?.timestamp >= features.windowFrom &&
-    s?.timestamp <= features.windowTo
-  ).slice(-30); // only last 30 samples for responsiveness
-  const rawAUs = computeAUs(usableSamples);
-  const aus = processAllAUs(rawAUs);
+  // Stage 1-2: multimodal feature extraction + AU processing
+  const multimodal = buildMultimodalFeatures({
+    faceSamples,
+    pointerSamples,
+    taskEvents,
+    calibrationProfile,
+    latestGaze,
+    latestPosture,
+    moveNetPose,
+  });
+  const features = multimodal.temporal;
+  const aus = multimodal.aus;
 
   // Stage 3: Channel scoring
   const channels = {};
   for (const name of Object.keys(CHANNEL_LABELS)) {
-    if (name === 'taskPerformance') continue;
+    if (name === 'taskPerformance' || name === 'visualAttention' || name === 'postureQuality') continue;
     const raw = bayesianChannelScore(name, aus);
     const score = toPercent(raw);
     channels[name] = { score, level: levelForScore(score) };
   }
+  channels.visualAttention = scoreVisualAttention(multimodal);
+  channels.postureQuality = scorePostureQuality(multimodal);
+  applyMultimodalChannelModifiers(channels, multimodal);
   channels.taskPerformance = scoreTaskPerformance(features);
 
   // Stage 4: Emotions
-  const emotions = classifyEmotions(aus);
+  const emotions = multimodal.emotions;
 
   // Capture quality
-  const captureQuality = assessCaptureQuality(faceSamples);
+  const captureQuality = multimodal.captureQuality;
 
   // Confidence
   const fp = features.facial?.facePresenceRatio ?? 0;
@@ -141,9 +237,9 @@ export function runEdgeAIInference({
     },
   };
 
-  // Composite (simple average)
-  const scores = Object.values(channels).map(c => c.score);
-  const compositeScore = scores.length ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : 0;
+  // Channel confidence/caveats and objective composite
+  annotateChannelConfidenceAndCaveats(channels, confidence);
+  const composite = computeWeightedComposite(channels);
 
   // Calibrated channels
   recordSessionScores(Object.fromEntries(Object.entries(channels).map(([n, c]) => [n, c.score])));
@@ -162,12 +258,18 @@ export function runEdgeAIInference({
     featureExtraction: {
       durationMs: features.durationMs,
       facialSampleCount: features.facial?.sampleCount ?? 0,
-      usableFacialSamples: features.facial?.usableSampleCount ?? 0,
+      usableFacialSamples: multimodal.sampleCounts.usableFaceSamples,
     },
     auCount: Object.values(aus).filter(au => au.intensity > 0.01).length,
     channels: labeledChannels,
-    composite: { score: compositeScore, level: levelForScore(compositeScore) },
+    composite,
     confidence,
+    multimodal: {
+      gaze: multimodal.gaze,
+      posture: multimodal.posture,
+      upperBody: multimodal.upperBody,
+      quality: multimodal.quality,
+    },
     caveats: [
       'Modelo bayesiano basado en AUs del FACS.',
       'Uso exclusivo para revisión humana.',

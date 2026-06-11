@@ -23,6 +23,7 @@ export default function Dashboard({
   edgeAIResult,edgeChannels,edgeConfidence,edgeComposite,
   latestLandmarks,latestGaze,auRegionSummary,DEVICE_CONFIG,
   latestPose,moveNetPose,moveNet = {},
+  onCalibrateGazeCenter,onCalibratePostureUpright,manualCalStatus,
 }){
   const camRef=useRef(null), meshRef=useRef(null);
   const emotions=edgeAIResult?.emotions;
@@ -55,6 +56,11 @@ export default function Dashboard({
             <div><span>Presencia</span><strong>{pct(telemetry.facePresenceRatio)}</strong></div>
             <div><span>FPS</span><strong>{fmt(telemetry.fpsEstimate,1)}</strong></div>
             <div><span>Calibración</span><strong style={{color:calibrationProfile?.eligible?'var(--ink-green)':'var(--ink-yellow)'}}>{calStatusLabel}</strong></div>
+          </div>
+          <div style={{display:'flex',gap:'8px',alignItems:'center',margin:'10px 0 0',flexWrap:'wrap'}}>
+            <button type="button" className="secondary" onClick={onCalibrateGazeCenter} disabled={!latestLandmarks} style={{fontSize:'0.68rem',padding:'6px 10px'}}>Calibrar mirada centro</button>
+            <button type="button" className="secondary" onClick={onCalibratePostureUpright} disabled={!latestLandmarks} style={{fontSize:'0.68rem',padding:'6px 10px'}}>Calibrar postura erguida</button>
+            {manualCalStatus&&<span className="caption" style={{fontSize:'0.62rem'}}>{manualCalStatus}</span>}
           </div>
           {captureQ&&(
             <div className="capture-quality-bar">
@@ -149,10 +155,11 @@ export default function Dashboard({
               {moveNetPose ? (
                 <div style={{background:'rgba(77,212,172,0.1)',borderRadius:'10px',padding:'8px 12px',textAlign:'center',fontSize:'0.62rem',color:'#4dd4ac'}}>
                   Hombros (MoveNet): {moveNetPose.shoulderAngle.toFixed(1)}° · simetría {Math.round(moveNetPose.symmetry*100)}% · conf {Math.round(moveNetPose.confidence*100)}%
+                  <span style={{display:'block',marginTop:'3px'}}>cobertura {Math.round((moveNetPose.upperBodyCoverage??0)*100)}% · brazos visibles {moveNetPose.armsVisible??0}/4 · actividad brazos {Math.round((moveNetPose.armActivity??0)*100)}%</span>
                 </div>
               ) : (
                 <div style={{background:'rgba(255,255,255,0.03)',borderRadius:'10px',padding:'8px 12px',textAlign:'center',fontSize:'0.62rem',color:'#9fb0c2'}}>
-                  MoveNet: {moveNet?.status??'idle'}{moveNet?.error?` · ${moveNet.error}`:''} · sin hombros detectados
+                  MoveNet: {moveNet?.status??'idle'}{moveNet?.error?` · ${moveNet.error}`:''} · sin hombros detectados. Aléjate hasta que ambos hombros entren en cuadro.
                 </div>
               )}
 

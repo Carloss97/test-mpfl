@@ -25,6 +25,17 @@ function centroid2D(landmarks, indices) {
   return count ? { x: sx / count, y: sy / count } : { x: 0.5, y: 0.5 };
 }
 
+function irisNoseDelta(landmarks) {
+  if (!landmarks || landmarks.length < 478 * 3) return null;
+  const leftIris = centroid2D(landmarks, LEFT_IRIS);
+  const rightIris = centroid2D(landmarks, RIGHT_IRIS);
+  const ref = centroid2D(landmarks, [NOSE_BRIDGE]);
+  return {
+    dx: ((leftIris.x - ref.x) + (rightIris.x - ref.x)) / 2,
+    dy: ((leftIris.y - ref.y) + (rightIris.y - ref.y)) / 2,
+  };
+}
+
 // Auto-calibration
 let baselineX = null, baselineY = null;
 let calibrationFrames = 0;
@@ -41,17 +52,26 @@ export function resetGazeEstimator() {
   smoothed = { x: 0.5, y: 0.5, conf: 0 };
 }
 
+export function calibrateGazeCenter(landmarks) {
+  const delta = irisNoseDelta(landmarks);
+  if (!delta) return { ok: false, reason: 'insufficient_iris_landmarks' };
+  baselineX = delta.dx;
+  baselineY = delta.dy;
+  calibrationFrames = CALIBRATION_WINDOW;
+  smoothed = { x: 0.5, y: 0.5, conf: 1 };
+  return { ok: true, baselineX: round(baselineX), baselineY: round(baselineY), calibrationFrames };
+}
+
 export function estimateGaze(landmarks) {
   if (!landmarks || landmarks.length < 478 * 3) {
     return { screenX: 0.5, screenY: 0.5, lookingAtScreen: false, confidence: 0 };
   }
 
-  const leftIris = centroid2D(landmarks, LEFT_IRIS);
-  const rightIris = centroid2D(landmarks, RIGHT_IRIS);
-  const ref = centroid2D(landmarks, [NOSE_BRIDGE]);
-
-  const dx = ((leftIris.x - ref.x) + (rightIris.x - ref.x)) / 2;
-  const dy = ((leftIris.y - ref.y) + (rightIris.y - ref.y)) / 2;
+  const delta = irisNoseDelta(landmarks);
+  if (!delta) {
+    return { screenX: 0.5, screenY: 0.5, lookingAtScreen: false, confidence: 0 };
+  }
+  const { dx, dy } = delta;
 
   // Auto-calibrate baseline
   if (calibrationFrames < CALIBRATION_WINDOW) {

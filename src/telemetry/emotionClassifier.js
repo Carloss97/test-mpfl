@@ -58,6 +58,66 @@ const EMOTION_LIKELIHOODS = {
   },
 };
 
+function au(aus, code) {
+  return clamp(aus[code]?.intensity ?? 0);
+}
+
+function anyStrong(aus, codes, threshold = 0.12) {
+  return codes.some((code) => au(aus, code) >= threshold);
+}
+
+function pairEvidence(aus, codes, threshold = 0.12) {
+  return codes.reduce((sum, code) => sum + au(aus, code), 0) >= threshold;
+}
+
+// Minimal FACS plausibility gates. These do NOT create emotions by themselves;
+// they only prevent a single weak AU from dominating the softmax.
+function facsRuleMultiplier(emotion, aus) {
+  switch (emotion) {
+    case 'happiness': {
+      const smile = au(aus, 'AU12');
+      const cheek = au(aus, 'AU6');
+      if (smile < 0.10) return 0.35;
+      return cheek >= 0.08 ? 1.25 : 0.90;
+    }
+    case 'anger': {
+      const brow = au(aus, 'AU4');
+      const tension = Math.max(au(aus, 'AU7'), au(aus, 'AU23'));
+      if (brow < 0.10) return 0.45;
+      if (tension < 0.10) return 0.30;
+      return 1.20;
+    }
+    case 'fear': {
+      const upper = pairEvidence(aus, ['AU1', 'AU2', 'AU5'], 0.18);
+      const lower = anyStrong(aus, ['AU20', 'AU26'], 0.10);
+      if (!upper) return 0.45;
+      if (!lower) return 0.55;
+      return 1.15;
+    }
+    case 'surprise': {
+      const brows = pairEvidence(aus, ['AU1', 'AU2'], 0.16);
+      const eyesOrJaw = anyStrong(aus, ['AU5', 'AU26'], 0.10);
+      if (!brows && !eyesOrJaw) return 0.40;
+      if (!brows || !eyesOrJaw) return 0.75;
+      return 1.15;
+    }
+    case 'sadness': {
+      if (anyStrong(aus, ['AU15', 'AU17'], 0.10)) return 1.15;
+      if (pairEvidence(aus, ['AU1', 'AU4'], 0.18)) return 0.90;
+      return 0.55;
+    }
+    case 'disgust': {
+      return au(aus, 'AU9') >= 0.10 ? 1.20 : 0.45;
+    }
+    case 'contempt': {
+      const asymmetric = Math.abs(au(aus, 'AU_L12') - au(aus, 'AU_R12')) + Math.abs(au(aus, 'AU_L14') - au(aus, 'AU_R14'));
+      return asymmetric >= 0.12 ? 1.15 : 0.50;
+    }
+    default:
+      return 1;
+  }
+}
+
 /**
  * Calcula probabilidad Naive Bayes para todas las emociones.
  *
@@ -104,7 +164,7 @@ export function classifyEmotions(aus = {}) {
       logProb += Math.log(Math.max(0.1, likelihood)) * intensity;
     }
 
-    logProbs[emotion] = logProb;
+    logProbs[emotion] = logProb + Math.log(facsRuleMultiplier(emotion, aus));
   }
 
   // Convert non-neutral log-probs to normalized weights via softmax.

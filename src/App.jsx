@@ -4,15 +4,16 @@ import { buildGestureInsights, AU_MAP, AU_REGIONS, GROUP_LABELS } from './teleme
 import { computeInsightsFromAUs } from './telemetry/insightMetrics.js';
 import { computeEnhancedAUs, resetAUCache } from './telemetry/auEnhancer.js';
 import { setAUBaseline } from './telemetry/auProcessor.js';
-import { estimateGaze, resetGazeEstimator } from './telemetry/gazeEstimator.js';
+import { estimateGaze, resetGazeEstimator, calibrateGazeCenter } from './telemetry/gazeEstimator.js';
 import { useFaceLandmarkerWorker } from './telemetry/useFaceLandmarkerWorker.js';
-import { estimateUpperBodyPosture, resetUpperBodyPostureState } from './telemetry/upperBodyPosture.js';
+import { estimateUpperBodyPosture, resetUpperBodyPostureState, calibrateUpperBodyPostureUpright } from './telemetry/upperBodyPosture.js';
 import { useMoveNet } from './telemetry/useMoveNet.js';
 import { buildFusionPayload } from './telemetry/payload.js';
 import { buildCalibrationProfile } from './telemetry/microgestureFeatures.js';
 import { requestCameraWithFallback, stopStream } from './telemetry/adaptiveCapture.js';
 import { adaptiveCalibrationSamples, estimateLightingQuality, canCalibrate } from './telemetry/lightingAdapter.js';
 import { runEdgeAIInference } from './telemetry/edgeAiEngine.js';
+import { createEmotionTemporalSmoother } from './telemetry/emotionTemporalSmoother.js';
 import { usePipelineWorker } from './telemetry/usePipelineWorker.js';
 import Dashboard from './components/Dashboard.jsx';
 import StickyHeader from './components/StickyHeader.jsx';
@@ -56,6 +57,7 @@ export default function App() {
   const sessionStartRef = useRef(0);
   const calibrationTimerRef = useRef(null);
   const streamRef = useRef(null);
+  const emotionSmootherRef = useRef(createEmotionTemporalSmoother());
 
   const [isCameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState(null);
@@ -81,6 +83,7 @@ export default function App() {
   const [sessions, setSessions] = useState([]);
   const [reportTab, setReportTab] = useState('markdown');
   const [reportFormat, setReportFormat] = useState('markdown');
+  const [manualCalStatus, setManualCalStatus] = useState(null);
 
   const recordFaceSample = useCallback((sample, landmarks) => {
     if (!sample?.blendshapes) return;
@@ -141,12 +144,14 @@ export default function App() {
       resetAUCache();
       resetGazeEstimator();
       resetUpperBodyPostureState();
+      emotionSmootherRef.current.reset();
       sessionStartRef.current = performance.now();
       setCalibrationProfile(null);
       setIsCalibrating(false);
       setShowReport(false);
       setReportContent(null);
       setShowReportModal(false);
+      setManualCalStatus(null);
       setLatestFaceSample(null);
       setLatestLandmarks(null);
       setBlendshapeNames([]);
@@ -160,6 +165,16 @@ export default function App() {
     setLatestFaceSample(null);
     setLatestLandmarks(null);
   }, []);
+
+  const handleCalibrateGazeCenter = useCallback(() => {
+    const result = calibrateGazeCenter(latestLandmarks);
+    setManualCalStatus(result.ok ? 'Mirada calibrada al centro' : 'No hay iris/rostro suficiente para calibrar mirada');
+  }, [latestLandmarks]);
+
+  const handleCalibratePostureUpright = useCallback(() => {
+    const result = calibrateUpperBodyPostureUpright(latestLandmarks);
+    setManualCalStatus(result.ok ? 'Postura erguida calibrada' : 'No hay rostro suficiente para calibrar postura');
+  }, [latestLandmarks]);
 
   const switchCamera = useCallback(async (deviceId) => {
     setSelectedDeviceId(deviceId);
@@ -260,7 +275,11 @@ export default function App() {
     const insights = buildGestureInsights(recentSamples);
     // Override metric proxies with AU-based calculations
     if (recentSamples.length > 0 && insights.auScores) {
-      const auMetrics = computeInsightsFromAUs(insights.auScores, facePresenceRatio);
+      const auMetrics = computeInsightsFromAUs(insights.auScores, facePresenceRatio, {
+        gaze: latestGaze,
+        posture: latestPose,
+        upperBody: moveNetPose,
+      });
       Object.assign(insights, auMetrics);
     }
     if (recentSamples.length > 0) {
@@ -268,7 +287,7 @@ export default function App() {
       insights.enhancedAUs = enhanced;
     }
     return { sampleCount: allSamples.length, recentCount, facePresenceRatio, meanConfidence, fpsEstimate, insights };
-  }, [latestFaceSample]);
+  }, [latestFaceSample, latestGaze, latestPose, moveNetPose]);
 
   // ─── Edge AI Inference (direct, no worker) ───
   const edgeAIResult = useMemo(() => {
@@ -281,10 +300,13 @@ export default function App() {
         taskEvents: taskEventsRef.current,
         calibrationProfile,
         runtime: { delegate: faceWorker.delegate ?? 'CPU' },
+        latestGaze,
+        latestPosture: latestPose,
+        moveNetPose,
       });
-      return result;
+      return { ...result, emotions: emotionSmootherRef.current.smooth(result.emotions, { timestamp: latestFaceSample?.timestamp ?? null }) };
     } catch (e) { console.error('Edge AI inference failed:', e); return null; }
-  }, [latestFaceSample, calibrationProfile, faceWorker.delegate, taskEventCount, faceSamplesRef.current?.length]);
+  }, [latestFaceSample, calibrationProfile, faceWorker.delegate, taskEventCount, faceSamplesRef.current?.length, latestGaze, latestPose, moveNetPose]);
 
   // ─── Pipeline Worker (future: optional, fallback to direct) ───
   // const pipeline = usePipelineWorker({ ... });
@@ -410,6 +432,9 @@ export default function App() {
           edgeAIResult={edgeAIResult} edgeChannels={edgeChannels} edgeConfidence={edgeConfidence} edgeComposite={edgeComposite}
           latestLandmarks={latestLandmarks} latestGaze={latestGaze} latestPose={latestPose} moveNetPose={moveNetPose} moveNet={moveNet} auRegionSummary={telemetry.insights?.auRegionSummary}
           DEVICE_CONFIG={DEVICE_CONFIG}
+          onCalibrateGazeCenter={handleCalibrateGazeCenter}
+          onCalibratePostureUpright={handleCalibratePostureUpright}
+          manualCalStatus={manualCalStatus}
         />
       ) : (
         <section className="grid-two">

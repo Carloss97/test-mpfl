@@ -1,130 +1,128 @@
 import React, { useState } from 'react';
 
-function Section({title,children}){
-  const [open,setOpen]=useState(false);
-  return(
+function Section({ title, children }) {
+  const [open, setOpen] = useState(false);
+  return (
     <div className="guide-section">
-      <div className="guide-hdr" onClick={()=>setOpen(!open)} style={{cursor:'pointer',userSelect:'none'}}>
-        <span className="guide-arrow">{open?'▼':'▶'}</span>
+      <div className="guide-hdr" onClick={() => setOpen(!open)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+        <span className="guide-arrow">{open ? '▼' : '▶'}</span>
         <span className="guide-title">{title}</span>
       </div>
-      {open&&<div className="guide-body">{children}</div>}
+      {open && <div className="guide-body">{children}</div>}
     </div>
   );
 }
 
-export default function ReferenceGuide(){
-  return(
-    <section className="panel reference-guide" style={{marginTop:'32px'}}>
-      <div className="panel-heading"><h2> Guía de referencia</h2></div>
-      <p className="caption">Documentación de todos los indicadores con sus fuentes académicas y fórmulas de cálculo.</p>
+export default function ReferenceGuide() {
+  return (
+    <section className="panel reference-guide" style={{ marginTop: '32px' }}>
+      <div className="panel-heading"><h2>Guía de referencia</h2></div>
+      <p className="caption">Documentación de indicadores, fuentes, fórmulas y caveats de la arquitectura multimodal actual.</p>
 
-      <Section title="Edge AI v8 — Pipeline bayesiano">
-        <p className="caption">El pipeline procesa AUs en 4 etapas.</p>
+      <Section title="Edge AI v8.1 multimodal">
+        <p className="caption">Pipeline local 100% client-side. El schema externo sigue siendo edge_ai_model_output_v8; el modelo interno es v8.1 multimodal.</p>
         <table className="guide-table">
           <thead><tr><th>Etapa</th><th>Módulo</th><th>Descripción</th></tr></thead>
           <tbody>
-            <tr><td>1. AUs crudas</td><td>gestureInsights.js</td><td>computeAUs(): promedia blendshapes de MediaPipe</td></tr>
-            <tr><td>2. Procesamiento</td><td>auProcessor.js</td><td>processAllAUs(): baseline subtraction + ganancia adaptativa 1.5-3.0×</td></tr>
-            <tr><td>3. Canales</td><td>edgeAiEngine.js</td><td>Bayesian scoring: sigmoide (k=8)</td></tr>
-            <tr><td>4. Emociones</td><td>emotionClassifier.js</td><td>Naive Bayes con softmax, 8 clases</td></tr>
+            <tr><td>Features comunes</td><td>multimodalFeatures.js</td><td>Une temporal features, AUs, emociones, gaze, postura, MoveNet, tarea y calidad.</td></tr>
+            <tr><td>AUs crudas</td><td>gestureInsights.js</td><td>Mapeo MediaPipe blendshapes → FACS/AUs proxy.</td></tr>
+            <tr><td>AUs procesadas</td><td>auProcessor.js</td><td>Baseline subtraction 60% + ganancia adaptativa. Sin double boost.</td></tr>
+            <tr><td>Canales</td><td>edgeAiEngine.js</td><td>Bayes AU + visualAttention + postureQuality + ajustes gaze/postura/MoveNet.</td></tr>
+            <tr><td>Composite</td><td>edgeAiEngine.js</td><td>Promedio ponderado con polaridad negativa para carga cognitiva, fatiga y estrés.</td></tr>
           </tbody>
         </table>
       </Section>
 
       <Section title="Canales Edge AI">
-        <p className="caption">7 canales. Cada uno usa AUs específicas con likelihood ratios.</p>
+        <p className="caption">Canales observacionales para revisión humana. No son diagnóstico ni decisión automatizada.</p>
         <table className="guide-table">
-          <thead><tr><th>Canal</th><th>AUs principales</th><th>Referencia</th></tr></thead>
+          <thead><tr><th>Canal</th><th>Inputs principales</th><th>Caveat</th></tr></thead>
           <tbody>
-            <tr><td>Carga Cognitiva</td><td>AU4 (3×), AU7 (3×), AU23 (2×)</td><td>Palinko et al. (2010)</td></tr>
-            <tr><td>Valencia Emocional</td><td>AU6 (4×), AU12 (4×)</td><td>Russell (1980)</td></tr>
-            <tr><td>Control Motor</td><td>Simetría AU L/R</td><td>Fitts (1954)</td></tr>
-            <tr><td>Engagement</td><td>AU5 (4×), AU1 (2×), AU45 (0.15×)</td><td>D'Mello & Graesser (2012)</td></tr>
-            <tr><td>Estrés</td><td>AU23 (4×), AU4 (2.5×), AU9 (2.5×)</td><td>Giannakakis et al. (2017)</td></tr>
-            <tr><td>Fatiga</td><td>AU45 (5×), AU43 (3.5×), AU7 (2.5×)</td><td>Dinges et al. (1998)</td></tr>
-            <tr><td>Rendimiento</td><td>Accuracy, RT, completion</td><td>Posner (1978)</td></tr>
+            <tr><td>Carga Cognitiva</td><td>AU4, AU7, AU23 + gaze/posture/task penalty</td><td>Alto reduce composite.</td></tr>
+            <tr><td>Valencia Emocional</td><td>AU6/AU12 vs AU4/AU15/AU9</td><td>Proxy circumplex Russell.</td></tr>
+            <tr><td>Control Motor</td><td>Simetría AU L/R</td><td>Facial proxy, no motor clínico.</td></tr>
+            <tr><td>Engagement</td><td>AUs + visualAttention + postureQuality</td><td>Depende fuertemente de gaze.</td></tr>
+            <tr><td>Estrés</td><td>AU4/AU23/AU9 + postura + gaze instability</td><td>Alto reduce composite.</td></tr>
+            <tr><td>Fatiga</td><td>AU45/AU43/AU7 + headForward + gaze instability</td><td>Alto reduce composite.</td></tr>
+            <tr><td>Atención Visual</td><td>gaze lookingAtScreen + confidence</td><td>Si gaze no está calibrado, baja confianza.</td></tr>
+            <tr><td>Calidad Postural</td><td>postureScore + MoveNet shoulder symmetry</td><td>MoveNet requiere hombros visibles.</td></tr>
+            <tr><td>Rendimiento</td><td>Accuracy, RT, completion</td><td>Solo cuando hay tarea.</td></tr>
           </tbody>
         </table>
       </Section>
 
-      <Section title="Emociones básicas">
-        <p className="caption">Naive Bayes con softmax. Referencia: Ekman & Friesen (1978).</p>
+      <Section title="Emociones básicas v2">
+        <p className="caption">Naive Bayes con neutral gate, reglas FACS mínimas e histéresis temporal en UI.</p>
         <table className="guide-table">
-          <thead><tr><th>Emoción</th><th>AUs principales</th></tr></thead>
+          <thead><tr><th>Emoción</th><th>Regla principal</th><th>Control anti-falso positivo</th></tr></thead>
           <tbody>
-            <tr><td>Alegría</td><td>AU6 (6×), AU12 (6×)</td></tr>
-            <tr><td>Tristeza</td><td>AU15 (4.5×), AU4 (2.5×), AU1 (3×)</td></tr>
-            <tr><td>Sorpresa</td><td>AU5 (4×), AU1 (3.5×), AU2 (3.5×), AU26 (3.5×)</td></tr>
-            <tr><td>Miedo</td><td>AU5 (2.5×), AU20 (3×), AU1 (2×)</td></tr>
-            <tr><td>Enojo</td><td>AU4 (3×), AU23 (3.5×), AU7 (3×)</td></tr>
-            <tr><td>Disgusto</td><td>AU9 (7×), AU15 (3×), AU17 (3×)</td></tr>
-            <tr><td>Desprecio</td><td>Asimetría AU12 L/R</td></tr>
+            <tr><td>Neutral</td><td>Dominante si energía AU es baja</td><td>Evita forzar una emoción débil.</td></tr>
+            <tr><td>Alegría</td><td>AU12 requerido; AU6 refuerza</td><td>AU12 bajo penaliza felicidad.</td></tr>
+            <tr><td>Enojo</td><td>AU4 + AU7/AU23</td><td>AU4 aislado no basta.</td></tr>
+            <tr><td>Sorpresa</td><td>AU1/AU2 + AU5/AU26</td><td>Ojos o cejas aisladas se penalizan.</td></tr>
+            <tr><td>Miedo</td><td>Upper face + AU20/AU26</td><td>AU5/AU4 aislados se penalizan.</td></tr>
+            <tr><td>Disgusto</td><td>AU9 dominante</td><td>Sin AU9 se reduce probabilidad.</td></tr>
+            <tr><td>Temporal</td><td>emotionTemporalSmoother.js</td><td>Exige frames estables antes de cambiar emoción.</td></tr>
           </tbody>
         </table>
       </Section>
 
-      <Section title="Métricas">
-        <p className="caption">0 = mínimo, 1 = máximo. Umbrales orientativos.</p>
+      <Section title="Métricas v3 multimodales">
+        <p className="caption">Si no hay contexto multimodal, usa fallback AU-only. Si hay gaze/postura/MoveNet, provenance = multimodal_v3.</p>
         <table className="guide-table">
-          <thead><tr><th>Métrica</th><th>AUs</th><th>Interpretación</th></tr></thead>
+          <thead><tr><th>Métrica</th><th>Inputs</th><th>Interpretación</th></tr></thead>
           <tbody>
-            <tr><td>Carga Cognitiva</td><td>AU4, AU7, AU5, AU23</td><td>{'>'}50%: esfuerzo mental (Palinko 2010)</td></tr>
-            <tr><td>Tensión</td><td>AU4, AU7, AU23</td><td>{'>'}50%: estrés</td></tr>
-            <tr><td>Atención</td><td>AU45, AU5, presencia</td><td>{'>'}60%: atención sostenida</td></tr>
-            <tr><td>Fatiga</td><td>AU45, AU7, AU43</td><td>{'>'}30%: detectable (Dinges 1998)</td></tr>
-            <tr><td>Estrés</td><td>AU4, AU23, AU9, AU27</td><td>{'>'}40%: elevado</td></tr>
-            <tr><td>Calma</td><td>Inversa tensión+estrés</td><td>{'>'}70%: relajado</td></tr>
-            <tr><td>Engagement</td><td>AU45, presencia, atención</td><td>{'>'}60%: comprometido</td></tr>
-            <tr><td>Valencia</td><td>AU6+12 vs AU4+15+9</td><td>{'>'}0.5: positiva (Russell 1980)</td></tr>
-            <tr><td>Arousal</td><td>AU1, AU2, AU5, AU26</td><td>{'>'}0.5: alta excitación</td></tr>
+            <tr><td>Atención</td><td>gaze focus + postura + AU45/AU5 + presencia</td><td>{'>'}60%: atención sostenida.</td></tr>
+            <tr><td>Fatiga</td><td>AU45/AU43/AU7 + headForward + gaze instability</td><td>Más alto = mayor fatiga observable.</td></tr>
+            <tr><td>Estrés</td><td>AU4/AU23/AU9/AU27 + postura + gaze + task error</td><td>Proxy de tensión, no diagnóstico.</td></tr>
+            <tr><td>Calma</td><td>Inversa ponderada de tensión/estrés/fatiga/postura</td><td>Más alto = menor tensión observable.</td></tr>
+            <tr><td>Engagement</td><td>atención + gaze + postura + shoulder symmetry</td><td>Más alto = más involucramiento visible.</td></tr>
+            <tr><td>Boredom</td><td>Inverso engagement + blink + gaze off-screen</td><td>Más alto = menor foco/actividad.</td></tr>
           </tbody>
         </table>
       </Section>
 
-      <Section title="Gaze Tracking">
-        <p className="caption">Estimación de mirada desde iris landmarks (468-477).</p>
+      <Section title="Gaze Tracking y calibración">
+        <p className="caption">Iris landmarks 468-477 contra nose bridge 6. Auto-calibración inicial y botón manual de centro.</p>
         <table className="guide-table">
-          <thead><tr><th>Componente</th><th>Descripción</th></tr></thead>
+          <thead><tr><th>Componente</th><th>Método</th><th>Caveat</th></tr></thead>
           <tbody>
-            <tr><td>Método</td><td>Centroide iris vs nose bridge (landmark 6). Auto-calibración 60 frames</td></tr>
-            <tr><td>Suavizado</td><td>EMA (α=0.12)</td></tr>
-            <tr><td>Precisión</td><td>~2-5° error angular con webcam</td></tr>
-            <tr><td>Métricas</td><td>screenFocusRatio, gazeStability, attentionScore</td></tr>
+            <tr><td>Baseline</td><td>Primeros 60 frames o botón “Calibrar mirada centro”</td><td>Debe mirar al centro durante calibración.</td></tr>
+            <tr><td>Coordenadas</td><td>delta iris-nose × SCALE=30</td><td>No es eye tracker absoluto.</td></tr>
+            <tr><td>Suavizado</td><td>EMA α=0.12</td><td>Reduce jitter, añade latencia leve.</td></tr>
+            <tr><td>Métricas</td><td>lookingAtScreen, confidence, distractionScore</td><td>Usado por atención/engagement.</td></tr>
           </tbody>
         </table>
       </Section>
 
-      <Section title="Body Pose (upper body)">
-        <p className="caption">Estimación desde landmarks faciales. Sin modelos adicionales.</p>
+      <Section title="Postura, cabeza y MoveNet">
+        <p className="caption">La postura facial estima cabeza; MoveNet aporta hombros, codos y muñecas reales cuando entran en cuadro.</p>
         <table className="guide-table">
-          <thead><tr><th>Métrica</th><th>Método</th><th>Interpretación</th></tr></thead>
+          <thead><tr><th>Señal</th><th>Método</th><th>Uso</th></tr></thead>
           <tbody>
-            <tr><td>Postura general</td><td>1 − tilt×0.4 − forward×0.3 − asym×0.3</td><td>{'>'}70%: buena postura</td></tr>
-            <tr><td>Inclinación lateral</td><td>Ángulo oreja-oreja vs horizontal</td><td>0° = recto, ±15° = inclinado</td></tr>
-            <tr><td>Inclinación frontal</td><td>Aspect ratio facial (altura/ancho)</td><td>Forward head si AR {'>'} 1.5</td></tr>
-            <tr><td>Asimetría</td><td>Desviación nariz vs centro</td><td>{'>'}30%: cabeza girada</td></tr>
-            <tr><td>Estabilidad</td><td>Dispersión jawline</td><td>Baja con movimiento</td></tr>
-            <tr><td>Hombros (est.)</td><td>Geométrico: chin.y + faceHeight×2.5</td><td>Estimación sin modelo</td></tr>
+            <tr><td>Head tilt</td><td>Ángulo oreja-oreja 234→454</td><td>Inclinación lateral.</td></tr>
+            <tr><td>Head forward</td><td>AR baseline máximo; botón “Calibrar postura erguida”</td><td>Penaliza postura/fatiga.</td></tr>
+            <tr><td>Posture score</td><td>1 − tilt×0.32 − forward×0.42 − asym×0.20 − instability×0.12</td><td>Proxy facial de postura.</td></tr>
+            <tr><td>MoveNet</td><td>COCO17: hombros, codos, muñecas</td><td>shoulder symmetry, upperBodyCoverage, armsVisible, armActivity.</td></tr>
+            <tr><td>Sin fallback</td><td>No se estiman hombros con FaceMesh</td><td>Si no detecta: aléjate hasta ver ambos hombros.</td></tr>
           </tbody>
         </table>
       </Section>
 
-      <Section title="Normalización">
+      <Section title="Normalización y privacidad">
         <table className="guide-table">
-          <thead><tr><th>Técnica</th><th>Módulo</th><th>Referencia</th></tr></thead>
+          <thead><tr><th>Técnica</th><th>Módulo</th><th>Estado</th></tr></thead>
           <tbody>
-            <tr><td>Z-score</td><td>edgeCalibration.js</td><td>Welford (1962)</td></tr>
-            <tr><td>EMA suavizado</td><td>auEnhancer.js</td><td>Roberts (1959), α=0.35</td></tr>
-            <tr><td>Platt Scaling</td><td>plattScaling.js</td><td>Platt (1999)</td></tr>
-            <tr><td>Lighting Adapter</td><td>lightingAdapter.js</td><td>Calibración 2-6s</td></tr>
-            <tr><td>Welford Algorithm</td><td>temporalFeatures.js</td><td>Single-pass O(n)</td></tr>
+            <tr><td>Z-score rolling</td><td>edgeCalibration.js</td><td>Normaliza canales.</td></tr>
+            <tr><td>Welford O(n)</td><td>temporalFeatures.js</td><td>Features temporales eficientes.</td></tr>
+            <tr><td>Sanitización</td><td>samplePrivacy.js</td><td>No guarda video/frames/landmarks crudos.</td></tr>
+            <tr><td>Payload compacto</td><td>payload.js</td><td>Omite bloque multimodal live.</td></tr>
           </tbody>
         </table>
       </Section>
 
       <Section title="Tecnologías">
-        <p>MediaPipe Face Landmarker (Google, 2023) · 478 landmarks + 52 blendshapes + iris · React 19 + Vite 8 · Web Workers · IndexedDB · auProcessor + emotionClassifier (Naive Bayes) · edgeCalibration (z-scores) · upperBodyPosture + MoveNet Lightning</p>
+        <p>React 19 · Vite 8 · MediaPipe Face Landmarker · TF.js MoveNet Lightning · Web Workers para FaceLandmarker · IndexedDB · FACS/AUs proxy · Edge AI bayesiano multimodal local.</p>
       </Section>
     </section>
   );

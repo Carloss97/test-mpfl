@@ -1,114 +1,86 @@
 # Guía de referencia — KRUMM Edge Fusion
 
-Documentación de todos los indicadores con sus fuentes académicas y fórmulas de cálculo.
+Documento sincronizado con la arquitectura multimodal actual.
 
----
+## Edge AI v8.1 multimodal
 
-## Edge AI v8 — Pipeline bayesiano
-
-El pipeline procesa AUs en 4 etapas. Cada etapa tiene un módulo independiente.
+El pipeline sigue exportando `edge_ai_model_output_v8`, pero el modelo interno es `krumm-edge-ai-v8.1.0-multimodal`.
 
 | Etapa | Módulo | Descripción |
-|-------|--------|-------------|
-| 1. AUs crudas | `gestureInsights.js` | `computeAUs()`: promedia blendshapes de MediaPipe sobre muestras con rostro |
-| 2. Procesamiento | `auProcessor.js` | `processAllAUs()`: resta baseline (80%) + ganancia adaptativa (1.5-3.0×) |
-| 3. Canales | `edgeAiEngine.js` | Bayesian scoring: log-likelihood por AU → sigmoide (k=8) → score 0-100% |
-| 4. Emociones | `emotionClassifier.js` | Naive Bayes con softmax sobre 8 clases |
-
----
+|---|---|---|
+| Features comunes | `multimodalFeatures.js` | Une temporal features, AUs, emociones, gaze, postura, MoveNet, tarea y calidad. |
+| AUs crudas | `gestureInsights.js` | Mapeo MediaPipe blendshapes → FACS/AUs proxy. |
+| AUs procesadas | `auProcessor.js` | Baseline subtraction 60% + ganancia adaptativa; sin double boost. |
+| Canales | `edgeAiEngine.js` | Bayes AU + `visualAttention` + `postureQuality` + ajustes gaze/postura/MoveNet. |
+| Composite | `edgeAiEngine.js` | Promedio ponderado con polaridad negativa para carga cognitiva, fatiga y estrés. |
 
 ## Canales Edge AI
 
-7 canales. Cada uno estima una dimensión cognitiva/emocional usando AUs específicas.
+| Canal | Inputs principales | Caveat |
+|---|---|---|
+| Carga Cognitiva | AU4, AU7, AU23 + gaze/posture/task penalty | Alto reduce composite. |
+| Valencia Emocional | AU6/AU12 vs AU4/AU15/AU9 | Proxy circumplex Russell. |
+| Control Motor | Simetría AU L/R | Facial proxy, no motor clínico. |
+| Engagement | AUs + visualAttention + postureQuality | Depende de gaze. |
+| Estrés | AU4/AU23/AU9 + postura + gaze instability | Alto reduce composite. |
+| Fatiga | AU45/AU43/AU7 + headForward + gaze instability | Alto reduce composite. |
+| Atención Visual | gaze lookingAtScreen + confidence | Si gaze no está calibrado, baja confianza. |
+| Calidad Postural | postureScore + MoveNet shoulder symmetry | MoveNet requiere hombros visibles. |
+| Rendimiento | Accuracy, RT, completion | Solo cuando hay tarea. |
 
-| Canal | AUs principales (ratio) | Referencia |
-|-------|------------------------|------------|
-| Carga Cognitiva | AU4 (3×), AU7 (3×), AU23 (2×) | Palinko et al. (2010) |
-| Valencia Emocional | AU6 (4×), AU12 (4×) positivo; AU4 (0.2×) negativo | Russell (1980) |
-| Control Motor | Simetría AU L/R | Fitts (1954) |
-| Engagement | AU5 (4×), AU1 (2×), AU45 (0.15×) | D'Mello & Graesser (2012) |
-| Estrés | AU23 (4×), AU4 (2.5×), AU9 (2.5×) | Giannakakis et al. (2017) |
-| Fatiga | AU45 (5×), AU43 (3.5×), AU7 (2.5×) | Dinges et al. (1998) |
-| Rendimiento | Accuracy, RT, completion (datos reales) | Posner (1978) |
+## Emociones básicas v2
 
----
+| Emoción | Regla principal | Control anti-falso positivo |
+|---|---|---|
+| Neutral | Dominante si energía AU es baja | Evita forzar una emoción débil. |
+| Alegría | AU12 requerido; AU6 refuerza | AU12 bajo penaliza felicidad. |
+| Enojo | AU4 + AU7/AU23 | AU4 aislado no basta. |
+| Sorpresa | AU1/AU2 + AU5/AU26 | Ojos o cejas aisladas se penalizan. |
+| Miedo | Upper face + AU20/AU26 | AU5/AU4 aislados se penalizan. |
+| Disgusto | AU9 dominante | Sin AU9 se reduce probabilidad. |
+| Temporal | `emotionTemporalSmoother.js` | Exige frames estables antes de cambiar emoción. |
 
-## Emociones básicas
+## Métricas v3 multimodales
 
-Clasificador Naive Bayes con softmax. 8 clases (7 emociones + neutral). Referencia: Ekman & Friesen (1978), Ekman (1992).
+Si no hay contexto multimodal, `computeInsightsFromAUs()` conserva fallback `au_only_v2`. Si hay gaze/postura/MoveNet, devuelve `provenance: multimodal_v3`.
 
-| Emoción | AUs principales (ratio) |
-|---------|------------------------|
-| Alegría | AU6 (6×), AU12 (6×) |
-| Tristeza | AU15 (4.5×), AU4 (4×), AU1 (3×) |
-| Sorpresa | AU5 (4×), AU1 (3.5×), AU2 (3.5×), AU26 (3.5×) |
-| Miedo | AU5 (3×), AU20 (3×), AU1 (2.5×), AU7 (2.5×), AU4 (2×), AU2 (2.5×), AU26 (2×) |
-| Enojo | AU4 (5×), AU23 (4×), AU7 (3.5×), AU5 (2×) |
-| Disgusto | AU9 (7×), AU15 (3×), AU17 (3×) |
-| Desprecio | Asimetría AU12 L/R, AU14 L/R |
+| Métrica | Inputs | Interpretación |
+|---|---|---|
+| Atención | gaze focus + postura + AU45/AU5 + presencia | >60%: atención sostenida. |
+| Fatiga | AU45/AU43/AU7 + headForward + gaze instability | Más alto = mayor fatiga observable. |
+| Estrés | AU4/AU23/AU9/AU27 + postura + gaze + task error | Proxy de tensión, no diagnóstico. |
+| Calma | Inversa ponderada de tensión/estrés/fatiga/postura | Más alto = menor tensión observable. |
+| Engagement | atención + gaze + postura + shoulder symmetry | Más alto = más involucramiento visible. |
+| Boredom | Inverso engagement + blink + gaze off-screen | Más alto = menor foco/actividad. |
 
----
+## Gaze Tracking y calibración
 
-## Métricas
+| Componente | Método | Caveat |
+|---|---|---|
+| Baseline | Primeros 60 frames o botón “Calibrar mirada centro” | Debe mirar al centro durante calibración. |
+| Coordenadas | delta iris-nose × SCALE=30 | No es eye tracker absoluto. |
+| Suavizado | EMA α=0.12 | Reduce jitter, añade latencia leve. |
+| Métricas | lookingAtScreen, confidence, distractionScore | Usado por atención/engagement. |
 
-Todas las métricas van de 0 (mínimo) a 1 (máximo). Calculadas desde AUs procesadas por `auProcessor.js`.
+## Postura, cabeza y MoveNet
 
-| Métrica | AUs usadas | Interpretación |
-|---------|-----------|----------------|
-| Carga Cognitiva | AU4, AU7, AU5, AU23 | >50%: esfuerzo mental elevado (Palinko 2010) |
-| Tensión | AU4, AU7, AU23 | >50%: estrés o concentración forzada |
-| Atención | AU45, AU5, presencia | >60%: atención sostenida (bajo parpadeo) |
-| Fatiga (PERCLOS) | AU45, AU7, AU43 | >30%: detectable (Dinges 1998, Ji 2004) |
-| Estrés | AU4, AU23, AU9, AU27 | >40%: elevado (Giannakakis 2017) |
-| Calma | Inversa de tensión+estrés | >70%: estado relajado |
-| Engagement | AU45, presencia, atención | >60%: comprometido (D'Mello 2012) |
-| Aburrimiento | Engagement, AU45, presencia | >40%: posible aburrimiento |
-| Valencia | AU6+12 vs AU4+15+9 | >0.5: positiva (Russell 1980) |
-| Arousal | AU1, AU2, AU5, AU26 | >0.5: alta excitación (Mehrabian 1974) |
+| Señal | Método | Uso |
+|---|---|---|
+| Head tilt | Ángulo oreja-oreja 234→454 | Inclinación lateral. |
+| Head forward | AR baseline máximo; botón “Calibrar postura erguida” | Penaliza postura/fatiga. |
+| Posture score | `1 - tilt*0.32 - forward*0.42 - asym*0.20 - instability*0.12` | Proxy facial de postura. |
+| MoveNet | COCO17: hombros, codos, muñecas | shoulder symmetry, upperBodyCoverage, armsVisible, armActivity. |
+| Sin fallback | No se estiman hombros con FaceMesh | Si no detecta: aléjate hasta ver ambos hombros. |
 
----
+## Normalización y privacidad
 
-## Gaze Tracking
-
-Estimación de dirección de mirada usando iris landmarks (índices 468-477).
-
-| Componente | Descripción |
-|-----------|-------------|
-| Método | Centroide del iris vs nose bridge (landmark 6) como referencia fija |
-| Calibración | Auto-calibración en primeros 60 frames (baseline personal) |
-| Suavizado | EMA (α=0.12) para reducir jitter |
-| Precisión | ~2-5° error angular con webcam estándar |
-| Métricas | screenFocusRatio, gazeStability, attentionScore |
-| Visualización | Círculo amarillo/gris en el FaceMesh |
-
----
-
-## Body Pose
-
-Detección de postura corporal con MediaPipe Pose Landmarker (33 landmarks).
-
-| Componente | Descripción |
-|-----------|-------------|
-| Método | upperBodyPosture.js — estimación desde landmarks faciales (orejas, nariz, mentón) |
-| headTilt | Ángulo oreja-oreja vs horizontal |
-| headForward | Aspect ratio facial (altura/ancho) como proxy de forward head posture |
-| Métricas | postureScore, headTilt, headForward, asymmetry, stability |
-| Visualización | Panel colapsable en Dashboard. Keypoints naranja en FaceMesh |
-
----
-
-## Normalización
-
-| Técnica | Módulo | Referencia |
-|---------|--------|------------|
-| Z-score | edgeCalibration.js | Welford (1962) |
-| EMA suavizado | auEnhancer.js | Roberts (1959). α=0.35 |
-| Platt Scaling | plattScaling.js | Platt (1999) |
-| Lighting Adapter | lightingAdapter.js | Calibración 2-6s |
-| Welford's Algorithm | temporalFeatures.js | Single-pass O(n) |
-
----
+| Técnica | Módulo | Estado |
+|---|---|---|
+| Z-score rolling | `edgeCalibration.js` | Normaliza canales. |
+| Welford O(n) | `temporalFeatures.js` | Features temporales eficientes. |
+| Sanitización | `samplePrivacy.js` | No guarda video/frames/landmarks crudos. |
+| Payload compacto | `payload.js` | Omite bloque multimodal live. |
 
 ## Tecnologías
 
-MediaPipe Face Landmarker (Google, 2023) · 478 landmarks + 52 blendshapes + iris tracking · React 19 + Vite 8 · Web Workers · IndexedDB · auProcessor + emotionClassifier (Naive Bayes) · edgeCalibration (z-scores) · MediaPipe Pose Landmarker
+React 19 · Vite 8 · MediaPipe Face Landmarker · TF.js MoveNet Lightning · Web Workers para FaceLandmarker · IndexedDB · FACS/AUs proxy · Edge AI bayesiano multimodal local.

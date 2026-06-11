@@ -47,7 +47,7 @@ const baseProps = {
   latestLandmarks: new Float32Array(478 * 3),
   latestGaze: { screenX: 0.53, screenY: 0.44, lookingAtScreen: true, confidence: 0.78, calibrationFrames: 60 },
   latestPose: { headTiltDeg: 3.2, headForward: 0.21, asymmetry: 0.09, stability: 0.88, postureScore: 0.82 },
-  moveNetPose: { shoulderAngle: 1.4, symmetry: 0.95, confidence: 0.8 },
+  moveNetPose: { shoulderAngle: 1.4, symmetry: 0.95, confidence: 0.8, upperBodyCoverage: 0.72, armsVisible: 2, armActivity: 0.4 },
   auRegionSummary: { upper: 0.2, mid: 0.1, lower: 0.3 },
   DEVICE_CONFIG: { fpsTarget: 15, mediapipeDelegate: 'CPU' },
 };
@@ -64,5 +64,8 @@ describe('Dashboard signal visibility', () => {
     expect(screen.getByText(/Asimetría/i)).toBeInTheDocument();
     expect(screen.getByText(/Estabilidad/i)).toBeInTheDocument();
     expect(screen.getByText(/Hombros \(MoveNet\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Calibrar mirada centro/i)).toBeInTheDocument();
+    expect(screen.getByText(/Calibrar postura erguida/i)).toBeInTheDocument();
+    expect(screen.getByText(/brazos visibles 2\/4/i)).toBeInTheDocument();
   });
 });

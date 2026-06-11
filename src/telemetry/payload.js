@@ -153,6 +153,9 @@ export function buildFusionPayload({
     generatedAt,
     runtime,
   });
+  // Keep exported payload compact/privacy-safe: multimodal internals are live UI
+  // diagnostics, not persisted session payload fields.
+  const { multimodal: _omittedMultimodal, ...compactEdgeAIOutput } = edgeAIOutput;
 
   return {
     schemaVersion: 'krumm_edge_fusion_poc_v1',
@@ -180,6 +183,6 @@ export function buildFusionPayload({
     ...(taskCorrelation ? { taskCorrelation } : {}),
     ...(edgeModelOutput ? { edgeModelOutput } : {}),
     ...(assessmentFeatureVector ? { assessmentFeatureVector } : {}),
-    edgeAI: edgeAIOutput,
+    edgeAI: compactEdgeAIOutput,
   };
 }

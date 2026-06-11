@@ -42,9 +42,13 @@ describe('runEdgeAIInference', () => {
     expect(output.modelKind).toBe('bayesian_au_channels');
     expect(output.channels).toBeTruthy();
     expect(output.channels.cognitiveLoad).toBeTruthy();
+    expect(output.channels.visualAttention).toBeTruthy();
+    expect(output.channels.postureQuality).toBeTruthy();
     expect(output.channels.cognitiveLoad.score).toBeGreaterThanOrEqual(0);
     expect(output.channels.cognitiveLoad.score).toBeLessThanOrEqual(100);
     expect(output.composite).toBeTruthy();
+    expect(output.composite.contributors).toBeTruthy();
+    expect(output.composite.contributors.fatigueIndex.polarity).toBe(-1);
     expect(output.composite.score).toBeGreaterThanOrEqual(0);
     expect(output.composite.score).toBeLessThanOrEqual(100);
     expect(output.confidence).toBeTruthy();
@@ -91,5 +95,24 @@ describe('runEdgeAIInference with features', () => {
     expect(output.channels.taskPerformance).toBeTruthy();
     expect(output.composite.score).toBeGreaterThanOrEqual(0);
     expect(output.composite.score).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('runEdgeAIInference with multimodal inputs', () => {
+  it('raises visual attention and posture quality when gaze/posture/MoveNet are good', () => {
+    const output = runEdgeAIInference({
+      faceSamples,
+      latestGaze: { available: true, lookingAtScreen: true, confidence: 0.95 },
+      latestPosture: { available: true, postureScore: 0.92, headForward: 0.04, headTilt: 0.03, confidence: 0.85 },
+      moveNetPose: { available: true, symmetry: 0.95, confidence: 0.9, upperBodyCoverage: 0.8, visibleUpperBodyKeypoints: 8 },
+    });
+
+    expect(output.channels.visualAttention.score).toBeGreaterThanOrEqual(75);
+    expect(output.channels.postureQuality.score).toBeGreaterThanOrEqual(75);
+    expect(output.channels.engagement.multimodalAdjusted).toBe(true);
+    expect(output.channels.visualAttention.confidence).toBeGreaterThan(0.8);
+    expect(output.channels.postureQuality.caveats).toEqual([]);
+    expect(output.multimodal.gaze.available).toBe(true);
+    expect(output.multimodal.upperBody.available).toBe(true);
   });
 });

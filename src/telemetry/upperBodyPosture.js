@@ -35,12 +35,36 @@ const STABILITY_POINTS = [
   LEFT_EAR, RIGHT_EAR, FOREHEAD, CHIN, LEFT_CHEEK, RIGHT_CHEEK, NOSE_TIP,
 ];
 
+function faceAspectRatioFromLandmarks(landmarks) {
+  if (!landmarks || landmarks.length < (RIGHT_EAR + 1) * 3) return null;
+  const get2D = (idx) => {
+    const i = idx * 3;
+    return { x: landmarks[i] ?? 0, y: landmarks[i + 1] ?? 0 };
+  };
+  const forehead = get2D(FOREHEAD);
+  const chin = get2D(CHIN);
+  const leftCheek = get2D(LEFT_CHEEK);
+  const rightCheek = get2D(RIGHT_CHEEK);
+  if (![forehead, chin, leftCheek, rightCheek].every((p) => Number.isFinite(p.x) && Number.isFinite(p.y))) return null;
+  const faceHeight = Math.max(0.01, chin.y - forehead.y);
+  const faceWidth = Math.max(0.01, rightCheek.x - leftCheek.x);
+  return { aspectRatio: faceHeight / faceWidth, faceHeight, faceWidth };
+}
+
 let maxAspectRatio = null;
 let previousStabilityPoints = null;
 
 export function resetUpperBodyPostureState() {
   maxAspectRatio = null;
   previousStabilityPoints = null;
+}
+
+export function calibrateUpperBodyPostureUpright(landmarks) {
+  const aspect = faceAspectRatioFromLandmarks(landmarks);
+  if (!aspect) return { ok: false, reason: 'insufficient_face_landmarks' };
+  maxAspectRatio = aspect.aspectRatio;
+  previousStabilityPoints = null;
+  return { ok: true, baselineAspectRatio: round(maxAspectRatio), faceHeight: round(aspect.faceHeight), faceWidth: round(aspect.faceWidth) };
 }
 
 export function estimateUpperBodyPosture(landmarks) {
@@ -82,9 +106,10 @@ export function estimateUpperBodyPosture(landmarks) {
   // Head forward/down: use face aspect ratio as webcam proxy.
   // Empirical observation on this webcam: upright face has higher AR; lowering
   // the head makes the projected face shorter/wider, decreasing AR.
-  const faceHeight = Math.max(0.01, chin.y - forehead.y);
-  const faceWidth = Math.max(0.01, rightCheek.x - leftCheek.x);
-  const aspectRatio = faceHeight / faceWidth;
+  const aspect = faceAspectRatioFromLandmarks(landmarks);
+  const faceHeight = aspect?.faceHeight ?? Math.max(0.01, chin.y - forehead.y);
+  const faceWidth = aspect?.faceWidth ?? Math.max(0.01, rightCheek.x - leftCheek.x);
+  const aspectRatio = aspect?.aspectRatio ?? (faceHeight / faceWidth);
 
   // Auto-calibrate: track maximum observed AR as the most upright baseline.
   if (maxAspectRatio === null || aspectRatio > maxAspectRatio) {

@@ -40,6 +40,16 @@ function extractMetrics(pose, videoWidth = 1, videoHeight = 1) {
 
   const visible = [kp[0], kp[1], kp[2], kp[3], kp[4], kp[5], kp[6], kp[7], kp[8], kp[9], kp[10]]
     .filter((p) => (p?.score ?? 0) >= 0.25).length;
+  const armIndices = [7, 8, 9, 10];
+  const armsVisible = armIndices.filter((idx) => (kp[idx]?.score ?? 0) >= 0.25).length;
+  const armActivityParts = [];
+  if ((kp[7]?.score ?? 0) >= 0.25) armActivityParts.push(Math.hypot(kp[7].x - leftShoulder.x, kp[7].y - leftShoulder.y) / Math.max(1, shoulderWidthPx));
+  if ((kp[8]?.score ?? 0) >= 0.25) armActivityParts.push(Math.hypot(kp[8].x - rightShoulder.x, kp[8].y - rightShoulder.y) / Math.max(1, shoulderWidthPx));
+  if ((kp[9]?.score ?? 0) >= 0.25) armActivityParts.push(Math.hypot(kp[9].x - leftShoulder.x, kp[9].y - leftShoulder.y) / Math.max(1, shoulderWidthPx));
+  if ((kp[10]?.score ?? 0) >= 0.25) armActivityParts.push(Math.hypot(kp[10].x - rightShoulder.x, kp[10].y - rightShoulder.y) / Math.max(1, shoulderWidthPx));
+  const armActivity = armActivityParts.length
+    ? Math.max(0, Math.min(1, armActivityParts.reduce((sum, v) => sum + v, 0) / armActivityParts.length / 1.5))
+    : 0;
 
   return {
     source: 'movenet_lightning_coco17_npm_main_thread',
@@ -49,6 +59,8 @@ function extractMetrics(pose, videoWidth = 1, videoHeight = 1) {
     confidence: Math.round(confidence * 100) / 100,
     upperBodyCoverage: Math.round((visible / 11) * 100) / 100,
     visibleUpperBodyKeypoints: visible,
+    armsVisible,
+    armActivity: Math.round(armActivity * 100) / 100,
     leftShoulder: { x: leftShoulder.x, y: leftShoulder.y, xNorm: normalizedKeypoints[5].xNorm, yNorm: normalizedKeypoints[5].yNorm },
     rightShoulder: { x: rightShoulder.x, y: rightShoulder.y, xNorm: normalizedKeypoints[6].xNorm, yNorm: normalizedKeypoints[6].yNorm },
     keypoints: kp,

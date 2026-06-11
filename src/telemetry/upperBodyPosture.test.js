@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { estimateUpperBodyPosture, resetUpperBodyPostureState } from './upperBodyPosture.js';
+import { estimateUpperBodyPosture, resetUpperBodyPostureState, calibrateUpperBodyPostureUpright } from './upperBodyPosture.js';
 
 function makeFace({ tiltDy = 0, aspectScale = 1 }) {
   const landmarks = new Float32Array(478 * 3);
@@ -32,5 +32,19 @@ describe('estimateUpperBodyPosture temporal quality', () => {
     expect(stableB.stability).toBeGreaterThan(0.85);
     expect(jittered.stability).toBeLessThan(stableB.stability);
     expect(jittered.confidence).toBeLessThanOrEqual(1);
+  });
+
+  it('uses explicit upright calibration as headForward baseline', () => {
+    resetUpperBodyPostureState();
+    const upright = makeFace({ aspectScale: 1.15 });
+    const lowered = makeFace({ aspectScale: 0.8 });
+    const calibration = calibrateUpperBodyPostureUpright(upright);
+    const uprightPose = estimateUpperBodyPosture(upright);
+    const loweredPose = estimateUpperBodyPosture(lowered);
+
+    expect(calibration.ok).toBe(true);
+    expect(uprightPose.headForward).toBeLessThan(0.05);
+    expect(loweredPose.headForward).toBeGreaterThan(uprightPose.headForward);
+    expect(loweredPose.postureScore).toBeLessThan(uprightPose.postureScore);
   });
 });
