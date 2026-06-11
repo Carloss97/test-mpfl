@@ -21,6 +21,7 @@ export default function Dashboard({
   insightItems,auEntries,activeAUCount,
   edgeAIResult,edgeChannels,edgeConfidence,edgeComposite,
   latestLandmarks,latestGaze,auRegionSummary,DEVICE_CONFIG,
+  latestPose,
 }){
   const camRef=useRef(null), meshRef=useRef(null);
   const emotions=edgeAIResult?.emotions;
@@ -92,6 +93,31 @@ export default function Dashboard({
                 })()}
               </div>
             </div>
+          )}
+        </article>
+      </div>
+
+      {/* Upper body posture — from face landmarks */}
+      <div className="dash-cam-row" style={{marginTop:'12px'}}>
+        <article className="panel" style={{gridColumn:'1/-1'}}>
+          <div className="panel-heading"><h2>🧍 Postura (upper body)</h2><span className="status ready" style={{fontSize:'0.65rem'}}>{latestPose?'detectado':'calculando...'}</span></div>
+          {latestPose ? (
+            <div style={{display:'flex',gap:'12px',padding:'8px 0'}}>
+              <div style={{fontSize:'0.72rem',color:'#c8d7e8',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'4px 16px'}}>
+                <span>Postura:</span><strong>{Math.round(latestPose.postureScore*100)}%</strong>
+                <span>Inclinación cabeza:</span><strong>{latestPose.headTiltDeg.toFixed(1)}°</strong>
+                <span>Inclinación frontal:</span><strong>{Math.round(latestPose.headForward*100)}%</strong>
+                <span>Asimetría:</span><strong>{Math.round(latestPose.asymmetry*100)}%</strong>
+                <span>Estabilidad:</span><strong>{Math.round(latestPose.stability*100)}%</strong>
+              </div>
+              <p className="caption" style={{flex:1,fontSize:'0.65rem'}}>
+                Estimado desde landmarks faciales (orejas, nariz, mentón).<br/>
+                Detecta inclinación lateral, forward head posture y asimetría.<br/>
+                Sin requerir Pose Landmarker ni ver el torso.
+              </p>
+            </div>
+          ) : (
+            <p className="caption">Esperando landmarks faciales para estimar postura...</p>
           )}
         </article>
       </div>

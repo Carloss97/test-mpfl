@@ -31,8 +31,8 @@ function clamp(v, l = 0, h = 1) {
 
 export function processAU(rawIntensity, baselineValue = 0) {
   if (!Number.isFinite(rawIntensity)) return 0;
-  // Subtract 80% of baseline
-  const net = Math.max(0, rawIntensity - baselineValue * 0.8);
+  // Subtract 60% of baseline (less aggressive, preserves signal after calibration)
+  const net = Math.max(0, rawIntensity - baselineValue * 0.6);
   // Adaptive gain
   let gain;
   if (net < 0.08) gain = 3.0;

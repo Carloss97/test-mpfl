@@ -118,12 +118,34 @@ export default class FaceMeshOverlay {
       ctx.beginPath(); ctx.arc(points[i].x, points[i].y, 1.2, 0, Math.PI * 2); ctx.fill();
     }
 
-    // Gaze indicator
-    if (this.gaze && this.gaze.lookingAtScreen) {
+    // Posture keypoints: ears, nose, chin, cheeks
+    const posturePts = [1, 10, 152, 234, 454, 123, 352]; // nose tip, glabella, gnathion, ears, cheeks
+    ctx.fillStyle = 'rgba(255,150,77,0.7)';
+    for (const idx of posturePts) {
+      if (idx < points.length) {
+        ctx.beginPath(); ctx.arc(points[idx].x, points[idx].y, 3.5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    // Lines connecting posture points
+    ctx.strokeStyle = 'rgba(255,150,77,0.4)'; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    if (234 < points.length && 454 < points.length) {
+      ctx.moveTo(points[234].x, points[234].y);
+      ctx.lineTo(points[454].x, points[454].y); // ear-to-ear
+    }
+    if (10 < points.length && 152 < points.length) {
+      ctx.moveTo(points[10].x, points[10].y);
+      ctx.lineTo(points[152].x, points[152].y); // forehead-to-chin
+    }
+    ctx.stroke();
+
+    // Gaze indicator — always draw if gaze data exists
+    if (this.gaze) {
       const gx = this.gaze.screenX * cw, gy = this.gaze.screenY * ch;
-      ctx.strokeStyle = 'rgba(255,209,102,0.7)'; ctx.lineWidth = 1.5;
+      ctx.strokeStyle = this.gaze.lookingAtScreen ? 'rgba(255,209,102,0.7)' : 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(gx, gy, 8, 0, Math.PI * 2); ctx.stroke();
-      ctx.fillStyle = 'rgba(255,209,102,0.9)';
+      ctx.fillStyle = this.gaze.lookingAtScreen ? 'rgba(255,209,102,0.9)' : 'rgba(255,255,255,0.4)';
       ctx.beginPath(); ctx.arc(gx, gy, 3, 0, Math.PI * 2); ctx.fill();
     }
 

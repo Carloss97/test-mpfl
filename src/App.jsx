@@ -6,6 +6,7 @@ import { computeEnhancedAUs, resetAUCache } from './telemetry/auEnhancer.js';
 import { setAUBaseline } from './telemetry/auProcessor.js';
 import { estimateGaze } from './telemetry/gazeEstimator.js';
 import { useFaceLandmarkerWorker } from './telemetry/useFaceLandmarkerWorker.js';
+import { estimateUpperBodyPosture } from './telemetry/upperBodyPosture.js';
 import { buildFusionPayload } from './telemetry/payload.js';
 import { buildCalibrationProfile } from './telemetry/microgestureFeatures.js';
 import { requestCameraWithFallback, stopStream } from './telemetry/adaptiveCapture.js';
@@ -66,6 +67,7 @@ export default function App() {
   const [latestFaceSample, setLatestFaceSample] = useState(null);
   const [latestLandmarks, setLatestLandmarks] = useState(null);
   const [latestGaze, setLatestGaze] = useState(null);
+  const [latestPose, setLatestPose] = useState(null);
   const [lastQuality, setLastQuality] = useState({});
   const [blendshapeNames, setBlendshapeNames] = useState([]);
   const [activeTab, setActiveTab] = useState('gestures');
@@ -84,10 +86,11 @@ export default function App() {
     setLatestLandmarks(landmarks ?? null);
     if (landmarks) {
       try {
-        const headPose = null; // could import estimateHeadPose from facialCapturePipeline
-        const gaze = estimateGaze(landmarks, null, window.innerWidth, window.innerHeight);
+        const gaze = estimateGaze(landmarks);
         setLatestGaze(gaze);
-      } catch (e) { /* gaze estimation is optional */ }
+        const posture = estimateUpperBodyPosture(landmarks);
+        setLatestPose(posture);
+      } catch (e) { /* optional */ }
     }
     setLastQuality(sample.quality ?? {});
     if (sample.blendshapes) setBlendshapeNames(Object.keys(sample.blendshapes).sort());
@@ -391,7 +394,7 @@ export default function App() {
           calibrationProfile={calibrationProfile} calStatusLabel={calStatusLabel}
           insightItems={insightItems} auEntries={auEntries} activeAUCount={activeAUCount}
           edgeAIResult={edgeAIResult} edgeChannels={edgeChannels} edgeConfidence={edgeConfidence} edgeComposite={edgeComposite}
-          latestLandmarks={latestLandmarks} latestGaze={latestGaze} auRegionSummary={telemetry.insights?.auRegionSummary}
+          latestLandmarks={latestLandmarks} latestGaze={latestGaze} latestPose={latestPose} auRegionSummary={telemetry.insights?.auRegionSummary}
           DEVICE_CONFIG={DEVICE_CONFIG}
         />
       ) : (
