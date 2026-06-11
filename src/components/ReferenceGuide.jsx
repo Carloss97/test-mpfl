@@ -124,7 +124,7 @@ export default function ReferenceGuide(){
       </Section>
 
       <Section title="Tecnologías">
-        <p>MediaPipe Face Landmarker (Google, 2023) · 478 landmarks + 52 blendshapes + iris · React 19 + Vite 8 · Web Workers · IndexedDB · auProcessor + emotionClassifier (Naive Bayes) · edgeCalibration (z-scores) · upperBodyPosture + shoulderEstimator</p>
+        <p>MediaPipe Face Landmarker (Google, 2023) · 478 landmarks + 52 blendshapes + iris · React 19 + Vite 8 · Web Workers · IndexedDB · auProcessor + emotionClassifier (Naive Bayes) · edgeCalibration (z-scores) · upperBodyPosture + MoveNet Lightning</p>
       </Section>
     </section>
   );

@@ -34,6 +34,13 @@ const CALIBRATION_WINDOW = 60;
 let smoothed = { x: 0.5, y: 0.5, conf: 0 };
 const ALPHA = 0.12;
 
+export function resetGazeEstimator() {
+  baselineX = null;
+  baselineY = null;
+  calibrationFrames = 0;
+  smoothed = { x: 0.5, y: 0.5, conf: 0 };
+}
+
 export function estimateGaze(landmarks) {
   if (!landmarks || landmarks.length < 478 * 3) {
     return { screenX: 0.5, screenY: 0.5, lookingAtScreen: false, confidence: 0 };
@@ -80,6 +87,9 @@ export function estimateGaze(landmarks) {
     screenY: round(smoothed.y),
     lookingAtScreen: looking,
     confidence: round(smoothed.conf),
+    calibrationFrames,
+    method: 'iris_centroid_delta',
+    caveats: calibrationFrames < CALIBRATION_WINDOW ? ['auto_calibrating_gaze_baseline'] : [],
   };
 }
 

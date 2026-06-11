@@ -4,10 +4,10 @@ import { buildGestureInsights, AU_MAP, AU_REGIONS, GROUP_LABELS } from './teleme
 import { computeInsightsFromAUs } from './telemetry/insightMetrics.js';
 import { computeEnhancedAUs, resetAUCache } from './telemetry/auEnhancer.js';
 import { setAUBaseline } from './telemetry/auProcessor.js';
-import { estimateGaze } from './telemetry/gazeEstimator.js';
+import { estimateGaze, resetGazeEstimator } from './telemetry/gazeEstimator.js';
 import { useFaceLandmarkerWorker } from './telemetry/useFaceLandmarkerWorker.js';
-import { estimateUpperBodyPosture } from './telemetry/upperBodyPosture.js';
-import { estimateShoulders } from './telemetry/shoulderEstimator.js';
+import { estimateUpperBodyPosture, resetUpperBodyPostureState } from './telemetry/upperBodyPosture.js';
+import { useMoveNet } from './telemetry/useMoveNet.js';
 import { buildFusionPayload } from './telemetry/payload.js';
 import { buildCalibrationProfile } from './telemetry/microgestureFeatures.js';
 import { requestCameraWithFallback, stopStream } from './telemetry/adaptiveCapture.js';
@@ -22,6 +22,7 @@ import TaskImpact from './components/TaskImpact.jsx';
 import { generateReport } from './telemetry/reportGenerator.js';
 import { saveSessionSafe, loadSessionsSafe, clearSessionsSafe } from './telemetry/storageManager.js';
 import { getRecommendedConfig } from './telemetry/deviceCapabilities.js';
+import { sanitizeFaceSampleForAggregation } from './telemetry/samplePrivacy.js';
 import './styles.css';
 import './dashboard.css';
 import './dashboard-ux.css';
@@ -69,7 +70,7 @@ export default function App() {
   const [latestLandmarks, setLatestLandmarks] = useState(null);
   const [latestGaze, setLatestGaze] = useState(null);
   const [latestPose, setLatestPose] = useState(null);
-  const [latestShoulders, setLatestShoulders] = useState(null);
+  const [moveNetPose, setMoveNetPose] = useState(null);
   const [lastQuality, setLastQuality] = useState({});
   const [blendshapeNames, setBlendshapeNames] = useState([]);
   const [activeTab, setActiveTab] = useState('gestures');
@@ -83,8 +84,9 @@ export default function App() {
 
   const recordFaceSample = useCallback((sample, landmarks) => {
     if (!sample?.blendshapes) return;
-    faceSamplesRef.current = [...faceSamplesRef.current, sample];
-    setLatestFaceSample(sample);
+    const safeSample = sanitizeFaceSampleForAggregation(sample);
+    faceSamplesRef.current = [...faceSamplesRef.current, safeSample];
+    setLatestFaceSample(safeSample);
     setLatestLandmarks(landmarks ?? null);
     if (landmarks) {
       try {
@@ -92,18 +94,24 @@ export default function App() {
         setLatestGaze(gaze);
         const posture = estimateUpperBodyPosture(landmarks);
         setLatestPose(posture);
-        const shoulders = estimateShoulders(landmarks);
-        setLatestShoulders(shoulders);
       } catch (e) { /* optional */ }
     }
-    setLastQuality(sample.quality ?? {});
-    if (sample.blendshapes) setBlendshapeNames(Object.keys(sample.blendshapes).sort());
+    setLastQuality(safeSample.quality ?? {});
+    if (safeSample.blendshapes) setBlendshapeNames(Object.keys(safeSample.blendshapes).sort());
   }, []);
 
   const faceWorker = useFaceLandmarkerWorker({
     videoRef, active: isCameraActive, onSample: recordFaceSample,
     fps: DEVICE_CONFIG?.fpsTarget ?? 15,
     preferredDelegate: DEVICE_CONFIG?.mediapipeDelegate ?? 'GPU',
+  });
+
+  const moveNetSample = useCallback((sample) => {
+    if (sample?.metrics) setMoveNetPose(sample.metrics);
+  }, []);
+
+  const moveNet = useMoveNet({
+    videoRef, active: isCameraActive, fps: 8, onSample: moveNetSample,
   });
 
   const refreshCameraDevices = useCallback(async () => {
@@ -131,6 +139,8 @@ export default function App() {
       await refreshCameraDevices().catch(() => []);
       faceSamplesRef.current = [];
       resetAUCache();
+      resetGazeEstimator();
+      resetUpperBodyPostureState();
       sessionStartRef.current = performance.now();
       setCalibrationProfile(null);
       setIsCalibrating(false);
@@ -398,7 +408,7 @@ export default function App() {
           calibrationProfile={calibrationProfile} calStatusLabel={calStatusLabel}
           insightItems={insightItems} auEntries={auEntries} activeAUCount={activeAUCount}
           edgeAIResult={edgeAIResult} edgeChannels={edgeChannels} edgeConfidence={edgeConfidence} edgeComposite={edgeComposite}
-          latestLandmarks={latestLandmarks} latestGaze={latestGaze} latestPose={latestPose} latestShoulders={latestShoulders} auRegionSummary={telemetry.insights?.auRegionSummary}
+          latestLandmarks={latestLandmarks} latestGaze={latestGaze} latestPose={latestPose} moveNetPose={moveNetPose} moveNet={moveNet} auRegionSummary={telemetry.insights?.auRegionSummary}
           DEVICE_CONFIG={DEVICE_CONFIG}
         />
       ) : (

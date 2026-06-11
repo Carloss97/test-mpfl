@@ -4,6 +4,15 @@ import { MEDIAPIPE_ASSETS, getFaceLandmarkerOptions } from './mediapipeAssets.js
 let landmarker = null;
 let currentDelegate = 'CPU';
 
+function clamp(v, l = 0, h = 1) {
+  return Math.min(h, Math.max(l, Number.isFinite(v) ? v : l));
+}
+function round(v, d = 4) {
+  if (!Number.isFinite(v)) return 0;
+  const f = 10 ** d;
+  return Math.round(v * f) / f;
+}
+
 async function ensureLandmarker(preferredDelegate) {
   if (landmarker && preferredDelegate === currentDelegate) return currentDelegate;
 
@@ -74,12 +83,25 @@ self.onmessage = async (event) => {
       if (faceCount > 0) {
         const blendshapes = scoreByName(result);
         const landmarks = extractLandmarks(result);
+        const blendshapeCount = Object.keys(blendshapes ?? {}).length;
+        const blendshapeCompleteness = clamp(blendshapeCount / 52);
+        let validLandmarkValues = 0;
+        for (let i = 0; i < (landmarks?.length ?? 0); i += 3) {
+          const x = landmarks[i], y = landmarks[i + 1];
+          if (Number.isFinite(x) && Number.isFinite(y) && !(x === 0 && y === 0)) validLandmarkValues++;
+        }
+        const landmarkCompleteness = landmarks?.length ? clamp(validLandmarkValues / (landmarks.length / 3)) : 0;
         const quality = {
-          facePresent: true, faceCount,
-          confidence: blendshapes ? 0.8 + Object.keys(blendshapes).length * 0.003 : 0.7,
+          facePresent: true,
+          faceCount,
+          multipleFaces: faceCount > 1,
+          blendshapeCompleteness: round(blendshapeCompleteness),
+          landmarkCompleteness: round(landmarkCompleteness),
+          confidence: round(clamp(0.45 + blendshapeCompleteness * 0.25 + landmarkCompleteness * 0.20 + (faceCount === 1 ? 0.10 : -0.10))),
+          confidenceKind: 'heuristic_from_model_outputs',
         };
         postMessage(
-          { type: 'sample', sample: { timestamp, blendshapes, landmarks, quality }, delegate: currentDelegate, landmarks },
+          { type: 'sample', sample: { timestamp, blendshapes, quality }, delegate: currentDelegate, landmarks },
           landmarks ? [landmarks.buffer] : undefined,
         );
       } else {

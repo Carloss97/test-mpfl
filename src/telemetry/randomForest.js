@@ -119,7 +119,24 @@ class RandomForest {
     const n = X.length;
     const sampleX = [], sampleY = [], oobSet = new Set();
     const used = new Set();
+
+    // Stratified seed: for small edge-local datasets, a pure bootstrap can
+    // accidentally drop an entire class from a tree (especially with 2–3
+    // samples), making serialization/prediction tests flaky and hurting early
+    // calibration. Seed each tree with one example per observed class when the
+    // dataset size allows it, then fill the remainder with bootstrap draws.
+    const firstIndexByClass = new Map();
     for (let i = 0; i < n; i++) {
+      if (!firstIndexByClass.has(y[i])) firstIndexByClass.set(y[i], i);
+    }
+    for (const idx of firstIndexByClass.values()) {
+      if (sampleX.length >= n) break;
+      sampleX.push(X[idx]);
+      sampleY.push(y[idx]);
+      used.add(idx);
+    }
+
+    while (sampleX.length < n) {
       const idx = Math.floor(Math.random() * n);
       sampleX.push(X[idx]);
       sampleY.push(y[idx]);

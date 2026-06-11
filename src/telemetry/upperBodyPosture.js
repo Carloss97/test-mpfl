@@ -26,18 +26,36 @@ const LEFT_CHEEK = 123;
 const RIGHT_CHEEK = 352;
 const NOSE_TIP = 1;
 
-// Contour for stability: jawline points
-const JAW_CONTOUR = [0, 17, 37, 39, 40, 61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95];
+// Points used for temporal stability. Include jaw contour plus anchor points that
+// move when the user tilts/leans, so the metric is actual frame-to-frame jitter
+// rather than distance to the center of the image.
+const STABILITY_POINTS = [
+  0, 17, 37, 39, 40, 61, 146, 91, 181, 84, 314, 405, 321, 375,
+  291, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95,
+  LEFT_EAR, RIGHT_EAR, FOREHEAD, CHIN, LEFT_CHEEK, RIGHT_CHEEK, NOSE_TIP,
+];
+
+let maxAspectRatio = null;
+let previousStabilityPoints = null;
+
+export function resetUpperBodyPostureState() {
+  maxAspectRatio = null;
+  previousStabilityPoints = null;
+}
 
 export function estimateUpperBodyPosture(landmarks) {
-  if (!landmarks || landmarks.length < RIGHT_EAR * 3) {
+  if (!landmarks || landmarks.length < (RIGHT_EAR + 1) * 3) {
     return {
+      method: 'face_landmark_proxy',
+      source: 'mediapipe_face_mesh',
+      confidence: 0,
       headTilt: 0,
       headTiltDeg: 0,
       headForward: 0.5,
       asymmetry: 0,
-      stability: 0.8,
-      postureScore: 0.7,
+      stability: 0,
+      postureScore: 0.5,
+      caveats: ['insufficient_face_landmarks'],
     };
   }
 
@@ -61,45 +79,73 @@ export function estimateUpperBodyPosture(landmarks) {
   // Normalized: 0 = straight, ±1 = 45° tilt
   const headTilt = clamp(Math.abs(tiltDeg) / 30);
 
-  // Head forward: use face aspect ratio as depth proxy.
-  // When leaning forward: face appears taller and narrower (foreshortening).
-  // When upright: face is wider relative to height.
+  // Head forward/down: use face aspect ratio as webcam proxy.
+  // Empirical observation on this webcam: upright face has higher AR; lowering
+  // the head makes the projected face shorter/wider, decreasing AR.
   const faceHeight = Math.max(0.01, chin.y - forehead.y);
   const faceWidth = Math.max(0.01, rightCheek.x - leftCheek.x);
   const aspectRatio = faceHeight / faceWidth;
-  // Typical resting AR: ~1.2-1.5. Forward lean increases AR.
-  const headForward = clamp((aspectRatio - 1.0) / 0.5); // 1.0→0%, 1.5→100%
+
+  // Auto-calibrate: track maximum observed AR as the most upright baseline.
+  if (maxAspectRatio === null || aspectRatio > maxAspectRatio) {
+    maxAspectRatio = aspectRatio;
+  }
+  const baselineAR = maxAspectRatio || aspectRatio || 1.0;
+  // 0 = at upright baseline, 1 = AR decreased substantially (head down/forward).
+  const headForward = clamp((baselineAR - aspectRatio) / 0.35);
 
   // Asymmetry: difference between left and right cheek positions
   const midX = (leftCheek.x + rightCheek.x) / 2;
   const asymmetry = clamp(Math.abs(get2D(NOSE_TIP).x - midX) / (faceWidth * 0.3));
 
-  // Stability: jitter of jaw contour points relative to previous frame
-  let jitterSum = 0, jitterN = 0;
-  for (const idx of JAW_CONTOUR) {
+  // Stability: temporal jitter of selected landmarks, normalized by face size.
+  const currentPoints = [];
+  for (const idx of STABILITY_POINTS) {
     const i = idx * 3;
     if (i + 1 >= landmarks.length) continue;
     const x = landmarks[i], y = landmarks[i + 1];
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
     if (x === 0 && y === 0) continue;
-    jitterSum += Math.abs(x - 0.5) + Math.abs(y - 0.5);
-    jitterN++;
+    currentPoints.push([idx, x, y]);
   }
-  // Normalize: higher deviation → lower stability
-  const meanDev = jitterN > 0 ? jitterSum / jitterN : 0;
-  const stability = clamp(1 - meanDev * 4);
+  const faceDiag = Math.max(0.05, Math.hypot(faceWidth, faceHeight));
+  let stability = 0.85;
+  if (previousStabilityPoints && currentPoints.length > 0) {
+    let motionSum = 0;
+    let motionN = 0;
+    for (const [idx, x, y] of currentPoints) {
+      const prev = previousStabilityPoints.get(idx);
+      if (!prev) continue;
+      motionSum += Math.hypot(x - prev.x, y - prev.y) / faceDiag;
+      motionN++;
+    }
+    const meanMotion = motionN > 0 ? motionSum / motionN : 0;
+    stability = clamp(1 - meanMotion * 12);
+  }
+  previousStabilityPoints = new Map(currentPoints.map(([idx, x, y]) => [idx, { x, y }]));
 
-  // Composite posture score: higher = better posture
-  // Forward head posture is weighted more heavily (it's the most common issue)
+  const requiredPoints = [leftEar, rightEar, forehead, chin, leftCheek, rightCheek, get2D(NOSE_TIP)];
+  const validRequired = requiredPoints.filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y) && !(p.x === 0 && p.y === 0)).length;
+  const landmarkCompleteness = validRequired / requiredPoints.length;
+  const confidence = clamp(landmarkCompleteness * 0.55 + stability * 0.25 + (faceWidth > 0.08 && faceHeight > 0.12 ? 0.20 : 0));
+
+  // Composite posture score: higher = better posture.
+  // Face-only posture is a proxy. It should be interpreted together with
+  // MoveNet/Pose Landmarker shoulders when those detections are available.
   const postureScore = clamp(
-    1 - headTilt * 0.35 - headForward * 0.50 - asymmetry * 0.25
+    1 - headTilt * 0.32 - headForward * 0.42 - asymmetry * 0.20 - (1 - stability) * 0.12
   );
 
   return {
+    method: 'face_landmark_proxy',
+    source: 'mediapipe_face_mesh',
+    confidence: round(confidence),
     headTilt: round(headTilt),
     headTiltDeg: round(tiltDeg),
     headForward: round(headForward),
     asymmetry: round(asymmetry),
     stability: round(stability),
     postureScore: round(postureScore),
+    caveats: ['upper_body_inferred_from_face_when_pose_model_unavailable'],
   };
 }

@@ -68,7 +68,29 @@ export function classifyEmotions(aus = {}) {
   const logProbs = {};
   const emotionNames = Object.keys(EMOTION_LIKELIHOODS);
 
-  // Prior: uniform (1/7 ≈ 0.14 for each emotion, neutral gets 1 - sum)
+  // Neutral is not “whatever mass is left after a softmax over emotions”.
+  // It is the correct dominant state when AU evidence is weak or absent.
+  // Allocate only an evidence-gated portion of probability mass to non-neutral
+  // emotions, then reserve the rest for neutral so probabilities sum to 1.
+  const evidenceMass = Object.values(aus).reduce((sum, au) => {
+    const intensity = clamp(au?.intensity ?? 0);
+    return sum + (intensity >= 0.01 ? intensity : 0);
+  }, 0);
+  const nonNeutralMass = clamp((evidenceMass - 0.03) / 1.25, 0, 0.92);
+
+  if (nonNeutralMass <= 0) {
+    return {
+      probabilities: {
+        happiness: 0, sadness: 0, surprise: 0, fear: 0,
+        anger: 0, disgust: 0, contempt: 0, neutral: 1,
+      },
+      dominant: 'neutral',
+      dominantScore: 1,
+      confidence: 0.95,
+    };
+  }
+
+  // Prior: uniform across non-neutral candidate emotions.
   const prior = 1 / emotionNames.length;
 
   for (const emotion of emotionNames) {
@@ -76,34 +98,37 @@ export function classifyEmotions(aus = {}) {
     let logProb = Math.log(prior);
 
     for (const [code, likelihood] of Object.entries(L)) {
-      const intensity = aus[code]?.intensity ?? 0;
+      const intensity = clamp(aus[code]?.intensity ?? 0);
       if (intensity < 0.01) continue;
-      // Weighted log-likelihood
+      // Weighted log-likelihood.
       logProb += Math.log(Math.max(0.1, likelihood)) * intensity;
     }
 
     logProbs[emotion] = logProb;
   }
 
-  // Convert log-probs to probabilities via softmax
+  // Convert non-neutral log-probs to normalized weights via softmax.
   const maxLog = Math.max(...Object.values(logProbs));
   let sumExp = 0;
-  const probs = {};
+  const weights = {};
 
   for (const [emotion, logP] of Object.entries(logProbs)) {
     const expVal = Math.exp(logP - maxLog);
-    probs[emotion] = expVal;
+    weights[emotion] = expVal;
     sumExp += expVal;
   }
 
-  // Normalize
-  for (const emotion of Object.keys(probs)) {
-    probs[emotion] = round(probs[emotion] / sumExp);
+  const probs = {};
+  let nonNeutralRounded = 0;
+  for (const emotion of emotionNames) {
+    const p = round((weights[emotion] / sumExp) * nonNeutralMass);
+    probs[emotion] = p;
+    nonNeutralRounded += p;
   }
+  probs.neutral = round(clamp(1 - nonNeutralRounded));
 
-  // Find dominant
   let dominant = 'neutral';
-  let dominantScore = 0;
+  let dominantScore = probs.neutral;
   for (const [emotion, prob] of Object.entries(probs)) {
     if (prob > dominantScore) {
       dominantScore = prob;
@@ -111,17 +136,16 @@ export function classifyEmotions(aus = {}) {
     }
   }
 
-  // If dominant is very weak, default to neutral
-  probs.neutral = round(Math.max(0, 1 - sumExp / (sumExp + 1))); // neutral gets remaining probability mass
-  if (dominantScore < 0.25) {
-    dominant = 'neutral';
-    dominantScore = probs.neutral;
-  }
+  const sorted = Object.values(probs).sort((a, b) => b - a);
+  const margin = (sorted[0] ?? 0) - (sorted[1] ?? 0);
+  const confidence = dominant === 'neutral'
+    ? clamp(0.55 + dominantScore * 0.4)
+    : clamp(dominantScore * 0.75 + margin * 0.25);
 
   return {
     probabilities: probs,
     dominant,
     dominantScore: round(dominantScore),
-    confidence: round(Math.min(1, dominantScore * 2)),
+    confidence: round(confidence),
   };
 }

@@ -62,6 +62,10 @@ export function useFaceLandmarkerWorker({
       if (type === 'frame-skipped') {
         pendingFrameRef.current = false;
       }
+      if (type === 'frame-error') {
+        pendingFrameRef.current = false;
+        setError(message);
+      }
       if (type === 'warning') {
         console.warn('[FaceLandmarker worker]', message);
       }
@@ -74,6 +78,7 @@ export function useFaceLandmarkerWorker({
     };
 
     worker.onerror = (err) => {
+      pendingFrameRef.current = false;
       setStatus('error');
       setError(err?.message ?? 'Worker error');
     };
@@ -101,9 +106,11 @@ export function useFaceLandmarkerWorker({
       if (worker && hasVideo && !pendingFrameRef.current && now - lastSentRef.current >= frameIntervalMs) {
         try {
           const bitmap = await createImageBitmap(video);
+          const targetWorker = workerRef.current;
+          if (!targetWorker) { bitmap?.close?.(); return; }
           pendingFrameRef.current = true;
           lastSentRef.current = now;
-          worker.postMessage(
+          targetWorker.postMessage(
             { type: 'frame', payload: { bitmap, timestamp: now } },
             [bitmap],
           );

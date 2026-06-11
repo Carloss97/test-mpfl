@@ -20,7 +20,7 @@ export default class FaceMeshOverlay {
     this.auActivation = {};
     this.quality = {};
     this.gaze = null;
-    this.shoulders = null;
+    this.moveNetPose = null;
     this.smoothed = null;
     this.visible = true;
     this.rafId = null;
@@ -43,13 +43,13 @@ export default class FaceMeshOverlay {
     if (this._observer) { this._observer.disconnect(); this._observer = null; }
     if (this.canvas.parentNode) this.canvas.parentNode.removeChild(this.canvas);
   }
-  update({ landmarks, auRegionActivation, visible, quality, gaze, shoulders }) {
+  update({ landmarks, auRegionActivation, visible, quality, gaze, moveNetPose }) {
     if (landmarks !== undefined) this.landmarks = landmarks;
     if (auRegionActivation !== undefined) this.auActivation = auRegionActivation;
     if (visible !== undefined) this.visible = visible;
     if (quality !== undefined) this.quality = quality;
     if (gaze !== undefined) this.gaze = gaze;
-    if (shoulders !== undefined) this.shoulders = shoulders;
+    if (moveNetPose !== undefined) this.moveNetPose = moveNetPose;
     this.canvas.style.display = this.visible ? '' : 'none';
   }
   _resize() {
@@ -141,23 +141,33 @@ export default class FaceMeshOverlay {
     }
     ctx.stroke();
 
-    // Estimated shoulders
-    if (this.shoulders && this.shoulders.visible) {
-      const ls = this.shoulders.leftShoulder, rs = this.shoulders.rightShoulder;
-      const lsx = ls.x * cw, lsy = ls.y * ch;
-      const rsx = rs.x * cw, rsy = rs.y * ch;
-      // Shoulder line
-      ctx.strokeStyle = 'rgba(255,150,77,0.5)'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
-      ctx.beginPath(); ctx.moveTo(lsx, lsy); ctx.lineTo(rsx, rsy); ctx.stroke();
-      ctx.setLineDash([]);
-      // Shoulder points
-      ctx.fillStyle = 'rgba(255,150,77,0.7)';
-      ctx.beginPath(); ctx.arc(lsx, lsy, 5, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(rsx, rsy, 5, 0, Math.PI * 2); ctx.fill();
-      // Labels
-      ctx.fillStyle = 'rgba(255,150,77,0.6)'; ctx.font = '8px Inter, system-ui, sans-serif';
-      ctx.fillText('hom izq', lsx - 30, lsy);
-      ctx.fillText('hom der', rsx + 5, rsy);
+    // MoveNet upper-trunk keypoints (normalized COCO17 coordinates)
+    if (this.moveNetPose?.normalizedKeypoints?.length) {
+      const kps = this.moveNetPose.normalizedKeypoints;
+      const get = (i) => {
+        const p = kps[i];
+        if (!p || (p.score ?? 0) < 0.25) return null;
+        return { x: p.xNorm * cw, y: p.yNorm * ch, score: p.score };
+      };
+      const links = [[5,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12]];
+      ctx.strokeStyle = 'rgba(255,150,77,0.8)';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      for (const [a,b] of links) {
+        const pa = get(a), pb = get(b);
+        if (pa && pb) { ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); }
+      }
+      ctx.stroke();
+      const labels = {5:'hombro izq',6:'hombro der',7:'codo izq',8:'codo der',9:'muñeca izq',10:'muñeca der'};
+      for (const idx of [5,6,7,8,9,10]) {
+        const p = get(idx);
+        if (!p) continue;
+        ctx.fillStyle = idx <= 6 ? 'rgba(77,212,172,0.9)' : 'rgba(255,150,77,0.85)';
+        ctx.beginPath(); ctx.arc(p.x, p.y, idx <= 6 ? 5 : 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.font = '8px Inter, system-ui, sans-serif';
+        ctx.fillText(labels[idx], p.x + 6, p.y + 3);
+      }
     }
 
     // Gaze indicator — always draw if gaze data exists

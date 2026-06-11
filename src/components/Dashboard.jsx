@@ -22,17 +22,20 @@ export default function Dashboard({
   insightItems,auEntries,activeAUCount,
   edgeAIResult,edgeChannels,edgeConfidence,edgeComposite,
   latestLandmarks,latestGaze,auRegionSummary,DEVICE_CONFIG,
-  latestPose,latestShoulders,
+  latestPose,moveNetPose,moveNet = {},
 }){
   const camRef=useRef(null), meshRef=useRef(null);
   const emotions=edgeAIResult?.emotions;
   const captureQ=edgeAIResult?.confidence?.captureQuality;
   const sc=`status ${statusClassName}`;
-  const [openMetrics,setOpenMetrics]=useState(false);
+  const [openMetrics,setOpenMetrics]=useState(true);
   const [openEdge,setOpenEdge]=useState(true); // open by default
-  const [openStats,setOpenStats]=useState(false);
+  const [openStats,setOpenStats]=useState(true);
   const [openPosture,setOpenPosture]=useState(true);
   const [openAuBars,setOpenAuBars]=useState(false);
+  const methodBadge=(status)=>status==='ready'?'ready':status==='error'?'error':'calibrating';
+  const gazeLabel=latestGaze?`${pct(latestGaze.confidence)} conf · ${latestGaze.lookingAtScreen?'en pantalla':'fuera/indeterminado'}`:'sin gaze';
+  const postureSource=moveNetPose?'MoveNet keypoints reales':latestPose?'FaceMesh proxy':'sin postura';
 
   return(
     <div className="dashboard-v2">
@@ -66,7 +69,7 @@ export default function Dashboard({
         <article className="panel dash-mesh-panel">
           <div className="panel-heading"><h2>🧬 Rostro</h2><span className="status ready" style={{fontSize:'0.65rem'}}>{latestLandmarks?'detectado':'sin rostro'}</span></div>
           <div className="mesh-dark-container" ref={meshRef}>
-            <FaceMeshOverlayWrapper containerRef={meshRef} landmarks={latestLandmarks} visible={showMesh} auRegionActivation={auRegionSummary} gaze={latestGaze} shoulders={latestShoulders}/>
+            <FaceMeshOverlayWrapper containerRef={meshRef} landmarks={latestLandmarks} visible={showMesh} auRegionActivation={auRegionSummary} gaze={latestGaze} moveNetPose={moveNetPose}/>
           </div>
 
           {telemetry.recentCount>0&&(
@@ -142,10 +145,14 @@ export default function Dashboard({
                 </div>
               </div>
 
-              {/* Shoulders estimate */}
-              {latestShoulders?.visible && (
-                <div style={{background:'rgba(255,150,77,0.08)',borderRadius:'10px',padding:'8px 12px',textAlign:'center',fontSize:'0.62rem',color:'#ffb87a'}}>
-                  Hombros estimados: {Math.round(latestShoulders.shoulderAngle*180/Math.PI)}° · ancho {Math.round(latestShoulders.shoulderWidth*100)}%
+              {/* Shoulders — MoveNet only, no FaceMesh fallback */}
+              {moveNetPose ? (
+                <div style={{background:'rgba(77,212,172,0.1)',borderRadius:'10px',padding:'8px 12px',textAlign:'center',fontSize:'0.62rem',color:'#4dd4ac'}}>
+                  Hombros (MoveNet): {moveNetPose.shoulderAngle.toFixed(1)}° · simetría {Math.round(moveNetPose.symmetry*100)}% · conf {Math.round(moveNetPose.confidence*100)}%
+                </div>
+              ) : (
+                <div style={{background:'rgba(255,255,255,0.03)',borderRadius:'10px',padding:'8px 12px',textAlign:'center',fontSize:'0.62rem',color:'#9fb0c2'}}>
+                  MoveNet: {moveNet?.status??'idle'}{moveNet?.error?` · ${moveNet.error}`:''} · sin hombros detectados
                 </div>
               )}
 
@@ -198,6 +205,17 @@ export default function Dashboard({
               <strong>{edgeComposite?.score??'—'}%</strong>
               <span className={`composite-level ${edgeComposite?.level??''}`}>{edgeComposite?.level??'—'}</span>
             </div>
+            {emotions&&(
+              <div className="emotion-badge" style={{margin:'0 0 10px'}}>
+                <span className="emotion-icon">{EMO_ICONS[emotions.dominant]||'😐'}</span>
+                <div><span className="emotion-label" style={{color:EMO_CLRS[emotions.dominant]}}>Expresión proxy: {emotions.dominant}</span><small className="caption">Naive Bayes sobre AUs procesadas · conf {pct(emotions.confidence??emotions.dominantScore)}</small></div>
+                <div className="emotion-mini-probs">
+                  {Object.entries(emotions.probabilities??{}).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([name,val])=>(
+                    <span className="emotion-mini-chip" key={name}>{name} {pct(val)}</span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="edge-channels-grid-compact">
               {Object.entries(edgeChannels).map(([name,ch])=>(
                 <div className="edge-channel-card" key={name} style={{borderColor:CH_COLORS[name]||'var(--ink-blue)',marginBottom:'4px',padding:'6px 10px'}}>
