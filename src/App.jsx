@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { buildCameraConstraints, normalizeVideoInputDevices } from './telemetry/cameraDevices.js';
-import { buildGestureInsights, AU_MAP, AU_REGIONS, GROUP_LABELS } from './telemetry/gestureInsights.js';
+import { normalizeVideoInputDevices } from './telemetry/cameraDevices.js';
+import { buildGestureInsights } from './telemetry/gestureInsights.js';
 import { computeInsightsFromAUs } from './telemetry/insightMetrics.js';
 import { computeEnhancedAUs, resetAUCache } from './telemetry/auEnhancer.js';
 import { setAUBaseline } from './telemetry/auProcessor.js';
@@ -8,20 +8,19 @@ import { estimateGaze, resetGazeEstimator, calibrateGazeCenter } from './telemet
 import { useFaceLandmarkerWorker } from './telemetry/useFaceLandmarkerWorker.js';
 import { estimateUpperBodyPosture, resetUpperBodyPostureState, calibrateUpperBodyPostureUpright } from './telemetry/upperBodyPosture.js';
 import { useMoveNet } from './telemetry/useMoveNet.js';
-import { buildFusionPayload } from './telemetry/payload.js';
+
 import { buildCalibrationProfile } from './telemetry/microgestureFeatures.js';
 import { requestCameraWithFallback, stopStream } from './telemetry/adaptiveCapture.js';
 import { adaptiveCalibrationSamples, estimateLightingQuality, canCalibrate } from './telemetry/lightingAdapter.js';
 import { runEdgeAIInference } from './telemetry/edgeAiEngine.js';
 import { createEmotionTemporalSmoother } from './telemetry/emotionTemporalSmoother.js';
-import { usePipelineWorker } from './telemetry/usePipelineWorker.js';
 import Dashboard from './components/Dashboard.jsx';
 import StickyHeader from './components/StickyHeader.jsx';
 import SimpleRTTask from './tasks/SimpleRTTask.jsx';
 import ReferenceGuide from './components/ReferenceGuide.jsx';
 import TaskImpact from './components/TaskImpact.jsx';
 import { generateReport } from './telemetry/reportGenerator.js';
-import { saveSessionSafe, loadSessionsSafe, clearSessionsSafe } from './telemetry/storageManager.js';
+import { loadSessionsSafe, clearSessionsSafe } from './telemetry/storageManager.js';
 import { getRecommendedConfig } from './telemetry/deviceCapabilities.js';
 import { sanitizeFaceSampleForAggregation } from './telemetry/samplePrivacy.js';
 import './styles.css';
@@ -34,12 +33,10 @@ import './dashboard-toggles.css';
 import './reference-guide.css';
 
 const DEVICE_CONFIG = getRecommendedConfig();
-const CALIBRATION_DURATION_MS = 4000;
 const MIN_SAMPLES_FOR_REPORT = 20;
 
 function clamp(v, min = 0, max = 1) { return Math.min(max, Math.max(min, Number.isFinite(v) ? v : min)); }
 function formatPercent(v) { return `${Math.round(clamp(v) * 100)}%`; }
-function formatNumber(v, d = 3) { if (!Number.isFinite(v)) return Number(0).toFixed(d); return Number(v).toFixed(d); }
 function hasEnoughSamples(t) { return (t?.sampleCount ?? 0) >= MIN_SAMPLES_FOR_REPORT; }
 
 export default function App() {
@@ -74,10 +71,9 @@ export default function App() {
   const [latestPose, setLatestPose] = useState(null);
   const [moveNetPose, setMoveNetPose] = useState(null);
   const [lastQuality, setLastQuality] = useState({});
-  const [blendshapeNames, setBlendshapeNames] = useState([]);
-  const [activeTab, setActiveTab] = useState('gestures');
-  const [exportStatus, setExportStatus] = useState(null);
-  const [showReport, setShowReport] = useState(false);
+  const [, setBlendshapeNames] = useState([]);
+  const [, setExportStatus] = useState(null);
+  const [, setShowReport] = useState(false);
   const [reportContent, setReportContent] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [sessions, setSessions] = useState([]);
@@ -97,7 +93,7 @@ export default function App() {
         setLatestGaze(gaze);
         const posture = estimateUpperBodyPosture(landmarks);
         setLatestPose(posture);
-      } catch (e) { /* optional */ }
+      } catch { /* optional */ }
     }
     setLastQuality(safeSample.quality ?? {});
     if (safeSample.blendshapes) setBlendshapeNames(Object.keys(safeSample.blendshapes).sort());
@@ -194,7 +190,7 @@ export default function App() {
     taskEventsRef.current = [...taskEventsRef.current, event];
     setTaskEventCount((c) => c + 1);
   }, []);
-  const handleTaskComplete = useCallback((summary) => {
+  const handleTaskComplete = useCallback(() => {
     // Task finished
   }, []);
 
@@ -207,29 +203,6 @@ export default function App() {
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 150);
   }, []);
-
-  const buildSessionPayload = useCallback(() => {
-    const samples = faceSamplesRef.current;
-    if (!samples.length) return null;
-    const end = performance.now();
-    const start = sessionStartRef.current ?? samples[0]?.timestamp ?? end - 100;
-    return buildFusionPayload({
-      runId: `local-run-${Date.now()}`, generatedAt: new Date().toISOString(),
-      startedAt: start, endedAt: end,
-      faceSamples: samples, pointerSamples: [], taskEvents: taskEventsRef.current,
-      calibrationProfile,
-      runtime: { delegate: faceWorker.delegate ?? 'CPU' },
-    });
-  }, [calibrationProfile, faceWorker.delegate]);
-
-  const handleSaveSession = useCallback(() => {
-    const payload = buildSessionPayload();
-    if (!payload) return;
-    saveSessionSafe(payload);
-    setSessions(loadSessionsSafe());
-    setExportStatus('saved');
-    setTimeout(() => setExportStatus(null), 3000);
-  }, [buildSessionPayload]);
 
   const startCalibration = useCallback(() => {
     setIsCalibrating(true);

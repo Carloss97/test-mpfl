@@ -11,17 +11,17 @@ const EMO_ICONS = { happiness:'😊',sadness:'😢',surprise:'😲',fear:'😨',
 const EMO_CLRS = { happiness:'#4dd4ac',sadness:'#74a7ff',surprise:'#ffd166',fear:'#ffb4b4',anger:'#ff6b6b',disgust:'#c8a86e',contempt:'#d4a574',neutral:'#9fb0c2' };
 
 function fmt(n,d=3){return Number.isFinite(n)?Number(n).toFixed(d):Number(0).toFixed(d)}
-function pct(v){const x=Math.min(1,Math.max(0,Number.isFinite(v)?v:0));return`${Math.round(x*100)}%`}
+function pct(v){const x=clamp(v);return`${Math.round(x*100)}%`}
 function light(c){return c==='good'?'var(--ink-green)':c==='moderate'?'var(--ink-yellow)':'var(--ink-red)'}
 const clamp=(v,l=0,h=1)=>Math.min(h,Math.max(l,Number.isFinite(v)?v:l));
 
 export default function Dashboard({
-  videoRef,isCameraActive,showMesh,setShowMesh,
+  videoRef,isCameraActive:_isCameraActive,showMesh,setShowMesh,
   telemetry,faceWorker,statusClassName,lastQuality,
   calibrationProfile,calStatusLabel,
   insightItems,auEntries,activeAUCount,
-  edgeAIResult,edgeChannels,edgeConfidence,edgeComposite,
-  latestLandmarks,latestGaze,auRegionSummary,DEVICE_CONFIG,
+  edgeAIResult,edgeChannels,edgeConfidence:_edgeConfidence,edgeComposite,
+  latestLandmarks,latestGaze,auRegionSummary,DEVICE_CONFIG:_DEVICE_CONFIG,
   latestPose,moveNetPose,moveNet = {},
   onCalibrateGazeCenter,onCalibratePostureUpright,manualCalStatus,
 }){
@@ -34,9 +34,6 @@ export default function Dashboard({
   const [openStats,setOpenStats]=useState(true);
   const [openPosture,setOpenPosture]=useState(true);
   const [openAuBars,setOpenAuBars]=useState(false);
-  const methodBadge=(status)=>status==='ready'?'ready':status==='error'?'error':'calibrating';
-  const gazeLabel=latestGaze?`${pct(latestGaze.confidence)} conf · ${latestGaze.lookingAtScreen?'en pantalla':'fuera/indeterminado'}`:'sin gaze';
-  const postureSource=moveNetPose?'MoveNet keypoints reales':latestPose?'FaceMesh proxy':'sin postura';
 
   return(
     <div className="dashboard-v2">

@@ -1,4 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { normalizeGameEvent } from '../telemetry/gameTelemetry.js';
+import { createPointerSampler, appendPointerSample } from '../telemetry/pointerSampler.js';
+import { summarizePointerTrial } from '../telemetry/kinematics.js';
 
 const TRIAL_COUNT = 10;
 const MAX_RT_MS = 3000;
@@ -8,17 +11,25 @@ const TARGET_RADIUS = 30;
 
 function randomPos(w, h, m = 60) { return { x: m + Math.random() * (w - m * 2), y: m + Math.random() * (h - m * 2) }; }
 
-export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT, onTrialStart, onTrialEnd, onComplete, width = 600, height = 400 }) {
+export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT, onTrialStart, onTrialEnd, onComplete, onGameEvent, width = 600, height = 400 }) {
   const containerRef = useRef(null);
   const stateRef = useRef({
     trials: [], trialId: 0, current: 0, phase: 'idle',
     targetPos: null, startTime: 0, timeoutId: null, itiId: null,
+    pointerSampler: createPointerSampler({ maxSamples: 600, sessionId: 'simple_rt' }),
   });
   const [render, setRender] = useState({ phase: 'idle', current: 0, targetPos: null, feedback: null, scores: null });
 
   const triggerRender = useCallback((patch) => {
     setRender((prev) => ({ ...prev, ...patch }));
   }, []);
+
+  const emitGameEvent = useCallback((event) => {
+    if (!onGameEvent) return null;
+    const normalized = normalizeGameEvent(event, { gameId: 'simple_rt', sessionId: 'simple_rt' });
+    onGameEvent(normalized);
+    return normalized;
+  }, [onGameEvent]);
 
   // ─── Core logic as refs (no re-render dependencies) ───
 
@@ -34,17 +45,24 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
     triggerRender({ phase: 'target', targetPos: pos, feedback: null });
 
     const tid = `rt-${s.trialId++}`;
-    onTrialStart?.({
+    s.pointerSampler = createPointerSampler({ maxSamples: 600, sessionId: 'simple_rt' });
+    const shownEvent = {
       type: 'target_shown', trialId: tid, targetId: 'rt-circle',
       timestamp: s.startTime,
       context: { taskId: 'simple_rt', taskLabel: 'RT Simple', trial: s.current + 1, position: pos },
+    };
+    onTrialStart?.(shownEvent);
+    emitGameEvent({
+      eventType: 'stimulus_shown', trialId: tid, targetId: 'rt-circle', timestamp: s.startTime,
+      stimulus: { kind: 'circle', payload: { position: pos, radius: TARGET_RADIUS } },
+      gameState: { score: s.trials.filter((trial) => trial.correct).length, level: 1, difficulty: 'baseline', combo: 0 },
     });
 
     // Timeout
     s.timeoutId = setTimeout(() => {
       doEndTrial(false, null, true);
     }, MAX_RT_MS);
-  }, [width, height, onTrialStart, triggerRender]);
+  }, [width, height, onTrialStart, emitGameEvent, triggerRender]);
 
   const doEndTrial = useCallback((correct, clickPos, timeout = false) => {
     const s = stateRef.current;
@@ -59,18 +77,37 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
       correct, reactionTimeMs: Math.round(Math.min(rt, MAX_RT_MS)),
       position: s.targetPos, clickPosition: clickPos,
     };
+    const pointerSummary = summarizePointerTrial(s.pointerSampler?.samples ?? [], {
+      shownAt: s.startTime,
+      responseAt: now,
+      target: s.targetPos ? { ...s.targetPos, radius: TARGET_RADIUS } : null,
+      click: clickPos,
+    });
     s.trials = [...s.trials, result];
     s.phase = 'feedback';
 
     triggerRender({ phase: 'feedback', feedback: { correct, rt: Math.round(Math.min(rt, MAX_RT_MS)), timeout } });
 
-    onTrialEnd?.({
+    const legacyEndEvent = {
       type: 'target_click', ...result,
       context: {
         taskId: 'simple_rt', taskLabel: 'RT Simple',
         correct, outcome: timeout ? 'timeout' : correct ? 'correct' : 'incorrect',
         score: correct ? 1 : 0,
       },
+    };
+    onTrialEnd?.(legacyEndEvent);
+    emitGameEvent({
+      eventType: 'response', trialId: tid, targetId: 'rt-circle', timestamp: now,
+      pointer: clickPos,
+      response: {
+        correct,
+        outcome: timeout ? 'timeout' : correct ? 'correct' : 'incorrect',
+        reactionTimeMs: Math.round(Math.min(rt, MAX_RT_MS)),
+        score: correct ? 1 : 0,
+        pointerSummary,
+      },
+      gameState: { score: s.trials.filter((trial) => trial.correct).length, level: 1, difficulty: 'baseline' },
     });
 
     // Schedule next trial
@@ -103,7 +140,22 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
         doStartTrial();
       }
     }, iti);
-  }, [trialCount, onTrialEnd, onComplete, doStartTrial, triggerRender]);
+  }, [trialCount, onTrialEnd, onComplete, emitGameEvent, doStartTrial, triggerRender]);
+
+  const handlePointerMove = useCallback((e) => {
+    const s = stateRef.current;
+    if (s.phase !== 'target') return;
+    const rect = containerRef.current?.getBoundingClientRect();
+    const x = rect ? e.clientX - rect.left : e.clientX;
+    const y = rect ? e.clientY - rect.top : e.clientY;
+    s.pointerSampler = appendPointerSample(s.pointerSampler, {
+      timestamp: e.timeStamp ?? performance.now(),
+      x,
+      y,
+      button: e.button,
+      pressure: e.pressure,
+    });
+  }, []);
 
   const handleClick = useCallback((e) => {
     const s = stateRef.current;
@@ -112,6 +164,13 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
     if (!rect) return;
     const cx = e.clientX - rect.left;
     const cy = e.clientY - rect.top;
+    s.pointerSampler = appendPointerSample(s.pointerSampler, {
+      timestamp: e.timeStamp ?? performance.now(),
+      x: cx,
+      y: cy,
+      button: e.button,
+      pressure: e.pressure,
+    });
     const dist = Math.hypot(cx - s.targetPos.x, cy - s.targetPos.y);
     doEndTrial(dist < TARGET_RADIUS, { x: cx, y: cy });
   }, [doEndTrial]);
@@ -123,7 +182,7 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
       const s = stateRef.current;
       if (s.timeoutId) clearTimeout(s.timeoutId);
       if (s.itiId) clearTimeout(s.itiId);
-      Object.assign(s, { trials: [], trialId: 0, current: 0, phase: 'idle', targetPos: null, timeoutId: null, itiId: null });
+      Object.assign(s, { trials: [], trialId: 0, current: 0, phase: 'idle', targetPos: null, timeoutId: null, itiId: null, pointerSampler: createPointerSampler({ maxSamples: 600, sessionId: 'simple_rt' }) });
       triggerRender({ phase: 'idle', current: 0, targetPos: null, feedback: null, scores: null });
       return;
     }
@@ -131,12 +190,13 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
     const s = stateRef.current;
     if (s.timeoutId) clearTimeout(s.timeoutId);
     if (s.itiId) clearTimeout(s.itiId);
-    Object.assign(s, { trials: [], trialId: 0, current: 0, phase: 'idle', targetPos: null, timeoutId: null, itiId: null });
+    Object.assign(s, { trials: [], trialId: 0, current: 0, phase: 'idle', targetPos: null, timeoutId: null, itiId: null, pointerSampler: createPointerSampler({ maxSamples: 600, sessionId: 'simple_rt' }) });
     triggerRender({ phase: 'idle', current: 0, targetPos: null, feedback: null, scores: null });
+    emitGameEvent({ eventType: 'game_start', timestamp: performance.now(), gameState: { score: 0, level: 1, difficulty: 'baseline', combo: 0 } });
     // Small delay then start
     const t = setTimeout(() => doStartTrial(), 200);
     return () => clearTimeout(t);
-  }, [active, doStartTrial, triggerRender]);
+  }, [active, doStartTrial, emitGameEvent, triggerRender]);
 
   // Cleanup on unmount
   useEffect(() => () => {
@@ -156,7 +216,7 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
         <span className="task-progress">{current + 1}/{trialCount}</span>
         {phase === 'finished' && <span className="task-progress" style={{ background: 'rgba(77,212,172,0.2)' }}>✓</span>}
       </div>
-      <div ref={containerRef} className="task-area" style={{ width, height, position: 'relative', cursor: phase === 'target' ? 'crosshair' : 'default' }} onClick={handleClick}>
+      <div ref={containerRef} className="task-area" style={{ width, height, position: 'relative', cursor: phase === 'target' ? 'crosshair' : 'default' }} onPointerMove={handlePointerMove} onClick={handleClick}>
         {phase === 'target' && targetPos && (
           <div className="rt-target" style={{ left: targetPos.x - 25, top: targetPos.y - 25, width: 50, height: 50 }} />
         )}
@@ -177,7 +237,7 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
               const s = stateRef.current;
               if (s.timeoutId) clearTimeout(s.timeoutId);
               if (s.itiId) clearTimeout(s.itiId);
-              Object.assign(s, { trials: [], trialId: 0, current: 0, phase: 'idle', targetPos: null, timeoutId: null, itiId: null });
+              Object.assign(s, { trials: [], trialId: 0, current: 0, phase: 'idle', targetPos: null, timeoutId: null, itiId: null, pointerSampler: createPointerSampler({ maxSamples: 600, sessionId: 'simple_rt' }) });
               triggerRender({ phase: 'idle', current: 0, targetPos: null, feedback: null, scores: null });
               setTimeout(() => doStartTrial(), 200);
             }} style={{ marginTop: '12px' }}>Repetir</button>
