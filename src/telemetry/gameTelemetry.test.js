@@ -76,4 +76,39 @@ describe('gameTelemetry v1', () => {
     expect(JSON.stringify(summary)).not.toContain('clickPosition');
     expect(JSON.stringify(summary)).not.toContain('pointerSamples');
   });
+
+  it('summarizes rich game telemetry for inference without raw samples', () => {
+    const events = [
+      normalizeGameEvent({ timestamp: 0, gameId: 'precision_targeting', trialId: 'p-1', eventType: 'stimulus_shown' }),
+      normalizeGameEvent({
+        timestamp: 420, gameId: 'precision_targeting', trialId: 'p-1', eventType: 'response',
+        response: {
+          correct: true, outcome: 'hit', reactionTimeMs: 420, score: 1,
+          fitts: { indexDifficulty: 2.5, throughput: 5.95 },
+          pointerSummary: { pathEfficiency: 0.82, meanJerkPxPerMs3: 0.02, correctionCount: 2, overshootCount: 1, clickDistanceToTargetPx: 4, samples: [{ x: 1, y: 1 }] },
+        },
+      }),
+      normalizeGameEvent({
+        timestamp: 900, gameId: 'go_nogo', trialId: 'g-1', eventType: 'response',
+        response: { correct: false, outcome: 'commission_error', reactionTimeMs: 180, score: 0, inhibition: { cue: 'NO-GO', responseRequired: false } },
+      }),
+      normalizeGameEvent({
+        timestamp: 1300, gameId: 'color_interference', trialId: 'c-1', eventType: 'response',
+        response: { correct: true, outcome: 'correct', reactionTimeMs: 380, score: 1, interference: { congruent: false, expectedResponse: 'green' } },
+      }),
+      normalizeGameEvent({
+        timestamp: 1700, gameId: 'pursuit_tracking', trialId: 't-1', eventType: 'response',
+        response: { correct: true, outcome: 'tracked', reactionTimeMs: 1000, score: 0.75, tracking: { rmsErrorPx: 12, lossRatio: 0.1, smoothPursuitScore: 0.8, samples: [{ x: 1 }] } },
+      }),
+    ];
+
+    const summary = summarizeGameEvents(events);
+
+    expect(summary.performance).toMatchObject({ accuracy: 0.75, completedTrialCount: 4, meanScore: 0.6875 });
+    expect(summary.motor).toMatchObject({ pathEfficiencyMean: 0.82, correctionRate: 2, overshootRate: 1, trackingRmsErrorPx: 12, smoothPursuitScore: 0.8 });
+    expect(summary.inhibition).toMatchObject({ commissionErrorRate: 1, omissionErrorRate: 0 });
+    expect(summary.interference).toMatchObject({ incongruentAccuracy: 1, errorRate: 0 });
+    expect(summary.fitts).toMatchObject({ meanIndexDifficulty: 2.5, meanThroughput: 5.95 });
+    expect(JSON.stringify(summary)).not.toContain('samples');
+  });
 });

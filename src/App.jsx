@@ -17,6 +17,11 @@ import { createEmotionTemporalSmoother } from './telemetry/emotionTemporalSmooth
 import Dashboard from './components/Dashboard.jsx';
 import StickyHeader from './components/StickyHeader.jsx';
 import SimpleRTTask from './tasks/SimpleRTTask.jsx';
+import PrecisionTargetingTask from './tasks/PrecisionTargetingTask.jsx';
+import PursuitTrackingTask from './tasks/PursuitTrackingTask.jsx';
+import GoNoGoTask from './tasks/GoNoGoTask.jsx';
+import ColorInterferenceTask from './tasks/ColorInterferenceTask.jsx';
+import { summarizeGameEvents } from './telemetry/gameTelemetry.js';
 import ReferenceGuide from './components/ReferenceGuide.jsx';
 import TaskImpact from './components/TaskImpact.jsx';
 import { generateReport } from './telemetry/reportGenerator.js';
@@ -35,6 +40,14 @@ import './reference-guide.css';
 const DEVICE_CONFIG = getRecommendedConfig();
 const MIN_SAMPLES_FOR_REPORT = 20;
 
+const GAME_ACTIVITY_OPTIONS = Object.freeze([
+  { id: 'simple_rt', label: 'RT Simple', description: 'Tiempo de reacción básico' },
+  { id: 'precision_targeting', label: 'Precisión visomotora', description: 'Fitts Law, precisión y trayectoria' },
+  { id: 'pursuit_tracking', label: 'Seguimiento continuo', description: 'Tracking visuomotor y pérdida de seguimiento' },
+  { id: 'go_nogo', label: 'Go/No-Go', description: 'Inhibición motora y errores de comisión/omisión' },
+  { id: 'color_interference', label: 'Interferencia color-palabra', description: 'Conflicto cognitivo tipo Stroop' },
+]);
+
 function clamp(v, min = 0, max = 1) { return Math.min(max, Math.max(min, Number.isFinite(v) ? v : min)); }
 function formatPercent(v) { return `${Math.round(clamp(v) * 100)}%`; }
 function hasEnoughSamples(t) { return (t?.sampleCount ?? 0) >= MIN_SAMPLES_FOR_REPORT; }
@@ -51,6 +64,7 @@ export default function App() {
   const videoRef = useRef(null);
   const faceSamplesRef = useRef([]);
   const taskEventsRef = useRef([]);
+  const gameEventsRef = useRef([]);
   const sessionStartRef = useRef(0);
   const calibrationTimerRef = useRef(null);
   const streamRef = useRef(null);
@@ -61,8 +75,11 @@ export default function App() {
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [cameraDevices, setCameraDevices] = useState([]);
   const [showMesh, setShowMesh] = useState(true);
+  const [selectedGameId, setSelectedGameId] = useState('simple_rt');
   const [taskActive, setTaskActive] = useState(false);
   const [taskEventCount, setTaskEventCount] = useState(0);
+  const [gameEventCount, setGameEventCount] = useState(0);
+  const [lastGameSummary, setLastGameSummary] = useState(null);
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [calibrationProfile, setCalibrationProfile] = useState(null);
   const [latestFaceSample, setLatestFaceSample] = useState(null);
@@ -190,13 +207,20 @@ export default function App() {
     taskEventsRef.current = [...taskEventsRef.current, event];
     setTaskEventCount((c) => c + 1);
   }, []);
-  const handleTaskComplete = useCallback(() => {
-    // Task finished
+  const handleGameEvent = useCallback((event) => {
+    gameEventsRef.current = [...gameEventsRef.current, event];
+    setGameEventCount((c) => c + 1);
+  }, []);
+  const handleTaskComplete = useCallback((summary) => {
+    setLastGameSummary(summary ?? null);
   }, []);
 
   const startTask = useCallback(() => {
     taskEventsRef.current = [];
+    gameEventsRef.current = [];
     setTaskEventCount(0);
+    setGameEventCount(0);
+    setLastGameSummary(null);
     setTaskActive(true);
     setTimeout(() => {
       const el = document.querySelector('.task-panel');
@@ -236,6 +260,8 @@ export default function App() {
   useEffect(() => () => { if (calibrationTimerRef.current) clearTimeout(calibrationTimerRef.current); }, []);
 
   // ─── Telemetry ───
+  const gameSummary = useMemo(() => summarizeGameEvents(gameEventsRef.current), [gameEventCount]);
+
   const telemetry = useMemo(() => {
     const allSamples = faceSamplesRef.current;
     const recentSamples = allSamples.slice(-60);
@@ -252,6 +278,7 @@ export default function App() {
         gaze: latestGaze,
         posture: latestPose,
         upperBody: moveNetPose,
+        task: gameSummary.performance,
       });
       Object.assign(insights, auMetrics);
     }
@@ -260,7 +287,7 @@ export default function App() {
       insights.enhancedAUs = enhanced;
     }
     return { sampleCount: allSamples.length, recentCount, facePresenceRatio, meanConfidence, fpsEstimate, insights };
-  }, [latestFaceSample, latestGaze, latestPose, moveNetPose]);
+  }, [latestFaceSample, latestGaze, latestPose, moveNetPose, gameSummary]);
 
   // ─── Edge AI Inference (direct, no worker) ───
   const edgeAIResult = useMemo(() => {
@@ -276,10 +303,11 @@ export default function App() {
         latestGaze,
         latestPosture: latestPose,
         moveNetPose,
+        gameSummary,
       });
       return { ...result, emotions: emotionSmootherRef.current.smooth(result.emotions, { timestamp: latestFaceSample?.timestamp ?? null }) };
     } catch (e) { console.error('Edge AI inference failed:', e); return null; }
-  }, [latestFaceSample, calibrationProfile, faceWorker.delegate, taskEventCount, faceSamplesRef.current?.length, latestGaze, latestPose, moveNetPose]);
+  }, [latestFaceSample, calibrationProfile, faceWorker.delegate, taskEventCount, gameEventCount, faceSamplesRef.current?.length, latestGaze, latestPose, moveNetPose, gameSummary]);
 
   // ─── Pipeline Worker (future: optional, fallback to direct) ───
   // const pipeline = usePipelineWorker({ ... });
@@ -289,6 +317,7 @@ export default function App() {
   const edgeChannels = edgeAIResult?.calibratedChannels ?? edgeAIResult?.channels ?? {};
   const edgeConfidence = edgeAIResult?.confidence;
   const edgeComposite = edgeAIResult?.composite;
+  const selectedGame = GAME_ACTIVITY_OPTIONS.find((option) => option.id === selectedGameId) ?? GAME_ACTIVITY_OPTIONS[0];
 
   const handleGenerateReport = useCallback((format = 'markdown') => {
     if (!hasEnoughSamples(telemetry)) return;
@@ -384,9 +413,23 @@ export default function App() {
             <button type="button" onClick={cancelCalibration} disabled={!isCalibrating} className="secondary">Cancelar</button>
           </div>
           <div className="task-controls">
-            <button type="button" onClick={startTask} disabled={taskActive || !isCameraActive} className="primary">
-              🎯 Tarea RT Simple
-            </button>
+            <div style={{display:'grid',gap:'6px',minWidth:'260px'}}>
+              <strong>Actividades gamificadas</strong>
+              <label className="caption" htmlFor="game-activity-select">Actividad gamificada</label>
+              <select id="game-activity-select" value={selectedGameId} onChange={(e) => setSelectedGameId(e.target.value)} disabled={taskActive} aria-label="Actividad gamificada">
+                {GAME_ACTIVITY_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+              </select>
+              <span className="caption">Fases A-H disponibles · {selectedGame.description}</span>
+            </div>
+            {!taskActive ? (
+              <button type="button" onClick={startTask} className="primary">
+                ▶ Iniciar actividad
+              </button>
+            ) : (
+              <button type="button" onClick={() => setTaskActive(false)} className="secondary">
+                Detener actividad
+              </button>
+            )}
             <button type="button" onClick={() => handleGenerateReport('markdown')} disabled={!hasEnoughSamples(telemetry)} className="secondary">
               📝 Reporte MD
             </button>
@@ -404,6 +447,7 @@ export default function App() {
           insightItems={insightItems} auEntries={auEntries} activeAUCount={activeAUCount}
           edgeAIResult={edgeAIResult} edgeChannels={edgeChannels} edgeConfidence={edgeConfidence} edgeComposite={edgeComposite}
           latestLandmarks={latestLandmarks} latestGaze={latestGaze} latestPose={latestPose} moveNetPose={moveNetPose} moveNet={moveNet} auRegionSummary={telemetry.insights?.auRegionSummary}
+          gameSummary={gameSummary}
           DEVICE_CONFIG={DEVICE_CONFIG}
           onCalibrateGazeCenter={handleCalibrateGazeCenter}
           onCalibratePostureUpright={handleCalibratePostureUpright}
@@ -424,14 +468,45 @@ export default function App() {
 
       {taskActive && (
         <section className="panel task-panel" style={{ scrollMarginTop: '80px' }}>
-          <div className="panel-heading"><h2>🎯 Tarea de Reacción</h2></div>
-          <SimpleRTTask
-            active={taskActive}
-            onTrialStart={handleTaskStart}
-            onTrialEnd={handleTaskEnd}
-            onComplete={handleTaskComplete}
-            width={600} height={400}
-          />
+          <div className="panel-heading">
+            <div>
+              <h2>🎮 {selectedGame.label}</h2>
+              <p className="caption">Eventos de juego: {gameEventCount} · Eventos legacy: {taskEventCount}</p>
+            </div>
+          </div>
+          {selectedGameId === 'simple_rt' && (
+            <SimpleRTTask
+              active={taskActive}
+              onTrialStart={handleTaskStart}
+              onTrialEnd={handleTaskEnd}
+              onGameEvent={handleGameEvent}
+              onComplete={handleTaskComplete}
+              width={600} height={400}
+            />
+          )}
+          {selectedGameId === 'precision_targeting' && (
+            <PrecisionTargetingTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete} width={600} height={400}/>
+          )}
+          {selectedGameId === 'pursuit_tracking' && (
+            <PursuitTrackingTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete} width={600} height={400} durationMs={6000}/>
+          )}
+          {selectedGameId === 'go_nogo' && (
+            <GoNoGoTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete}/>
+          )}
+          {selectedGameId === 'color_interference' && (
+            <ColorInterferenceTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete}/>
+          )}
+          {lastGameSummary && (
+            <p className="caption">Último resultado: {Math.round((lastGameSummary.accuracy ?? lastGameSummary.meanScore ?? lastGameSummary.score ?? 0) * 100)}%</p>
+          )}
+          {gameSummary.eventCount > 0 && (
+            <div className="summary-grid summary-grid-compact" style={{marginTop:'10px'}}>
+              <div><span>Game events</span><strong>{gameSummary.eventCount}</strong></div>
+              <div><span>Precisión</span><strong>{formatPercent(gameSummary.performance?.accuracy??0)}</strong></div>
+              <div><span>RT medio</span><strong>{Math.round(gameSummary.performance?.meanReactionTimeMs??0)}ms</strong></div>
+              <div><span>Motor</span><strong>{formatPercent(gameSummary.motor?.pathEfficiencyMean??gameSummary.motor?.smoothPursuitScore??0)}</strong></div>
+            </div>
+          )}
           <TaskImpact edgeAIResult={edgeAIResult} taskActive={taskActive} />
         </section>
       )}

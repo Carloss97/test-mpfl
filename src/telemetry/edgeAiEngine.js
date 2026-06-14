@@ -1,10 +1,10 @@
 /**
- * Edge AI Engine v8 — Pipeline lineal limpio
+ * Edge AI Engine v8.1 — Pipeline lineal multimodal
  *
  * Etapas:
- *   1. computeAUs (gestureInsights) → AUs crudas
+ *   1. buildMultimodalFeatures → features temporales + AUs + gaze/postura/MoveNet/game
  *   2. processAllAUs (auProcessor) → AUs procesadas (baseline + gain)
- *   3. Bayesian scoring por canal (likelihood ratios)
+ *   3. Bayesian scoring por canal (likelihood ratios) + modificadores multimodales/game-aware
  *   4. classifyEmotions (emotionClassifier) → Naive Bayes
  *
  * Sin Gradient Boosting (requiere entrenamiento, inestable al inicio).
@@ -16,7 +16,7 @@
 import { buildMultimodalFeatures } from './multimodalFeatures.js';
 import { recordSessionScores, normalizeAllChannels } from './edgeCalibration.js';
 
-const MODEL_VERSION = 'krumm-edge-ai-v8.1.0-multimodal';
+const MODEL_VERSION = 'krumm-edge-ai-v8.2.0-game-aware';
 
 // ─── Helpers ───
 function clamp(v, l = 0, h = 1) { return Math.min(h, Math.max(l, Number.isFinite(v) ? v : l)); }
@@ -77,14 +77,17 @@ function bayesianChannelScore(channelName, aus) {
 }
 
 // ─── Task Performance (usa datos reales) ───
-function scoreTaskPerformance(features) {
-  const perf = features.performance ?? {};
+function scoreTaskPerformance(multimodal) {
+  const perf = multimodal.task ?? multimodal.performance ?? {};
   const acc = perf.accuracy ?? 0;
   const mrt = perf.meanReactionTimeMs ?? 0;
-  const cr = perf.completedCount && perf.trialCount ? perf.completedCount / perf.trialCount : 1;
+  const completed = perf.completedTrialCount ?? perf.completedCount;
+  const cr = completed && perf.trialCount ? completed / perf.trialCount : 1;
+  const meanScore = perf.meanScore ?? acc;
   const rtScore = clamp(1 - mrt / 2000);
-  const raw = acc * 0.35 + rtScore * 0.30 + cr * 0.20 + 0.15;
-  return { score: toPercent(raw), level: levelForScore(toPercent(raw)) };
+  const raw = acc * 0.30 + meanScore * 0.20 + rtScore * 0.30 + cr * 0.20;
+  const score = toPercent(raw);
+  return { score, level: levelForScore(score), source: multimodal.game?.available ? 'game_telemetry' : 'task' };
 }
 
 function channelFromRaw(raw, extras = {}) {
@@ -134,6 +137,17 @@ function applyMultimodalChannelModifiers(channels, multimodal) {
   if (channels.stressResponse) {
     const score = Math.round(channels.stressResponse.score * 0.75 + posturePenalty * 0.15 + gazeInstability * 0.10);
     channels.stressResponse = { ...channels.stressResponse, score, level: levelForScore(score), multimodalAdjusted: true };
+  }
+  if (channels.motorControl && multimodal.game?.available) {
+    const motor = multimodal.game.motor ?? {};
+    const path = motor.pathEfficiencyMean || 0;
+    const pursuit = motor.smoothPursuitScore || 0;
+    const lowLoss = 1 - clamp(motor.trackingLossRatio ?? 0);
+    const lowOvershoot = 1 - clamp((motor.overshootRate ?? 0) / 3);
+    const lowJerk = 1 - clamp((motor.jerkMean ?? 0) * 10);
+    const motorRaw = clamp(path * 0.35 + pursuit * 0.25 + lowLoss * 0.15 + lowOvershoot * 0.15 + lowJerk * 0.10);
+    const score = Math.round(channels.motorControl.score * 0.45 + motorRaw * 100 * 0.55);
+    channels.motorControl = { ...channels.motorControl, score, level: levelForScore(score), gameAdjusted: true, source: 'aus_facs+game_telemetry' };
   }
 }
 
@@ -186,6 +200,7 @@ export function runEdgeAIInference({
   faceSamples = [], pointerSamples = [], taskEvents = [],
   calibrationProfile = null, runtime = {},
   latestGaze = null, latestPosture = null, moveNetPose = null,
+  gameSummary = null,
 } = {}) {
   const generatedAt = new Date().toISOString();
 
@@ -198,6 +213,7 @@ export function runEdgeAIInference({
     latestGaze,
     latestPosture,
     moveNetPose,
+    gameSummary,
   });
   const features = multimodal.temporal;
   const aus = multimodal.aus;
@@ -213,7 +229,7 @@ export function runEdgeAIInference({
   channels.visualAttention = scoreVisualAttention(multimodal);
   channels.postureQuality = scorePostureQuality(multimodal);
   applyMultimodalChannelModifiers(channels, multimodal);
-  channels.taskPerformance = scoreTaskPerformance(features);
+  channels.taskPerformance = scoreTaskPerformance(multimodal);
 
   // Stage 4: Emotions
   const emotions = multimodal.emotions;
@@ -268,6 +284,7 @@ export function runEdgeAIInference({
       gaze: multimodal.gaze,
       posture: multimodal.posture,
       upperBody: multimodal.upperBody,
+      game: multimodal.game,
       quality: multimodal.quality,
     },
     caveats: [

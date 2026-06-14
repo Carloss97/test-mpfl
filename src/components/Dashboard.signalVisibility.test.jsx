@@ -68,4 +68,19 @@ describe('Dashboard signal visibility', () => {
     expect(screen.getByText(/Calibrar postura erguida/i)).toBeInTheDocument();
     expect(screen.getByText(/brazos visibles 2\/4/i)).toBeInTheDocument();
   });
+
+  it('surfaces synchronized game telemetry when game summary exists', () => {
+    render(<Dashboard {...baseProps} gameSummary={{
+      eventCount: 6,
+      performance: { accuracy: 0.83, completedTrialCount: 5, trialCount: 6, meanReactionTimeMs: 420 },
+      motor: { pathEfficiencyMean: 0.76 },
+      interference: { errorRate: 0.17 },
+      inhibition: {},
+    }} />);
+
+    expect(screen.getByText(/Actividad sincronizada/i)).toBeInTheDocument();
+    expect(screen.getByText(/Eventos/i)).toBeInTheDocument();
+    expect(screen.getByText(/RT medio/i)).toBeInTheDocument();
+    expect(screen.getByText(/usado por métricas\/Edge AI/i)).toBeInTheDocument();
+  });
 });

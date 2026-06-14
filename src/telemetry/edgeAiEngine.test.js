@@ -115,4 +115,22 @@ describe('runEdgeAIInference with multimodal inputs', () => {
     expect(output.multimodal.gaze.available).toBe(true);
     expect(output.multimodal.upperBody.available).toBe(true);
   });
+
+  it('uses game telemetry summaries for task performance and motor control inference', () => {
+    const output = runEdgeAIInference({
+      faceSamples,
+      gameSummary: {
+        performance: { accuracy: 0.9, meanReactionTimeMs: 360, completedTrialCount: 5, trialCount: 5, meanScore: 0.88 },
+        motor: { pathEfficiencyMean: 0.92, smoothPursuitScore: 0.85, trackingLossRatio: 0.05, jerkMean: 0.01, overshootRate: 0.1 },
+        inhibition: { commissionErrorRate: 0, omissionErrorRate: 0, correctGoRT: 310 },
+        interference: { conflictCostMs: 90, errorRate: 0 },
+      },
+    });
+
+    expect(output.channels.taskPerformance.score).toBeGreaterThanOrEqual(70);
+    expect(output.channels.taskPerformance.source).toBe('game_telemetry');
+    expect(output.channels.motorControl.gameAdjusted).toBe(true);
+    expect(output.multimodal.game.available).toBe(true);
+    expect(output.multimodal.game.performance.accuracy).toBe(0.9);
+  });
 });

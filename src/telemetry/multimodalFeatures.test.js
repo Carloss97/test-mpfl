@@ -52,4 +52,22 @@ describe('buildMultimodalFeatures', () => {
     expect(features.upperBody.available).toBe(false);
     expect(features.quality.facePresenceRatio).toBeGreaterThan(0);
   });
+
+  it('includes synchronized game telemetry summaries as task/game features', () => {
+    const features = buildMultimodalFeatures({
+      faceSamples: [sample(0), sample(33), sample(66)],
+      gameSummary: {
+        performance: { accuracy: 0.75, meanReactionTimeMs: 420, completedTrialCount: 4, trialCount: 4, meanScore: 0.7 },
+        motor: { pathEfficiencyMean: 0.82, smoothPursuitScore: 0.8, trackingLossRatio: 0.1, correctionRate: 2 },
+        inhibition: { commissionErrorRate: 0.25, omissionErrorRate: 0 },
+        interference: { conflictCostMs: 180, errorRate: 0.1 },
+      },
+    });
+
+    expect(features.game.available).toBe(true);
+    expect(features.game.performance.accuracy).toBe(0.75);
+    expect(features.task.accuracy).toBe(0.75);
+    expect(features.game.motor.pathEfficiencyMean).toBe(0.82);
+    expect(features.sampleCounts.gameEvents).toBe(4);
+  });
 });

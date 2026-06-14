@@ -136,6 +136,16 @@ export function appendGameEvent(events = [], event = {}, defaults = {}) {
   return [...events, normalizeGameEvent(event, defaults)];
 }
 
+function mean(values, digits = 4) {
+  const numeric = values.map(Number).filter(Number.isFinite);
+  if (!numeric.length) return 0;
+  return round(numeric.reduce((sum, value) => sum + value, 0) / numeric.length, digits);
+}
+
+function rate(count, total) {
+  return total > 0 ? round(count / total, 4) : 0;
+}
+
 export function summarizeGameEvents(events = []) {
   const normalized = events.map((event) => event?.type === GAME_EVENT_TYPE ? event : normalizeGameEvent(event));
   const byEventType = {};
@@ -161,6 +171,20 @@ export function summarizeGameEvents(events = []) {
   const reactionTimes = responses
     .map((response) => finiteOrNull(response.reactionTimeMs))
     .filter((value) => value !== null);
+  const responseScores = responses
+    .map((response) => finiteOrNull(response.score))
+    .filter((value) => value !== null);
+
+  const pointerSummaries = responses.map((response) => response.pointerSummary).filter(Boolean);
+  const fittsSummaries = responses.map((response) => response.fitts).filter(Boolean);
+  const trackingSummaries = responses.map((response) => response.tracking).filter(Boolean);
+  const inhibitionResponses = responses.filter((response) => response.inhibition || ['correct_go', 'correct_withhold', 'commission_error', 'omission_error'].includes(response.outcome));
+  const interferenceResponses = responses.filter((response) => response.interference);
+
+  const noGoResponses = inhibitionResponses.filter((response) => response.inhibition?.responseRequired === false || ['commission_error', 'correct_withhold'].includes(response.outcome));
+  const goResponses = inhibitionResponses.filter((response) => response.inhibition?.responseRequired === true || ['correct_go', 'omission_error'].includes(response.outcome));
+  const congruentResponses = interferenceResponses.filter((response) => response.interference?.congruent === true);
+  const incongruentResponses = interferenceResponses.filter((response) => response.interference?.congruent === false);
 
   return {
     schemaVersion: GAME_SUMMARY_SCHEMA,
@@ -170,6 +194,41 @@ export function summarizeGameEvents(events = []) {
     accuracy: responses.length ? round(correctResponses.length / responses.length, 4) : 0,
     meanReactionTimeMs: reactionTimes.length ? round(reactionTimes.reduce((sum, value) => sum + value, 0) / reactionTimes.length, 2) : 0,
     totalScore: scores.length ? round(scores.reduce((sum, value) => sum + value, 0), 4) : 0,
+    performance: {
+      trialCount: trialIds.size,
+      completedTrialCount: responses.length,
+      accuracy: responses.length ? round(correctResponses.length / responses.length, 4) : 0,
+      meanReactionTimeMs: mean(reactionTimes, 2),
+      meanScore: mean(responseScores, 4),
+    },
+    motor: {
+      pathEfficiencyMean: mean(pointerSummaries.map((summary) => summary.pathEfficiency), 4),
+      jerkMean: mean(pointerSummaries.map((summary) => summary.meanJerkPxPerMs3), 5),
+      correctionRate: mean(pointerSummaries.map((summary) => summary.correctionCount), 4),
+      overshootRate: mean(pointerSummaries.map((summary) => summary.overshootCount), 4),
+      clickDistanceMeanPx: mean(pointerSummaries.map((summary) => summary.clickDistanceToTargetPx), 2),
+      trackingRmsErrorPx: mean(trackingSummaries.map((summary) => summary.rmsErrorPx), 2),
+      trackingLossRatio: mean(trackingSummaries.map((summary) => summary.lossRatio), 4),
+      smoothPursuitScore: mean(trackingSummaries.map((summary) => summary.smoothPursuitScore), 4),
+    },
+    fitts: {
+      meanIndexDifficulty: mean(fittsSummaries.map((summary) => summary.indexDifficulty), 4),
+      meanThroughput: mean(fittsSummaries.map((summary) => summary.throughput), 4),
+    },
+    inhibition: {
+      commissionErrorRate: rate(inhibitionResponses.filter((response) => response.outcome === 'commission_error').length, noGoResponses.length),
+      omissionErrorRate: rate(inhibitionResponses.filter((response) => response.outcome === 'omission_error').length, goResponses.length),
+      correctGoRT: mean(inhibitionResponses.filter((response) => response.outcome === 'correct_go').map((response) => response.reactionTimeMs), 2),
+      postErrorSlowingMs: mean(inhibitionResponses.map((response) => response.postErrorSlowingMs), 2),
+    },
+    interference: {
+      congruentAccuracy: rate(congruentResponses.filter((response) => response.correct === true).length, congruentResponses.length),
+      incongruentAccuracy: rate(incongruentResponses.filter((response) => response.correct === true).length, incongruentResponses.length),
+      congruentRT: mean(congruentResponses.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2),
+      incongruentRT: mean(incongruentResponses.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2),
+      conflictCostMs: round(mean(incongruentResponses.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2) - mean(congruentResponses.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2), 2),
+      errorRate: rate(interferenceResponses.filter((response) => response.correct === false).length, interferenceResponses.length),
+    },
     byEventType,
     window: {
       startedAt,

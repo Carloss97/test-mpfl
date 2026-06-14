@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import App from './App.jsx';
 
@@ -24,6 +24,16 @@ describe('App shell', () => {
     expect(screen.getByRole('heading', { name: /KRUMM Edge Fusion/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Cámara y señal/i })).toBeInTheDocument();
     expect(screen.getByText(/Inicia la cámara para comenzar/i)).toBeInTheDocument();
+    expect(screen.getByText(/Actividades gamificadas/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Actividad gamificada/i)).toBeInTheDocument();
+    expect(screen.getByText(/Fases A-H/i)).toBeInTheDocument();
+  });
+
+  it('allows manual access to newly implemented gamified tasks without starting the camera', () => {
+    render(<App />);
+    fireEvent.change(screen.getByLabelText(/Actividad gamificada/i), { target: { value: 'go_nogo' } });
+    fireEvent.click(screen.getByRole('button', { name: /Iniciar actividad/i }));
+    expect(screen.getByRole('heading', { name: /Go\/No-Go/i })).toBeInTheDocument();
   });
 
   it('shows session history when localStorage has saved sessions', () => {

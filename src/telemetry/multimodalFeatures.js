@@ -9,11 +9,7 @@
  * - gaze
  * - head/posture proxy
  * - MoveNet upper-body metrics
- * - task features
- *
- * This module is intentionally a thin orchestration layer: it should not invent
- * new algorithms yet. Later phases will make metrics and Edge AI consume this
- * object directly.
+ * - task/game features
  */
 
 import { buildFullFeatureVector } from './temporalFeatures.js';
@@ -94,6 +90,8 @@ function summarizeUpperBody(moveNetPose = null) {
       shoulderSymmetry: 0,
       upperBodyCoverage: 0,
       visibleUpperBodyKeypoints: 0,
+      armsVisible: 0,
+      armActivity: 0,
       source: 'unavailable',
     };
   }
@@ -111,6 +109,43 @@ function summarizeUpperBody(moveNetPose = null) {
   };
 }
 
+function summarizeGame(gameSummary = null) {
+  if (!gameSummary) {
+    return {
+      available: false,
+      performance: {},
+      motor: {},
+      inhibition: {},
+      interference: {},
+      fitts: {},
+      source: 'unavailable',
+    };
+  }
+  return {
+    available: true,
+    performance: {
+      trialCount: gameSummary.performance?.trialCount ?? gameSummary.trialCount ?? 0,
+      completedTrialCount: gameSummary.performance?.completedTrialCount ?? gameSummary.completedTrialCount ?? 0,
+      accuracy: round(gameSummary.performance?.accuracy ?? gameSummary.accuracy ?? 0),
+      meanReactionTimeMs: round(gameSummary.performance?.meanReactionTimeMs ?? gameSummary.meanReactionTimeMs ?? 0, 2),
+      meanScore: round(gameSummary.performance?.meanScore ?? 0),
+    },
+    motor: {
+      pathEfficiencyMean: round(gameSummary.motor?.pathEfficiencyMean ?? 0),
+      jerkMean: round(gameSummary.motor?.jerkMean ?? 0, 5),
+      correctionRate: round(gameSummary.motor?.correctionRate ?? 0),
+      overshootRate: round(gameSummary.motor?.overshootRate ?? 0),
+      trackingRmsErrorPx: round(gameSummary.motor?.trackingRmsErrorPx ?? 0, 2),
+      trackingLossRatio: round(gameSummary.motor?.trackingLossRatio ?? 0),
+      smoothPursuitScore: round(gameSummary.motor?.smoothPursuitScore ?? 0),
+    },
+    inhibition: { ...gameSummary.inhibition },
+    interference: { ...gameSummary.interference },
+    fitts: { ...gameSummary.fitts },
+    source: 'game_telemetry',
+  };
+}
+
 export function buildMultimodalFeatures({
   faceSamples = [],
   pointerSamples = [],
@@ -119,6 +154,7 @@ export function buildMultimodalFeatures({
   latestGaze = null,
   latestPosture = null,
   moveNetPose = null,
+  gameSummary = null,
 } = {}) {
   const temporal = buildFullFeatureVector({ faceSamples, pointerSamples, taskEvents, calibrationProfile });
 
@@ -135,6 +171,10 @@ export function buildMultimodalFeatures({
 
   const facePresenceRatio = temporal.facial?.facePresenceRatio ?? 0;
   const meanConfidence = temporal.facial?.meanConfidence ?? 0;
+  const game = summarizeGame(gameSummary);
+  const task = game.available
+    ? { ...temporal.performance, ...game.performance, source: 'game_telemetry' }
+    : (temporal.performance ?? {});
 
   return {
     temporal,
@@ -145,7 +185,8 @@ export function buildMultimodalFeatures({
     gaze: summarizeGaze(latestGaze),
     posture: summarizePosture(latestPosture),
     upperBody: summarizeUpperBody(moveNetPose),
-    task: temporal.performance ?? {},
+    game,
+    task,
     quality: {
       facePresenceRatio: round(facePresenceRatio),
       meanConfidence: round(meanConfidence),
@@ -158,6 +199,7 @@ export function buildMultimodalFeatures({
       usableFaceSamples: usableSamples.length,
       taskEvents: taskEvents.length,
       pointerSamples: pointerSamples.length,
+      gameEvents: game.performance.completedTrialCount ?? 0,
     },
   };
 }

@@ -21,7 +21,7 @@ export default function Dashboard({
   calibrationProfile,calStatusLabel,
   insightItems,auEntries,activeAUCount,
   edgeAIResult,edgeChannels,edgeConfidence:_edgeConfidence,edgeComposite,
-  latestLandmarks,latestGaze,auRegionSummary,DEVICE_CONFIG:_DEVICE_CONFIG,
+  latestLandmarks,latestGaze,auRegionSummary,gameSummary,DEVICE_CONFIG:_DEVICE_CONFIG,
   latestPose,moveNetPose,moveNet = {},
   onCalibrateGazeCenter,onCalibratePostureUpright,manualCalStatus,
 }){
@@ -175,6 +175,27 @@ export default function Dashboard({
       </div>
 
       {/* Collapsible sections */}
+      {gameSummary?.eventCount>0&&(
+        <div className="dash-section">
+          <div className="dash-section-hdr" style={{cursor:'default',userSelect:'none'}}>
+            <span className="dash-section-arrow">◆</span>
+            <span className="dash-section-title">🎮 Actividad sincronizada</span>
+            <span className="dash-section-badge">{gameSummary.performance?.accuracy!==undefined?`${Math.round(gameSummary.performance.accuracy*100)}%`:'—'}</span>
+          </div>
+          <div className="dash-section-body">
+            <div className="stats-grid-compact">
+              <div className="stat-item"><span>Eventos</span><strong>{gameSummary.eventCount}</strong></div>
+              <div className="stat-item"><span>Trials</span><strong>{gameSummary.performance?.completedTrialCount??0}/{gameSummary.performance?.trialCount??0}</strong></div>
+              <div className="stat-item"><span>Precisión</span><strong>{pct(gameSummary.performance?.accuracy??0)}</strong></div>
+              <div className="stat-item"><span>RT medio</span><strong>{Math.round(gameSummary.performance?.meanReactionTimeMs??0)}ms</strong></div>
+              <div className="stat-item"><span>Motor</span><strong>{pct(gameSummary.motor?.pathEfficiencyMean??gameSummary.motor?.smoothPursuitScore??0)}</strong></div>
+              <div className="stat-item"><span>Errores</span><strong>{pct(gameSummary.interference?.errorRate??gameSummary.inhibition?.commissionErrorRate??0)}</strong></div>
+            </div>
+            <p className="caption" style={{fontSize:'0.56rem'}}>Sincronizado con `performance.now()` y usado por métricas/Edge AI. No se guardan trayectorias crudas.</p>
+          </div>
+        </div>
+      )}
+
       <div className="dash-section">
         <div className="dash-section-hdr" onClick={()=>setOpenMetrics(!openMetrics)} style={{cursor:'pointer',userSelect:'none'}}>
           <span className="dash-section-arrow">{openMetrics?'▼':'▶'}</span>

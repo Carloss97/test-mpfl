@@ -6,7 +6,14 @@
 
 **Arquitectura propuesta:** crear una capa de telemetría de juego desacoplada de cada actividad. Los juegos emiten eventos normalizados con `performance.now()`. Los módulos de telemetría transforman esos eventos en agregados privacy-safe. Edge AI consume agregados y features, no componentes de juego ni trayectorias crudas.
 
-**Estado general:** Fase A-H completadas; Fase I pendiente.
+**Estado general:** Fase A-H completadas; microfase UX + integración game-aware completada; Fase I pendiente.
+
+**Microfase UX/game-aware completada:** las actividades A-H son accesibles desde el selector visible `Actividades gamificadas` en la página inicial. Sus eventos `game_event_v1` se agregan con `summarizeGameEvents()` y se sincronizan por `performance.now()` con cámara/facial telemetry. El resumen se integra en:
+- `src/App.jsx`: `gameSummary` en estado derivado, UI de actividad y conteo de eventos.
+- `src/components/Dashboard.jsx`: panel `Actividad sincronizada` con precisión, RT, motor y errores.
+- `src/telemetry/multimodalFeatures.js`: bloque `game` + `task` game-aware.
+- `src/telemetry/edgeAiEngine.js`: `taskPerformance` y `motorControl` usan game telemetry cuando existe.
+- `src/telemetry/insightMetrics.js`: recibe `task: gameSummary.performance` desde App para estrés/carga/engagement.
 
 ---
 
