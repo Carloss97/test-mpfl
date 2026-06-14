@@ -29,6 +29,21 @@ describe('PrecisionTargetingTask', () => {
     vi.useRealTimers();
   });
 
+  it('requires a start pad before showing variable Fitts targets, unlike simple RT', async () => {
+    const onGameEvent = vi.fn();
+
+    render(<PrecisionTargetingTask active trialCount={1} width={600} height={400} onGameEvent={onGameEvent} />);
+
+    expect(screen.getAllByText(/toca el punto de inicio/i).length).toBeGreaterThan(0);
+    expect(screen.queryByTestId('precision-target')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('precision-start-pad'), { clientX: 300, clientY: 200 });
+
+    expect(screen.getByTestId('precision-target')).toBeInTheDocument();
+    expect(screen.getAllByText(/Fitts/i).length).toBeGreaterThan(0);
+    expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'stimulus_shown', trialId: 'precision-0' }));
+  });
+
   it('emits rich game telemetry and completion summary for a hit trial', async () => {
     let now = 0;
     vi.spyOn(performance, 'now').mockImplementation(() => now);
@@ -46,13 +61,18 @@ describe('PrecisionTargetingTask', () => {
       />,
     );
 
-    const target = screen.getByTestId('precision-target');
+    const startPad = screen.getByTestId('precision-start-pad');
     expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'game_start', gameId: 'precision_targeting' }));
-    expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'stimulus_shown', trialId: 'precision-0' }));
 
+    await act(async () => {
+      now = 50;
+      fireEvent.click(startPad, { clientX: 300, clientY: 200 });
+    });
+
+    const target = screen.getByTestId('precision-target');
     const taskArea = screen.getByTestId('precision-task-area');
-    fireEvent.pointerMove(taskArea, { clientX: 120, clientY: 100, timeStamp: 50 });
-    fireEvent.pointerMove(taskArea, { clientX: 300, clientY: 200, timeStamp: 120 });
+    fireEvent.pointerMove(taskArea, { clientX: 320, clientY: 210 });
+    fireEvent.pointerMove(taskArea, { clientX: 420, clientY: 240 });
 
     const x = Number(target.dataset.x);
     const y = Number(target.dataset.y);

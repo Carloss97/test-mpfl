@@ -507,7 +507,7 @@ export default function App() {
               <div><span>Motor</span><strong>{formatPercent(gameSummary.motor?.pathEfficiencyMean??gameSummary.motor?.smoothPursuitScore??0)}</strong></div>
             </div>
           )}
-          <TaskImpact edgeAIResult={edgeAIResult} taskActive={taskActive} />
+          <TaskImpact edgeAIResult={edgeAIResult} taskActive={taskActive} gameSummary={gameSummary} />
         </section>
       )}
 

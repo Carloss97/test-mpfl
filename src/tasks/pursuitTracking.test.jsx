@@ -45,7 +45,25 @@ describe('PursuitTrackingTask', () => {
     vi.useRealTimers();
   });
 
-  it('emits privacy-safe pursuit telemetry at completion', async () => {
+  it('animates the target with elapsed time even before pointer movement', async () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+
+    render(<PursuitTrackingTask active width={600} height={400} durationMs={1000} />);
+
+    const target = screen.getByTestId('pursuit-target');
+    const left0 = target.style.left;
+
+    await act(async () => {
+      now = 500;
+      vi.advanceTimersByTime(500);
+    });
+
+    expect(target.style.left).not.toBe(left0);
+    expect(screen.getByText(/punto móvil/i)).toBeInTheDocument();
+  });
+
+  it('emits privacy-safe pursuit telemetry at completion using trial-relative timestamps', async () => {
     let now = 0;
     vi.spyOn(performance, 'now').mockImplementation(() => now);
     const onGameEvent = vi.fn();
@@ -66,12 +84,14 @@ describe('PursuitTrackingTask', () => {
     expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'stimulus_shown', trialId: 'pursuit-0' }));
 
     const area = screen.getByTestId('pursuit-task-area');
-    fireEvent.pointerMove(area, { clientX: 100, clientY: 100, timeStamp: 0 });
-    fireEvent.pointerMove(area, { clientX: 220, clientY: 130, timeStamp: 150 });
-    fireEvent.pointerMove(area, { clientX: 360, clientY: 160, timeStamp: 300 });
+    now = 0;
+    fireEvent.pointerMove(area, { clientX: 100, clientY: 100 });
+    now = 150;
+    fireEvent.pointerMove(area, { clientX: 220, clientY: 130 });
+    now = 300;
+    fireEvent.pointerMove(area, { clientX: 360, clientY: 160 });
 
     await act(async () => {
-      now = 300;
       vi.advanceTimersByTime(350);
     });
 

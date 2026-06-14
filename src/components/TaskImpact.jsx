@@ -2,15 +2,18 @@ import React from 'react';
 
 /**
  * TaskImpact — muestra el efecto de la tarea en las métricas.
- * Compara AUs/métricas durante la tarea vs baseline pre-tarea.
+ * Explica la diferencia entre inferencia solo cámara y cámara + telemetría de actividad.
  */
-export default function TaskImpact({ edgeAIResult, taskActive }) {
-  if (!taskActive || !edgeAIResult) return null;
+export default function TaskImpact({ edgeAIResult, taskActive, gameSummary = null }) {
+  if (!taskActive) return null;
 
   const channels = edgeAIResult?.channels ?? {};
   const emotions = edgeAIResult?.emotions;
   const confidence = edgeAIResult?.confidence;
   const composite = edgeAIResult?.composite;
+  const hasGameTelemetry = Boolean(gameSummary?.eventCount > 0 || edgeAIResult?.multimodal?.game?.available);
+  const performance = gameSummary?.performance ?? edgeAIResult?.multimodal?.game?.performance ?? {};
+  const motor = gameSummary?.motor ?? edgeAIResult?.multimodal?.game?.motor ?? {};
 
   // Top changing channels
   const channelEntries = Object.entries(channels)
@@ -18,7 +21,7 @@ export default function TaskImpact({ edgeAIResult, taskActive }) {
     .sort((a, b) => b[1].score - a[1].score)
     .slice(0, 4);
 
-  if (!channelEntries.length && !emotions) return null;
+  if (!channelEntries.length && !emotions && !hasGameTelemetry) return null;
 
   return (
     <div className="task-impact" style={{
@@ -28,6 +31,33 @@ export default function TaskImpact({ edgeAIResult, taskActive }) {
       <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#7df0cb', marginBottom: '6px' }}>
         📊 Impacto de la tarea
       </div>
+
+      {hasGameTelemetry && (
+        <div style={{ marginBottom: '8px', padding: '8px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)' }}>
+          <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#dff8ff', marginBottom: '4px' }}>
+            Cámara + actividad
+          </div>
+          <p className="caption" style={{ margin: 0, fontSize: '0.58rem' }}>
+            Sin actividad, Edge AI usa cámara: AUs/FACS, emoción proxy, gaze, postura y MoveNet. Con actividad añade precisión/RT/errores/trayectoria para ajustar rendimiento, control motor, estrés/carga y score compuesto.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+            <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: '999px', background: 'rgba(255,255,255,0.06)', color: '#c8d7e8' }}>
+              Sin actividad: cámara + AUs + gaze/postura
+            </span>
+            <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: '999px', background: 'rgba(77,212,172,0.12)', color: '#7df0cb' }}>
+              Con actividad: precisión/RT/errores/trayectoria
+            </span>
+            {!edgeAIResult && (
+              <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: '999px', background: 'rgba(255,209,102,0.12)', color: '#ffd166' }}>
+                Inicia cámara para fusionar con AUs/gaze/postura
+              </span>
+            )}
+            <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: '999px', background: 'rgba(77,212,172,0.12)', color: '#7df0cb' }}>
+              Rendimiento {Math.round((performance.accuracy ?? 0) * 100)}% · Motor {Math.round(((motor.pathEfficiencyMean ?? motor.smoothPursuitScore ?? 0) * 100))}%
+            </span>
+          </div>
+        </div>
+      )}
 
       {emotions && (
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px' }}>
@@ -52,9 +82,10 @@ export default function TaskImpact({ edgeAIResult, taskActive }) {
           {channelEntries.map(([name, ch]) => (
             <span key={name} style={{
               fontSize: '0.6rem', padding: '2px 8px', borderRadius: '999px',
-              background: 'rgba(255,255,255,0.06)', color: '#c8d7e8',
+              background: ch.source === 'game_telemetry' || ch.gameAdjusted ? 'rgba(77,212,172,0.12)' : 'rgba(255,255,255,0.06)',
+              color: ch.source === 'game_telemetry' || ch.gameAdjusted ? '#7df0cb' : '#c8d7e8',
             }}>
-              {ch.label}: {ch.score}%
+              {ch.label}: {ch.score}%{ch.source === 'game_telemetry' || ch.gameAdjusted ? ' + juego' : ''}
             </span>
           ))}
         </div>

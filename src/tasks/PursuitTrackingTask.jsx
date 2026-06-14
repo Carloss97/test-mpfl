@@ -98,12 +98,16 @@ function PursuitTrackingInner({ emit, width, height, durationMs, hitRadiusPx, on
   const areaRef = useRef(null);
   const [finished, setFinished] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [liveSampleCount, setLiveSampleCount] = useState(0);
   const startTimeRef = useRef(0);
   const pointerSamplerRef = useRef(createPointerSampler({ maxSamples: 1200, sessionId: 'pursuit_tracking' }));
   const targetPath = useMemo(() => buildPursuitPath({ width, height, durationMs }), [durationMs, height, width]);
 
   useEffect(() => {
     startTimeRef.current = performance.now();
+    setElapsed(0);
+    setFinished(false);
+    setLiveSampleCount(0);
     pointerSamplerRef.current = createPointerSampler({ maxSamples: 1200, sessionId: 'pursuit_tracking' });
     emit({
       eventType: 'stimulus_shown',
@@ -113,7 +117,14 @@ function PursuitTrackingInner({ emit, width, height, durationMs, hitRadiusPx, on
       stimulus: { kind: 'moving_target_path', payload: { durationMs, hitRadiusPx, pointCount: targetPath.length } },
       gameState: { score: 0, level: 1, difficulty: 'continuous_tracking' },
     });
-    const timer = setTimeout(() => {
+
+    const tickId = window.setInterval(() => {
+      const relative = Math.max(0, Math.min(durationMs, performance.now() - startTimeRef.current));
+      setElapsed(relative);
+    }, 33);
+
+    const timer = window.setTimeout(() => {
+      window.clearInterval(tickId);
       const summary = summarizePursuitSamples({
         targetPath,
         pointerSamples: pointerSamplerRef.current.samples,
@@ -136,31 +147,39 @@ function PursuitTrackingInner({ emit, width, height, durationMs, hitRadiusPx, on
         gameState: { score, level: 1, difficulty: 'continuous_tracking' },
       });
       emit({ eventType: 'game_end', timestamp: now, gameState: { score, level: 1, difficulty: 'continuous_tracking' } });
+      setElapsed(durationMs);
       setFinished(true);
       onComplete?.({ gameId: 'pursuit_tracking', totalTrials: 1, score, tracking: summary });
     }, durationMs);
-    return () => clearTimeout(timer);
+
+    return () => {
+      window.clearInterval(tickId);
+      window.clearTimeout(timer);
+    };
   }, [durationMs, emit, hitRadiusPx, onComplete, targetPath]);
 
   const toLocalPointer = useCallback((event) => {
     const rect = areaRef.current?.getBoundingClientRect();
+    const relativeTimestamp = Math.max(0, Math.min(durationMs, performance.now() - startTimeRef.current));
     return {
-      timestamp: event.timeStamp ?? Math.max(0, performance.now() - startTimeRef.current),
+      timestamp: relativeTimestamp,
       x: rect ? event.clientX - rect.left : event.clientX,
       y: rect ? event.clientY - rect.top : event.clientY,
       button: event.button,
       pressure: event.pressure,
     };
-  }, []);
+  }, [durationMs]);
 
   const recordPointer = useCallback((event) => {
     if (finished) return;
     const sample = toLocalPointer(event);
     pointerSamplerRef.current = appendPointerSample(pointerSamplerRef.current, sample);
-    setElapsed(Math.max(0, Math.min(durationMs, Number(sample.timestamp) || 0)));
-  }, [durationMs, finished, toLocalPointer]);
+    setElapsed(sample.timestamp);
+    setLiveSampleCount(pointerSamplerRef.current.samples.length);
+  }, [finished, toLocalPointer]);
 
   const target = interpolateTarget(targetPath, elapsed) ?? targetPath[0];
+  const progress = Math.max(0, Math.min(100, Math.round((elapsed / durationMs) * 100)));
 
   if (finished) {
     return (
@@ -174,15 +193,28 @@ function PursuitTrackingInner({ emit, width, height, durationMs, hitRadiusPx, on
     <div className="pursuit-tracking-task">
       <div className="task-header">
         <span className="task-title">🎯 Seguimiento continuo</span>
-        <span className="task-progress">{Math.round((elapsed / durationMs) * 100)}%</span>
+        <span className="task-progress">{progress}%</span>
+        <span className="task-progress">muestras {liveSampleCount}</span>
       </div>
+      <p className="caption" style={{ margin: '4px 0 8px' }}>
+        Mantén el cursor sobre el punto móvil. Esta tarea mide error RMS, pérdida de seguimiento y suavidad; no es una tarea de clic.
+      </p>
       <div
         ref={areaRef}
         className="task-area"
         data-testid="pursuit-task-area"
-        style={{ width, height, position: 'relative', cursor: 'crosshair' }}
+        style={{ width, height, position: 'relative', cursor: 'none' }}
         onPointerMove={recordPointer}
       >
+        <svg width={width} height={height} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.25 }}>
+          <polyline
+            points={targetPath.map((point) => `${point.x},${point.y}`).join(' ')}
+            fill="none"
+            stroke="#7df0cb"
+            strokeWidth="2"
+            strokeDasharray="4 8"
+          />
+        </svg>
         <div
           className="rt-target"
           data-testid="pursuit-target"
@@ -192,6 +224,8 @@ function PursuitTrackingInner({ emit, width, height, durationMs, hitRadiusPx, on
             width: hitRadiusPx * 2,
             height: hitRadiusPx * 2,
             borderRadius: '999px',
+            transition: 'left 80ms linear, top 80ms linear',
+            boxShadow: '0 0 0 10px rgba(77,212,172,0.08), 0 0 26px rgba(77,212,172,0.45)',
           }}
         />
       </div>

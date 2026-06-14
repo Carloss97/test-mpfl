@@ -110,7 +110,10 @@ function summarizeUpperBody(moveNetPose = null) {
 }
 
 function summarizeGame(gameSummary = null) {
-  if (!gameSummary) {
+  const evidenceCount = gameSummary
+    ? Math.max(gameSummary.eventCount ?? 0, gameSummary.performance?.completedTrialCount ?? gameSummary.completedTrialCount ?? 0)
+    : 0;
+  if (!gameSummary || evidenceCount <= 0) {
     return {
       available: false,
       performance: {},
