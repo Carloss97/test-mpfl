@@ -1,8 +1,8 @@
 /**
- * Edge AI Engine v8.1 — Pipeline lineal multimodal
+ * Edge AI Engine v9.1 — Pipeline lineal multimodal + game-aware
  *
  * Etapas:
- *   1. buildMultimodalFeatures → features temporales + AUs + gaze/postura/MoveNet/game
+ *   1. buildMultimodalFeatures → features temporales + AUs + gaze/postura/MoveNet/game/correlation
  *   2. processAllAUs (auProcessor) → AUs procesadas (baseline + gain)
  *   3. Bayesian scoring por canal (likelihood ratios) + modificadores multimodales/game-aware
  *   4. classifyEmotions (emotionClassifier) → Naive Bayes
@@ -16,7 +16,7 @@
 import { buildMultimodalFeatures } from './multimodalFeatures.js';
 import { recordSessionScores, normalizeAllChannels } from './edgeCalibration.js';
 
-const MODEL_VERSION = 'krumm-edge-ai-v8.2.0-game-aware';
+const MODEL_VERSION = 'krumm-edge-ai-v9.1.0-game-aware';
 
 // ─── Helpers ───
 function clamp(v, l = 0, h = 1) { return Math.min(h, Math.max(l, Number.isFinite(v) ? v : l)); }
@@ -40,6 +40,10 @@ const CHANNEL_LABELS = {
   visualAttention: 'Atención Visual',
   postureQuality: 'Calidad Postural',
   taskPerformance: 'Rendimiento',
+  inhibitionControl: 'Control Inhibitorio',
+  visuomotorPrecision: 'Precisión Visomotora',
+  visualSearchEfficiency: 'Eficiencia Búsqueda Visual',
+  adaptiveResilience: 'Resiliencia Adaptativa',
 };
 
 // ─── Likelihood ratios por canal ───
@@ -119,6 +123,52 @@ function scorePostureQuality(multimodal) {
   return channelFromRaw(raw, { confidence: round(confidence), source: upper.available ? 'posture+movenet' : 'posture' });
 }
 
+function scoreInhibitionControl(multimodal) {
+  if (!multimodal.game?.available) return channelFromRaw(0.5, { confidence: 0, source: 'unavailable', caveats: ['game_telemetry_unavailable'] });
+  const inhibition = multimodal.game.inhibition ?? {};
+  const commission = clamp(inhibition.commissionErrorRate ?? 0);
+  const omission = clamp(inhibition.omissionErrorRate ?? 0);
+  const postErrorSlowing = clamp((inhibition.postErrorSlowingMs ?? 0) / 800);
+  const raw = clamp(1 - (commission * 0.45 + omission * 0.35 + postErrorSlowing * 0.20));
+  return channelFromRaw(raw, { confidence: 0.85, source: 'game_telemetry' });
+}
+
+function scoreVisuomotorPrecision(multimodal) {
+  if (!multimodal.game?.available) return channelFromRaw(0.5, { confidence: 0, source: 'unavailable', caveats: ['game_telemetry_unavailable'] });
+  const motor = multimodal.game.motor ?? {};
+  const fitts = multimodal.game.fitts ?? {};
+  const path = clamp(motor.pathEfficiencyMean ?? 0);
+  const pursuit = clamp(motor.smoothPursuitScore ?? 0);
+  const lowLoss = 1 - clamp(motor.trackingLossRatio ?? 0);
+  const lowOvershoot = 1 - clamp((motor.overshootRate ?? 0) / 2);
+  const throughput = clamp((fitts.meanThroughput ?? 0) / 5);
+  const raw = clamp(path * 0.30 + pursuit * 0.22 + lowLoss * 0.18 + lowOvershoot * 0.15 + throughput * 0.15);
+  return channelFromRaw(raw, { confidence: 0.85, source: 'game_telemetry' });
+}
+
+function scoreVisualSearchEfficiency(multimodal) {
+  if (!multimodal.game?.available) return channelFromRaw(0.5, { confidence: 0, source: 'unavailable', caveats: ['game_telemetry_unavailable'] });
+  const visualSearch = multimodal.game.visualSearch ?? {};
+  const efficiency = clamp(visualSearch.searchEfficiency ?? 0);
+  const lowError = 1 - clamp(visualSearch.errorRate ?? 0);
+  const setSizeBonus = clamp((visualSearch.meanSetSize ?? 0) / 20);
+  const raw = clamp(efficiency * 0.65 + lowError * 0.25 + setSizeBonus * 0.10);
+  return channelFromRaw(raw, { confidence: 0.8, source: 'game_telemetry' });
+}
+
+function scoreAdaptiveResilience(multimodal) {
+  if (!multimodal.game?.available) return channelFromRaw(0.5, { confidence: 0, source: 'unavailable', caveats: ['game_telemetry_unavailable'] });
+  const perf = multimodal.game.performance ?? {};
+  const inhibition = multimodal.game.inhibition ?? {};
+  const correlation = multimodal.gameCorrelation ?? {};
+  const completedRatio = perf.trialCount ? clamp((perf.completedTrialCount ?? 0) / perf.trialCount) : 0;
+  const lowErrors = 1 - clamp(Math.max(inhibition.commissionErrorRate ?? 0, inhibition.omissionErrorRate ?? 0));
+  const postureStable = clamp(0.5 + (correlation.meanReactionPostureDelta ?? 0));
+  const faceStable = clamp(0.5 + (correlation.meanReactionFacePresenceDelta ?? 0));
+  const raw = clamp((perf.accuracy ?? 0) * 0.35 + completedRatio * 0.25 + lowErrors * 0.20 + postureStable * 0.10 + faceStable * 0.10);
+  return channelFromRaw(raw, { confidence: 0.8, source: 'game_telemetry+correlation' });
+}
+
 function applyMultimodalChannelModifiers(channels, multimodal) {
   const visual = channels.visualAttention?.score ?? 50;
   const posture = channels.postureQuality?.score ?? 50;
@@ -138,6 +188,18 @@ function applyMultimodalChannelModifiers(channels, multimodal) {
     const score = Math.round(channels.stressResponse.score * 0.75 + posturePenalty * 0.15 + gazeInstability * 0.10);
     channels.stressResponse = { ...channels.stressResponse, score, level: levelForScore(score), multimodalAdjusted: true };
   }
+  if (channels.cognitiveLoad && multimodal.game?.available) {
+    const perf = multimodal.game.performance ?? {};
+    const inhibition = multimodal.game.inhibition ?? {};
+    const interference = multimodal.game.interference ?? {};
+    const conflict = clamp((interference.conflictCostMs ?? 0) / 600);
+    const error = clamp(interference.errorRate ?? 0);
+    const inhibitionError = clamp(Math.max(inhibition.commissionErrorRate ?? 0, inhibition.omissionErrorRate ?? 0));
+    const slowRt = clamp((perf.meanReactionTimeMs ?? 0) / 1500);
+    const gameLoad = clamp(conflict * 0.40 + error * 0.25 + inhibitionError * 0.20 + slowRt * 0.15);
+    const score = Math.round(channels.cognitiveLoad.score * 0.55 + gameLoad * 100 * 0.45);
+    channels.cognitiveLoad = { ...channels.cognitiveLoad, score, level: levelForScore(score), gameAdjusted: true, source: 'aus_facs+game_telemetry' };
+  }
   if (channels.motorControl && multimodal.game?.available) {
     const motor = multimodal.game.motor ?? {};
     const path = motor.pathEfficiencyMean || 0;
@@ -152,14 +214,18 @@ function applyMultimodalChannelModifiers(channels, multimodal) {
 }
 
 const COMPOSITE_WEIGHTS = {
-  engagement: { weight: 0.18, polarity: 1 },
-  visualAttention: { weight: 0.18, polarity: 1 },
-  postureQuality: { weight: 0.14, polarity: 1 },
-  taskPerformance: { weight: 0.14, polarity: 1 },
-  emotionalValence: { weight: 0.10, polarity: 1 },
-  motorControl: { weight: 0.08, polarity: 1 },
-  cognitiveLoad: { weight: 0.06, polarity: -1 },
-  fatigueIndex: { weight: 0.06, polarity: -1 },
+  engagement: { weight: 0.15, polarity: 1 },
+  visualAttention: { weight: 0.14, polarity: 1 },
+  postureQuality: { weight: 0.10, polarity: 1 },
+  taskPerformance: { weight: 0.12, polarity: 1 },
+  inhibitionControl: { weight: 0.08, polarity: 1 },
+  visuomotorPrecision: { weight: 0.08, polarity: 1 },
+  adaptiveResilience: { weight: 0.08, polarity: 1 },
+  visualSearchEfficiency: { weight: 0.04, polarity: 1 },
+  emotionalValence: { weight: 0.08, polarity: 1 },
+  motorControl: { weight: 0.07, polarity: 1 },
+  cognitiveLoad: { weight: 0.05, polarity: -1 },
+  fatigueIndex: { weight: 0.05, polarity: -1 },
   stressResponse: { weight: 0.06, polarity: -1 },
 };
 
@@ -222,8 +288,9 @@ export function runEdgeAIInference({
 
   // Stage 3: Channel scoring
   const channels = {};
+  const explicitChannels = new Set(['taskPerformance', 'visualAttention', 'postureQuality', 'inhibitionControl', 'visuomotorPrecision', 'visualSearchEfficiency', 'adaptiveResilience']);
   for (const name of Object.keys(CHANNEL_LABELS)) {
-    if (name === 'taskPerformance' || name === 'visualAttention' || name === 'postureQuality') continue;
+    if (explicitChannels.has(name)) continue;
     const raw = bayesianChannelScore(name, aus);
     const score = toPercent(raw);
     channels[name] = { score, level: levelForScore(score) };
@@ -232,6 +299,10 @@ export function runEdgeAIInference({
   channels.postureQuality = scorePostureQuality(multimodal);
   applyMultimodalChannelModifiers(channels, multimodal);
   channels.taskPerformance = scoreTaskPerformance(multimodal);
+  channels.inhibitionControl = scoreInhibitionControl(multimodal);
+  channels.visuomotorPrecision = scoreVisuomotorPrecision(multimodal);
+  channels.visualSearchEfficiency = scoreVisualSearchEfficiency(multimodal);
+  channels.adaptiveResilience = scoreAdaptiveResilience(multimodal);
 
   // Stage 4: Emotions
   const emotions = multimodal.emotions;

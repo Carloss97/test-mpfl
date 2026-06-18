@@ -6,7 +6,7 @@
 
 **Arquitectura propuesta:** crear una capa de telemetría de juego desacoplada de cada actividad. Los juegos emiten eventos normalizados con `performance.now()`. Los módulos de telemetría transforman esos eventos en agregados privacy-safe. Edge AI consume agregados y features, no componentes de juego ni trayectorias crudas.
 
-**Estado general:** Fase A-J completadas; microfase UX + integración game-aware + baseline/delta completadas; Fase K pendiente.
+**Estado general:** Fase A-L completadas; microfase UX + integración game-aware + baseline/delta completadas; Fase M pendiente.
 
 **Microfase UX/game-aware completada:** las actividades A-I son accesibles desde el selector visible `Actividades gamificadas` en la página inicial. Sus eventos `game_event_v1` se agregan con `summarizeGameEvents()` y se sincronizan por `performance.now()` con cámara/facial telemetry. El resumen se integra en:
 - `src/App.jsx`: `gameSummary` en estado derivado, UI de actividad y conteo de eventos.
@@ -389,16 +389,17 @@
 
 ## Fase K — Feature vector v2
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 11
 
 **Objetivo:** crear vector estable para análisis local/reportes con datos gamificados.
 
-**Archivos:**
-- Crear: `src/telemetry/gameFeatureVector.js`
-- Crear: `src/telemetry/gameFeatureVector.test.js`
-- Modificar: `src/telemetry/assessmentFeatureVector.js`
+**Archivos implementados:**
+- Creado: `src/telemetry/gameFeatureVector.js`
+- Creado: `src/telemetry/gameFeatureVector.test.js`
+- Modificado: `src/telemetry/assessmentFeatureVector.js`
+- Modificado: `src/telemetry/assessmentFeatureVector.test.js`
 
 **Nuevas dimensiones:**
 - game.meanScore
@@ -415,22 +416,25 @@
 - emotion.postErrorTensionDelta
 
 **Criterios de éxito:**
-- `assessment_feature_vector_v2` versionado.
-- Dimensionalidad estable con tests.
+- [x] `assessment_feature_vector_v2` versionado (`0.2.0`).
+- [x] Dimensionalidad estable con `GAME_FEATURE_VECTOR_V2_ORDER`.
+- [x] `featureArray` numérico y estable.
+- [x] No exporta windows, estímulos crudos, landmarks ni rutas de cursor.
 
 ---
 
 ## Fase L — Edge AI v9.1 game-aware
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 12
 
 **Objetivo:** incorporar desempeño de juego y telemetría conductual en canales Edge AI.
 
-**Archivos:**
-- Modificar: `src/telemetry/edgeAiEngine.js`
-- Crear: `src/telemetry/edgeAiEngine.game.test.js`
+**Archivos implementados:**
+- Modificado: `src/telemetry/edgeAiEngine.js`
+- Creado: `src/telemetry/edgeAiEngine.game.test.js`
+- Modificado: `src/telemetry/edgeAiEngine.test.js`
 
 **Canales nuevos/refinados:**
 - inhibitionControl
@@ -440,9 +444,11 @@
 - cognitiveLoad con conflictCost + RT variance + gaze instability
 
 **Criterios de éxito:**
-- Edge AI separa rendimiento conductual, estado afectivo y calidad de señal.
-- Composite explica contribuyentes.
-- Tests sintéticos responden en dirección esperada.
+- [x] Edge AI separa rendimiento conductual, estado afectivo y calidad de señal.
+- [x] Canales explícitos: `inhibitionControl`, `visuomotorPrecision`, `visualSearchEfficiency`, `adaptiveResilience`.
+- [x] `cognitiveLoad` responde a conflicto/error/RT de juego.
+- [x] Composite explica contribuyentes nuevos.
+- [x] Tests sintéticos responden en dirección esperada.
 
 ---
 

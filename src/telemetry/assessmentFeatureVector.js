@@ -1,3 +1,5 @@
+import { buildGameFeatureVectorV2 } from './gameFeatureVector.js';
+
 const VERSION = '0.1.0';
 
 export const ASSESSMENT_FEATURE_ORDER = Object.freeze([
@@ -124,4 +126,8 @@ export function buildAssessmentFeatureVector({
     },
     runtime,
   };
+}
+
+export function buildAssessmentFeatureVectorV2(options = {}) {
+  return buildGameFeatureVectorV2(options);
 }
