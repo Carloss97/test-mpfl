@@ -6,7 +6,7 @@
 
 **Arquitectura propuesta:** crear una capa de telemetría de juego desacoplada de cada actividad. Los juegos emiten eventos normalizados con `performance.now()`. Los módulos de telemetría transforman esos eventos en agregados privacy-safe. Edge AI consume agregados y features, no componentes de juego ni trayectorias crudas.
 
-**Estado general:** Fase A-N completadas; microfase UX + integración game-aware + baseline/delta completadas; Fase O pendiente.
+**Estado general:** Fase A-Q completadas; microfase UX + integración game-aware + baseline/delta completadas.
 
 **Microfase UX/game-aware completada:** las actividades A-I son accesibles desde el selector visible `Actividades gamificadas` en la página inicial. Sus eventos `game_event_v1` se agregan con `summarizeGameEvents()` y se sincronizan por `performance.now()` con cámara/facial telemetry. El resumen se integra en:
 - `src/App.jsx`: `gameSummary` en estado derivado, UI de actividad y conteo de eventos.
@@ -498,34 +498,34 @@
 
 ## Fase O — Dificultad adaptativa
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 15
 
 **Objetivo:** ajustar dificultad por rendimiento con reglas trazables.
 
-**Archivos:**
-- Crear: `src/tasks/adaptiveDifficulty.js`
-- Crear: `src/tasks/adaptiveDifficulty.test.js`
+**Archivos implementados:**
+- Creado: `src/tasks/adaptiveDifficulty.js`
+- Creado: `src/tasks/adaptiveDifficulty.test.js`
 
 **Criterios de éxito:**
-- Dificultad sube/baja monotónicamente según accuracy/RT.
-- Cada cambio registra motivo.
-- La dificultad queda disponible para análisis posterior.
+- [x] Dificultad sube/baja monotónicamente según accuracy/RT/carga/motor/errores.
+- [x] Cada cambio registra motivo (`reasonCodes`) y traza (`trace`).
+- [x] La dificultad queda disponible para análisis posterior mediante snapshot agregado.
 
 ---
 
 ## Fase P — Simulación y validación
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 16
 
 **Objetivo:** validar algoritmos con sesiones sintéticas antes de depender de usuarios reales.
 
-**Archivos:**
-- Crear: `src/telemetry/simulatedGameSessions.test.js`
-- Crear: `src/telemetry/gameScenarioFixtures.js`
+**Archivos implementados:**
+- Creado: `src/telemetry/simulatedGameSessions.test.js`
+- Creado: `src/telemetry/gameScenarioFixtures.js`
 
 **Escenarios:**
 - buen control motor
@@ -535,26 +535,27 @@
 - mejora por práctica
 
 **Criterios de éxito:**
-- Métricas y Edge AI responden en dirección esperada en todos los escenarios.
+- [x] Métricas y Edge AI responden en dirección esperada en todos los escenarios.
+- [x] Escenarios cubiertos: buen control motor, fatiga, estrés/error, distracción y mejora por práctica.
 
 ---
 
 ## Fase Q — Export investigación opcional
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 17
 
 **Objetivo:** permitir exportar datasets locales agregados por trial para análisis offline.
 
-**Archivos:**
-- Crear: `src/telemetry/researchExport.js`
-- Crear: `src/telemetry/researchExport.test.js`
+**Archivos implementados:**
+- Creado: `src/telemetry/researchExport.js`
+- Creado: `src/telemetry/researchExport.test.js`
 
 **Criterios de éxito:**
-- JSONL/CSV por trial.
-- Sin PII ni señales reconstructivas.
-- Compatible con feature vector v2.
+- [x] JSONL/CSV por trial.
+- [x] Sin PII ni señales reconstructivas.
+- [x] Compatible con feature vector v2 y columnas estables `feature.*`.
 
 ---
 

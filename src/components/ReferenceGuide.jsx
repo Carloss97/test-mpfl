@@ -19,15 +19,15 @@ export default function ReferenceGuide() {
       <div className="panel-heading"><h2>Guía de referencia</h2></div>
       <p className="caption">Documentación de indicadores, fuentes, fórmulas y caveats de la arquitectura multimodal actual.</p>
 
-      <Section title="Edge AI v8.1 multimodal">
-        <p className="caption">Pipeline local 100% client-side. El schema externo sigue siendo edge_ai_model_output_v8; el modelo interno es v8.1 multimodal.</p>
+      <Section title="Edge AI v9.1 multimodal + game-aware">
+        <p className="caption">Pipeline local 100% client-side. El schema externo sigue siendo edge_ai_model_output_v8; el modelo interno es v9.1 game-aware.</p>
         <table className="guide-table">
           <thead><tr><th>Etapa</th><th>Módulo</th><th>Descripción</th></tr></thead>
           <tbody>
             <tr><td>Features comunes</td><td>multimodalFeatures.js</td><td>Une temporal features, AUs, emociones, gaze, postura, MoveNet, tarea y calidad.</td></tr>
             <tr><td>AUs crudas</td><td>gestureInsights.js</td><td>Mapeo MediaPipe blendshapes → FACS/AUs proxy.</td></tr>
             <tr><td>AUs procesadas</td><td>auProcessor.js</td><td>Baseline subtraction 60% + ganancia adaptativa. Sin double boost.</td></tr>
-            <tr><td>Canales</td><td>edgeAiEngine.js</td><td>Bayes AU + visualAttention + postureQuality + ajustes gaze/postura/MoveNet.</td></tr>
+            <tr><td>Canales</td><td>edgeAiEngine.js</td><td>Bayes AU + visualAttention + postureQuality + canales game-aware explícitos.</td></tr>
             <tr><td>Composite</td><td>edgeAiEngine.js</td><td>Promedio ponderado con polaridad negativa para carga cognitiva, fatiga y estrés.</td></tr>
           </tbody>
         </table>
@@ -47,6 +47,10 @@ export default function ReferenceGuide() {
             <tr><td>Atención Visual</td><td>gaze lookingAtScreen + confidence</td><td>Si gaze no está calibrado, baja confianza.</td></tr>
             <tr><td>Calidad Postural</td><td>postureScore + MoveNet shoulder symmetry</td><td>MoveNet requiere hombros visibles.</td></tr>
             <tr><td>Rendimiento</td><td>Accuracy, RT, completion</td><td>Solo cuando hay tarea.</td></tr>
+            <tr><td>Control inhibitorio</td><td>commission/omission error + post-error slowing</td><td>Solo con actividad Go/No-Go o equivalente.</td></tr>
+            <tr><td>Precisión visomotora</td><td>Fitts throughput + path efficiency + tracking loss</td><td>Separa precisión de RT simple.</td></tr>
+            <tr><td>Eficiencia búsqueda visual</td><td>searchEfficiency + errorRate + setSize</td><td>Depende de tarea Visual Search.</td></tr>
+            <tr><td>Resiliencia adaptativa</td><td>accuracy + completion + errores + deltas de correlación</td><td>Resume estabilidad bajo tarea.</td></tr>
           </tbody>
         </table>
       </Section>
@@ -123,6 +127,47 @@ export default function ReferenceGuide() {
 
       <Section title="Tecnologías">
         <p>React 19 · Vite 8 · MediaPipe Face Landmarker · TF.js MoveNet Lightning · Web Workers para FaceLandmarker · IndexedDB · FACS/AUs proxy · Edge AI bayesiano multimodal local.</p>
+      </Section>
+
+      <Section title="Apéndice gamificado O-Q: dificultad, validación y exportación">
+        <p className="caption">Las fases O-Q cierran el ciclo experimental: recomendación de dificultad, escenarios sintéticos y exportación agregada para análisis offline.</p>
+        <table className="guide-table">
+          <thead><tr><th>Fase</th><th>Módulo</th><th>Algoritmo</th><th>Salida</th></tr></thead>
+          <tbody>
+            <tr><td>O — Dificultad adaptativa</td><td>tasks/adaptiveDifficulty.js</td><td>Evidencia up/down sobre accuracy, RT, completion, motor, inhibición, interferencia, búsqueda visual y carga cognitiva.</td><td>adaptive_difficulty_recommendation_v1 con reasonCodes y trace.</td></tr>
+            <tr><td>P — Simulación</td><td>telemetry/gameScenarioFixtures.js</td><td>Fixtures deterministas: buen control motor, fatiga, estrés/error, distracción y mejora por práctica.</td><td>Validación direccional de Edge AI, vector v2 y dificultad.</td></tr>
+            <tr><td>Q — Export investigación</td><td>telemetry/researchExport.js</td><td>Registros por trial desde gameCorrelation + assessment_feature_vector_v2; IDs hasheados.</td><td>krumm_research_export_v1, JSONL y CSV con columnas feature.*.</td></tr>
+          </tbody>
+        </table>
+      </Section>
+
+      <Section title="Algoritmos y fórmulas O-Q">
+        <p className="caption">Las reglas son trazables y anti-oscilación; no usan datos crudos ni rutas reconstructivas.</p>
+        <table className="guide-table">
+          <thead><tr><th>Algoritmo</th><th>Fórmula / regla</th><th>Justificación</th></tr></thead>
+          <tbody>
+            <tr><td>Subir dificultad</td><td><code>up {'>'}= down + 2</code>, con accuracy {'>'}= 0.85, completion {'>'}= 0.90, RT rápido, motor estable y baja carga.</td><td>Evita subir por una sola señal aislada.</td></tr>
+            <tr><td>Bajar dificultad</td><td><code>down {'>'}= up + 2</code>, con accuracy {'<'}= 0.55, RT lento, motor débil, errores altos o cognitiveLoad {'>'}= 75.</td><td>Reduce demanda ante sobrecarga o caída de desempeño.</td></tr>
+            <tr><td>Mantener dificultad</td><td>Sin margen de 2 puntos entre evidencia up/down.</td><td>Histéresis discreta anti-oscilación.</td></tr>
+            <tr><td>Validación sintética</td><td>Comparar escenarios esperados: control bueno, fatiga, estrés/error, distracción, práctica.</td><td>Detecta fórmulas invertidas antes de usar datos reales.</td></tr>
+            <tr><td>Export JSONL/CSV</td><td>Un registro por trial: runId, trialIndex, gameId, outcome, correct, reactionTimeMs, feature.*.</td><td>Análisis offline sin reconstruir cursor, rostro o estímulos.</td></tr>
+          </tbody>
+        </table>
+      </Section>
+
+      <Section title="Referencias metodológicas O-Q">
+        <p className="caption">Estas referencias justifican la lógica conductual; KRUMM las usa como señales observacionales, no diagnósticas.</p>
+        <table className="guide-table">
+          <thead><tr><th>Tema</th><th>Referencia</th><th>Uso en KRUMM</th></tr></thead>
+          <tbody>
+            <tr><td>Dificultad adaptativa</td><td>Flow theory / challenge-skill balance (Csikszentmihalyi) + computerized adaptive testing.</td><td>Subir dificultad cuando la habilidad observada supera la demanda; bajar ante sobrecarga.</td></tr>
+            <tr><td>Control inhibitorio</td><td>Paradigmas Go/No-Go y post-error slowing.</td><td>commissionErrorRate, omissionErrorRate y postErrorSlowingMs.</td></tr>
+            <tr><td>Precisión visomotora</td><td>Fitts, P. M. (1954), speed-accuracy tradeoff.</td><td><code>ID = log2(D/W + 1)</code> y throughput en Precision Targeting.</td></tr>
+            <tr><td>Búsqueda visual</td><td>Treisman & Gelade (1980), Feature Integration Theory.</td><td>setSize, distractores y searchEfficiency.</td></tr>
+            <tr><td>Tracking continuo</td><td>Smooth pursuit / visuomotor tracking.</td><td>RMS error, pérdida de seguimiento y smooth pursuit score.</td></tr>
+            <tr><td>Export privacy-safe</td><td>Data minimization / privacy by design.</td><td>Exportar agregados y feature vectors; nunca video, frames, landmarks, raw events ni pointer paths.</td></tr>
+          </tbody>
+        </table>
       </Section>
     </section>
   );

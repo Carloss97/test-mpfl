@@ -2,16 +2,16 @@
 
 Documento sincronizado con la arquitectura multimodal actual.
 
-## Edge AI v8.1 multimodal
+## Edge AI v9.1 multimodal + game-aware
 
-El pipeline sigue exportando `edge_ai_model_output_v8`, pero el modelo interno es `krumm-edge-ai-v8.1.0-multimodal`.
+El pipeline sigue exportando `edge_ai_model_output_v8` para compatibilidad, pero el modelo interno es `krumm-edge-ai-v9.1.0-game-aware`.
 
 | Etapa | Módulo | Descripción |
 |---|---|---|
 | Features comunes | `multimodalFeatures.js` | Une temporal features, AUs, emociones, gaze, postura, MoveNet, tarea y calidad. |
 | AUs crudas | `gestureInsights.js` | Mapeo MediaPipe blendshapes → FACS/AUs proxy. |
 | AUs procesadas | `auProcessor.js` | Baseline subtraction 60% + ganancia adaptativa; sin double boost. |
-| Canales | `edgeAiEngine.js` | Bayes AU + `visualAttention` + `postureQuality` + ajustes gaze/postura/MoveNet. |
+| Canales | `edgeAiEngine.js` | Bayes AU + `visualAttention` + `postureQuality` + canales game-aware explícitos. |
 | Composite | `edgeAiEngine.js` | Promedio ponderado con polaridad negativa para carga cognitiva, fatiga y estrés. |
 
 ## Canales Edge AI
@@ -27,6 +27,10 @@ El pipeline sigue exportando `edge_ai_model_output_v8`, pero el modelo interno e
 | Atención Visual | gaze lookingAtScreen + confidence | Si gaze no está calibrado, baja confianza. |
 | Calidad Postural | postureScore + MoveNet shoulder symmetry | MoveNet requiere hombros visibles. |
 | Rendimiento | Accuracy, RT, completion | Solo cuando hay tarea. |
+| Control inhibitorio | commission/omission error + post-error slowing | Solo con actividad Go/No-Go o equivalente. |
+| Precisión visomotora | Fitts throughput + path efficiency + tracking loss | Separa precisión de RT simple. |
+| Eficiencia búsqueda visual | searchEfficiency + errorRate + setSize | Depende de tarea Visual Search. |
+| Resiliencia adaptativa | accuracy + completion + errores + deltas de correlación | Resume estabilidad bajo tarea. |
 
 ## Emociones básicas v2
 
@@ -84,3 +88,34 @@ Si no hay contexto multimodal, `computeInsightsFromAUs()` conserva fallback `au_
 ## Tecnologías
 
 React 19 · Vite 8 · MediaPipe Face Landmarker · TF.js MoveNet Lightning · Web Workers para FaceLandmarker · IndexedDB · FACS/AUs proxy · Edge AI bayesiano multimodal local.
+
+## Apéndice gamificado O-Q: dificultad, validación y exportación
+
+Las fases O-Q cierran el ciclo experimental: la app ya no solo mide desempeño, sino que puede recomendar dificultad, validar escenarios sintéticos y exportar datasets agregados para análisis offline.
+
+| Fase | Módulo | Algoritmo | Salida |
+|---|---|---|---|
+| O — Dificultad adaptativa | `tasks/adaptiveDifficulty.js` | Reglas monotónicas con evidencia `up/down` sobre accuracy, RT, completion, motor, inhibición, interferencia, búsqueda visual y carga cognitiva. | `adaptive_difficulty_recommendation_v1` con `previousLevel`, `nextLevel`, `direction`, `reasonCodes`, `snapshot`, `trace`. |
+| P — Simulación | `telemetry/gameScenarioFixtures.js` | Fixtures deterministas: buen control motor, fatiga, estrés/error, distracción y mejora por práctica; cada escenario alimenta Edge AI + vector v2 + dificultad. | Validación direccional de canales (`cognitiveLoad`, `fatigueIndex`, `visualAttention`, `visuomotorPrecision`) y recomendación adaptativa. |
+| Q — Export investigación | `telemetry/researchExport.js` | Construcción de registros por trial a partir de `gameCorrelation.trials` + `assessment_feature_vector_v2`; IDs de trial se hashean. | Dataset `krumm_research_export_v1`, JSONL y CSV con columnas `feature.*`. |
+
+## Algoritmos y fórmulas O-Q
+
+| Algoritmo | Fórmula / regla | Justificación |
+|---|---|---|
+| Subir dificultad | `up >= down + 2`, con evidencia por `accuracy >= 0.85`, `completion >= 0.90`, RT rápido, motor estable, baja inhibición, baja carga. | Evita subir por una sola señal aislada; exige convergencia de desempeño y control. |
+| Bajar dificultad | `down >= up + 2`, con evidencia por `accuracy <= 0.55`, completion baja, RT lento, motor débil, errores inhibitorios/interferencia alta, `cognitiveLoad >= 75`. | Reduce dificultad cuando el desempeño cae o aparece sobrecarga observable. |
+| Mantener dificultad | Si no hay margen de 2 puntos entre evidencia `up/down`. | Control anti-oscilación; equivale a histéresis discreta. |
+| Validación sintética | Comparar dirección esperada por escenario: buen control debe subir; estrés/error debe subir carga y bajar inhibición; distracción baja atención; práctica mejora vector. | Prueba de sanidad antes de usar datos reales; reduce riesgo de fórmulas invertidas. |
+| Export JSONL/CSV | Un registro por trial: `runId`, `trialIndex`, `gameId`, `outcome`, `correct`, `reactionTimeMs`, `feature.*`. | Compatible con análisis offline sin reconstruir cursor, rostro o estímulos. |
+
+## Referencias metodológicas O-Q
+
+| Tema | Referencia | Uso en KRUMM |
+|---|---|---|
+| Dificultad adaptativa | Flow theory / challenge-skill balance (Csikszentmihalyi) + computerized adaptive testing | Subir dificultad solo cuando habilidad observada supera la demanda; bajar ante sobrecarga. |
+| Control inhibitorio | Go/No-Go y post-error slowing en psicología cognitiva | `commissionErrorRate`, `omissionErrorRate`, `postErrorSlowingMs`. |
+| Precisión visomotora | Fitts, P. M. (1954), speed-accuracy tradeoff | `ID = log2(D/W + 1)` y throughput para Precision Targeting. |
+| Búsqueda visual | Treisman & Gelade (1980), Feature Integration Theory | `setSize`, distractores y `searchEfficiency`. |
+| Tracking continuo | Smooth pursuit / visuomotor tracking | RMS error, pérdida de seguimiento y smooth pursuit score. |
+| Export privacy-safe | Data minimization / privacy by design | Exportar agregados y feature vectors, nunca video, frames, landmarks, raw events ni pointer paths. |
