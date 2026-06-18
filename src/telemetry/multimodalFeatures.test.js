@@ -61,6 +61,7 @@ describe('buildMultimodalFeatures', () => {
         motor: { pathEfficiencyMean: 0.82, smoothPursuitScore: 0.8, trackingLossRatio: 0.1, correctionRate: 2 },
         inhibition: { commissionErrorRate: 0.25, omissionErrorRate: 0 },
         interference: { conflictCostMs: 180, errorRate: 0.1 },
+        visualSearch: { meanSetSize: 12, searchEfficiency: 0.7 },
       },
     });
 
@@ -68,6 +69,21 @@ describe('buildMultimodalFeatures', () => {
     expect(features.game.performance.accuracy).toBe(0.75);
     expect(features.task.accuracy).toBe(0.75);
     expect(features.game.motor.pathEfficiencyMean).toBe(0.82);
+    expect(features.game.visualSearch.searchEfficiency).toBe(0.7);
     expect(features.sampleCounts.gameEvents).toBe(4);
+  });
+
+  it('includes privacy-safe game correlation windows when provided', () => {
+    const features = buildMultimodalFeatures({
+      faceSamples: [sample(0), sample(33), sample(66)],
+      gameCorrelation: {
+        schemaVersion: 'game_signal_correlation_v3',
+        aggregate: { trialCount: 2, completedTrialCount: 1, accuracy: 0.5, meanReactionTimeMs: 480, meanReactionPostureDelta: -0.12 },
+        trials: [{ trialId: 't1', windows: { preTrial: {}, reaction: {}, postResponse: {}, recovery: {} } }],
+      },
+    });
+
+    expect(features.gameCorrelation).toMatchObject({ available: true, trialCount: 2, completedTrialCount: 1, accuracy: 0.5, meanReactionPostureDelta: -0.12 });
+    expect(JSON.stringify(features.gameCorrelation)).not.toContain('windows');
   });
 });

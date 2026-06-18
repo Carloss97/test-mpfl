@@ -21,7 +21,7 @@ export default function Dashboard({
   calibrationProfile,calStatusLabel,
   insightItems,auEntries,activeAUCount,
   edgeAIResult,edgeChannels,edgeConfidence:_edgeConfidence,edgeComposite,
-  latestLandmarks,latestGaze,auRegionSummary,gameSummary,DEVICE_CONFIG:_DEVICE_CONFIG,
+  latestLandmarks,latestGaze,auRegionSummary,gameSummary,gameCorrelation,DEVICE_CONFIG:_DEVICE_CONFIG,
   latestPose,moveNetPose,moveNet = {},
   onCalibrateGazeCenter,onCalibratePostureUpright,manualCalStatus,
 }){
@@ -190,6 +190,7 @@ export default function Dashboard({
               <div className="stat-item"><span>RT medio</span><strong>{Math.round(gameSummary.performance?.meanReactionTimeMs??0)}ms</strong></div>
               <div className="stat-item"><span>Motor</span><strong>{pct(gameSummary.motor?.pathEfficiencyMean??gameSummary.motor?.smoothPursuitScore??0)}</strong></div>
               <div className="stat-item"><span>Errores</span><strong>{pct(gameSummary.interference?.errorRate??gameSummary.inhibition?.commissionErrorRate??0)}</strong></div>
+              <div className="stat-item"><span>Ventanas</span><strong>{gameCorrelation?.aggregate?.completedTrialCount??edgeAIResult?.multimodal?.gameCorrelation?.completedTrialCount??0}</strong></div>
             </div>
             <p className="caption" style={{fontSize:'0.56rem'}}>Sincronizado con `performance.now()` y usado por métricas/Edge AI. No se guardan trayectorias crudas.</p>
           </div>

@@ -21,7 +21,9 @@ import PrecisionTargetingTask from './tasks/PrecisionTargetingTask.jsx';
 import PursuitTrackingTask from './tasks/PursuitTrackingTask.jsx';
 import GoNoGoTask from './tasks/GoNoGoTask.jsx';
 import ColorInterferenceTask from './tasks/ColorInterferenceTask.jsx';
+import VisualSearchTask from './tasks/VisualSearchTask.jsx';
 import { summarizeGameEvents } from './telemetry/gameTelemetry.js';
+import { correlateGameWithMultimodalSignals } from './telemetry/gameCorrelation.js';
 import ReferenceGuide from './components/ReferenceGuide.jsx';
 import TaskImpact from './components/TaskImpact.jsx';
 import { generateReport } from './telemetry/reportGenerator.js';
@@ -46,11 +48,13 @@ const GAME_ACTIVITY_OPTIONS = Object.freeze([
   { id: 'pursuit_tracking', label: 'Seguimiento continuo', description: 'Tracking visuomotor y pérdida de seguimiento' },
   { id: 'go_nogo', label: 'Go/No-Go', description: 'Inhibición motora y errores de comisión/omisión' },
   { id: 'color_interference', label: 'Interferencia color-palabra', description: 'Conflicto cognitivo tipo Stroop' },
+  { id: 'visual_search', label: 'Búsqueda visual', description: 'Atención selectiva y eficiencia de búsqueda' },
 ]);
 
 function clamp(v, min = 0, max = 1) { return Math.min(max, Math.max(min, Number.isFinite(v) ? v : min)); }
 function formatPercent(v) { return `${Math.round(clamp(v) * 100)}%`; }
 function hasEnoughSamples(t) { return (t?.sampleCount ?? 0) >= MIN_SAMPLES_FOR_REPORT; }
+function appendBounded(list, item, max = 900) { return [...list, item].slice(-max); }
 
 export default function App() {
   // Error boundary for debugging
@@ -65,6 +69,10 @@ export default function App() {
   const faceSamplesRef = useRef([]);
   const taskEventsRef = useRef([]);
   const gameEventsRef = useRef([]);
+  const gazeSamplesRef = useRef([]);
+  const postureSamplesRef = useRef([]);
+  const upperBodySamplesRef = useRef([]);
+  const edgeAIResultRef = useRef(null);
   const sessionStartRef = useRef(0);
   const calibrationTimerRef = useRef(null);
   const streamRef = useRef(null);
@@ -80,6 +88,7 @@ export default function App() {
   const [taskEventCount, setTaskEventCount] = useState(0);
   const [gameEventCount, setGameEventCount] = useState(0);
   const [lastGameSummary, setLastGameSummary] = useState(null);
+  const [baselineEdgeAI, setBaselineEdgeAI] = useState(null);
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [calibrationProfile, setCalibrationProfile] = useState(null);
   const [latestFaceSample, setLatestFaceSample] = useState(null);
@@ -108,8 +117,10 @@ export default function App() {
       try {
         const gaze = estimateGaze(landmarks);
         setLatestGaze(gaze);
+        gazeSamplesRef.current = appendBounded(gazeSamplesRef.current, { ...gaze, timestamp: safeSample.timestamp });
         const posture = estimateUpperBodyPosture(landmarks);
         setLatestPose(posture);
+        postureSamplesRef.current = appendBounded(postureSamplesRef.current, { ...posture, timestamp: safeSample.timestamp });
       } catch { /* optional */ }
     }
     setLastQuality(safeSample.quality ?? {});
@@ -123,7 +134,15 @@ export default function App() {
   });
 
   const moveNetSample = useCallback((sample) => {
-    if (sample?.metrics) setMoveNetPose(sample.metrics);
+    if (sample?.metrics) {
+      setMoveNetPose(sample.metrics);
+      upperBodySamplesRef.current = appendBounded(upperBodySamplesRef.current, {
+        timestamp: sample.timestamp ?? performance.now(),
+        confidence: sample.metrics.confidence,
+        armActivity: sample.metrics.armActivity,
+        upperBodyCoverage: sample.metrics.upperBodyCoverage,
+      });
+    }
   }, []);
 
   const moveNet = useMoveNet({
@@ -154,6 +173,9 @@ export default function App() {
       await attachCameraStream(stream);
       await refreshCameraDevices().catch(() => []);
       faceSamplesRef.current = [];
+      gazeSamplesRef.current = [];
+      postureSamplesRef.current = [];
+      upperBodySamplesRef.current = [];
       resetAUCache();
       resetGazeEstimator();
       resetUpperBodyPostureState();
@@ -221,6 +243,10 @@ export default function App() {
     setTaskEventCount(0);
     setGameEventCount(0);
     setLastGameSummary(null);
+    setBaselineEdgeAI(edgeAIResultRef.current ? {
+      composite: edgeAIResultRef.current.composite,
+      channels: edgeAIResultRef.current.channels,
+    } : null);
     setTaskActive(true);
     setTimeout(() => {
       const el = document.querySelector('.task-panel');
@@ -261,6 +287,14 @@ export default function App() {
 
   // ─── Telemetry ───
   const gameSummary = useMemo(() => summarizeGameEvents(gameEventsRef.current), [gameEventCount]);
+  const gameCorrelation = useMemo(() => correlateGameWithMultimodalSignals({
+    gameEvents: gameEventsRef.current,
+    faceSamples: faceSamplesRef.current,
+    pointerSamples: [],
+    gazeSamples: gazeSamplesRef.current,
+    postureSamples: postureSamplesRef.current,
+    upperBodySamples: upperBodySamplesRef.current,
+  }), [gameEventCount, latestFaceSample, latestGaze, latestPose, moveNetPose]);
 
   const telemetry = useMemo(() => {
     const allSamples = faceSamplesRef.current;
@@ -304,10 +338,15 @@ export default function App() {
         latestPosture: latestPose,
         moveNetPose,
         gameSummary,
+        gameCorrelation,
       });
       return { ...result, emotions: emotionSmootherRef.current.smooth(result.emotions, { timestamp: latestFaceSample?.timestamp ?? null }) };
     } catch (e) { console.error('Edge AI inference failed:', e); return null; }
-  }, [latestFaceSample, calibrationProfile, faceWorker.delegate, taskEventCount, gameEventCount, faceSamplesRef.current?.length, latestGaze, latestPose, moveNetPose, gameSummary]);
+  }, [latestFaceSample, calibrationProfile, faceWorker.delegate, taskEventCount, gameEventCount, faceSamplesRef.current?.length, latestGaze, latestPose, moveNetPose, gameSummary, gameCorrelation]);
+
+  useEffect(() => {
+    edgeAIResultRef.current = edgeAIResult;
+  }, [edgeAIResult]);
 
   // ─── Pipeline Worker (future: optional, fallback to direct) ───
   // const pipeline = usePipelineWorker({ ... });
@@ -419,7 +458,7 @@ export default function App() {
               <select id="game-activity-select" value={selectedGameId} onChange={(e) => setSelectedGameId(e.target.value)} disabled={taskActive} aria-label="Actividad gamificada">
                 {GAME_ACTIVITY_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
               </select>
-              <span className="caption">Fases A-H disponibles · {selectedGame.description}</span>
+              <span className="caption">Fases A-I disponibles · {selectedGame.description}</span>
             </div>
             {!taskActive ? (
               <button type="button" onClick={startTask} className="primary">
@@ -448,6 +487,7 @@ export default function App() {
           edgeAIResult={edgeAIResult} edgeChannels={edgeChannels} edgeConfidence={edgeConfidence} edgeComposite={edgeComposite}
           latestLandmarks={latestLandmarks} latestGaze={latestGaze} latestPose={latestPose} moveNetPose={moveNetPose} moveNet={moveNet} auRegionSummary={telemetry.insights?.auRegionSummary}
           gameSummary={gameSummary}
+          gameCorrelation={gameCorrelation}
           DEVICE_CONFIG={DEVICE_CONFIG}
           onCalibrateGazeCenter={handleCalibrateGazeCenter}
           onCalibratePostureUpright={handleCalibratePostureUpright}
@@ -496,6 +536,9 @@ export default function App() {
           {selectedGameId === 'color_interference' && (
             <ColorInterferenceTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete}/>
           )}
+          {selectedGameId === 'visual_search' && (
+            <VisualSearchTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete} width={600} height={400}/>
+          )}
           {lastGameSummary && (
             <p className="caption">Último resultado: {Math.round((lastGameSummary.accuracy ?? lastGameSummary.meanScore ?? lastGameSummary.score ?? 0) * 100)}%</p>
           )}
@@ -507,7 +550,7 @@ export default function App() {
               <div><span>Motor</span><strong>{formatPercent(gameSummary.motor?.pathEfficiencyMean??gameSummary.motor?.smoothPursuitScore??0)}</strong></div>
             </div>
           )}
-          <TaskImpact edgeAIResult={edgeAIResult} taskActive={taskActive} gameSummary={gameSummary} />
+          <TaskImpact edgeAIResult={edgeAIResult} taskActive={taskActive} gameSummary={gameSummary} baselineEdgeAI={baselineEdgeAI} />
         </section>
       )}
 

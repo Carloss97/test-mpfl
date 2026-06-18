@@ -100,15 +100,21 @@ describe('gameTelemetry v1', () => {
         timestamp: 1700, gameId: 'pursuit_tracking', trialId: 't-1', eventType: 'response',
         response: { correct: true, outcome: 'tracked', reactionTimeMs: 1000, score: 0.75, tracking: { rmsErrorPx: 12, lossRatio: 0.1, smoothPursuitScore: 0.8, samples: [{ x: 1 }] } },
       }),
+      normalizeGameEvent({
+        timestamp: 2100, gameId: 'visual_search', trialId: 'v-1', eventType: 'response',
+        response: { correct: true, outcome: 'target_found', reactionTimeMs: 700, score: 1, visualSearch: { setSize: 12, distractorCount: 11, clickDistanceToTargetPx: 3, searchEfficiency: 0.76, items: [{ id: 'raw' }] } },
+      }),
     ];
 
     const summary = summarizeGameEvents(events);
 
-    expect(summary.performance).toMatchObject({ accuracy: 0.75, completedTrialCount: 4, meanScore: 0.6875 });
+    expect(summary.performance).toMatchObject({ accuracy: 0.8, completedTrialCount: 5, meanScore: 0.75 });
     expect(summary.motor).toMatchObject({ pathEfficiencyMean: 0.82, correctionRate: 2, overshootRate: 1, trackingRmsErrorPx: 12, smoothPursuitScore: 0.8 });
     expect(summary.inhibition).toMatchObject({ commissionErrorRate: 1, omissionErrorRate: 0 });
     expect(summary.interference).toMatchObject({ incongruentAccuracy: 1, errorRate: 0 });
     expect(summary.fitts).toMatchObject({ meanIndexDifficulty: 2.5, meanThroughput: 5.95 });
+    expect(summary.visualSearch).toMatchObject({ meanSetSize: 12, meanDistractorCount: 11, searchEfficiency: 0.76, meanClickDistanceToTargetPx: 3 });
     expect(JSON.stringify(summary)).not.toContain('samples');
+    expect(JSON.stringify(summary)).not.toContain('items');
   });
 });

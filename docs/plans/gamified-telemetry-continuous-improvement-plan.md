@@ -6,14 +6,15 @@
 
 **Arquitectura propuesta:** crear una capa de telemetría de juego desacoplada de cada actividad. Los juegos emiten eventos normalizados con `performance.now()`. Los módulos de telemetría transforman esos eventos en agregados privacy-safe. Edge AI consume agregados y features, no componentes de juego ni trayectorias crudas.
 
-**Estado general:** Fase A-H completadas; microfase UX + integración game-aware completada; Fase I pendiente.
+**Estado general:** Fase A-J completadas; microfase UX + integración game-aware + baseline/delta completadas; Fase K pendiente.
 
-**Microfase UX/game-aware completada:** las actividades A-H son accesibles desde el selector visible `Actividades gamificadas` en la página inicial. Sus eventos `game_event_v1` se agregan con `summarizeGameEvents()` y se sincronizan por `performance.now()` con cámara/facial telemetry. El resumen se integra en:
+**Microfase UX/game-aware completada:** las actividades A-I son accesibles desde el selector visible `Actividades gamificadas` en la página inicial. Sus eventos `game_event_v1` se agregan con `summarizeGameEvents()` y se sincronizan por `performance.now()` con cámara/facial telemetry. El resumen se integra en:
 - `src/App.jsx`: `gameSummary` en estado derivado, UI de actividad y conteo de eventos.
 - `src/components/Dashboard.jsx`: panel `Actividad sincronizada` con precisión, RT, motor y errores.
 - `src/telemetry/multimodalFeatures.js`: bloque `game` + `task` game-aware.
 - `src/telemetry/edgeAiEngine.js`: `taskPerformance` y `motorControl` usan game telemetry cuando existe.
 - `src/telemetry/insightMetrics.js`: recibe `task: gameSummary.performance` desde App para estrés/carga/engagement.
+- `src/components/TaskImpact.jsx`: muestra baseline pre-actividad vs actual con actividad cuando existe cámara/Edge AI, y explica cámara-only vs cámara+actividad.
 
 ---
 
@@ -315,40 +316,60 @@
 
 ## Fase I — Visual Search
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 9
 
 **Objetivo:** medir atención selectiva y exploración visual/cursor.
 
-**Archivos:**
-- Crear: `src/tasks/VisualSearchTask.jsx`
-- Crear: `src/tasks/visualSearch.test.jsx`
+**Archivos implementados:**
+- Creado: `src/tasks/VisualSearchTask.jsx`
+- Creado: `src/tasks/visualSearch.test.jsx`
+- Modificado: `src/App.jsx`
+- Modificado: `src/App.test.jsx`
+- Modificado: `src/telemetry/gameTelemetry.js`
+- Modificado: `src/telemetry/gameTelemetry.test.js`
+- Modificado: `src/components/TaskImpact.jsx`
+- Creado: `src/components/TaskImpact.test.jsx`
 
-**Features:**
-- searchTime
-- distractorClicks
-- cursorExplorationEntropy
-- gazeOffscreenDuringSearch
+**Features implementadas:**
+- matriz con un objetivo (`●`) y distractores (`○`, `◇`, `□`, `△`)
+- setSize variable
+- distractorCount
+- reactionTimeMs
+- clickDistanceToTargetPx
+- searchEfficiency
+- visualSearch summary agregado en `summarizeGameEvents()`
+- selector App actualizado a `Fases A-I disponibles`
+- baseline pre-actividad vs actual con actividad en `TaskImpact`
 
 **Criterios de éxito:**
-- Distingue búsqueda eficiente vs distractores/errores.
-- Eventos y payload siguen privacy-safe.
+- [x] Distingue búsqueda eficiente vs distractores/errores.
+- [x] Eventos y payload siguen privacy-safe.
+- [x] Visual Search accesible desde la página inicial.
+- [x] Baseline/delta visible en `TaskImpact` cuando existe Edge AI previo.
+- [x] Tests/build verdes.
 
 ---
 
 ## Fase J — Correlación multimodal task/game v3
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 10
 
 **Objetivo:** fusionar game events + pointer + face/gaze/posture/MoveNet por ventanas de trial.
 
-**Archivos:**
-- Crear: `src/telemetry/gameCorrelation.js`
-- Crear: `src/telemetry/gameCorrelation.test.js`
-- Modificar: `src/telemetry/taskCorrelation.js`
+**Archivos implementados:**
+- Creado: `src/telemetry/gameCorrelation.js`
+- Creado: `src/telemetry/gameCorrelation.test.js`
+- Modificado: `src/telemetry/multimodalFeatures.js`
+- Modificado: `src/telemetry/multimodalFeatures.test.js`
+- Modificado: `src/telemetry/edgeAiEngine.js`
+- Modificado: `src/telemetry/edgeAiEngine.test.js`
+- Modificado: `src/App.jsx`
+- Modificado: `src/components/Dashboard.jsx`
+- Modificado: `src/components/Dashboard.signalVisibility.test.jsx`
 
 **Ventanas:**
 - pre-trial: -300 ms a stimulus
@@ -357,8 +378,12 @@
 - recovery: +500 ms a +1500 ms
 
 **Criterios de éxito:**
-- Cada trial tiene ventanas completas con features faciales, gaze, postura, upperBody, pointer y game.
-- No se exportan señales crudas.
+- [x] Cada trial tiene ventanas `preTrial`, `reaction`, `postResponse`, `recovery` con features faciales, gaze, postura, upperBody, pointer y game.
+- [x] Trials incompletos no fabrican ventanas post-response/recovery.
+- [x] No se exportan señales crudas, landmarks, blendshapes, trayectoria de cursor ni estímulos completos.
+- [x] Edge AI expone `multimodal.gameCorrelation` como agregado privacy-safe.
+- [x] Dashboard muestra conteo de ventanas correlacionadas.
+- [x] Tests/build verdes.
 
 ---
 

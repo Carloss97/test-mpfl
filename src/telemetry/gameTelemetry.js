@@ -178,6 +178,7 @@ export function summarizeGameEvents(events = []) {
   const pointerSummaries = responses.map((response) => response.pointerSummary).filter(Boolean);
   const fittsSummaries = responses.map((response) => response.fitts).filter(Boolean);
   const trackingSummaries = responses.map((response) => response.tracking).filter(Boolean);
+  const visualSearchSummaries = responses.map((response) => response.visualSearch).filter(Boolean);
   const inhibitionResponses = responses.filter((response) => response.inhibition || ['correct_go', 'correct_withhold', 'commission_error', 'omission_error'].includes(response.outcome));
   const interferenceResponses = responses.filter((response) => response.interference);
 
@@ -228,6 +229,13 @@ export function summarizeGameEvents(events = []) {
       incongruentRT: mean(incongruentResponses.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2),
       conflictCostMs: round(mean(incongruentResponses.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2) - mean(congruentResponses.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2), 2),
       errorRate: rate(interferenceResponses.filter((response) => response.correct === false).length, interferenceResponses.length),
+    },
+    visualSearch: {
+      meanSetSize: mean(visualSearchSummaries.map((summary) => summary.setSize), 2),
+      meanDistractorCount: mean(visualSearchSummaries.map((summary) => summary.distractorCount), 2),
+      searchEfficiency: mean(visualSearchSummaries.map((summary) => summary.searchEfficiency), 4),
+      meanClickDistanceToTargetPx: mean(visualSearchSummaries.map((summary) => summary.clickDistanceToTargetPx), 2),
+      errorRate: rate(responses.filter((response) => response.visualSearch && response.correct === false).length, visualSearchSummaries.length),
     },
     byEventType,
     window: {

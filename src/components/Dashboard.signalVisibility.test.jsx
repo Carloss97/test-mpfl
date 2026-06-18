@@ -76,11 +76,12 @@ describe('Dashboard signal visibility', () => {
       motor: { pathEfficiencyMean: 0.76 },
       interference: { errorRate: 0.17 },
       inhibition: {},
-    }} />);
+    }} gameCorrelation={{ aggregate: { completedTrialCount: 4 } }} />);
 
     expect(screen.getByText(/Actividad sincronizada/i)).toBeInTheDocument();
     expect(screen.getByText(/Eventos/i)).toBeInTheDocument();
     expect(screen.getByText(/RT medio/i)).toBeInTheDocument();
+    expect(screen.getByText(/Ventanas/i)).toBeInTheDocument();
     expect(screen.getByText(/usado por métricas\/Edge AI/i)).toBeInTheDocument();
   });
 });

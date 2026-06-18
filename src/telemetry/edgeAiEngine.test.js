@@ -133,4 +133,18 @@ describe('runEdgeAIInference with multimodal inputs', () => {
     expect(output.multimodal.game.available).toBe(true);
     expect(output.multimodal.game.performance.accuracy).toBe(0.9);
   });
+
+  it('exposes game-signal correlation aggregate without raw windows', () => {
+    const output = runEdgeAIInference({
+      faceSamples,
+      gameCorrelation: {
+        schemaVersion: 'game_signal_correlation_v3',
+        aggregate: { trialCount: 2, completedTrialCount: 2, accuracy: 1, meanReactionTimeMs: 400, meanReactionPostureDelta: -0.08 },
+        trials: [{ trialId: 'raw-window', windows: { reaction: { face: { sampleCount: 1 } } } }],
+      },
+    });
+
+    expect(output.multimodal.gameCorrelation).toMatchObject({ available: true, trialCount: 2, completedTrialCount: 2, accuracy: 1 });
+    expect(JSON.stringify(output.multimodal.gameCorrelation)).not.toContain('windows');
+  });
 });

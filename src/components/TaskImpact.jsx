@@ -4,7 +4,7 @@ import React from 'react';
  * TaskImpact — muestra el efecto de la tarea en las métricas.
  * Explica la diferencia entre inferencia solo cámara y cámara + telemetría de actividad.
  */
-export default function TaskImpact({ edgeAIResult, taskActive, gameSummary = null }) {
+export default function TaskImpact({ edgeAIResult, taskActive, gameSummary = null, baselineEdgeAI = null }) {
   if (!taskActive) return null;
 
   const channels = edgeAIResult?.channels ?? {};
@@ -14,6 +14,21 @@ export default function TaskImpact({ edgeAIResult, taskActive, gameSummary = nul
   const hasGameTelemetry = Boolean(gameSummary?.eventCount > 0 || edgeAIResult?.multimodal?.game?.available);
   const performance = gameSummary?.performance ?? edgeAIResult?.multimodal?.game?.performance ?? {};
   const motor = gameSummary?.motor ?? edgeAIResult?.multimodal?.game?.motor ?? {};
+  const baselineComposite = baselineEdgeAI?.composite?.score;
+  const currentComposite = composite?.score;
+  const compositeDelta = Number.isFinite(baselineComposite) && Number.isFinite(currentComposite)
+    ? currentComposite - baselineComposite
+    : null;
+  const deltaLabel = (value) => `${value >= 0 ? '+' : ''}${Math.round(value)}`;
+  const channelDeltas = Object.entries(channels)
+    .map(([name, channel]) => {
+      const before = baselineEdgeAI?.channels?.[name]?.score;
+      if (!Number.isFinite(before) || !Number.isFinite(channel.score)) return null;
+      return { name, label: channel.label ?? name, delta: channel.score - before };
+    })
+    .filter(Boolean)
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    .slice(0, 3);
 
   // Top changing channels
   const channelEntries = Object.entries(channels)
@@ -56,6 +71,25 @@ export default function TaskImpact({ edgeAIResult, taskActive, gameSummary = nul
               Rendimiento {Math.round((performance.accuracy ?? 0) * 100)}% · Motor {Math.round(((motor.pathEfficiencyMean ?? motor.smoothPursuitScore ?? 0) * 100))}%
             </span>
           </div>
+        </div>
+      )}
+
+      {baselineEdgeAI && compositeDelta !== null && (
+        <div style={{ marginBottom: '8px', padding: '8px', borderRadius: '10px', background: 'rgba(255,209,102,0.06)', border: '1px solid rgba(255,209,102,0.14)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.58rem', color: '#9fb0c2' }}>Baseline pre-actividad: <strong>{baselineComposite}%</strong></span>
+            <span style={{ fontSize: '0.58rem', color: '#9fb0c2' }}>Actual con actividad: <strong>{currentComposite}%</strong></span>
+            <span style={{ fontSize: '0.6rem', color: compositeDelta >= 0 ? '#7df0cb' : '#ff6b6b', fontWeight: 800 }}>{deltaLabel(compositeDelta)}</span>
+          </div>
+          {channelDeltas.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+              {channelDeltas.map((item) => (
+                <span key={item.name} style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: '999px', background: 'rgba(255,255,255,0.06)', color: item.delta >= 0 ? '#7df0cb' : '#ffb3b3' }}>
+                  {item.label} {deltaLabel(item.delta)}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

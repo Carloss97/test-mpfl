@@ -10,6 +10,7 @@
  * - head/posture proxy
  * - MoveNet upper-body metrics
  * - task/game features
+ * - privacy-safe game/signal correlation summaries
  */
 
 import { buildFullFeatureVector } from './temporalFeatures.js';
@@ -121,6 +122,7 @@ function summarizeGame(gameSummary = null) {
       inhibition: {},
       interference: {},
       fitts: {},
+      visualSearch: {},
       source: 'unavailable',
     };
   }
@@ -145,7 +147,32 @@ function summarizeGame(gameSummary = null) {
     inhibition: { ...gameSummary.inhibition },
     interference: { ...gameSummary.interference },
     fitts: { ...gameSummary.fitts },
+    visualSearch: { ...gameSummary.visualSearch },
     source: 'game_telemetry',
+  };
+}
+
+function summarizeGameCorrelation(gameCorrelation = null) {
+  const aggregate = gameCorrelation?.aggregate ?? null;
+  if (!aggregate || (aggregate.trialCount ?? 0) <= 0) {
+    return {
+      available: false,
+      trialCount: 0,
+      completedTrialCount: 0,
+      accuracy: 0,
+      source: 'unavailable',
+    };
+  }
+  return {
+    available: true,
+    trialCount: aggregate.trialCount ?? 0,
+    completedTrialCount: aggregate.completedTrialCount ?? 0,
+    accuracy: round(aggregate.accuracy ?? 0),
+    meanReactionTimeMs: round(aggregate.meanReactionTimeMs ?? 0, 2),
+    meanReactionFacePresenceDelta: round(aggregate.meanReactionFacePresenceDelta ?? 0),
+    meanReactionPostureDelta: round(aggregate.meanReactionPostureDelta ?? 0),
+    byGameId: { ...aggregate.byGameId },
+    source: 'game_signal_correlation_v3',
   };
 }
 
@@ -158,6 +185,7 @@ export function buildMultimodalFeatures({
   latestPosture = null,
   moveNetPose = null,
   gameSummary = null,
+  gameCorrelation = null,
 } = {}) {
   const temporal = buildFullFeatureVector({ faceSamples, pointerSamples, taskEvents, calibrationProfile });
 
@@ -175,6 +203,7 @@ export function buildMultimodalFeatures({
   const facePresenceRatio = temporal.facial?.facePresenceRatio ?? 0;
   const meanConfidence = temporal.facial?.meanConfidence ?? 0;
   const game = summarizeGame(gameSummary);
+  const gameCorrelationSummary = summarizeGameCorrelation(gameCorrelation);
   const task = game.available
     ? { ...temporal.performance, ...game.performance, source: 'game_telemetry' }
     : (temporal.performance ?? {});
@@ -189,6 +218,7 @@ export function buildMultimodalFeatures({
     posture: summarizePosture(latestPosture),
     upperBody: summarizeUpperBody(moveNetPose),
     game,
+    gameCorrelation: gameCorrelationSummary,
     task,
     quality: {
       facePresenceRatio: round(facePresenceRatio),
@@ -203,6 +233,7 @@ export function buildMultimodalFeatures({
       taskEvents: taskEvents.length,
       pointerSamples: pointerSamples.length,
       gameEvents: game.performance.completedTrialCount ?? 0,
+      correlatedTrials: gameCorrelationSummary.completedTrialCount ?? 0,
     },
   };
 }

@@ -201,6 +201,7 @@ export function runEdgeAIInference({
   calibrationProfile = null, runtime = {},
   latestGaze = null, latestPosture = null, moveNetPose = null,
   gameSummary = null,
+  gameCorrelation = null,
 } = {}) {
   const generatedAt = new Date().toISOString();
 
@@ -214,6 +215,7 @@ export function runEdgeAIInference({
     latestPosture,
     moveNetPose,
     gameSummary,
+    gameCorrelation,
   });
   const features = multimodal.temporal;
   const aus = multimodal.aus;
@@ -285,6 +287,7 @@ export function runEdgeAIInference({
       posture: multimodal.posture,
       upperBody: multimodal.upperBody,
       game: multimodal.game,
+      gameCorrelation: multimodal.gameCorrelation,
       quality: multimodal.quality,
     },
     caveats: [
