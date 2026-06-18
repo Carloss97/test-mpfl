@@ -16,6 +16,7 @@ import { runEdgeAIInference } from './telemetry/edgeAiEngine.js';
 import { createEmotionTemporalSmoother } from './telemetry/emotionTemporalSmoother.js';
 import Dashboard from './components/Dashboard.jsx';
 import StickyHeader from './components/StickyHeader.jsx';
+import GameSessionPanel from './components/GameSessionPanel.jsx';
 import SimpleRTTask from './tasks/SimpleRTTask.jsx';
 import PrecisionTargetingTask from './tasks/PrecisionTargetingTask.jsx';
 import PursuitTrackingTask from './tasks/PursuitTrackingTask.jsx';
@@ -24,6 +25,7 @@ import ColorInterferenceTask from './tasks/ColorInterferenceTask.jsx';
 import VisualSearchTask from './tasks/VisualSearchTask.jsx';
 import { summarizeGameEvents } from './telemetry/gameTelemetry.js';
 import { correlateGameWithMultimodalSignals } from './telemetry/gameCorrelation.js';
+import { buildAssessmentFeatureVectorV2 } from './telemetry/assessmentFeatureVector.js';
 import ReferenceGuide from './components/ReferenceGuide.jsx';
 import TaskImpact from './components/TaskImpact.jsx';
 import { generateReport } from './telemetry/reportGenerator.js';
@@ -357,19 +359,32 @@ export default function App() {
   const edgeConfidence = edgeAIResult?.confidence;
   const edgeComposite = edgeAIResult?.composite;
   const selectedGame = GAME_ACTIVITY_OPTIONS.find((option) => option.id === selectedGameId) ?? GAME_ACTIVITY_OPTIONS[0];
+  const assessmentFeatureVectorV2 = useMemo(() => (
+    gameSummary?.eventCount > 0
+      ? buildAssessmentFeatureVectorV2({
+        gameSummary,
+        gameCorrelation,
+        edgeModelOutput: edgeAIResult,
+        runtime: { delegate: faceWorker.delegate ?? 'CPU' },
+      })
+      : null
+  ), [gameSummary, gameCorrelation, edgeAIResult, faceWorker.delegate]);
 
   const handleGenerateReport = useCallback((format = 'markdown') => {
     if (!hasEnoughSamples(telemetry)) return;
     const durationMs = performance.now() - (sessionStartRef.current ?? performance.now());
     const report = generateReport({
       format, telemetry, edgeAIResult, calibrationProfile,
+      gameSummary,
+      gameCorrelation,
+      assessmentFeatureVector: assessmentFeatureVectorV2,
       runtime: { delegate: faceWorker.delegate ?? 'CPU' },
       durationMs, sessionId: `session-${Date.now()}`,
     });
     setReportContent(report);
     setReportFormat(format);
     setShowReportModal(true);
-  }, [telemetry, edgeAIResult, calibrationProfile, faceWorker.delegate]);
+  }, [telemetry, edgeAIResult, calibrationProfile, faceWorker.delegate, gameSummary, gameCorrelation, assessmentFeatureVectorV2]);
 
   const handleExportReport = useCallback(() => {
     if (!reportContent) return;
@@ -458,7 +473,7 @@ export default function App() {
               <select id="game-activity-select" value={selectedGameId} onChange={(e) => setSelectedGameId(e.target.value)} disabled={taskActive} aria-label="Actividad gamificada">
                 {GAME_ACTIVITY_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
               </select>
-              <span className="caption">Fases A-I disponibles · {selectedGame.description}</span>
+              <span className="caption">Fases A-M integradas · actividades A-I · {selectedGame.description}</span>
             </div>
             {!taskActive ? (
               <button type="button" onClick={startTask} className="primary">
@@ -542,14 +557,13 @@ export default function App() {
           {lastGameSummary && (
             <p className="caption">Último resultado: {Math.round((lastGameSummary.accuracy ?? lastGameSummary.meanScore ?? lastGameSummary.score ?? 0) * 100)}%</p>
           )}
-          {gameSummary.eventCount > 0 && (
-            <div className="summary-grid summary-grid-compact" style={{marginTop:'10px'}}>
-              <div><span>Game events</span><strong>{gameSummary.eventCount}</strong></div>
-              <div><span>Precisión</span><strong>{formatPercent(gameSummary.performance?.accuracy??0)}</strong></div>
-              <div><span>RT medio</span><strong>{Math.round(gameSummary.performance?.meanReactionTimeMs??0)}ms</strong></div>
-              <div><span>Motor</span><strong>{formatPercent(gameSummary.motor?.pathEfficiencyMean??gameSummary.motor?.smoothPursuitScore??0)}</strong></div>
-            </div>
-          )}
+          <GameSessionPanel
+            selectedGame={selectedGame}
+            taskActive={taskActive}
+            gameSummary={gameSummary}
+            gameCorrelation={gameCorrelation}
+            edgeAIResult={edgeAIResult}
+          />
           <TaskImpact edgeAIResult={edgeAIResult} taskActive={taskActive} gameSummary={gameSummary} baselineEdgeAI={baselineEdgeAI} />
         </section>
       )}

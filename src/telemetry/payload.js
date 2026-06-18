@@ -1,4 +1,4 @@
-import { buildAssessmentFeatureVector } from './assessmentFeatureVector.js';
+import { buildAssessmentFeatureVector, buildAssessmentFeatureVectorV2 } from './assessmentFeatureVector.js';
 import { generateEdgeModelOutput } from './edgeInference.js';
 import { runEdgeAIInference } from './edgeAiEngine.js';
 import { buildCalibrationProfile } from './microgestureFeatures.js';
@@ -101,6 +101,52 @@ export function summarizeFaceAroundClick(
   };
 }
 
+function sanitizeGameSummary(gameSummary = null) {
+  if (!gameSummary) return null;
+  return {
+    eventCount: Number(gameSummary.eventCount ?? 0),
+    performance: { ...gameSummary.performance },
+    motor: { ...gameSummary.motor },
+    fitts: { ...gameSummary.fitts },
+    inhibition: { ...gameSummary.inhibition },
+    interference: { ...gameSummary.interference },
+    visualSearch: { ...gameSummary.visualSearch },
+  };
+}
+
+function sanitizeGameCorrelation(gameCorrelation = null) {
+  if (!gameCorrelation?.aggregate) return null;
+  return {
+    schemaVersion: gameCorrelation.schemaVersion ?? 'game_signal_correlation_v3',
+    aggregate: { ...gameCorrelation.aggregate },
+    privacy: {
+      containsRawFaceSamples: false,
+      containsRawPointerPath: false,
+      containsRawGameStimuli: false,
+      aggregateOnlyWindows: true,
+    },
+  };
+}
+
+function sanitizeGameFeatureVector(vector = null) {
+  if (!vector) return null;
+  return {
+    type: vector.type,
+    version: vector.version,
+    privacy: { ...vector.privacy },
+    featureOrder: [...(vector.featureOrder ?? [])],
+    featureArray: [...(vector.featureArray ?? [])],
+    featureMap: { ...vector.featureMap },
+    aggregate: { ...vector.aggregate },
+    game: { ...vector.game },
+    pointer: { ...vector.pointer },
+    response: { ...vector.response },
+    multimodalDuringTrials: { ...vector.multimodalDuringTrials },
+    qualityFlags: [...(vector.qualityFlags ?? [])],
+    model: { ...vector.model },
+  };
+}
+
 export function buildFusionPayload({
   runId,
   generatedAt = new Date().toISOString(),
@@ -115,6 +161,9 @@ export function buildFusionPayload({
   runtime = {},
   blendshapeNames = DEFAULT_BLENDSHAPES,
   clickWindowOptions = { beforeMs: 250, duringMs: 250, afterMs: 300 },
+  gameSummary = null,
+  gameCorrelation = null,
+  gameFeatureVector = null,
 } = {}) {
   const start = Number(startedAt ?? 0);
   const end = Number(endedAt ?? start);
@@ -152,10 +201,26 @@ export function buildFusionPayload({
     calibrationProfile: microgestureCalibration,
     generatedAt,
     runtime,
+    gameSummary,
+    gameCorrelation,
   });
   // Keep exported payload compact/privacy-safe: multimodal internals are live UI
   // diagnostics, not persisted session payload fields.
   const { multimodal: _omittedMultimodal, ...compactEdgeAIOutput } = edgeAIOutput;
+  const safeGameSummary = sanitizeGameSummary(gameSummary);
+  const safeGameCorrelation = sanitizeGameCorrelation(gameCorrelation);
+  const safeGameFeatureVector = sanitizeGameFeatureVector(gameFeatureVector ?? (
+    safeGameSummary
+      ? buildAssessmentFeatureVectorV2({
+        runId,
+        generatedAt,
+        gameSummary: safeGameSummary,
+        gameCorrelation: safeGameCorrelation,
+        edgeModelOutput: edgeAIOutput,
+        runtime,
+      })
+      : null
+  ));
 
   return {
     schemaVersion: 'krumm_edge_fusion_poc_v1',
@@ -171,6 +236,7 @@ export function buildFusionPayload({
       rawFramesStored: false,
       rawPointerPathStored: false,
       facialLandmarksStored: false,
+      rawGameEventsStored: false,
       payloadContainsAggregatesOnly: true,
     },
     facialSummary: summarizeBlendshapes(faceSamples, blendshapeNames),
@@ -183,6 +249,13 @@ export function buildFusionPayload({
     ...(taskCorrelation ? { taskCorrelation } : {}),
     ...(edgeModelOutput ? { edgeModelOutput } : {}),
     ...(assessmentFeatureVector ? { assessmentFeatureVector } : {}),
+    ...(safeGameSummary || safeGameCorrelation || safeGameFeatureVector ? {
+      gameTelemetry: {
+        ...(safeGameSummary ? { summary: safeGameSummary } : {}),
+        ...(safeGameCorrelation ? { correlation: safeGameCorrelation } : {}),
+        ...(safeGameFeatureVector ? { featureVector: safeGameFeatureVector } : {}),
+      },
+    } : {}),
     edgeAI: compactEdgeAIOutput,
   };
 }

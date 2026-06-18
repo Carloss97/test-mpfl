@@ -10,8 +10,7 @@
  *  - html: versión renderizable en navegador
  */
 
-import { buildGestureInsights, AU_MAP, AU_REGIONS } from './gestureInsights.js';
-import { runEdgeAIInference } from './edgeAiEngine.js';
+import { AU_REGIONS } from './gestureInsights.js';
 
 const MIN_SAMPLES_FOR_REPORT = 20;
 
@@ -47,7 +46,7 @@ function barChart(value, width = 20) {
 
 // ─── Report builders ───
 
-function buildMarkdownReport({ telemetry, edgeAIResult, calibrationProfile, sessionInfo = {} }) {
+function buildMarkdownReport({ telemetry, edgeAIResult, calibrationProfile, sessionInfo = {}, gameSummary = null, gameCorrelation = null, assessmentFeatureVector = null }) {
   const lines = [];
 
   // Header
@@ -105,7 +104,7 @@ function buildMarkdownReport({ telemetry, edgeAIResult, calibrationProfile, sess
     lines.push('');
 
     if (edgeAIResult.channels) {
-      for (const [name, channel] of Object.entries(edgeAIResult.channels)) {
+      for (const [, channel] of Object.entries(edgeAIResult.channels)) {
         const emoji = levelEmoji(channel.level);
         lines.push(`### ${emoji} ${channel.label} — ${channel.score}% (${channel.level})`);
         lines.push('');
@@ -200,9 +199,36 @@ function buildMarkdownReport({ telemetry, edgeAIResult, calibrationProfile, sess
       lines.push('');
     }
 
-    // ─── Sección 6: Caveats ───
+    if (gameSummary?.performance || gameCorrelation?.aggregate || assessmentFeatureVector) {
+      lines.push('## 6. Actividad gamificada');
+      lines.push('');
+      const performance = gameSummary?.performance ?? {};
+      lines.push('| Métrica | Valor |');
+      lines.push('|---------|-------|');
+      lines.push(`| Eventos | ${gameSummary?.eventCount ?? 0} |`);
+      lines.push(`| Trials | ${performance.completedTrialCount ?? 0}/${performance.trialCount ?? 0} |`);
+      lines.push(`| Precisión | ${pct(performance.accuracy ?? gameCorrelation?.aggregate?.accuracy ?? 0)} |`);
+      lines.push(`| RT medio | ${round(performance.meanReactionTimeMs ?? gameCorrelation?.aggregate?.meanReactionTimeMs ?? 0)} ms |`);
+      lines.push(`| Ventanas correlacionadas | ${gameCorrelation?.aggregate?.completedTrialCount ?? 0} |`);
+      lines.push(`| Δ postura reacción | ${round(gameCorrelation?.aggregate?.meanReactionPostureDelta ?? 0, 3)} |`);
+      lines.push('');
+
+      if (assessmentFeatureVector) {
+        lines.push('### Feature vector v2');
+        lines.push('');
+        lines.push(`**Tipo:** ${assessmentFeatureVector.type ?? 'assessment_feature_vector_v2'}`);
+        lines.push(`**Versión:** ${assessmentFeatureVector.version ?? '—'}`);
+        lines.push(`**Dimensiones:** ${assessmentFeatureVector.featureOrder?.length ?? assessmentFeatureVector.featureArray?.length ?? 0}`);
+        lines.push('');
+      }
+
+      lines.push('_La sección gamificada contiene agregados: no incluye rutas crudas, landmarks, frames, video ni eventos reconstructivos._');
+      lines.push('');
+    }
+
+    // ─── Sección 7: Caveats ───
     if (edgeAIResult.caveats?.length) {
-      lines.push('## 6. Advertencias (Caveats)');
+      lines.push('## 7. Advertencias (Caveats)');
       lines.push('');
       for (const caveat of edgeAIResult.caveats) {
         lines.push(`- ⚠ ${caveat}`);
@@ -220,8 +246,8 @@ function buildMarkdownReport({ telemetry, edgeAIResult, calibrationProfile, sess
   return lines.join('\n');
 }
 
-function buildHtmlReport({ telemetry, edgeAIResult, calibrationProfile, sessionInfo = {} }) {
-  const md = buildMarkdownReport({ telemetry, edgeAIResult, calibrationProfile, sessionInfo });
+function buildHtmlReport({ telemetry, edgeAIResult, calibrationProfile, sessionInfo = {}, gameSummary = null, gameCorrelation = null, assessmentFeatureVector = null }) {
+  const md = buildMarkdownReport({ telemetry, edgeAIResult, calibrationProfile, sessionInfo, gameSummary, gameCorrelation, assessmentFeatureVector });
   // Simple markdown-to-HTML conversion
   let html = md
     // Headers
@@ -284,7 +310,7 @@ function buildHtmlReport({ telemetry, edgeAIResult, calibrationProfile, sessionI
 </html>`;
 }
 
-function buildJsonReport({ telemetry, edgeAIResult, calibrationProfile, sessionInfo = {} }) {
+function buildJsonReport({ telemetry, edgeAIResult, calibrationProfile, sessionInfo = {}, gameSummary = null, gameCorrelation = null, assessmentFeatureVector = null }) {
   return {
     reportVersion: 'krumm_edge_report_v1',
     generatedAt: new Date().toISOString(),
@@ -341,6 +367,39 @@ function buildJsonReport({ telemetry, edgeAIResult, calibrationProfile, sessionI
       confusion: round(telemetry.insights.confusion ?? 0),
       cognitiveLoad: round(telemetry.insights.cognitiveLoad ?? 0),
     } : {},
+    ...(gameSummary || gameCorrelation?.aggregate || assessmentFeatureVector ? {
+      gameTelemetry: {
+        ...(gameSummary ? {
+          summary: {
+            eventCount: Number(gameSummary.eventCount ?? 0),
+            performance: { ...gameSummary.performance },
+            motor: { ...gameSummary.motor },
+            fitts: { ...gameSummary.fitts },
+            inhibition: { ...gameSummary.inhibition },
+            interference: { ...gameSummary.interference },
+            visualSearch: { ...gameSummary.visualSearch },
+          },
+        } : {}),
+        ...(gameCorrelation?.aggregate ? {
+          correlation: {
+            schemaVersion: gameCorrelation.schemaVersion ?? 'game_signal_correlation_v3',
+            aggregate: { ...gameCorrelation.aggregate },
+          },
+        } : {}),
+        ...(assessmentFeatureVector ? {
+          assessmentFeatureVector: {
+            type: assessmentFeatureVector.type,
+            version: assessmentFeatureVector.version,
+            featureOrder: [...(assessmentFeatureVector.featureOrder ?? [])],
+            featureArray: [...(assessmentFeatureVector.featureArray ?? [])],
+            featureMap: { ...assessmentFeatureVector.featureMap },
+            aggregate: { ...assessmentFeatureVector.aggregate },
+            privacy: { ...assessmentFeatureVector.privacy },
+            qualityFlags: [...(assessmentFeatureVector.qualityFlags ?? [])],
+          },
+        } : {}),
+      },
+    } : {}),
     governance: {
       humanReviewOnly: true,
       noAutomatedDecision: true,
@@ -367,6 +426,9 @@ export function generateReport({
   edgeAIResult = null,
   calibrationProfile = null,
   sessionInfo = {},
+  gameSummary = null,
+  gameCorrelation = null,
+  assessmentFeatureVector = null,
   format = 'markdown',
 } = {}) {
   // Ensure edgeAIResult exists — recompute if needed
@@ -374,16 +436,16 @@ export function generateReport({
 
   switch (format) {
     case 'html':
-      return buildHtmlReport({ telemetry, edgeAIResult: aiResult, calibrationProfile, sessionInfo });
+      return buildHtmlReport({ telemetry, edgeAIResult: aiResult, calibrationProfile, sessionInfo, gameSummary, gameCorrelation, assessmentFeatureVector });
     case 'json':
       return JSON.stringify(
-        buildJsonReport({ telemetry, edgeAIResult: aiResult, calibrationProfile, sessionInfo }),
+        buildJsonReport({ telemetry, edgeAIResult: aiResult, calibrationProfile, sessionInfo, gameSummary, gameCorrelation, assessmentFeatureVector }),
         null,
         2,
       );
     case 'markdown':
     default:
-      return buildMarkdownReport({ telemetry, edgeAIResult: aiResult, calibrationProfile, sessionInfo });
+      return buildMarkdownReport({ telemetry, edgeAIResult: aiResult, calibrationProfile, sessionInfo, gameSummary, gameCorrelation, assessmentFeatureVector });
   }
 }
 

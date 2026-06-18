@@ -6,7 +6,7 @@
 
 **Arquitectura propuesta:** crear una capa de telemetría de juego desacoplada de cada actividad. Los juegos emiten eventos normalizados con `performance.now()`. Los módulos de telemetría transforman esos eventos en agregados privacy-safe. Edge AI consume agregados y features, no componentes de juego ni trayectorias crudas.
 
-**Estado general:** Fase A-L completadas; microfase UX + integración game-aware + baseline/delta completadas; Fase M pendiente.
+**Estado general:** Fase A-N completadas; microfase UX + integración game-aware + baseline/delta completadas; Fase O pendiente.
 
 **Microfase UX/game-aware completada:** las actividades A-I son accesibles desde el selector visible `Actividades gamificadas` en la página inicial. Sus eventos `game_event_v1` se agregan con `summarizeGameEvents()` y se sincronizan por `performance.now()` con cámara/facial telemetry. El resumen se integra en:
 - `src/App.jsx`: `gameSummary` en estado derivado, UI de actividad y conteo de eventos.
@@ -454,42 +454,45 @@
 
 ## Fase M — UI de sesión gamificada
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 13
 
 **Objetivo:** mostrar actividades, resultados y correlaciones sin saturar dashboard.
 
-**Archivos:**
-- Crear: `src/components/GameSessionPanel.jsx`
-- Crear: `src/components/GameTelemetrySummary.jsx`
-- Modificar: `src/App.jsx`
-- Modificar: `src/components/Dashboard.jsx`
+**Archivos implementados:**
+- Creado: `src/components/GameSessionPanel.jsx`
+- Creado: `src/components/GameTelemetrySummary.jsx`
+- Creado: `src/components/GameCorrelationPanel.jsx`
+- Creado: `src/components/GameSessionPanel.test.jsx`
+- Modificado: `src/App.jsx`
 
 **Criterios de éxito:**
-- Selector de actividad.
-- Score/dificultad/trials visibles.
-- Resumen de telemetría conductual.
-- Dashboard sigue legible.
+- [x] Selector de actividad sigue visible.
+- [x] Score/trials/RT/motor/inhibición/búsqueda visibles en panel compacto.
+- [x] Resumen de telemetría conductual y correlación multimodal visibles.
+- [x] Dashboard sigue legible: el panel vive junto a la tarea, no como saturación adicional del dashboard.
 
 ---
 
 ## Fase N — Payload, reportes y privacidad
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 14
 
 **Objetivo:** exportar resultados agregados de juego sin señales crudas sensibles.
 
-**Archivos:**
-- Modificar: `src/telemetry/payload.js`
-- Modificar: `src/telemetry/reportGenerator.js`
-- Crear: `src/telemetry/gamePayload.test.js`
+**Archivos implementados:**
+- Modificado: `src/telemetry/payload.js`
+- Modificado: `src/telemetry/reportGenerator.js`
+- Modificado: `src/App.jsx`
+- Creado: `src/telemetry/gamePayload.test.js`
 
 **Criterios de éxito:**
-- Payload contiene game summaries.
-- Payload no contiene `pointerSamples`, `rawPointerPath`, `landmarks`, `faceSamples`, video ni frames.
+- [x] Payload contiene `gameTelemetry.summary`, `gameTelemetry.correlation.aggregate` y `assessment_feature_vector_v2`.
+- [x] Reportes markdown/json contienen sección `Actividad gamificada` + `Feature vector v2`.
+- [x] Payload/reporte no contienen `pointerSamples`, `rawPointerPath`, `landmarks`, `faceSamples`, video, frames, windows crudas, estímulos completos ni raw game events.
 
 ---
 
