@@ -4,10 +4,10 @@ function Section({ title, children }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="guide-section">
-      <div className="guide-hdr" onClick={() => setOpen(!open)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+      <button type="button" className="guide-hdr" aria-expanded={open} onClick={() => setOpen(!open)}>
         <span className="guide-arrow">{open ? '▼' : '▶'}</span>
         <span className="guide-title">{title}</span>
-      </div>
+      </button>
       {open && <div className="guide-body">{children}</div>}
     </div>
   );
@@ -18,6 +18,27 @@ export default function ReferenceGuide() {
     <section className="panel reference-guide" style={{ marginTop: '32px' }}>
       <div className="panel-heading"><h2>Guía de referencia</h2></div>
       <p className="caption">Documentación de indicadores, fuentes, fórmulas y caveats de la arquitectura multimodal actual.</p>
+
+      <div className="guide-summary-grid" aria-label="Resumen operativo A-Z">
+        <div><span>Estado</span><strong>A-Z cerrado técnicamente</strong></div>
+        <div><span>Uso principal</span><strong>Revisión humana</strong></div>
+        <div><span>Privacidad</span><strong>Agregados, sin crudos</strong></div>
+        <div><span>Pendiente físico</span><strong>Smoke con cámara real</strong></div>
+      </div>
+
+      <Section title="Cómo leer esta guía y cerrar una sesión">
+        <p className="caption">Usa esta sección como índice operativo antes de abrir las tablas técnicas. La evaluación es browser-local, observacional y privacy-safe.</p>
+        <table className="guide-table">
+          <thead><tr><th>Paso</th><th>Qué revisar</th><th>Resultado esperado</th></tr></thead>
+          <tbody>
+            <tr><td>1. Señal</td><td>Cámara, FaceMesh, AUs, gaze, postura y MoveNet/estado.</td><td>Calidad suficiente o caveats explícitos.</td></tr>
+            <tr><td>2. Batería</td><td>Secuencia unificada RT → Fitts → Tracking → Go/No-Go → Stroop → Visual Search.</td><td>Bloques completados y progreso claro.</td></tr>
+            <tr><td>3. Fusión</td><td>gameSummary, gameCorrelation.aggregate y assessment_feature_vector_v2.</td><td>Solo agregados; sin ventanas ni eventos crudos.</td></tr>
+            <tr><td>4. Reporte</td><td>Perfil de habilidades, evidencia, caveats, calidad y gobernanza.</td><td>Lenguaje observacional, sin contratar/rechazar/diagnosticar.</td></tr>
+            <tr><td>5. Cierre</td><td>Bundle local/reportes + protocolo manual de cámara.</td><td>Artefactos descargables y privacy review manual.</td></tr>
+          </tbody>
+        </table>
+      </Section>
 
       <Section title="Edge AI v9.1 multimodal + game-aware">
         <p className="caption">Pipeline local 100% client-side. El schema externo sigue siendo edge_ai_model_output_v8; el modelo interno es v9.1 game-aware.</p>

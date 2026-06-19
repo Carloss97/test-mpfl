@@ -2,6 +2,18 @@
 
 Documento sincronizado con la arquitectura multimodal actual.
 
+## Cómo leer esta guía y cerrar una sesión
+
+Estado operativo: A-Z cerrado técnicamente. Uso principal: revisión humana. Privacidad: agregados sin crudos. Pendiente físico: smoke con cámara real.
+
+| Paso | Qué revisar | Resultado esperado |
+|---|---|---|
+| 1. Señal | Cámara, FaceMesh, AUs, gaze, postura y MoveNet/estado. | Calidad suficiente o caveats explícitos. |
+| 2. Batería | Secuencia unificada RT → Fitts → Tracking → Go/No-Go → Stroop → Visual Search. | Bloques completados y progreso claro. |
+| 3. Fusión | `gameSummary`, `gameCorrelation.aggregate` y `assessment_feature_vector_v2`. | Solo agregados; sin ventanas ni eventos crudos. |
+| 4. Reporte | Perfil de habilidades, evidencia, caveats, calidad y gobernanza. | Lenguaje observacional, sin contratar/rechazar/diagnosticar. |
+| 5. Cierre | Bundle local/reportes + protocolo manual de cámara. | Artefactos descargables y privacy review manual. |
+
 ## Edge AI v9.1 multimodal + game-aware
 
 El pipeline sigue exportando `edge_ai_model_output_v8` para compatibilidad, pero el modelo interno es `krumm-edge-ai-v9.1.0-game-aware`.
