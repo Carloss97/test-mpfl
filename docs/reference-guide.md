@@ -120,9 +120,9 @@ Las fases O-Q cierran el ciclo experimental: la app ya no solo mide desempeño, 
 | Tracking continuo | Smooth pursuit / visuomotor tracking | RMS error, pérdida de seguimiento y smooth pursuit score. |
 | Export privacy-safe | Data minimization / privacy by design | Exportar agregados y feature vectors, nunca video, frames, landmarks, raw events ni pointer paths. |
 
-## Experiencia evaluativa unificada R-X
+## Experiencia evaluativa unificada R-Z
 
-Las fases R-X convierten las mediciones A-Q en una experiencia completa: batería guiada, sesión consolidada, perfil de talento, payload final, reporte humano y entrega local/futura.
+Las fases R-Z convierten las mediciones A-Q en una experiencia completa: batería guiada, sesión consolidada, perfil de talento, payload final, reporte humano, entrega local/futura, smoke manual y verificación integral.
 
 | Fase | Módulo principal | Función | Privacidad/gobernanza |
 |---|---|---|---|
@@ -133,6 +133,8 @@ Las fases R-X convierten las mediciones A-Q en una experiencia completa: baterí
 | V — Payload final | `assessment/finalAssessmentPayload.js` | Empaqueta quality, behavioral, talentProfile y Edge AI para reporte. | `humanReviewOnly`, `noAutomatedDecision`, `privacySafe`. |
 | W — Reporte humano | `assessment/talentReportGenerator.js` | Genera Markdown, HTML y JSON con portada, resumen, habilidades, caveats y apéndice. | Lenguaje observacional; no recomienda contratar/rechazar. |
 | X — Entrega | `assessment/reportSubmissionClient.js` | Crea bundle local y cliente HTTP futuro para enviar/describir reportes. | Valida payload antes de descargar o enviar. |
+| Y — Smoke manual | `docs/qa/unified-assessment-manual-smoke.md` | Protocolo para validar cámara real, calibración, batería, reportes y privacidad en navegador. | Requiere ejecución humana con permisos de cámara. |
+| Z — Verificación integral | `assessment/assessmentExperienceSmoke.js` | Smoke sintético A-X + checklist Y; suite, build, audit y scans. | Prueba pipeline sin datos crudos ni claims automáticos. |
 
 ## Reporte final y lectura humana
 
@@ -147,9 +149,9 @@ El reporte final está diseñado para personas evaluadoras: resume evidencia, li
 | Correlación cámara+tarea | Deltas agregados de reacción/postura/presencia facial. | Contextualizar desempeño bajo tarea sin raw windows. |
 | Gobernanza | Declaración de revisión humana, sin decisión automática y sin export crudo. | Marco de uso responsable y privacy-by-design. |
 
-## Revisión retroactiva A-X
+## Revisión retroactiva A-Z
 
-Resumen del avance acumulado: la app pasó de medir AUs/FACS y señales multimodales a una batería evaluativa completa con reporte final privacy-safe.
+Resumen del avance acumulado: la app pasó de medir AUs/FACS y señales multimodales a una batería evaluativa completa con reporte final privacy-safe, smoke sintético y protocolo manual de cámara.
 
 | Bloque | Estado | Resultado práctico |
 |---|---|---|
@@ -159,3 +161,4 @@ Resumen del avance acumulado: la app pasó de medir AUs/FACS y señales multimod
 | M-N UI/payload | Completado | Panel de sesión, baseline/delta y reportes base agregados. |
 | O-Q Validación/export | Completado | Dificultad adaptativa, escenarios sintéticos y export JSONL/CSV de investigación. |
 | R-X Assessment final | Completado | Batería guiada, sesión unificada, perfil de talento, payload final, reporte y bundle de entrega. |
+| Y-Z Cierre técnico | Cerrado técnicamente | Protocolo manual para cámara real + smoke sintético integral + suite/build/audit/scans. |

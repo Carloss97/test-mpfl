@@ -170,8 +170,8 @@ export default function ReferenceGuide() {
         </table>
       </Section>
 
-      <Section title="Experiencia evaluativa unificada R-X">
-        <p className="caption">Las fases R-X convierten las mediciones A-Q en una experiencia completa: batería guiada, sesión consolidada, perfil de talento, payload final, reporte humano y entrega local/futura.</p>
+      <Section title="Experiencia evaluativa unificada R-Z">
+        <p className="caption">Las fases R-Z convierten las mediciones A-Q en una experiencia completa: batería guiada, sesión consolidada, perfil de talento, payload final, reporte humano, entrega local/futura, smoke manual y verificación integral.</p>
         <table className="guide-table">
           <thead><tr><th>Fase</th><th>Módulo principal</th><th>Función</th><th>Privacidad/gobernanza</th></tr></thead>
           <tbody>
@@ -182,6 +182,8 @@ export default function ReferenceGuide() {
             <tr><td>V — Payload final</td><td>assessment/finalAssessmentPayload.js</td><td>Empaqueta quality, behavioral, talentProfile y Edge AI para reporte.</td><td><code>humanReviewOnly</code>, <code>noAutomatedDecision</code>, <code>privacySafe</code>.</td></tr>
             <tr><td>W — Reporte humano</td><td>assessment/talentReportGenerator.js</td><td>Genera Markdown, HTML y JSON con portada, resumen, habilidades, caveats y apéndice.</td><td>Lenguaje observacional; no recomienda contratar/rechazar.</td></tr>
             <tr><td>X — Entrega</td><td>assessment/reportSubmissionClient.js</td><td>Crea bundle local y cliente HTTP futuro para enviar/describir reportes.</td><td>Valida payload antes de descargar o enviar.</td></tr>
+            <tr><td>Y — Smoke manual</td><td>docs/qa/unified-assessment-manual-smoke.md</td><td>Protocolo para validar cámara real, calibración, batería, reportes y privacidad en navegador.</td><td>Requiere ejecución humana con permisos de cámara.</td></tr>
+            <tr><td>Z — Verificación integral</td><td>assessment/assessmentExperienceSmoke.js</td><td>Smoke sintético A-X + checklist Y; suite, build, audit y scans.</td><td>Prueba pipeline sin datos crudos ni claims automáticos.</td></tr>
           </tbody>
         </table>
       </Section>
@@ -201,8 +203,8 @@ export default function ReferenceGuide() {
         </table>
       </Section>
 
-      <Section title="Revisión retroactiva A-X">
-        <p className="caption">Resumen del avance acumulado: la app pasó de medir AUs/FACS y señales multimodales a una batería evaluativa completa con reporte final privacy-safe.</p>
+      <Section title="Revisión retroactiva A-Z">
+        <p className="caption">Resumen del avance acumulado: la app pasó de medir AUs/FACS y señales multimodales a una batería evaluativa completa con reporte final privacy-safe, smoke sintético y protocolo manual de cámara.</p>
         <table className="guide-table">
           <thead><tr><th>Bloque</th><th>Estado</th><th>Resultado práctico</th></tr></thead>
           <tbody>
@@ -212,6 +214,7 @@ export default function ReferenceGuide() {
             <tr><td>M-N UI/payload</td><td>Completado</td><td>Panel de sesión, baseline/delta y reportes base agregados.</td></tr>
             <tr><td>O-Q Validación/export</td><td>Completado</td><td>Dificultad adaptativa, escenarios sintéticos y export JSONL/CSV de investigación.</td></tr>
             <tr><td>R-X Assessment final</td><td>Completado</td><td>Batería guiada, sesión unificada, perfil de talento, payload final, reporte y bundle de entrega.</td></tr>
+            <tr><td>Y-Z Cierre técnico</td><td>Cerrado técnicamente</td><td>Protocolo manual para cámara real + smoke sintético integral + suite/build/audit/scans.</td></tr>
           </tbody>
         </table>
       </Section>
