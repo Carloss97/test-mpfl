@@ -27,6 +27,8 @@ describe('App shell', () => {
     expect(screen.getByText(/Actividades gamificadas/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Actividad gamificada/i)).toBeInTheDocument();
     expect(screen.getByText(/Fases A-M/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Evaluación gamificada unificada/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Preparar evaluación/i })).toBeInTheDocument();
   });
 
   it('allows manual access to newly implemented gamified tasks without starting the camera', () => {

@@ -126,88 +126,90 @@ export const UNIFIED_BATTERY_CONFIG = {
 
 ## Fase R — Battery Runtime unificado
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 1
 
 **Objetivo:** crear el runtime que sabe avanzar por baseline, bloques de juego, recuperación y finalización.
 
-**Archivos:**
+**Archivos implementados:**
 
-- Crear: `src/assessment/batteryConfig.js`
-- Crear: `src/assessment/batteryRuntime.js`
-- Crear: `src/assessment/batteryRuntime.test.js`
-- Crear: `src/assessment/UnifiedGameBattery.jsx`
-- Modificar: `src/App.jsx`
+- Creado: `src/assessment/batteryConfig.js`
+- Creado: `src/assessment/batteryRuntime.js`
+- Creado: `src/assessment/batteryRuntime.test.js`
+- Creado: `src/assessment/UnifiedGameBattery.jsx`
+- Creado: `src/assessment/UnifiedGameBattery.test.jsx`
+- Modificado: `src/App.jsx`
+- Modificado: `src/App.test.jsx`
 
 **Tareas:**
 
-- [ ] Definir `UNIFIED_BATTERY_CONFIG`.
-- [ ] Implementar estados: `idle`, `consent`, `camera_check`, `baseline`, `instructions`, `running_block`, `rest`, `recovery`, `completed`, `report_ready`.
-- [ ] Implementar `createBatterySession()`.
-- [ ] Implementar `advanceBatteryState()` puro y testeable.
-- [ ] Mapear `gameId` a componente existente.
-- [ ] Emitir eventos de bloque: `battery_start`, `block_start`, `block_end`, `battery_end`.
-- [ ] Probar secuencia completa sin UI.
+- [x] Definir `UNIFIED_BATTERY_CONFIG`.
+- [x] Implementar estados: `idle`, `consent`, `camera_check`, `baseline`, `instructions`, `running_block`, `rest`, `recovery`, `completed`, `report_ready`.
+- [x] Implementar `createBatterySession()`.
+- [x] Implementar `advanceBatteryState()` puro y testeable.
+- [x] Mapear `gameId` a componente existente mediante `UnifiedGameBattery`.
+- [x] Emitir eventos de bloque: `battery_start`, `block_start`, `block_end`, `battery_end`.
+- [x] Probar secuencia completa sin UI.
 
 **Criterios de éxito:**
 
-- [ ] La secuencia es determinista.
-- [ ] No salta bloques.
-- [ ] Se puede pausar/cancelar.
-- [ ] El runtime no guarda datos crudos.
-- [ ] Tests cubren baseline, bloques, recovery y completed.
+- [x] La secuencia es determinista.
+- [x] No salta bloques.
+- [x] Se puede cancelar. Pausa queda para fase S si se requiere.
+- [x] El runtime no guarda datos crudos.
+- [x] Tests cubren baseline, bloques, recovery y completed.
 
 ---
 
 ## Fase S — Experiencia guiada del participante
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 2
 
 **Objetivo:** construir pantallas de consentimiento, calibración, instrucciones, progreso y finalización.
 
-**Archivos:**
+**Archivos implementados:**
 
-- Crear: `src/assessment/ParticipantAssessmentFlow.jsx`
-- Crear: `src/assessment/ConsentCalibrationScreen.jsx`
-- Crear: `src/assessment/BatteryProgress.jsx`
-- Crear: `src/assessment/BlockInstructionScreen.jsx`
-- Crear: `src/assessment/FinalAssessmentScreen.jsx`
-- Crear: `src/assessment/participantAssessmentFlow.test.jsx`
-- Modificar: `src/App.jsx`
+- Creado: `src/assessment/ParticipantAssessmentFlow.jsx`
+- Creado: `src/assessment/ConsentCalibrationScreen.jsx`
+- Creado: `src/assessment/BatteryProgress.jsx`
+- Creado: `src/assessment/BlockInstructionScreen.jsx`
+- Creado: `src/assessment/FinalAssessmentScreen.jsx`
+- Creado: `src/assessment/participantAssessmentFlow.test.jsx`
+- Modificado: `src/assessment/UnifiedGameBattery.jsx`
 
 **Tareas:**
 
-- [ ] Pantalla de consentimiento con copy privacy-safe.
-- [ ] Check técnico de cámara/señal.
-- [ ] Botones de calibración gaze/postura.
-- [ ] Progress bar de batería.
-- [ ] Instrucciones por juego.
-- [ ] Pantalla final con acciones de reporte/exportación.
+- [x] Pantalla de consentimiento con copy privacy-safe.
+- [x] Check técnico de cámara/señal.
+- [~] Botones de calibración gaze/postura: quedan en App/Dashboard; se conectarán al flujo dedicado en una iteración posterior si se requiere.
+- [x] Progress bar de batería.
+- [x] Instrucciones por juego.
+- [x] Pantalla final con acciones de reporte.
 
 **Criterios de éxito:**
 
-- [ ] El participante entiende qué hacer en cada etapa.
-- [ ] La cámara es requerida en modo assessment.
-- [ ] Practice/manual sigue funcionando sin cámara.
-- [ ] UI no oculta el dashboard ni señales críticas.
+- [x] El participante entiende qué hacer en cada etapa.
+- [x] La cámara es requerida en modo assessment.
+- [x] Practice/manual sigue funcionando sin cámara.
+- [x] UI no oculta el dashboard ni señales críticas.
 
 ---
 
 ## Fase T — Sesión evaluativa unificada
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 3
 
 **Objetivo:** consolidar todos los agregados de una batería en una sesión final.
 
-**Archivos:**
+**Archivos implementados:**
 
-- Crear: `src/assessment/assessmentSession.js`
-- Crear: `src/assessment/assessmentSession.test.js`
+- Creado: `src/assessment/assessmentSession.js`
+- Creado: `src/assessment/assessmentSession.test.js`
 
 **Schema propuesto:**
 
@@ -231,26 +233,26 @@ export const UNIFIED_BATTERY_CONFIG = {
 
 **Criterios de éxito:**
 
-- [ ] Contiene bloques y resumen global.
-- [ ] Contiene calidad de señal.
-- [ ] Contiene trazas de dificultad.
-- [ ] No contiene campos prohibidos.
+- [x] Contiene bloques y resumen global.
+- [x] Contiene calidad de señal.
+- [x] Contiene trazas de dificultad.
+- [x] No contiene campos prohibidos.
 
 ---
 
 ## Fase U — Perfil de talento/habilidades
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 4
 
 **Objetivo:** mapear métricas técnicas a dimensiones legibles de talento/habilidad.
 
-**Archivos:**
+**Archivos implementados:**
 
-- Crear: `src/assessment/talentDimensions.js`
-- Crear: `src/assessment/talentProfile.js`
-- Crear: `src/assessment/talentProfile.test.js`
+- Creado: `src/assessment/talentDimensions.js`
+- Creado: `src/assessment/talentProfile.js`
+- Creado: `src/assessment/talentProfile.test.js`
 
 **Dimensiones iniciales:**
 
@@ -269,9 +271,9 @@ export const UNIFIED_BATTERY_CONFIG = {
 
 **Criterios de éxito:**
 
-- [ ] Cada dimensión tiene score, confianza, evidencia y caveats.
-- [ ] No hay recomendación de contratar/rechazar.
-- [ ] El perfil usa lenguaje observacional.
+- [x] Cada dimensión tiene score, confianza, evidencia y caveats.
+- [x] No hay recomendación de contratar/rechazar.
+- [x] El perfil usa lenguaje observacional.
 
 ---
 
@@ -524,10 +526,10 @@ La etapa se considera completada si:
 
 | Fase | Estado | Tests | Build | Docs | Nota |
 |---|---|---|---|---|---|
-| R Runtime batería | [ ] | [ ] | [ ] | [ ] | Columna vertebral. |
-| S UI participante | [ ] | [ ] | [ ] | [ ] | Consentimiento + calibración + progreso. |
-| T Sesión unificada | [ ] | [ ] | [ ] | [ ] | Agregador final. |
-| U Talent profile | [ ] | [ ] | [ ] | [ ] | Habilidades humanas observables. |
+| R Runtime batería | [x] | [x] | [x] | [x] | Runtime + UI inicial integrados en App; focal tests, oxlint y build verdes. |
+| S UI participante | [x] | [x] | [x] | [x] | Componentes guiados integrados en `UnifiedGameBattery`; focal tests, oxlint y build verdes. |
+| T Sesión unificada | [x] | [x] | [x] | [x] | Agregador final privacy-safe; focal tests, oxlint y build verdes. |
+| U Talent profile | [x] | [x] | [x] | [x] | Perfil observacional con 10 dimensiones; focal tests, oxlint y build verdes. |
 | V Payload final | [ ] | [ ] | [ ] | [ ] | Privacy guard fuerte. |
 | W Reporte humano | [ ] | [ ] | [ ] | [ ] | Markdown/HTML/JSON. |
 | X Envío/export | [ ] | [ ] | [ ] | [ ] | Local primero, backend después. |
@@ -541,3 +543,10 @@ La etapa se considera completada si:
 | Fecha | Cambio | Evidencia |
 |---|---|---|
 | 2026-06-18 | Documento inicial creado. | Plan R-Z preparado a partir de fases A-Q completadas. |
+| 2026-06-18 | Fase R completada. | `npx vitest run src/App.test.jsx src/assessment/UnifiedGameBattery.test.jsx src/assessment/batteryRuntime.test.js --pool=threads` → 3 files / 11 tests passed. |
+| 2026-06-18 | Verificación Fase R. | `npx oxlint ...` → 0 warnings/errors; `npm run build` → 1342 modules transformed, built OK. |
+| 2026-06-18 | Fase S completada. | `npx vitest run src/assessment/participantAssessmentFlow.test.jsx src/assessment/UnifiedGameBattery.test.jsx src/assessment/batteryRuntime.test.js src/App.test.jsx --pool=threads` → 4 files / 16 tests passed. |
+| 2026-06-18 | Verificación Fase S. | `npx oxlint src/assessment src/App.jsx src/App.test.jsx` → 0 warnings/errors; `npm run build` → 1346 modules transformed, built OK. |
+| 2026-06-19 | Fase T completada. | `npx vitest run src/assessment/assessmentSession.test.js --pool=threads` → 1 file / 3 tests passed. |
+| 2026-06-19 | Fase U completada. | `npx vitest run src/assessment/talentProfile.test.js --pool=threads` → 1 file / 4 tests passed. |
+| 2026-06-19 | Verificación Fases T-U. | `npx oxlint src/assessment src/App.jsx src/App.test.jsx` → 0 warnings/errors; assessment focal suite → 6 files / 23 tests passed; `npm run build` → 1346 modules transformed, built OK. |

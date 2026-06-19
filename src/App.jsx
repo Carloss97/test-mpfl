@@ -17,6 +17,7 @@ import { createEmotionTemporalSmoother } from './telemetry/emotionTemporalSmooth
 import Dashboard from './components/Dashboard.jsx';
 import StickyHeader from './components/StickyHeader.jsx';
 import GameSessionPanel from './components/GameSessionPanel.jsx';
+import UnifiedGameBattery from './assessment/UnifiedGameBattery.jsx';
 import SimpleRTTask from './tasks/SimpleRTTask.jsx';
 import PrecisionTargetingTask from './tasks/PrecisionTargetingTask.jsx';
 import PursuitTrackingTask from './tasks/PursuitTrackingTask.jsx';
@@ -492,6 +493,13 @@ export default function App() {
         {cameraError && <p className="error">{cameraError}</p>}
         {faceWorker.error && <p className="error">Error de MediaPipe: {faceWorker.error}</p>}
       </section>
+
+      <UnifiedGameBattery
+        cameraActive={isCameraActive}
+        onRequestCamera={startCamera}
+        onGameEvent={handleGameEvent}
+        onBlockComplete={({ summary }) => handleTaskComplete(summary)}
+      />
 
       {isCameraActive ? (
         <Dashboard
