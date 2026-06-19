@@ -63,6 +63,49 @@ describe('PursuitTrackingTask', () => {
     expect(screen.getByText(/punto móvil/i)).toBeInTheDocument();
   });
 
+  it('keeps advancing when telemetry updates re-render the parent and leaves the cursor visible', async () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+
+    function ParentHarness() {
+      const [events, setEvents] = React.useState(0);
+      return (
+        <>
+          <span data-testid="event-count">{events}</span>
+          <PursuitTrackingTask
+            active
+            width={600}
+            height={400}
+            durationMs={1000}
+            onGameEvent={() => setEvents((count) => count + 1)}
+          />
+        </>
+      );
+    }
+
+    render(<ParentHarness />);
+
+    const area = screen.getByTestId('pursuit-task-area');
+    const target = screen.getByTestId('pursuit-target');
+    const left0 = target.style.left;
+    expect(area.style.cursor).not.toBe('none');
+
+    await act(async () => {
+      now = 500;
+      vi.advanceTimersByTime(500);
+    });
+
+    expect(Number(screen.getByTestId('event-count').textContent)).toBeGreaterThan(0);
+    expect(target.style.left).not.toBe(left0);
+
+    await act(async () => {
+      now = 1100;
+      vi.advanceTimersByTime(700);
+    });
+
+    expect(screen.getByTestId('pursuit-finished')).toBeInTheDocument();
+  });
+
   it('emits privacy-safe pursuit telemetry at completion using trial-relative timestamps', async () => {
     let now = 0;
     vi.spyOn(performance, 'now').mockImplementation(() => now);

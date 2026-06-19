@@ -7,6 +7,7 @@ const DEFAULT_HEIGHT = 400;
 const DEFAULT_DURATION_MS = 6000;
 const DEFAULT_STEPS = 25;
 const DEFAULT_HIT_RADIUS = 28;
+const PURSUIT_GAME_DEFINITION = Object.freeze({ id: 'pursuit_tracking', label: 'Seguimiento visuomotor', difficulty: 'continuous_tracking' });
 
 function round(value, digits = 4) {
   const numeric = Number(value);
@@ -96,6 +97,8 @@ export function summarizePursuitSamples({ targetPath = [], pointerSamples = [], 
 
 function PursuitTrackingInner({ emit, width, height, durationMs, hitRadiusPx, onComplete }) {
   const areaRef = useRef(null);
+  const emitRef = useRef(emit);
+  const onCompleteRef = useRef(onComplete);
   const [finished, setFinished] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [liveSampleCount, setLiveSampleCount] = useState(0);
@@ -103,13 +106,16 @@ function PursuitTrackingInner({ emit, width, height, durationMs, hitRadiusPx, on
   const pointerSamplerRef = useRef(createPointerSampler({ maxSamples: 1200, sessionId: 'pursuit_tracking' }));
   const targetPath = useMemo(() => buildPursuitPath({ width, height, durationMs }), [durationMs, height, width]);
 
+  useEffect(() => { emitRef.current = emit; }, [emit]);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+
   useEffect(() => {
     startTimeRef.current = performance.now();
     setElapsed(0);
     setFinished(false);
     setLiveSampleCount(0);
     pointerSamplerRef.current = createPointerSampler({ maxSamples: 1200, sessionId: 'pursuit_tracking' });
-    emit({
+    emitRef.current({
       eventType: 'stimulus_shown',
       trialId: 'pursuit-0',
       targetId: 'pursuit-target',
@@ -132,7 +138,7 @@ function PursuitTrackingInner({ emit, width, height, durationMs, hitRadiusPx, on
       });
       const score = summary.smoothPursuitScore;
       const now = performance.now();
-      emit({
+      emitRef.current({
         eventType: 'response',
         trialId: 'pursuit-0',
         targetId: 'pursuit-target',
@@ -146,17 +152,17 @@ function PursuitTrackingInner({ emit, width, height, durationMs, hitRadiusPx, on
         },
         gameState: { score, level: 1, difficulty: 'continuous_tracking' },
       });
-      emit({ eventType: 'game_end', timestamp: now, gameState: { score, level: 1, difficulty: 'continuous_tracking' } });
+      emitRef.current({ eventType: 'game_end', timestamp: now, gameState: { score, level: 1, difficulty: 'continuous_tracking' } });
       setElapsed(durationMs);
       setFinished(true);
-      onComplete?.({ gameId: 'pursuit_tracking', totalTrials: 1, score, tracking: summary });
+      onCompleteRef.current?.({ gameId: 'pursuit_tracking', totalTrials: 1, score, tracking: summary });
     }, durationMs);
 
     return () => {
       window.clearInterval(tickId);
       window.clearTimeout(timer);
     };
-  }, [durationMs, emit, hitRadiusPx, onComplete, targetPath]);
+  }, [durationMs, hitRadiusPx, targetPath]);
 
   const toLocalPointer = useCallback((event) => {
     const rect = areaRef.current?.getBoundingClientRect();
@@ -203,7 +209,7 @@ function PursuitTrackingInner({ emit, width, height, durationMs, hitRadiusPx, on
         ref={areaRef}
         className="task-area"
         data-testid="pursuit-task-area"
-        style={{ width, height, position: 'relative', cursor: 'none' }}
+        style={{ width, height, position: 'relative', cursor: 'crosshair' }}
         onPointerMove={recordPointer}
       >
         <svg width={width} height={height} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.25 }}>
@@ -238,7 +244,7 @@ export default function PursuitTrackingTask({ active = false, width = DEFAULT_WI
     <GameRuntime
       active={active}
       sessionId="pursuit_tracking"
-      gameDefinition={{ id: 'pursuit_tracking', label: 'Seguimiento visuomotor', difficulty: 'continuous_tracking' }}
+      gameDefinition={PURSUIT_GAME_DEFINITION}
       onEvent={onGameEvent}
       renderTrial={(_, emit) => (
         <PursuitTrackingInner

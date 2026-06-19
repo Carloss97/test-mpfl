@@ -6,6 +6,7 @@ const DEFAULT_HEIGHT = 400;
 const DEFAULT_TRIAL_COUNT = 6;
 const TARGET_SYMBOL = '●';
 const DISTRACTOR_SYMBOLS = ['○', '◇', '□', '△'];
+const VISUAL_SEARCH_GAME_DEFINITION = Object.freeze({ id: 'visual_search', label: 'Búsqueda visual', difficulty: 'set_size' });
 
 function round(value, digits = 4) {
   const numeric = Number(value);
@@ -87,6 +88,8 @@ export function summarizeVisualSearchResults(trials = []) {
 }
 
 function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
+  const emitRef = useRef(emit);
+  const onCompleteRef = useRef(onComplete);
   const [current, setCurrent] = useState(0);
   const [finished, setFinished] = useState(false);
   const [feedback, setFeedback] = useState(null);
@@ -95,11 +98,14 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
   const trials = useMemo(() => buildVisualSearchTrials({ width, height, count: trialCount }), [width, height, trialCount]);
   const trial = trials[current];
 
+  useEffect(() => { emitRef.current = emit; }, [emit]);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+
   useEffect(() => {
     if (!trial || finished) return;
     setFeedback(null);
     startTimeRef.current = performance.now();
-    emit({
+    emitRef.current({
       eventType: 'stimulus_shown',
       trialId: trial.trialId,
       targetId: trial.targetId,
@@ -114,7 +120,7 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
       },
       gameState: { score: trialsRef.current.filter((item) => item.correct).length, level: current + 1, difficulty: trial.setSize },
     });
-  }, [current, emit, finished, trial]);
+  }, [current, finished, trial]);
 
   const handleItemClick = useCallback((event, item) => {
     if (!trial || finished) return;
@@ -134,7 +140,7 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
       searchEfficiency,
     };
     trialsRef.current = [...trialsRef.current, result];
-    emit({
+    emitRef.current({
       eventType: 'response',
       trialId: trial.trialId,
       targetId: trial.targetId,
@@ -159,12 +165,12 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
     if (next >= trials.length) {
       const summary = summarizeVisualSearchResults(trialsRef.current);
       setFinished(true);
-      emit({ eventType: 'game_end', timestamp: now, gameState: { score: summary.accuracy, level: trials.length, difficulty: trial.setSize } });
-      onComplete?.(summary);
+      emitRef.current({ eventType: 'game_end', timestamp: now, gameState: { score: summary.accuracy, level: trials.length, difficulty: trial.setSize } });
+      onCompleteRef.current?.(summary);
     } else {
       window.setTimeout(() => setCurrent(next), 350);
     }
-  }, [current, emit, finished, onComplete, trial, trials.length]);
+  }, [current, finished, trial, trials.length]);
 
   if (finished) {
     const summary = summarizeVisualSearchResults(trialsRef.current);
@@ -232,7 +238,7 @@ export default function VisualSearchTask({ active = false, trialCount = DEFAULT_
     <GameRuntime
       active={active}
       sessionId="visual_search"
-      gameDefinition={{ id: 'visual_search', label: 'Búsqueda visual', difficulty: 'set_size' }}
+      gameDefinition={VISUAL_SEARCH_GAME_DEFINITION}
       onEvent={onGameEvent}
       renderTrial={(_, emit) => (
         <VisualSearchInner emit={emit} trialCount={trialCount} width={width} height={height} onComplete={onComplete} />

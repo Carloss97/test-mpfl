@@ -13,6 +13,10 @@ function randomPos(w, h, m = 60) { return { x: m + Math.random() * (w - m * 2), 
 
 export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT, onTrialStart, onTrialEnd, onComplete, onGameEvent, width = 600, height = 400 }) {
   const containerRef = useRef(null);
+  const onTrialStartRef = useRef(onTrialStart);
+  const onTrialEndRef = useRef(onTrialEnd);
+  const onCompleteRef = useRef(onComplete);
+  const onGameEventRef = useRef(onGameEvent);
   const stateRef = useRef({
     trials: [], trialId: 0, current: 0, phase: 'idle',
     targetPos: null, startTime: 0, timeoutId: null, itiId: null,
@@ -20,16 +24,21 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
   });
   const [render, setRender] = useState({ phase: 'idle', current: 0, targetPos: null, feedback: null, scores: null });
 
+  useEffect(() => { onTrialStartRef.current = onTrialStart; }, [onTrialStart]);
+  useEffect(() => { onTrialEndRef.current = onTrialEnd; }, [onTrialEnd]);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+  useEffect(() => { onGameEventRef.current = onGameEvent; }, [onGameEvent]);
+
   const triggerRender = useCallback((patch) => {
     setRender((prev) => ({ ...prev, ...patch }));
   }, []);
 
   const emitGameEvent = useCallback((event) => {
-    if (!onGameEvent) return null;
+    if (!onGameEventRef.current) return null;
     const normalized = normalizeGameEvent(event, { gameId: 'simple_rt', sessionId: 'simple_rt' });
-    onGameEvent(normalized);
+    onGameEventRef.current(normalized);
     return normalized;
-  }, [onGameEvent]);
+  }, []);
 
   // ─── Core logic as refs (no re-render dependencies) ───
 
@@ -51,7 +60,7 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
       timestamp: s.startTime,
       context: { taskId: 'simple_rt', taskLabel: 'RT Simple', trial: s.current + 1, position: pos },
     };
-    onTrialStart?.(shownEvent);
+    onTrialStartRef.current?.(shownEvent);
     emitGameEvent({
       eventType: 'stimulus_shown', trialId: tid, targetId: 'rt-circle', timestamp: s.startTime,
       stimulus: { kind: 'circle', payload: { position: pos, radius: TARGET_RADIUS } },
@@ -62,7 +71,7 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
     s.timeoutId = setTimeout(() => {
       doEndTrial(false, null, true);
     }, MAX_RT_MS);
-  }, [width, height, onTrialStart, emitGameEvent, triggerRender]);
+  }, [width, height, emitGameEvent, triggerRender]);
 
   const doEndTrial = useCallback((correct, clickPos, timeout = false) => {
     const s = stateRef.current;
@@ -96,7 +105,7 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
         score: correct ? 1 : 0,
       },
     };
-    onTrialEnd?.(legacyEndEvent);
+    onTrialEndRef.current?.(legacyEndEvent);
     emitGameEvent({
       eventType: 'response', trialId: tid, targetId: 'rt-circle', timestamp: now,
       pointer: clickPos,
@@ -133,14 +142,14 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
           } : { accuracy: 0, meanRT: 0 },
         };
         triggerRender({ phase: 'finished', scores: summary });
-        onComplete?.(summary);
+        onCompleteRef.current?.(summary);
       } else {
         s.current = next;
         triggerRender({ current: next });
         doStartTrial();
       }
     }, iti);
-  }, [trialCount, onTrialEnd, onComplete, emitGameEvent, doStartTrial, triggerRender]);
+  }, [trialCount, emitGameEvent, doStartTrial, triggerRender]);
 
   const handlePointerMove = useCallback((e) => {
     const s = stateRef.current;

@@ -7,6 +7,7 @@ const DEFAULT_WIDTH = 600;
 const DEFAULT_HEIGHT = 400;
 const DEFAULT_TRIAL_COUNT = 8;
 const TARGET_RADII = [34, 26, 20, 16];
+const PRECISION_GAME_DEFINITION = Object.freeze({ id: 'precision_targeting', label: 'Precisión visomotora', difficulty: 'fitts' });
 
 function round(value, digits = 4) {
   const numeric = Number(value);
@@ -57,6 +58,8 @@ export function buildPrecisionTrials({ width = DEFAULT_WIDTH, height = DEFAULT_H
 
 function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }) {
   const areaRef = useRef(null);
+  const emitRef = useRef(emit);
+  const onCompleteRef = useRef(onComplete);
   const [current, setCurrent] = useState(0);
   const [phase, setPhase] = useState('ready');
   const [finished, setFinished] = useState(false);
@@ -66,6 +69,9 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
   const pointerSamplerRef = useRef(createPointerSampler({ maxSamples: 900, sessionId: 'precision_targeting' }));
   const trials = useMemo(() => buildPrecisionTrials({ width, height, count: trialCount }), [width, height, trialCount]);
   const trial = trials[current];
+
+  useEffect(() => { emitRef.current = emit; }, [emit]);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   useEffect(() => {
     if (!trial || finished) return;
@@ -98,7 +104,7 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
       pressure: 0,
     });
     setPhase('target');
-    emit({
+    emitRef.current({
       eventType: 'stimulus_shown',
       trialId: trial.trialId,
       targetId: trial.targetId,
@@ -115,7 +121,7 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
       },
       gameState: { score: trialsRef.current.reduce((sum, item) => sum + item.score, 0), level: current + 1, difficulty: trial.fittsId },
     });
-  }, [current, emit, finished, phase, trial]);
+  }, [current, finished, phase, trial]);
 
   const recordPointer = useCallback((event) => {
     if (finished || !trial || phase !== 'target') return;
@@ -150,7 +156,7 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
       pathEfficiency: pointerSummary.pathEfficiency,
     };
     trialsRef.current = [...trialsRef.current, result];
-    emit({
+    emitRef.current({
       eventType: 'response',
       trialId: trial.trialId,
       targetId: trial.targetId,
@@ -190,14 +196,14 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
         trials: completed,
       };
       setFinished(true);
-      emit({ eventType: 'game_end', timestamp: now, gameState: { score: completed.reduce((sum, item) => sum + item.score, 0), level: trials.length, difficulty: trial.fittsId } });
-      onComplete?.(summary);
+      emitRef.current({ eventType: 'game_end', timestamp: now, gameState: { score: completed.reduce((sum, item) => sum + item.score, 0), level: trials.length, difficulty: trial.fittsId } });
+      onCompleteRef.current?.(summary);
     } else {
       window.setTimeout(() => {
         setCurrent(next);
       }, 450);
     }
-  }, [current, emit, finished, onComplete, phase, toLocalPointer, trial, trials.length]);
+  }, [current, finished, phase, toLocalPointer, trial, trials.length]);
 
   if (finished) {
     const completed = trialsRef.current;
@@ -296,7 +302,7 @@ export default function PrecisionTargetingTask({ active = false, trialCount = DE
     <GameRuntime
       active={active}
       sessionId="precision_targeting"
-      gameDefinition={{ id: 'precision_targeting', label: 'Precisión visomotora', difficulty: 'fitts' }}
+      gameDefinition={PRECISION_GAME_DEFINITION}
       onEvent={onGameEvent}
       renderTrial={(_, emit) => (
         <PrecisionTargetingInner

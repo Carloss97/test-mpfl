@@ -80,6 +80,7 @@ export default function App() {
   const calibrationTimerRef = useRef(null);
   const streamRef = useRef(null);
   const emotionSmootherRef = useRef(createEmotionTemporalSmoother());
+  const lastMoveNetMetricsKeyRef = useRef('');
 
   const [isCameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState(null);
@@ -138,12 +139,24 @@ export default function App() {
 
   const moveNetSample = useCallback((sample) => {
     if (sample?.metrics) {
-      setMoveNetPose(sample.metrics);
+      const metrics = sample.metrics;
+      const metricsKey = [
+        metrics.confidence,
+        metrics.symmetry,
+        metrics.shoulderAngle,
+        metrics.upperBodyCoverage,
+        metrics.armActivity,
+        metrics.armsVisible,
+      ].map((value) => Number(value ?? 0).toFixed(3)).join('|');
+      if (metricsKey !== lastMoveNetMetricsKeyRef.current) {
+        lastMoveNetMetricsKeyRef.current = metricsKey;
+        setMoveNetPose(metrics);
+      }
       upperBodySamplesRef.current = appendBounded(upperBodySamplesRef.current, {
         timestamp: sample.timestamp ?? performance.now(),
-        confidence: sample.metrics.confidence,
-        armActivity: sample.metrics.armActivity,
-        upperBodyCoverage: sample.metrics.upperBodyCoverage,
+        confidence: metrics.confidence,
+        armActivity: metrics.armActivity,
+        upperBodyCoverage: metrics.upperBodyCoverage,
       });
     }
   }, []);
@@ -179,6 +192,7 @@ export default function App() {
       gazeSamplesRef.current = [];
       postureSamplesRef.current = [];
       upperBodySamplesRef.current = [];
+      lastMoveNetMetricsKeyRef.current = '';
       resetAUCache();
       resetGazeEstimator();
       resetUpperBodyPostureState();
@@ -202,6 +216,8 @@ export default function App() {
     setCameraActive(false);
     setLatestFaceSample(null);
     setLatestLandmarks(null);
+    setMoveNetPose(null);
+    lastMoveNetMetricsKeyRef.current = '';
   }, []);
 
   const handleCalibrateGazeCenter = useCallback(() => {

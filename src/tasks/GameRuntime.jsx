@@ -9,7 +9,12 @@ export default function GameRuntime({
   renderTrial,
 }) {
   const startedRef = useRef(false);
+  const onEventRef = useRef(onEvent);
   const gameId = gameDefinition?.id ?? 'unknown_game';
+
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  }, [onEvent]);
 
   const session = useMemo(() => createGameTelemetrySession({
     sessionId,
@@ -21,9 +26,9 @@ export default function GameRuntime({
       sessionId: session.sessionId,
       gameId: session.gameId,
     });
-    onEvent?.(normalized);
+    onEventRef.current?.(normalized);
     return normalized;
-  }, [onEvent, session.gameId, session.sessionId]);
+  }, [session.gameId, session.sessionId]);
 
   useEffect(() => {
     if (!active) {

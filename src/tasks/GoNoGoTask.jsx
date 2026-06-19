@@ -4,6 +4,7 @@ import GameRuntime from './GameRuntime.jsx';
 const DEFAULT_TRIAL_COUNT = 10;
 const DEFAULT_STIMULUS_MS = 900;
 const DEFAULT_ITI_MS = 350;
+const GO_NOGO_GAME_DEFINITION = Object.freeze({ id: 'go_nogo', label: 'Go/No-Go inhibición motora', difficulty: 'response_inhibition' });
 
 function round(value, digits = 4) {
   const numeric = Number(value);
@@ -107,6 +108,8 @@ export function summarizeGoNoGoResults(results = []) {
 
 function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, onComplete }) {
   const trials = useMemo(() => buildGoNoGoTrials({ count: trialCount, noGoEvery: 2 }), [trialCount]);
+  const emitRef = useRef(emit);
+  const onCompleteRef = useRef(onComplete);
   const [current, setCurrent] = useState(0);
   const [finished, setFinished] = useState(false);
   const resultsRef = useRef([]);
@@ -116,16 +119,19 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, onComplete }) {
   const itiRef = useRef(null);
   const trial = trials[current];
 
+  useEffect(() => { emitRef.current = emit; }, [emit]);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+
   const completeIfFinished = useCallback((nextResults, now) => {
     if (nextResults.length >= trials.length) {
       const summary = summarizeGoNoGoResults(nextResults);
       setFinished(true);
-      emit({ eventType: 'game_end', timestamp: now, gameState: { score: summary.meanScore, level: trials.length, difficulty: 'go_no_go' } });
-      onComplete?.(summary);
+      emitRef.current({ eventType: 'game_end', timestamp: now, gameState: { score: summary.meanScore, level: trials.length, difficulty: 'go_no_go' } });
+      onCompleteRef.current?.(summary);
       return true;
     }
     return false;
-  }, [emit, onComplete, trials.length]);
+  }, [trials.length]);
 
   const finalizeTrial = useCallback((response) => {
     if (!trial || handledRef.current || finished) return;
@@ -136,7 +142,7 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, onComplete }) {
     const nextResults = [...resultsRef.current, scored];
     resultsRef.current = nextResults;
 
-    emit({
+    emitRef.current({
       eventType: 'response',
       trialId: trial.trialId,
       targetId: trial.targetId,
@@ -158,13 +164,13 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, onComplete }) {
     if (!completeIfFinished(nextResults, now)) {
       itiRef.current = setTimeout(() => setCurrent((value) => value + 1), itiMs);
     }
-  }, [completeIfFinished, current, emit, finished, itiMs, trial]);
+  }, [completeIfFinished, current, finished, itiMs, trial]);
 
   useEffect(() => {
     if (!trial || finished) return undefined;
     handledRef.current = false;
     shownAtRef.current = performance.now();
-    emit({
+    emitRef.current({
       eventType: 'stimulus_shown',
       trialId: trial.trialId,
       targetId: trial.targetId,
@@ -179,7 +185,7 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, onComplete }) {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (itiRef.current) clearTimeout(itiRef.current);
     };
-  }, [current, emit, finalizeTrial, finished, stimulusMs, trial]);
+  }, [current, finalizeTrial, finished, stimulusMs, trial]);
 
   if (finished) {
     const summary = summarizeGoNoGoResults(resultsRef.current);
@@ -226,7 +232,7 @@ export default function GoNoGoTask({ active = false, trialCount = DEFAULT_TRIAL_
     <GameRuntime
       active={active}
       sessionId="go_nogo"
-      gameDefinition={{ id: 'go_nogo', label: 'Go/No-Go inhibición motora', difficulty: 'response_inhibition' }}
+      gameDefinition={GO_NOGO_GAME_DEFINITION}
       onEvent={onGameEvent}
       renderTrial={(_, emit) => (
         <GoNoGoInner

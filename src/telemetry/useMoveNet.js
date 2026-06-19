@@ -73,8 +73,13 @@ export function useMoveNet({ videoRef, active = false, fps = 6, onSample } = {})
   const animRef = useRef(0);
   const lastTimeRef = useRef(0);
   const pendingRef = useRef(false);
+  const onSampleRef = useRef(onSample);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    onSampleRef.current = onSample;
+  }, [onSample]);
 
   const stop = useCallback(() => {
     if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = 0; }
@@ -121,7 +126,7 @@ export function useMoveNet({ videoRef, active = false, fps = 6, onSample } = {})
       try {
         const poses = await detector.estimatePoses(video, { maxPoses: 1, flipHorizontal: false });
         const metrics = poses?.length ? extractMetrics(poses[0], video.videoWidth, video.videoHeight) : null;
-        if (metrics) onSample?.({ timestamp: now, metrics, keypoints: metrics.keypoints });
+        if (metrics) onSampleRef.current?.({ timestamp: now, metrics, keypoints: metrics.keypoints });
       } catch (err) {
         setError(err?.message ?? String(err));
       } finally {
@@ -131,7 +136,7 @@ export function useMoveNet({ videoRef, active = false, fps = 6, onSample } = {})
 
     animRef.current = requestAnimationFrame(tick);
     return stop;
-  }, [active, status, fps, videoRef, stop, onSample]);
+  }, [active, status, fps, videoRef, stop]);
 
   return { status, error };
 }

@@ -16,6 +16,7 @@ const TRIAL_PATTERN = Object.freeze([
   { word: 'AMARILLO', ink: 'yellow', congruent: true },
   { word: 'ROJO', ink: 'blue', congruent: false },
 ]);
+const COLOR_INTERFERENCE_GAME_DEFINITION = Object.freeze({ id: 'color_interference', label: 'Interferencia color-palabra', difficulty: 'conflict' });
 
 function round(value, digits = 4) {
   const numeric = Number(value);
@@ -103,16 +104,21 @@ export function summarizeColorInterferenceResults(results = []) {
 
 function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
   const trials = useMemo(() => buildColorInterferenceTrials({ count: trialCount }), [trialCount]);
+  const emitRef = useRef(emit);
+  const onCompleteRef = useRef(onComplete);
   const [current, setCurrent] = useState(0);
   const [finished, setFinished] = useState(false);
   const resultsRef = useRef([]);
   const shownAtRef = useRef(0);
   const trial = trials[current];
 
+  useEffect(() => { emitRef.current = emit; }, [emit]);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+
   useEffect(() => {
     if (!trial || finished) return;
     shownAtRef.current = performance.now();
-    emit({
+    emitRef.current({
       eventType: 'stimulus_shown',
       trialId: trial.trialId,
       targetId: trial.targetId,
@@ -129,7 +135,7 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
       },
       gameState: { score: resultsRef.current.reduce((sum, result) => sum + result.score, 0), level: current + 1, difficulty: trial.congruent ? 'congruent' : 'incongruent' },
     });
-  }, [current, emit, finished, trial]);
+  }, [current, finished, trial]);
 
   const handleResponse = useCallback((response) => {
     if (!trial || finished) return;
@@ -137,7 +143,7 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
     const scored = scoreColorInterferenceResponse({ trial, response, shownAt: shownAtRef.current, timestamp: now });
     const nextResults = [...resultsRef.current, scored];
     resultsRef.current = nextResults;
-    emit({
+    emitRef.current({
       eventType: 'response',
       trialId: trial.trialId,
       targetId: trial.targetId,
@@ -161,12 +167,12 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
     if (next >= trials.length) {
       const summary = summarizeColorInterferenceResults(nextResults);
       setFinished(true);
-      emit({ eventType: 'game_end', timestamp: now, gameState: { score: summary.meanScore, level: trials.length, difficulty: 'mixed_interference' } });
-      onComplete?.(summary);
+      emitRef.current({ eventType: 'game_end', timestamp: now, gameState: { score: summary.meanScore, level: trials.length, difficulty: 'mixed_interference' } });
+      onCompleteRef.current?.(summary);
     } else {
       setTimeout(() => setCurrent(next), itiMs);
     }
-  }, [current, emit, finished, itiMs, onComplete, trial, trials.length]);
+  }, [current, finished, itiMs, trial, trials.length]);
 
   if (finished) {
     const summary = summarizeColorInterferenceResults(resultsRef.current);
@@ -222,7 +228,7 @@ export default function ColorInterferenceTask({ active = false, trialCount = 8, 
     <GameRuntime
       active={active}
       sessionId="color_interference"
-      gameDefinition={{ id: 'color_interference', label: 'Interferencia color-palabra', difficulty: 'conflict' }}
+      gameDefinition={COLOR_INTERFERENCE_GAME_DEFINITION}
       onEvent={onGameEvent}
       renderTrial={(_, emit) => (
         <ColorInterferenceInner
