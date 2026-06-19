@@ -4,7 +4,7 @@
 
 **Fecha de creación:** 2026-06-18
 
-**Estado general:** [ ] Por implementar. Fases A-Q del plan gamificado base ya completadas; este documento inicia la etapa de experiencia unificada.
+**Estado general:** [~] En progreso avanzado. Fases A-X completadas; quedan Y-Z para smoke manual completo y verificación automatizada integral de la experiencia final.
 
 **Goal:** permitir que un participante complete una batería gamificada con cámara activa, que el sistema fusione telemetría conductual + facial/gaze/postura/MoveNet, y que al final se genere un reporte final privacy-safe para revisión humana de talento y habilidades.
 
@@ -279,16 +279,16 @@ export const UNIFIED_BATTERY_CONFIG = {
 
 ## Fase V — Payload final inferido
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 5
 
 **Objetivo:** construir el paquete final enviado al generador de reporte.
 
-**Archivos:**
+**Archivos implementados:**
 
-- Crear: `src/assessment/finalAssessmentPayload.js`
-- Crear: `src/assessment/finalAssessmentPayload.test.js`
+- Creado: `src/assessment/finalAssessmentPayload.js`
+- Creado: `src/assessment/finalAssessmentPayload.test.js`
 
 **Schema propuesto:**
 
@@ -308,26 +308,25 @@ export const UNIFIED_BATTERY_CONFIG = {
 
 **Criterios de éxito:**
 
-- [ ] Contiene `humanReviewOnly: true`.
-- [ ] Contiene `noAutomatedDecision: true`.
-- [ ] Contiene `observationalOnly: true`.
-- [ ] Privacy guard bloquea campos prohibidos.
+- [x] Contiene `humanReviewOnly: true`.
+- [x] Contiene `noAutomatedDecision: true`.
+- [x] Contiene `observationalOnly: true`.
+- [x] Privacy guard bloquea campos prohibidos.
 
 ---
 
 ## Fase W — Reporte final humano
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 6
 
 **Objetivo:** generar reporte final legible para personas evaluadoras.
 
-**Archivos:**
+**Archivos implementados:**
 
-- Crear: `src/assessment/talentReportGenerator.js`
-- Crear: `src/assessment/talentReportGenerator.test.js`
-- Modificar: `src/telemetry/reportGenerator.js` si conviene reutilizar formato.
+- Creado: `src/assessment/talentReportGenerator.js`
+- Creado: `src/assessment/talentReportGenerator.test.js`
 
 **Secciones del reporte:**
 
@@ -344,26 +343,26 @@ export const UNIFIED_BATTERY_CONFIG = {
 
 **Criterios de éxito:**
 
-- [ ] Markdown, HTML y JSON.
-- [ ] Lenguaje claro y humano.
-- [ ] Evidencia por dimensión.
-- [ ] Caveats y calidad de señal visibles.
-- [ ] Sin decisión automática.
+- [x] Markdown, HTML y JSON.
+- [x] Lenguaje claro y humano.
+- [x] Evidencia por dimensión.
+- [x] Caveats y calidad de señal visibles.
+- [x] Sin decisión automática.
 
 ---
 
 ## Fase X — Envío/entrega del reporte
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Prioridad:** 7
 
 **Objetivo:** preparar la salida local y futura integración backend.
 
-**Archivos:**
+**Archivos implementados:**
 
-- Crear: `src/assessment/reportSubmissionClient.js`
-- Crear: `src/assessment/reportSubmissionClient.test.js`
+- Creado: `src/assessment/reportSubmissionClient.js`
+- Creado: `src/assessment/reportSubmissionClient.test.js`
 
 **Modo inicial:**
 
@@ -379,10 +378,10 @@ POST /api/assessment-reports
 
 **Criterios de éxito:**
 
-- [ ] Valida schema antes de enviar/descargar.
-- [ ] Rechaza payload con campos prohibidos.
-- [ ] Permite descargar Markdown/HTML/JSON.
-- [ ] Permite export JSONL/CSV de investigación.
+- [x] Valida schema antes de enviar/descargar.
+- [x] Rechaza payload con campos prohibidos.
+- [x] Permite descargar Markdown/HTML/JSON como descriptores locales.
+- [x] Permite anexar export JSONL/CSV de investigación al bundle local.
 
 ---
 
@@ -530,9 +529,9 @@ La etapa se considera completada si:
 | S UI participante | [x] | [x] | [x] | [x] | Componentes guiados integrados en `UnifiedGameBattery`; focal tests, oxlint y build verdes. |
 | T Sesión unificada | [x] | [x] | [x] | [x] | Agregador final privacy-safe; focal tests, oxlint y build verdes. |
 | U Talent profile | [x] | [x] | [x] | [x] | Perfil observacional con 10 dimensiones; focal tests, oxlint y build verdes. |
-| V Payload final | [ ] | [ ] | [ ] | [ ] | Privacy guard fuerte. |
-| W Reporte humano | [ ] | [ ] | [ ] | [ ] | Markdown/HTML/JSON. |
-| X Envío/export | [ ] | [ ] | [ ] | [ ] | Local primero, backend después. |
+| V Payload final | [x] | [x] | [x] | [x] | `krumm_final_assessment_payload_v1`; focal tests, oxlint y build verdes. |
+| W Reporte humano | [x] | [x] | [x] | [x] | Markdown/HTML/JSON humano; focal tests, oxlint y build verdes. |
+| X Envío/export | [x] | [x] | [x] | [x] | Bundle local + cliente HTTP futuro; focal tests, oxlint y build verdes. |
 | Y Smoke manual | [ ] | [ ] | [ ] | [ ] | Prueba real con cámara. |
 | Z Verificación integral | [ ] | [ ] | [ ] | [ ] | Suite + scans. |
 
@@ -550,3 +549,5 @@ La etapa se considera completada si:
 | 2026-06-19 | Fase T completada. | `npx vitest run src/assessment/assessmentSession.test.js --pool=threads` → 1 file / 3 tests passed. |
 | 2026-06-19 | Fase U completada. | `npx vitest run src/assessment/talentProfile.test.js --pool=threads` → 1 file / 4 tests passed. |
 | 2026-06-19 | Verificación Fases T-U. | `npx oxlint src/assessment src/App.jsx src/App.test.jsx` → 0 warnings/errors; assessment focal suite → 6 files / 23 tests passed; `npm run build` → 1346 modules transformed, built OK. |
+| 2026-06-19 | Fases V-W-X completadas. | Tests focales: `finalAssessmentPayload`, `talentReportGenerator`, `reportSubmissionClient` verdes. |
+| 2026-06-19 | Verificación Fases V-X + guía. | `npx oxlint src/assessment src/components/ReferenceGuide.jsx src/App.jsx src/App.test.jsx` → 0 warnings/errors; V-X focal suite → 6 files / 19 tests passed; `npm run build` → 1346 modules transformed, built OK. |

@@ -169,6 +169,52 @@ export default function ReferenceGuide() {
           </tbody>
         </table>
       </Section>
+
+      <Section title="Experiencia evaluativa unificada R-X">
+        <p className="caption">Las fases R-X convierten las mediciones A-Q en una experiencia completa: batería guiada, sesión consolidada, perfil de talento, payload final, reporte humano y entrega local/futura.</p>
+        <table className="guide-table">
+          <thead><tr><th>Fase</th><th>Módulo principal</th><th>Función</th><th>Privacidad/gobernanza</th></tr></thead>
+          <tbody>
+            <tr><td>R — Runtime batería</td><td>assessment/batteryRuntime.js</td><td>Orquesta consentimiento, cámara, baseline, bloques, descansos, recovery y finalización.</td><td>No almacena señales crudas; solo timeline de estados.</td></tr>
+            <tr><td>S — Flujo participante</td><td>assessment/UnifiedGameBattery.jsx</td><td>Muestra progreso, instrucciones, consentimiento y estados finales sin reemplazar el selector manual.</td><td>Modo assessment requiere cámara; modo manual sigue disponible.</td></tr>
+            <tr><td>T — Sesión unificada</td><td>assessment/assessmentSession.js</td><td>Consolida batería, gameSummary, gameCorrelation.aggregate, Edge AI, vector v2, dificultad y calidad.</td><td>Valida ausencia de video, frames, landmarks, pointer paths y raw events.</td></tr>
+            <tr><td>U — Perfil talento</td><td>assessment/talentProfile.js</td><td>Mapea agregados a 10 habilidades observacionales con score, confianza, evidencia y caveats.</td><td>Solo revisión humana; sin decisión automática.</td></tr>
+            <tr><td>V — Payload final</td><td>assessment/finalAssessmentPayload.js</td><td>Empaqueta quality, behavioral, talentProfile y Edge AI para reporte.</td><td><code>humanReviewOnly</code>, <code>noAutomatedDecision</code>, <code>privacySafe</code>.</td></tr>
+            <tr><td>W — Reporte humano</td><td>assessment/talentReportGenerator.js</td><td>Genera Markdown, HTML y JSON con portada, resumen, habilidades, caveats y apéndice.</td><td>Lenguaje observacional; no recomienda contratar/rechazar.</td></tr>
+            <tr><td>X — Entrega</td><td>assessment/reportSubmissionClient.js</td><td>Crea bundle local y cliente HTTP futuro para enviar/describir reportes.</td><td>Valida payload antes de descargar o enviar.</td></tr>
+          </tbody>
+        </table>
+      </Section>
+
+      <Section title="Reporte final y lectura humana">
+        <p className="caption">El reporte final está diseñado para personas evaluadoras: resume evidencia, limita inferencias y explicita calidad de señal.</p>
+        <table className="guide-table">
+          <thead><tr><th>Sección</th><th>Contenido</th><th>Uso recomendado</th></tr></thead>
+          <tbody>
+            <tr><td>Resumen ejecutivo</td><td>Fortalezas, áreas a revisar y confianza global.</td><td>Primera lectura rápida, siempre con caveats.</td></tr>
+            <tr><td>Calidad de señal</td><td>Muestras, presencia facial, confianza, trials correlacionados.</td><td>Determina si la sesión es interpretable.</td></tr>
+            <tr><td>Perfil de habilidades</td><td>10 dimensiones: velocidad, precisión, atención, inhibición, interferencia, búsqueda, adaptabilidad, consistencia y regulación.</td><td>Comparar evidencia, no usar como dictamen automático.</td></tr>
+            <tr><td>Resultados por juego</td><td>Accuracy, RT, score, search efficiency y métricas conductuales.</td><td>Ubicar qué actividad sostiene cada conclusión.</td></tr>
+            <tr><td>Correlación cámara+tarea</td><td>Deltas agregados de reacción/postura/presencia facial.</td><td>Contextualizar desempeño bajo tarea sin raw windows.</td></tr>
+            <tr><td>Gobernanza</td><td>Declaración de revisión humana, sin decisión automática y sin export crudo.</td><td>Marco de uso responsable y privacy-by-design.</td></tr>
+          </tbody>
+        </table>
+      </Section>
+
+      <Section title="Revisión retroactiva A-X">
+        <p className="caption">Resumen del avance acumulado: la app pasó de medir AUs/FACS y señales multimodales a una batería evaluativa completa con reporte final privacy-safe.</p>
+        <table className="guide-table">
+          <thead><tr><th>Bloque</th><th>Estado</th><th>Resultado práctico</th></tr></thead>
+          <tbody>
+            <tr><td>A-I Juegos</td><td>Completado</td><td>RT, precisión/Fitts, tracking, Go/No-Go, Stroop y Visual Search accesibles manualmente.</td></tr>
+            <tr><td>J-K Correlación/vector</td><td>Completado</td><td>Ventanas pre/reaction/post/recovery y <code>assessment_feature_vector_v2</code>.</td></tr>
+            <tr><td>L Edge AI</td><td>Completado</td><td>Canales game-aware v9.1: inhibición, precisión visomotora, búsqueda visual y resiliencia.</td></tr>
+            <tr><td>M-N UI/payload</td><td>Completado</td><td>Panel de sesión, baseline/delta y reportes base agregados.</td></tr>
+            <tr><td>O-Q Validación/export</td><td>Completado</td><td>Dificultad adaptativa, escenarios sintéticos y export JSONL/CSV de investigación.</td></tr>
+            <tr><td>R-X Assessment final</td><td>Completado</td><td>Batería guiada, sesión unificada, perfil de talento, payload final, reporte y bundle de entrega.</td></tr>
+          </tbody>
+        </table>
+      </Section>
     </section>
   );
 }

@@ -119,3 +119,43 @@ Las fases O-Q cierran el ciclo experimental: la app ya no solo mide desempeño, 
 | Búsqueda visual | Treisman & Gelade (1980), Feature Integration Theory | `setSize`, distractores y `searchEfficiency`. |
 | Tracking continuo | Smooth pursuit / visuomotor tracking | RMS error, pérdida de seguimiento y smooth pursuit score. |
 | Export privacy-safe | Data minimization / privacy by design | Exportar agregados y feature vectors, nunca video, frames, landmarks, raw events ni pointer paths. |
+
+## Experiencia evaluativa unificada R-X
+
+Las fases R-X convierten las mediciones A-Q en una experiencia completa: batería guiada, sesión consolidada, perfil de talento, payload final, reporte humano y entrega local/futura.
+
+| Fase | Módulo principal | Función | Privacidad/gobernanza |
+|---|---|---|---|
+| R — Runtime batería | `assessment/batteryRuntime.js` | Orquesta consentimiento, cámara, baseline, bloques, descansos, recovery y finalización. | No almacena señales crudas; solo timeline de estados. |
+| S — Flujo participante | `assessment/UnifiedGameBattery.jsx` | Muestra progreso, instrucciones, consentimiento y estados finales sin reemplazar el selector manual. | Modo assessment requiere cámara; modo manual sigue disponible. |
+| T — Sesión unificada | `assessment/assessmentSession.js` | Consolida batería, `gameSummary`, `gameCorrelation.aggregate`, Edge AI, vector v2, dificultad y calidad. | Valida ausencia de video, frames, landmarks, pointer paths y raw events. |
+| U — Perfil talento | `assessment/talentProfile.js` | Mapea agregados a 10 habilidades observacionales con score, confianza, evidencia y caveats. | Solo revisión humana; sin decisión automática. |
+| V — Payload final | `assessment/finalAssessmentPayload.js` | Empaqueta quality, behavioral, talentProfile y Edge AI para reporte. | `humanReviewOnly`, `noAutomatedDecision`, `privacySafe`. |
+| W — Reporte humano | `assessment/talentReportGenerator.js` | Genera Markdown, HTML y JSON con portada, resumen, habilidades, caveats y apéndice. | Lenguaje observacional; no recomienda contratar/rechazar. |
+| X — Entrega | `assessment/reportSubmissionClient.js` | Crea bundle local y cliente HTTP futuro para enviar/describir reportes. | Valida payload antes de descargar o enviar. |
+
+## Reporte final y lectura humana
+
+El reporte final está diseñado para personas evaluadoras: resume evidencia, limita inferencias y explicita calidad de señal.
+
+| Sección | Contenido | Uso recomendado |
+|---|---|---|
+| Resumen ejecutivo | Fortalezas, áreas a revisar y confianza global. | Primera lectura rápida, siempre con caveats. |
+| Calidad de señal | Muestras, presencia facial, confianza, trials correlacionados. | Determina si la sesión es interpretable. |
+| Perfil de habilidades | 10 dimensiones: velocidad, precisión, atención, inhibición, interferencia, búsqueda, adaptabilidad, consistencia y regulación. | Comparar evidencia, no usar como dictamen automático. |
+| Resultados por juego | Accuracy, RT, score, search efficiency y métricas conductuales. | Ubicar qué actividad sostiene cada conclusión. |
+| Correlación cámara+tarea | Deltas agregados de reacción/postura/presencia facial. | Contextualizar desempeño bajo tarea sin raw windows. |
+| Gobernanza | Declaración de revisión humana, sin decisión automática y sin export crudo. | Marco de uso responsable y privacy-by-design. |
+
+## Revisión retroactiva A-X
+
+Resumen del avance acumulado: la app pasó de medir AUs/FACS y señales multimodales a una batería evaluativa completa con reporte final privacy-safe.
+
+| Bloque | Estado | Resultado práctico |
+|---|---|---|
+| A-I Juegos | Completado | RT, precisión/Fitts, tracking, Go/No-Go, Stroop y Visual Search accesibles manualmente. |
+| J-K Correlación/vector | Completado | Ventanas pre/reaction/post/recovery y `assessment_feature_vector_v2`. |
+| L Edge AI | Completado | Canales game-aware v9.1: inhibición, precisión visomotora, búsqueda visual y resiliencia. |
+| M-N UI/payload | Completado | Panel de sesión, baseline/delta y reportes base agregados. |
+| O-Q Validación/export | Completado | Dificultad adaptativa, escenarios sintéticos y export JSONL/CSV de investigación. |
+| R-X Assessment final | Completado | Batería guiada, sesión unificada, perfil de talento, payload final, reporte y bundle de entrega. |
