@@ -8,6 +8,8 @@
 
 **Estado general:** Fase A-Q completadas; microfase UX + integración game-aware + baseline/delta completadas.
 
+**Siguiente etapa documentada:** la experiencia evaluativa completa se trackea en `docs/plans/unified-gamified-assessment-experience-plan.md`. Ese documento cubre fases R-Z: battery runtime, flujo participante, sesión unificada, perfil de talento, payload final, reporte humano, envío/export, smoke manual y verificación integral.
+
 **Microfase UX/game-aware completada:** las actividades A-I son accesibles desde el selector visible `Actividades gamificadas` en la página inicial. Sus eventos `game_event_v1` se agregan con `summarizeGameEvents()` y se sincronizan por `performance.now()` con cámara/facial telemetry. El resumen se integra en:
 - `src/App.jsx`: `gameSummary` en estado derivado, UI de actividad y conteo de eventos.
 - `src/components/Dashboard.jsx`: panel `Actividad sincronizada` con precisión, RT, motor y errores.
