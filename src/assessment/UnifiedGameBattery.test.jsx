@@ -16,6 +16,25 @@ function MockGame({ active, trialCount, onComplete }) {
 }
 
 describe('UnifiedGameBattery', () => {
+  it('allows choosing demo mode before starting and uses the short battery config', () => {
+    render(<UnifiedGameBattery cameraActive gameComponents={{ simple_rt: MockGame }} />);
+
+    const modeSelect = screen.getByLabelText(/Modo de batería/i);
+    expect(modeSelect).toHaveValue('standardized');
+    fireEvent.change(modeSelect, { target: { value: 'demo' } });
+    expect(modeSelect).toHaveValue('demo');
+    expect(screen.getByText(/modo demo/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Preparar evaluación/i }));
+    expect(modeSelect).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /Acepto condiciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Iniciar baseline/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Completar baseline/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Iniciar bloque/i }));
+
+    expect(screen.getByText(/Trials configurados: 4/i)).toBeInTheDocument();
+  });
+
   it('guides the evaluator from consent to first running block with camera active', () => {
     render(<UnifiedGameBattery cameraActive gameComponents={{ simple_rt: MockGame }} />);
 

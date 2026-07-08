@@ -23,7 +23,7 @@ export default function ReferenceGuide() {
         <div><span>Estado</span><strong>A-Z cerrado técnicamente</strong></div>
         <div><span>Uso principal</span><strong>Revisión humana</strong></div>
         <div><span>Privacidad</span><strong>Agregados, sin crudos</strong></div>
-        <div><span>Post-Z</span><strong>AA smoke reportado · AB persistencia local</strong></div>
+        <div><span>Demo</span><strong>AC preview · AD modo demo</strong></div>
       </div>
 
       <Section title="Cómo leer esta guía y cerrar una sesión">
@@ -208,6 +208,7 @@ export default function ReferenceGuide() {
             <tr><td>AA — Smoke real registrado</td><td>docs/qa/unified-assessment-manual-smoke-2026-07-08.md</td><td>Registro del smoke con cámara reportado por usuario después de estabilizar juegos.</td><td>No guarda capturas ni datos crudos; explicita límite WSL/headless.</td></tr>
             <tr><td>AB — Persistencia local final</td><td>assessment/finalAssessmentStorage.js + FinalAssessmentHistoryPanel.jsx</td><td>Guarda payload final, manifiesto y reportes; lista y re-descarga sesiones finales.</td><td>Valida payload, claves prohibidas y JSON de reportes antes de persistir.</td></tr>
             <tr><td>AC — Preview/descarga final</td><td>assessment/FinalReportPanel.jsx</td><td>Muestra preview Markdown/HTML/JSON, validación, calidad y botones de descarga directa.</td><td>HTML se previsualiza como texto seguro; descargas se bloquean si falla privacy guard.</td></tr>
+            <tr><td>AD — Modo demo rápido</td><td>assessment/batteryConfig.js + UnifiedGameBattery.jsx</td><td>Agrega DEMO_BATTERY_CONFIG y selector Demo rápida/Evaluación estándar.</td><td>Modo demo reduce baseline, recovery, descansos y trials sin alterar el modo estandarizado.</td></tr>
           </tbody>
         </table>
       </Section>

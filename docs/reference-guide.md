@@ -4,7 +4,7 @@ Documento sincronizado con la arquitectura multimodal actual.
 
 ## Cómo leer esta guía y cerrar una sesión
 
-Estado operativo: A-Z cerrado técnicamente. Uso principal: revisión humana. Privacidad: agregados sin crudos. Post-Z: AA smoke real reportado y AB persistencia local final.
+Estado operativo: A-Z cerrado técnicamente. Uso principal: revisión humana. Privacidad: agregados sin crudos. Demo: AC preview final y AD modo demo rápido.
 
 | Paso | Qué revisar | Resultado esperado |
 |---|---|---|
@@ -150,6 +150,7 @@ Las fases R-Z convierten las mediciones A-Q en una experiencia completa: baterí
 | AA — Smoke real registrado | `docs/qa/unified-assessment-manual-smoke-2026-07-08.md` | Registro del smoke con cámara reportado por usuario después de estabilizar juegos. | No guarda capturas ni datos crudos; explicita límite WSL/headless. |
 | AB — Persistencia local final | `assessment/finalAssessmentStorage.js` + `FinalAssessmentHistoryPanel.jsx` | Guarda payload final, manifiesto y reportes; lista y re-descarga sesiones finales. | Valida payload, claves prohibidas y JSON de reportes antes de persistir. |
 | AC — Preview/descarga final | `assessment/FinalReportPanel.jsx` | Muestra preview Markdown/HTML/JSON, validación, calidad y botones de descarga directa. | HTML se previsualiza como texto seguro; descargas se bloquean si falla privacy guard. |
+| AD — Modo demo rápido | `assessment/batteryConfig.js` + `UnifiedGameBattery.jsx` | Agrega `DEMO_BATTERY_CONFIG` y selector Demo rápida/Evaluación estándar. | Modo demo reduce baseline, recovery, descansos y trials sin alterar el modo estandarizado. |
 
 ## Reporte final y lectura humana
 

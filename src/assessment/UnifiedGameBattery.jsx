@@ -9,7 +9,13 @@ import BatteryProgress from './BatteryProgress.jsx';
 import BlockInstructionScreen from './BlockInstructionScreen.jsx';
 import ConsentCalibrationScreen from './ConsentCalibrationScreen.jsx';
 import FinalAssessmentScreen from './FinalAssessmentScreen.jsx';
-import { UNIFIED_BATTERY_CONFIG } from './batteryConfig.js';
+import {
+  BATTERY_MODE_OPTIONS,
+  UNIFIED_BATTERY_CONFIG,
+  getBatteryConfigByMode,
+  getBatteryModeLabel,
+  listBatteryConfigs,
+} from './batteryConfig.js';
 import {
   BATTERY_STATES,
   advanceBatteryState,
@@ -59,6 +65,14 @@ export default function UnifiedGameBattery({
   onBatteryComplete,
   onBlockComplete,
 } = {}) {
+  const availableConfigs = useMemo(() => {
+    const defaults = listBatteryConfigs();
+    return defaults.some((item) => item.id === config.id) ? defaults : [config, ...defaults];
+  }, [config]);
+  const [selectedMode, setSelectedMode] = useState(config.mode ?? 'standardized');
+  const selectedConfig = useMemo(() => (
+    availableConfigs.find((item) => item.mode === selectedMode) ?? getBatteryConfigByMode(selectedMode)
+  ), [availableConfigs, selectedMode]);
   const [session, setSession] = useState(() => createBatterySession({ config, now: now() }));
   const [notice, setNotice] = useState(null);
   const progress = deriveBatteryProgress(session);
@@ -74,6 +88,14 @@ export default function UnifiedGameBattery({
   const dispatch = useCallback((action) => {
     setSession((previous) => advanceBatteryState(previous, { ...action, timestamp: action.timestamp ?? now() }));
   }, []);
+
+  const changeBatteryMode = useCallback((event) => {
+    const nextMode = event.target.value;
+    const nextConfig = availableConfigs.find((item) => item.mode === nextMode) ?? getBatteryConfigByMode(nextMode);
+    setSelectedMode(nextMode);
+    setNotice(null);
+    setSession(createBatterySession({ config: nextConfig, now: now() }));
+  }, [availableConfigs]);
 
   const startConsent = useCallback(() => {
     setNotice(null);
@@ -105,15 +127,28 @@ export default function UnifiedGameBattery({
   }, [dispatch]);
 
   const totalLabel = `${progress.completedBlocks}/${progress.totalBlocks}`;
+  const modeLocked = session.state !== BATTERY_STATES.IDLE;
 
   return (
     <section className="panel unified-battery-panel" aria-label="Evaluación gamificada unificada">
       <div className="panel-heading">
         <div>
           <h2>🧭 Evaluación gamificada unificada</h2>
-          <p className="caption">Secuencia R-Z · modo {config.mode} · progreso {totalLabel}</p>
+          <p className="caption">Secuencia R-Z · modo {selectedConfig.mode} · {getBatteryModeLabel(selectedConfig)} · progreso {totalLabel}</p>
         </div>
         <span className="dash-section-badge">Estado: {stateLabel(session.state)}</span>
+      </div>
+
+      <div className="dash-section-body" style={{ display: 'flex', gap: '0.75rem', alignItems: 'end', flexWrap: 'wrap' }}>
+        <label className="caption" htmlFor="battery-mode-select" style={{ display: 'grid', gap: '0.25rem' }}>
+          Modo de batería
+          <select id="battery-mode-select" value={selectedMode} onChange={changeBatteryMode} disabled={modeLocked} aria-label="Modo de batería">
+            {BATTERY_MODE_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>{option.label}</option>
+            ))}
+          </select>
+        </label>
+        <p className="caption">{modeLocked ? 'Modo bloqueado durante una evaluación activa.' : 'Elige demo rápida para reuniones o evaluación estándar para comparabilidad.'}</p>
       </div>
 
       <BatteryProgress completedBlocks={progress.completedBlocks} totalBlocks={progress.totalBlocks} currentBlock={currentBlock} state={session.state} />

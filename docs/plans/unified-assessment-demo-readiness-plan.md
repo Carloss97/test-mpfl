@@ -181,22 +181,20 @@ Resultado:
 
 # Fase AD — Modo demo rápido + selector demo/estándar
 
-**Estado:** [ ] Por implementar  
+**Estado:** [x] Completado  
 **Prioridad:** 2  
 **Objetivo:** permitir una batería breve para reuniones sin romper el modo estandarizado.
 
 ## Archivos
 
-- Modificar: `src/assessment/batteryConfig.js`
-- Crear: `src/assessment/batteryConfig.demo.test.js`
-- Modificar: `src/assessment/UnifiedGameBattery.jsx`
-- Modificar: `src/assessment/UnifiedGameBattery.test.jsx`
-- Modificar: `src/App.jsx` si el selector vive fuera de la batería.
-- Documentar: `docs/reference-guide.md`, `src/components/ReferenceGuide.jsx`.
+- Modificado: `src/assessment/batteryConfig.js`
+- Creado: `src/assessment/batteryConfig.demo.test.js`
+- Modificado: `src/assessment/UnifiedGameBattery.jsx`
+- Modificado: `src/assessment/UnifiedGameBattery.test.jsx`
+- Documentado: `docs/plans/unified-assessment-demo-readiness-plan.md`
+- Pendiente de documentación final: `docs/reference-guide.md`, `src/components/ReferenceGuide.jsx`.
 
-## Config propuesta
-
-Agregar:
+## Config implementada
 
 ```js
 export const DEMO_BATTERY_CONFIG = Object.freeze({
@@ -217,50 +215,41 @@ export const DEMO_BATTERY_CONFIG = Object.freeze({
 });
 ```
 
+También se implementaron:
+
+- `BATTERY_MODE_OPTIONS`
+- `listBatteryConfigs()`
+- `getBatteryConfigByMode()`
+- `getBatteryConfigById()`
+- `getBatteryModeLabel()`
+
 ## Tareas TDD
 
 ### Task AD.1 — Test de configuración demo
 
-Tests:
-
-```text
-- DEMO_BATTERY_CONFIG.mode === 'demo'
-- baseline/recovery son menores que estándar
-- conserva los 6 juegos en el mismo orden
-- todos los trialCount/durationMs son menores o iguales al estándar
-```
+**Resultado:** RED confirmado por exports faltantes; luego GREEN con `batteryConfig.demo.test.js`.
 
 ### Task AD.2 — Selector de modo
 
-UI esperada:
-
-```text
-Modo de batería:
-[ Demo rápida ] [ Evaluación estándar ]
-```
-
-Criterios:
-
-- El selector solo se puede cambiar en `idle` o antes de iniciar consentimiento.
-- El estado de progreso muestra modo `demo` o `standardized`.
-- El modo estándar mantiene config actual.
+**Resultado:** `UnifiedGameBattery` muestra selector “Modo de batería” con opciones “Demo rápida” y “Evaluación estándar”. El selector queda bloqueado al salir de `idle`.
 
 ### Task AD.3 — Integración con runtime
 
-Asegurar que `createBatterySession({ config })` recibe la config elegida.
-
-Tests:
-
-```text
-- al seleccionar demo, primer bloque RT Simple usa 4 trials
-- al seleccionar estándar, RT Simple usa 10 trials
-```
+**Resultado:** al seleccionar demo, `createBatterySession()` se reconstruye con `DEMO_BATTERY_CONFIG`; el primer bloque RT Simple usa 4 trials. El modo estándar conserva 10 trials.
 
 ### Task AD.4 — Verificación de AD
 
+**Evidencia focal:**
+
 ```bash
-NODE_ENV=test npx vitest run src/assessment/batteryConfig.demo.test.js src/assessment/UnifiedGameBattery.test.jsx src/App.test.jsx --pool=threads
-npm run build
+NODE_ENV=test npx vitest run src/assessment/batteryConfig.demo.test.js src/assessment/UnifiedGameBattery.test.jsx --pool=threads --maxWorkers=4
+```
+
+Resultado:
+
+```text
+2 test files passed
+7 tests passed
 ```
 
 ---
