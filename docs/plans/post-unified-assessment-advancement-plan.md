@@ -65,7 +65,7 @@ El siguiente objetivo no es añadir más señales, sino convertir esto en un pil
 
 ## Fase AA — Smoke real con cámara y registro de hallazgos
 
-**Estado:** [ ] Por ejecutar manualmente
+**Estado:** [x] Completado como smoke real reportado por usuario
 
 **Objetivo:** ejecutar el protocolo de `docs/qa/unified-assessment-manual-smoke.md` con cámara real.
 
@@ -79,27 +79,35 @@ El siguiente objetivo no es añadir más señales, sino convertir esto en un pil
 
 **Criterio de éxito:** la batería se completa de inicio a fin y genera reporte final legible sin datos crudos.
 
+**Evidencia de cierre:** `docs/qa/unified-assessment-manual-smoke-2026-07-08.md`. La validación de cámara real fue reportada por el usuario en navegador local; Hermes mantiene la limitación de no poder observar cámara física desde WSL/headless.
+
 ---
 
 ## Fase AB — Persistencia local de sesiones finales
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Objetivo:** guardar y listar sesiones evaluativas finales en IndexedDB/localStorage seguro.
 
-**Archivos sugeridos:**
+**Archivos implementados:**
 
-- Crear: `src/assessment/finalAssessmentStorage.js`
-- Crear: `src/assessment/finalAssessmentStorage.test.js`
-- Modificar: `src/App.jsx` o panel final de batería.
+- Creado: `src/assessment/finalAssessmentStorage.js`
+- Creado: `src/assessment/finalAssessmentStorage.test.js`
+- Creado: `src/assessment/FinalAssessmentHistoryPanel.jsx`
+- Creado: `src/assessment/FinalAssessmentHistoryPanel.test.jsx`
+- Modificado: `src/App.jsx`
 
 **Tareas:**
 
-- [ ] Guardar `finalAssessmentPayload` + report manifest.
-- [ ] Listar sesiones finales por fecha/runId.
-- [ ] Descargar artefactos de una sesión previa.
-- [ ] Añadir pruning configurable.
-- [ ] Privacy guard antes de persistir.
+- [x] Guardar `finalAssessmentPayload` + report manifest.
+- [x] Listar sesiones finales por fecha/runId.
+- [x] Descargar artefactos de una sesión previa.
+- [x] Añadir pruning configurable.
+- [x] Privacy guard antes de persistir.
+
+**Notas de implementación:** al llegar a `report_ready`, `App.jsx` construye `krumm_unified_assessment_session_v1` → `krumm_talent_profile_v1` → `krumm_final_assessment_payload_v1` → reportes Markdown/HTML/JSON → `krumm_report_delivery_bundle_v1`, y guarda el registro con `saveFinalAssessmentSession()`. El panel `FinalAssessmentHistoryPanel` permite listar, limpiar y re-descargar payload/manifiesto/reportes guardados. La persistencia valida payload final, claves prohibidas y contenido JSON de reportes antes de escribir.
+
+**Evidencia:** `NODE_ENV=test npx vitest run src/assessment/finalAssessmentStorage.test.js src/assessment/FinalAssessmentHistoryPanel.test.jsx src/assessment/UnifiedGameBattery.test.jsx src/App.test.jsx --pool=threads` → 4 archivos / 15 tests verdes.
 
 ---
 

@@ -4,7 +4,7 @@ Documento sincronizado con la arquitectura multimodal actual.
 
 ## Cómo leer esta guía y cerrar una sesión
 
-Estado operativo: A-Z cerrado técnicamente. Uso principal: revisión humana. Privacidad: agregados sin crudos. Pendiente físico: smoke con cámara real.
+Estado operativo: A-Z cerrado técnicamente. Uso principal: revisión humana. Privacidad: agregados sin crudos. Post-Z: AA smoke real reportado y AB persistencia local final.
 
 | Paso | Qué revisar | Resultado esperado |
 |---|---|---|
@@ -12,7 +12,7 @@ Estado operativo: A-Z cerrado técnicamente. Uso principal: revisión humana. Pr
 | 2. Batería | Secuencia unificada RT → Fitts → Tracking → Go/No-Go → Stroop → Visual Search. | Bloques completados y progreso claro. |
 | 3. Fusión | `gameSummary`, `gameCorrelation.aggregate` y `assessment_feature_vector_v2`. | Solo agregados; sin ventanas ni eventos crudos. |
 | 4. Reporte | Perfil de habilidades, evidencia, caveats, calidad y gobernanza. | Lenguaje observacional, sin contratar/rechazar/diagnosticar. |
-| 5. Cierre | Bundle local/reportes + protocolo manual de cámara. | Artefactos descargables y privacy review manual. |
+| 5. Cierre | Bundle local/reportes + protocolo manual de cámara + historial final local. | Artefactos descargables, registro AA y persistencia AB privacy-safe. |
 
 ## Edge AI v9.1 multimodal + game-aware
 
@@ -147,6 +147,8 @@ Las fases R-Z convierten las mediciones A-Q en una experiencia completa: baterí
 | X — Entrega | `assessment/reportSubmissionClient.js` | Crea bundle local y cliente HTTP futuro para enviar/describir reportes. | Valida payload antes de descargar o enviar. |
 | Y — Smoke manual | `docs/qa/unified-assessment-manual-smoke.md` | Protocolo para validar cámara real, calibración, batería, reportes y privacidad en navegador. | Requiere ejecución humana con permisos de cámara. |
 | Z — Verificación integral | `assessment/assessmentExperienceSmoke.js` | Smoke sintético A-X + checklist Y; suite, build, audit y scans. | Prueba pipeline sin datos crudos ni claims automáticos. |
+| AA — Smoke real registrado | `docs/qa/unified-assessment-manual-smoke-2026-07-08.md` | Registro del smoke con cámara reportado por usuario después de estabilizar juegos. | No guarda capturas ni datos crudos; explicita límite WSL/headless. |
+| AB — Persistencia local final | `assessment/finalAssessmentStorage.js` + `FinalAssessmentHistoryPanel.jsx` | Guarda payload final, manifiesto y reportes; lista y re-descarga sesiones finales. | Valida payload, claves prohibidas y JSON de reportes antes de persistir. |
 
 ## Reporte final y lectura humana
 

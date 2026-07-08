@@ -18,6 +18,17 @@ import Dashboard from './components/Dashboard.jsx';
 import StickyHeader from './components/StickyHeader.jsx';
 import GameSessionPanel from './components/GameSessionPanel.jsx';
 import UnifiedGameBattery from './assessment/UnifiedGameBattery.jsx';
+import FinalAssessmentHistoryPanel, { downloadStoredSessionDescriptors } from './assessment/FinalAssessmentHistoryPanel.jsx';
+import { buildUnifiedAssessmentSession } from './assessment/assessmentSession.js';
+import { buildTalentProfile } from './assessment/talentProfile.js';
+import { buildFinalAssessmentPayload } from './assessment/finalAssessmentPayload.js';
+import { generateTalentReport } from './assessment/talentReportGenerator.js';
+import { buildLocalReportBundle } from './assessment/reportSubmissionClient.js';
+import {
+  clearFinalAssessmentSessions,
+  loadFinalAssessmentSessions,
+  saveFinalAssessmentSession,
+} from './assessment/finalAssessmentStorage.js';
 import SimpleRTTask from './tasks/SimpleRTTask.jsx';
 import PrecisionTargetingTask from './tasks/PrecisionTargetingTask.jsx';
 import PursuitTrackingTask from './tasks/PursuitTrackingTask.jsx';
@@ -81,6 +92,7 @@ export default function App() {
   const streamRef = useRef(null);
   const emotionSmootherRef = useRef(createEmotionTemporalSmoother());
   const lastMoveNetMetricsKeyRef = useRef('');
+  const completedBatteryRunIdsRef = useRef(new Set());
 
   const [isCameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState(null);
@@ -107,6 +119,8 @@ export default function App() {
   const [reportContent, setReportContent] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [sessions, setSessions] = useState([]);
+  const [finalAssessmentSessions, setFinalAssessmentSessions] = useState([]);
+  const [finalAssessmentStatus, setFinalAssessmentStatus] = useState(null);
   const [reportTab, setReportTab] = useState('markdown');
   const [reportFormat, setReportFormat] = useState('markdown');
   const [manualCalStatus, setManualCalStatus] = useState(null);
@@ -415,6 +429,60 @@ export default function App() {
     setTimeout(() => setExportStatus(null), 3000);
   }, [reportContent, reportFormat]);
 
+  const refreshFinalAssessmentSessions = useCallback(async () => {
+    try {
+      const records = await loadFinalAssessmentSessions();
+      setFinalAssessmentSessions(records);
+    } catch {
+      setFinalAssessmentSessions([]);
+    }
+  }, []);
+
+  const handleClearFinalAssessmentSessions = useCallback(async () => {
+    await clearFinalAssessmentSessions().catch(() => {});
+    setFinalAssessmentSessions([]);
+    setFinalAssessmentStatus('Historial final limpiado localmente.');
+  }, []);
+
+  const handleDownloadFinalAssessmentSession = useCallback((_, descriptors) => {
+    downloadStoredSessionDescriptors(descriptors);
+  }, []);
+
+  const handleBatteryComplete = useCallback(async (batterySession) => {
+    const runId = batterySession?.runId;
+    if (!runId || completedBatteryRunIdsRef.current.has(runId)) return;
+    completedBatteryRunIdsRef.current.add(runId);
+    setFinalAssessmentStatus('Generando y guardando evaluación final local...');
+    try {
+      const assessmentSession = buildUnifiedAssessmentSession({
+        batterySession,
+        generatedAt: new Date().toISOString(),
+        consent: { camera: isCameraActive, aggregateExport: true, humanReviewOnly: true },
+        telemetry,
+        gameSummary,
+        gameCorrelation,
+        edgeAIResult,
+        featureVectorV2: assessmentFeatureVectorV2,
+      });
+      const talentProfile = buildTalentProfile({ assessmentSession });
+      const payload = buildFinalAssessmentPayload({
+        assessmentSession,
+        talentProfile,
+        participant: { aliasHash: null, declaredRoleTarget: null },
+        generatedAt: new Date().toISOString(),
+      });
+      const reports = ['markdown', 'html', 'json'].map((format) => generateTalentReport({ payload, format }));
+      const bundle = buildLocalReportBundle({ payload, reports, generatedAt: new Date().toISOString() });
+      const record = await saveFinalAssessmentSession({ payload, bundle });
+      const records = await loadFinalAssessmentSessions();
+      setFinalAssessmentSessions(records);
+      setFinalAssessmentStatus(`Evaluación final ${record.runId} guardada localmente (${record.bundle?.manifest?.fileCount ?? 0} archivos).`);
+    } catch (error) {
+      completedBatteryRunIdsRef.current.delete(runId);
+      setFinalAssessmentStatus(`No se pudo guardar la evaluación final: ${error?.message ?? String(error)}`);
+    }
+  }, [assessmentFeatureVectorV2, edgeAIResult, gameCorrelation, gameSummary, isCameraActive, telemetry]);
+
   // ─── Derived values ───
   const insightItems = [
     { id: 'tension', label: 'Tensión', value: telemetry.insights?.tension ?? 0 },
@@ -440,7 +508,8 @@ export default function App() {
 
   useEffect(() => {
     loadSessionsSafe().then(setSessions).catch(() => setSessions([]));
-  }, []);
+    refreshFinalAssessmentSessions();
+  }, [refreshFinalAssessmentSessions]);
 
   return (
     <div className="app-shell">
@@ -515,6 +584,7 @@ export default function App() {
         onRequestCamera={startCamera}
         onGameEvent={handleGameEvent}
         onBlockComplete={({ summary }) => handleTaskComplete(summary)}
+        onBatteryComplete={handleBatteryComplete}
       />
 
       {isCameraActive ? (
@@ -611,6 +681,14 @@ export default function App() {
           </div>
         </section>
       )}
+
+      <FinalAssessmentHistoryPanel
+        sessions={finalAssessmentSessions}
+        status={finalAssessmentStatus}
+        onRefresh={refreshFinalAssessmentSessions}
+        onClear={handleClearFinalAssessmentSessions}
+        onDownloadSession={handleDownloadFinalAssessmentSession}
+      />
 
       {showReportModal && reportContent && (
         <div className="modal-overlay" onClick={() => setShowReportModal(false)}>

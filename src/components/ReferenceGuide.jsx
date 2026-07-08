@@ -23,7 +23,7 @@ export default function ReferenceGuide() {
         <div><span>Estado</span><strong>A-Z cerrado técnicamente</strong></div>
         <div><span>Uso principal</span><strong>Revisión humana</strong></div>
         <div><span>Privacidad</span><strong>Agregados, sin crudos</strong></div>
-        <div><span>Pendiente físico</span><strong>Smoke con cámara real</strong></div>
+        <div><span>Post-Z</span><strong>AA smoke reportado · AB persistencia local</strong></div>
       </div>
 
       <Section title="Cómo leer esta guía y cerrar una sesión">
@@ -35,7 +35,7 @@ export default function ReferenceGuide() {
             <tr><td>2. Batería</td><td>Secuencia unificada RT → Fitts → Tracking → Go/No-Go → Stroop → Visual Search.</td><td>Bloques completados y progreso claro.</td></tr>
             <tr><td>3. Fusión</td><td>gameSummary, gameCorrelation.aggregate y assessment_feature_vector_v2.</td><td>Solo agregados; sin ventanas ni eventos crudos.</td></tr>
             <tr><td>4. Reporte</td><td>Perfil de habilidades, evidencia, caveats, calidad y gobernanza.</td><td>Lenguaje observacional, sin contratar/rechazar/diagnosticar.</td></tr>
-            <tr><td>5. Cierre</td><td>Bundle local/reportes + protocolo manual de cámara.</td><td>Artefactos descargables y privacy review manual.</td></tr>
+            <tr><td>5. Cierre</td><td>Bundle local/reportes + protocolo manual de cámara + historial final local.</td><td>Artefactos descargables, registro AA y persistencia AB privacy-safe.</td></tr>
           </tbody>
         </table>
       </Section>
@@ -205,6 +205,8 @@ export default function ReferenceGuide() {
             <tr><td>X — Entrega</td><td>assessment/reportSubmissionClient.js</td><td>Crea bundle local y cliente HTTP futuro para enviar/describir reportes.</td><td>Valida payload antes de descargar o enviar.</td></tr>
             <tr><td>Y — Smoke manual</td><td>docs/qa/unified-assessment-manual-smoke.md</td><td>Protocolo para validar cámara real, calibración, batería, reportes y privacidad en navegador.</td><td>Requiere ejecución humana con permisos de cámara.</td></tr>
             <tr><td>Z — Verificación integral</td><td>assessment/assessmentExperienceSmoke.js</td><td>Smoke sintético A-X + checklist Y; suite, build, audit y scans.</td><td>Prueba pipeline sin datos crudos ni claims automáticos.</td></tr>
+            <tr><td>AA — Smoke real registrado</td><td>docs/qa/unified-assessment-manual-smoke-2026-07-08.md</td><td>Registro del smoke con cámara reportado por usuario después de estabilizar juegos.</td><td>No guarda capturas ni datos crudos; explicita límite WSL/headless.</td></tr>
+            <tr><td>AB — Persistencia local final</td><td>assessment/finalAssessmentStorage.js + FinalAssessmentHistoryPanel.jsx</td><td>Guarda payload final, manifiesto y reportes; lista y re-descarga sesiones finales.</td><td>Valida payload, claves prohibidas y JSON de reportes antes de persistir.</td></tr>
           </tbody>
         </table>
       </Section>
