@@ -18,6 +18,7 @@ import Dashboard from './components/Dashboard.jsx';
 import StickyHeader from './components/StickyHeader.jsx';
 import GameSessionPanel from './components/GameSessionPanel.jsx';
 import UnifiedGameBattery from './assessment/UnifiedGameBattery.jsx';
+import FinalReportPanel from './assessment/FinalReportPanel.jsx';
 import FinalAssessmentHistoryPanel, { downloadStoredSessionDescriptors } from './assessment/FinalAssessmentHistoryPanel.jsx';
 import { buildUnifiedAssessmentSession } from './assessment/assessmentSession.js';
 import { buildTalentProfile } from './assessment/talentProfile.js';
@@ -121,6 +122,7 @@ export default function App() {
   const [sessions, setSessions] = useState([]);
   const [finalAssessmentSessions, setFinalAssessmentSessions] = useState([]);
   const [finalAssessmentStatus, setFinalAssessmentStatus] = useState(null);
+  const [latestFinalAssessment, setLatestFinalAssessment] = useState(null);
   const [reportTab, setReportTab] = useState('markdown');
   const [reportFormat, setReportFormat] = useState('markdown');
   const [manualCalStatus, setManualCalStatus] = useState(null);
@@ -217,6 +219,7 @@ export default function App() {
       setShowReport(false);
       setReportContent(null);
       setShowReportModal(false);
+      setLatestFinalAssessment(null);
       setManualCalStatus(null);
       setLatestFaceSample(null);
       setLatestLandmarks(null);
@@ -448,6 +451,14 @@ export default function App() {
     downloadStoredSessionDescriptors(descriptors);
   }, []);
 
+  const handleDownloadFinalReportFile = useCallback((descriptor) => {
+    downloadStoredSessionDescriptors([descriptor]);
+  }, []);
+
+  const handleDownloadFinalReportAll = useCallback((descriptors) => {
+    downloadStoredSessionDescriptors(descriptors);
+  }, []);
+
   const handleBatteryComplete = useCallback(async (batterySession) => {
     const runId = batterySession?.runId;
     if (!runId || completedBatteryRunIdsRef.current.has(runId)) return;
@@ -473,8 +484,10 @@ export default function App() {
       });
       const reports = ['markdown', 'html', 'json'].map((format) => generateTalentReport({ payload, format }));
       const bundle = buildLocalReportBundle({ payload, reports, generatedAt: new Date().toISOString() });
+      setLatestFinalAssessment({ payload, reports, bundle, record: null });
       const record = await saveFinalAssessmentSession({ payload, bundle });
       const records = await loadFinalAssessmentSessions();
+      setLatestFinalAssessment({ payload, reports, bundle, record });
       setFinalAssessmentSessions(records);
       setFinalAssessmentStatus(`Evaluación final ${record.runId} guardada localmente (${record.bundle?.manifest?.fileCount ?? 0} archivos).`);
     } catch (error) {
@@ -586,6 +599,17 @@ export default function App() {
         onBlockComplete={({ summary }) => handleTaskComplete(summary)}
         onBatteryComplete={handleBatteryComplete}
       />
+
+      {latestFinalAssessment && (
+        <FinalReportPanel
+          payload={latestFinalAssessment.payload}
+          reports={latestFinalAssessment.reports}
+          bundle={latestFinalAssessment.bundle}
+          storageRecord={latestFinalAssessment.record}
+          onDownloadFile={handleDownloadFinalReportFile}
+          onDownloadAll={handleDownloadFinalReportAll}
+        />
+      )}
 
       {isCameraActive ? (
         <Dashboard

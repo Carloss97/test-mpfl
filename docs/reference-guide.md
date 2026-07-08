@@ -149,6 +149,7 @@ Las fases R-Z convierten las mediciones A-Q en una experiencia completa: baterí
 | Z — Verificación integral | `assessment/assessmentExperienceSmoke.js` | Smoke sintético A-X + checklist Y; suite, build, audit y scans. | Prueba pipeline sin datos crudos ni claims automáticos. |
 | AA — Smoke real registrado | `docs/qa/unified-assessment-manual-smoke-2026-07-08.md` | Registro del smoke con cámara reportado por usuario después de estabilizar juegos. | No guarda capturas ni datos crudos; explicita límite WSL/headless. |
 | AB — Persistencia local final | `assessment/finalAssessmentStorage.js` + `FinalAssessmentHistoryPanel.jsx` | Guarda payload final, manifiesto y reportes; lista y re-descarga sesiones finales. | Valida payload, claves prohibidas y JSON de reportes antes de persistir. |
+| AC — Preview/descarga final | `assessment/FinalReportPanel.jsx` | Muestra preview Markdown/HTML/JSON, validación, calidad y botones de descarga directa. | HTML se previsualiza como texto seguro; descargas se bloquean si falla privacy guard. |
 
 ## Reporte final y lectura humana
 

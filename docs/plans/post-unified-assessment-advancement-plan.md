@@ -113,23 +113,27 @@ El siguiente objetivo no es añadir más señales, sino convertir esto en un pil
 
 ## Fase AC — UI final de report preview/download
 
-**Estado:** [ ] Por implementar
+**Estado:** [x] Completado
 
 **Objetivo:** que la app permita previsualizar y descargar el reporte final sin tocar consola/código.
 
-**Archivos sugeridos:**
+**Archivos implementados:**
 
-- Crear: `src/assessment/FinalReportPanel.jsx`
-- Crear: `src/assessment/FinalReportPanel.test.jsx`
-- Modificar: `UnifiedGameBattery.jsx` / `FinalAssessmentScreen.jsx`.
+- Creado: `src/assessment/FinalReportPanel.jsx`
+- Creado: `src/assessment/FinalReportPanel.test.jsx`
+- Modificado: `src/App.jsx`
 
 **Tareas:**
 
-- [ ] Preview Markdown/HTML.
-- [ ] Botones Descargar MD/HTML/JSON.
-- [ ] Botones Descargar JSONL/CSV research export.
-- [ ] Mostrar `payload.validation.ok` y caveats.
-- [ ] Bloquear descarga si privacy guard falla.
+- [x] Preview Markdown/HTML/JSON como texto seguro.
+- [x] Botones Descargar MD/HTML/JSON.
+- [x] Botones Descargar payload final, manifiesto y descarga completa.
+- [x] Mostrar `payload.validation.ok`, calidad y caveats/violaciones.
+- [x] Bloquear descarga si privacy guard falla.
+
+**Notas de implementación:** `App.jsx` mantiene `latestFinalAssessment` al generarse `report_ready` y muestra `FinalReportPanel` debajo de la batería. El panel usa los mismos reportes/bundle/payload generados para AB, no renderiza HTML con `dangerouslySetInnerHTML`, y entrega descriptores seguros a los callbacks de descarga.
+
+**Evidencia:** `NODE_ENV=test npx vitest run src/assessment/FinalReportPanel.test.jsx src/assessment/finalAssessmentStorage.test.js src/assessment/FinalAssessmentHistoryPanel.test.jsx src/App.test.jsx --pool=threads` → 4 archivos / 18 tests verdes.
 
 ---
 
@@ -252,10 +256,10 @@ geometric_shoulder_fallback
 
 ## 7. Próximo paso recomendado inmediato
 
-Ejecutar **Fase AA — Smoke real con cámara**, usando:
+Continuar con el plan detallado de demo:
 
 ```text
-docs/qa/unified-assessment-manual-smoke.md
+docs/plans/unified-assessment-demo-readiness-plan.md
 ```
 
-Después de esa prueba, priorizar bugs/UX reales antes de añadir backend o nuevas métricas.
+El siguiente bloque concreto es **Fase AC — UI final de reporte preview/download**. Después avanzar en orden por modo demo rápido, readiness de señal, guion de demo, fixture sintética de fallback y rehearsal manual. No avanzar a backend o métricas nuevas hasta cerrar la experiencia local de demo.
