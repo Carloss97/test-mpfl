@@ -262,4 +262,4 @@ Continuar con el plan detallado de demo:
 docs/plans/unified-assessment-demo-readiness-plan.md
 ```
 
-El siguiente bloque concreto es **Fase AE — Signal Readiness Panel** del plan de demo. AC y AD ya están implementadas; continuar con readiness de señal, guion de demo, fixture sintética de fallback y rehearsal manual. No avanzar a backend o métricas nuevas hasta cerrar la experiencia local de demo.
+El siguiente bloque concreto es **Fase AG — Sesión demo sintética/preparada para fallback** del plan de demo. AC-AF ya están implementadas; continuar con fixture sintética de fallback y rehearsal manual. No avanzar a backend o métricas nuevas hasta cerrar la experiencia local de demo.

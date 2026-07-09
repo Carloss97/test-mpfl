@@ -1,4 +1,5 @@
 import React from 'react';
+import SignalReadinessPanel from './SignalReadinessPanel.jsx';
 
 export default function ConsentCalibrationScreen({
   stage = 'consent',
@@ -8,6 +9,7 @@ export default function ConsentCalibrationScreen({
   onStartBaseline,
   onCompleteBaseline,
   onCancel,
+  signalReadiness,
 }) {
   if (stage === 'consent') {
     return (
@@ -23,6 +25,7 @@ export default function ConsentCalibrationScreen({
     return (
       <div className="dash-section-body">
         <p className="caption">{cameraActive ? 'Cámara lista para baseline.' : 'Se requiere cámara activa para iniciar la batería evaluativa.'}</p>
+        <SignalReadinessPanel cameraActive={cameraActive} {...signalReadiness} />
         {cameraActive ? (
           <button type="button" className="primary" onClick={onStartBaseline}>Iniciar baseline</button>
         ) : (

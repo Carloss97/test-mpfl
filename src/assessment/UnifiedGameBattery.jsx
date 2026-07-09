@@ -64,6 +64,7 @@ export default function UnifiedGameBattery({
   onBatterySessionChange,
   onBatteryComplete,
   onBlockComplete,
+  signalReadiness = {},
 } = {}) {
   const availableConfigs = useMemo(() => {
     const defaults = listBatteryConfigs();
@@ -167,6 +168,7 @@ export default function UnifiedGameBattery({
         <ConsentCalibrationScreen
           stage="camera_check"
           cameraActive={cameraActive}
+          signalReadiness={signalReadiness}
           onRequestCamera={startBaseline}
           onStartBaseline={startBaseline}
           onCancel={cancelBattery}

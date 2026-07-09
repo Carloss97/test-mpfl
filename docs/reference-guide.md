@@ -4,7 +4,7 @@ Documento sincronizado con la arquitectura multimodal actual.
 
 ## Cómo leer esta guía y cerrar una sesión
 
-Estado operativo: A-Z cerrado técnicamente. Uso principal: revisión humana. Privacidad: agregados sin crudos. Demo: AC preview final y AD modo demo rápido.
+Estado operativo: A-Z cerrado técnicamente. Uso principal: revisión humana. Privacidad: agregados sin crudos. Demo: AC preview final, AD modo demo rápido, AE readiness de señal y AF guion/checklist.
 
 | Paso | Qué revisar | Resultado esperado |
 |---|---|---|
@@ -151,6 +151,8 @@ Las fases R-Z convierten las mediciones A-Q en una experiencia completa: baterí
 | AB — Persistencia local final | `assessment/finalAssessmentStorage.js` + `FinalAssessmentHistoryPanel.jsx` | Guarda payload final, manifiesto y reportes; lista y re-descarga sesiones finales. | Valida payload, claves prohibidas y JSON de reportes antes de persistir. |
 | AC — Preview/descarga final | `assessment/FinalReportPanel.jsx` | Muestra preview Markdown/HTML/JSON, validación, calidad y botones de descarga directa. | HTML se previsualiza como texto seguro; descargas se bloquean si falla privacy guard. |
 | AD — Modo demo rápido | `assessment/batteryConfig.js` + `UnifiedGameBattery.jsx` | Agrega `DEMO_BATTERY_CONFIG` y selector Demo rápida/Evaluación estándar. | Modo demo reduce baseline, recovery, descansos y trials sin alterar el modo estandarizado. |
+| AE — Signal readiness | `assessment/SignalReadinessPanel.jsx` | Checklist previo a baseline para cámara, FaceMesh, rostro, confianza, AUs, gaze, postura, MoveNet y privacidad. | Permite continuar con caveats explícitos; no inventa hombros ni datos faltantes. |
+| AF — Guion/checklist demo | `docs/demo/unified-assessment-demo-script.md` + `demo-rehearsal-checklist.md` | Guion operacional, checklist de ensayo y FAQ para presentar sin improvisar claims. | Incluye plan B de cámara, lenguaje seguro, privacidad y próximos pasos hacia piloto. |
 
 ## Reporte final y lectura humana
 

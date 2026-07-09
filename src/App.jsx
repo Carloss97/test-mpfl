@@ -285,6 +285,7 @@ export default function App() {
     } : null);
     setTaskActive(true);
     setTimeout(() => {
+      if (typeof document === 'undefined') return;
       const el = document.querySelector('.task-panel');
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 150);
@@ -512,6 +513,15 @@ export default function App() {
   ];
   const auEntries = Object.entries(telemetry.insights?.auScores ?? {}).sort((a, b) => (b[1]?.intensity ?? 0) - (a[1]?.intensity ?? 0));
   const activeAUCount = auEntries.filter(([, au]) => au.intensity > 0.03).length;
+  const signalReadiness = useMemo(() => ({
+    telemetry,
+    faceWorker,
+    latestGaze,
+    latestPose,
+    moveNet,
+    moveNetPose,
+    activeAUCount,
+  }), [telemetry, faceWorker, latestGaze, latestPose, moveNet, moveNetPose, activeAUCount]);
   const calStatusLabel = isCalibrating ? 'Calibrando...'
     : !calibrationProfile ? 'Sin calibrar'
     : calibrationProfile.eligible ? 'Baseline válido' : 'Baseline no elegible';
@@ -598,6 +608,7 @@ export default function App() {
         onGameEvent={handleGameEvent}
         onBlockComplete={({ summary }) => handleTaskComplete(summary)}
         onBatteryComplete={handleBatteryComplete}
+        signalReadiness={signalReadiness}
       />
 
       {latestFinalAssessment && (

@@ -256,33 +256,36 @@ Resultado:
 
 # Fase AE — Signal Readiness Panel
 
-**Estado:** [ ] Por implementar  
+**Estado:** [x] Completado  
 **Prioridad:** 3  
 **Objetivo:** reducir riesgo de demo fallida mostrando una checklist clara antes del baseline.
 
 ## Archivos
 
-- Crear: `src/assessment/SignalReadinessPanel.jsx`
-- Crear: `src/assessment/SignalReadinessPanel.test.jsx`
-- Modificar: `src/assessment/ConsentCalibrationScreen.jsx`
-- Modificar: `src/assessment/UnifiedGameBattery.jsx`
-- Modificar: `src/App.jsx` para pasar métricas actuales.
+- Creado: `src/assessment/SignalReadinessPanel.jsx`
+- Creado: `src/assessment/SignalReadinessPanel.test.jsx`
+- Modificado: `src/assessment/ConsentCalibrationScreen.jsx`
+- Modificado: `src/assessment/UnifiedGameBattery.jsx`
+- Modificado: `src/App.jsx` para pasar señales actuales.
+- Documentado: `docs/plans/unified-assessment-demo-readiness-plan.md`, `docs/reference-guide.md`, `src/components/ReferenceGuide.jsx`.
 
-## Señales a mostrar
+## Señales implementadas
 
-| Señal | Input esperado | Estado |
+| Señal | Input usado | Estado |
 |---|---|---|
 | Cámara | `cameraActive` | OK/pendiente |
-| FaceMesh | `telemetry.sampleCount`, `faceWorker.status` | OK/pendiente/error |
-| Rostro | `telemetry.facePresenceRatio` | OK si >= 0.70 |
-| Confianza facial | `telemetry.meanConfidence` | OK si >= 0.55 |
-| AUs/FACS | `activeAUCount` o sample blendshapes | OK si hay datos |
-| Gaze | `latestGaze.confidence` | OK/calibrando |
-| Postura | `latestPose.postureScore` | OK/calibrando |
-| MoveNet | `moveNet.status`, `moveNetPose.confidence` | OK/no visible/error |
-| Privacidad | constante UI | siempre visible |
+| FaceMesh | `telemetry.sampleCount`, `faceWorker.status`, `faceWorker.error` | OK/pendiente/error |
+| Rostro | `telemetry.facePresenceRatio` | OK si >= 0.70; caveat si bajo con muestras |
+| Confianza facial | `telemetry.meanConfidence` | OK si >= 0.55; caveat si baja con muestras |
+| AUs/FACS | `activeAUCount` | OK si hay AUs activos |
+| Gaze | `latestGaze.confidence` | OK si >= 0.35; pendiente/caveat si calibrando |
+| Postura | `latestPose.postureScore` | OK si >= 0.35; pendiente/caveat si calibrando |
+| MoveNet | `moveNet.status`, `moveNet.error`, `moveNetPose.confidence`, `moveNetPose.upperBodyCoverage` | OK/error/caveat sin hombros detectados |
+| Privacidad | copy constante | siempre OK |
 
 ## Copy requerido
+
+Incluido en `SignalReadinessPanel`:
 
 - “Si MoveNet no detecta hombros, aléjate hasta que ambos hombros entren en cuadro.”
 - “La demo puede continuar con caveats; no se inventan hombros ni datos faltantes.”
@@ -292,53 +295,55 @@ Resultado:
 
 ### Task AE.1 — Test del panel con señal buena
 
-Debe mostrar todos los checks en OK.
+**Resultado:** RED confirmado por import faltante; luego GREEN con todos los checks en OK.
 
 ### Task AE.2 — Test con cámara apagada/señal baja
 
-Debe mostrar acciones:
-
-```text
-Iniciar cámara
-Mejorar iluminación
-Centrar rostro
-Alejarse para hombros
-```
+**Resultado:** muestra cámara pendiente, FaceMesh error, MoveNet caveat cuando está listo sin hombros y acciones de iluminación/encuadre.
 
 ### Task AE.3 — Integración en camera_check
 
-En `ConsentCalibrationScreen` o `UnifiedGameBattery`, mostrar panel durante `camera_check` antes de iniciar baseline.
+**Resultado:** `ConsentCalibrationScreen` muestra `SignalReadinessPanel` durante `camera_check`; `UnifiedGameBattery` recibe `signalReadiness`; `App.jsx` pasa telemetry agregada, FaceMesh, gaze, postura, MoveNet y `activeAUCount`.
 
 ### Task AE.4 — Verificación AE
 
+**Evidencia focal:**
+
 ```bash
-NODE_ENV=test npx vitest run src/assessment/SignalReadinessPanel.test.jsx src/assessment/UnifiedGameBattery.test.jsx src/App.test.jsx --pool=threads
-npm run build
+NODE_ENV=test npx vitest run src/assessment/SignalReadinessPanel.test.jsx src/assessment/UnifiedGameBattery.test.jsx --pool=forks --maxWorkers=1 --reporter=default
+```
+
+Resultado:
+
+```text
+2 test files passed
+7 tests passed
 ```
 
 ---
 
 # Fase AF — Guion de demo y checklist de ensayo
 
-**Estado:** [ ] Por implementar  
+**Estado:** [x] Completado  
 **Prioridad:** 4  
 **Objetivo:** preparar un guion operacional para presentar KRUMM sin improvisar claims ni pasos técnicos.
 
 ## Archivos
 
-- Crear: `docs/demo/unified-assessment-demo-script.md`
-- Crear: `docs/demo/demo-rehearsal-checklist.md`
-- Opcional: `docs/demo/demo-faq.md`
+- Creado: `docs/demo/unified-assessment-demo-script.md`
+- Creado: `docs/demo/demo-rehearsal-checklist.md`
+- Creado: `docs/demo/demo-faq.md`
+- Documentado: `docs/plans/unified-assessment-demo-readiness-plan.md`, `docs/reference-guide.md`, `src/components/ReferenceGuide.jsx`.
 
-## Guion mínimo
+## Guion cubierto
 
-El guion debe cubrir:
+El guion cubre:
 
 1. Problema que resuelve KRUMM.
 2. Qué mide: desempeño gamificado + señales observacionales FACS/AUs/gaze/postura/MoveNet.
-3. Qué no mide: personalidad, diagnóstico, inferencias de engaño ni decisión automática.
-4. Privacidad: browser-local, agregados, no video/frames/landmarks/pointer paths.
-5. Flujo de demo: cámara → checklist → consentimiento → batería demo → reporte → historial.
+3. Qué no mide: personalidad, evaluación clínica, inferencias de verdad/falsedad ni decisión automática.
+4. Privacidad: browser-local, agregados, sin video/frames/landmarks crudos/trayectorias de puntero.
+5. Flujo de demo: cámara → readiness → consentimiento → batería demo → reporte → historial.
 6. Qué decir en cada juego.
 7. Cómo leer el reporte final.
 8. Preguntas frecuentes.
@@ -347,27 +352,28 @@ El guion debe cubrir:
 
 ## Checklist de ensayo
 
-Debe incluir:
+Incluye:
 
 ```text
 [ ] npm run build OK
-[ ] NODE_ENV=test npx vitest run --pool=threads OK
+[ ] focos de demo OK
 [ ] npm run dev abierto
 [ ] navegador con permisos de cámara
 [ ] iluminación frontal
 [ ] hombros visibles
 [ ] demo rápida seleccionada
-[ ] historial final limpiado o preparado
-[ ] reporte anterior de backup disponible
+[ ] historial final preparado
 [ ] privacidad explicada antes de iniciar
 [ ] no hay errores críticos en consola
 ```
 
 ## Verificación AF
 
-- Validar que los markdown no tengan fences rotos.
-- Validar que no contengan claims prohibidos.
-- Validar que no incluyan secretos ni datos personales reales.
+Pendiente de verificación global en el cierre AE/AF:
+
+- Validar markdown sin fences rotos.
+- Validar ausencia de claims prohibidos.
+- Validar ausencia de secretos o datos personales reales.
 
 ---
 

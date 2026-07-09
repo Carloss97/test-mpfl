@@ -23,7 +23,7 @@ export default function ReferenceGuide() {
         <div><span>Estado</span><strong>A-Z cerrado técnicamente</strong></div>
         <div><span>Uso principal</span><strong>Revisión humana</strong></div>
         <div><span>Privacidad</span><strong>Agregados, sin crudos</strong></div>
-        <div><span>Demo</span><strong>AC preview · AD modo demo</strong></div>
+        <div><span>Demo</span><strong>AC preview · AD modo demo · AE readiness · AF guion</strong></div>
       </div>
 
       <Section title="Cómo leer esta guía y cerrar una sesión">
@@ -209,6 +209,8 @@ export default function ReferenceGuide() {
             <tr><td>AB — Persistencia local final</td><td>assessment/finalAssessmentStorage.js + FinalAssessmentHistoryPanel.jsx</td><td>Guarda payload final, manifiesto y reportes; lista y re-descarga sesiones finales.</td><td>Valida payload, claves prohibidas y JSON de reportes antes de persistir.</td></tr>
             <tr><td>AC — Preview/descarga final</td><td>assessment/FinalReportPanel.jsx</td><td>Muestra preview Markdown/HTML/JSON, validación, calidad y botones de descarga directa.</td><td>HTML se previsualiza como texto seguro; descargas se bloquean si falla privacy guard.</td></tr>
             <tr><td>AD — Modo demo rápido</td><td>assessment/batteryConfig.js + UnifiedGameBattery.jsx</td><td>Agrega DEMO_BATTERY_CONFIG y selector Demo rápida/Evaluación estándar.</td><td>Modo demo reduce baseline, recovery, descansos y trials sin alterar el modo estandarizado.</td></tr>
+            <tr><td>AE — Signal readiness</td><td>assessment/SignalReadinessPanel.jsx</td><td>Checklist previo a baseline para cámara, FaceMesh, rostro, confianza, AUs, gaze, postura, MoveNet y privacidad.</td><td>Permite continuar con caveats explícitos; no inventa hombros ni datos faltantes.</td></tr>
+            <tr><td>AF — Guion/checklist demo</td><td>docs/demo/unified-assessment-demo-script.md + demo-rehearsal-checklist.md</td><td>Guion operacional, checklist de ensayo y FAQ para presentar sin improvisar claims.</td><td>Incluye plan B de cámara, lenguaje seguro, privacidad y próximos pasos hacia piloto.</td></tr>
           </tbody>
         </table>
       </Section>
