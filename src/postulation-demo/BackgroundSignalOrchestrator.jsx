@@ -9,6 +9,12 @@ import { resetAUCache } from '../telemetry/auEnhancer.js';
 import { computeAUs } from '../telemetry/gestureInsights.js';
 import { useMoveNet } from '../telemetry/useMoveNet.js';
 
+const SIGNAL_CONTEXT_SCHEMA = 'krumm_postulation_demo_signal_context_v1';
+const MAX_FACE_SAMPLES = 600;
+const MAX_GAZE_SAMPLES = 600;
+const MAX_POSTURE_SAMPLES = 600;
+const MAX_UPPER_BODY_SAMPLES = 600;
+
 function clamp01(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return 0;
@@ -22,6 +28,130 @@ function mean(values) {
 
 function appendBounded(list, item, max = 600) {
   return [...list, item].slice(-max);
+}
+
+function nowMs() {
+  return globalThis.performance?.now?.() ?? Date.now();
+}
+
+function finiteOrNull(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function round(value, digits = 4) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  const factor = 10 ** digits;
+  return Math.round(numeric * factor) / factor;
+}
+
+function includeFinite(target, key, value, digits = 4) {
+  const numeric = finiteOrNull(value);
+  if (numeric !== null) target[key] = round(numeric, digits);
+}
+
+function sanitizeHistory(items = [], sanitizer, max) {
+  return (Array.isArray(items) ? items : [])
+    .map((item) => sanitizer(item, { requireTimestamp: true }))
+    .filter(Boolean)
+    .slice(-max);
+}
+
+function sanitizeFaceHistory(samples = []) {
+  return (Array.isArray(samples) ? samples : [])
+    .map((sample) => sanitizeFaceSampleForAggregation(sample))
+    .filter((sample) => finiteOrNull(sample?.timestamp) !== null)
+    .slice(-MAX_FACE_SAMPLES);
+}
+
+function sanitizeGazeSample(sample = null, { requireTimestamp = false } = {}) {
+  if (!sample || typeof sample !== 'object') return null;
+  const timestamp = finiteOrNull(sample.timestamp);
+  if (requireTimestamp && timestamp === null) return null;
+  const safe = {
+    lookingAtScreen: Boolean(sample.lookingAtScreen),
+    confidence: clamp01(sample.confidence),
+    screenX: round(sample.screenX ?? 0.5),
+    screenY: round(sample.screenY ?? 0.5),
+  };
+  if (timestamp !== null) safe.timestamp = round(timestamp, 2);
+  if (sample.calibrationFrames !== undefined) safe.calibrationFrames = Number(sample.calibrationFrames) || 0;
+  return safe;
+}
+
+function sanitizePostureSample(sample = null, { requireTimestamp = false } = {}) {
+  if (!sample || typeof sample !== 'object') return null;
+  const timestamp = finiteOrNull(sample.timestamp);
+  if (requireTimestamp && timestamp === null) return null;
+  const safe = {
+    postureScore: clamp01(sample.postureScore ?? 0),
+    headForward: clamp01(sample.headForward ?? 0),
+    confidence: clamp01(sample.confidence ?? 0),
+  };
+  if (timestamp !== null) safe.timestamp = round(timestamp, 2);
+  includeFinite(safe, 'headTilt', sample.headTilt);
+  includeFinite(safe, 'headTiltDeg', sample.headTiltDeg, 2);
+  includeFinite(safe, 'asymmetry', sample.asymmetry);
+  includeFinite(safe, 'stability', sample.stability);
+  if (sample.source) safe.source = String(sample.source);
+  if (Array.isArray(sample.caveats)) safe.caveats = sample.caveats.map(String).slice(0, 6);
+  return safe;
+}
+
+function sanitizeUpperBodySample(sample = null, { requireTimestamp = false } = {}) {
+  if (!sample || typeof sample !== 'object') return null;
+  const timestamp = finiteOrNull(sample.timestamp);
+  if (requireTimestamp && timestamp === null) return null;
+  const symmetry = clamp01(sample.symmetry ?? sample.shoulderSymmetry ?? 0);
+  const safe = {
+    source: sample.source ? String(sample.source) : 'movenet',
+    confidence: clamp01(sample.confidence ?? 0),
+    symmetry,
+    shoulderSymmetry: symmetry,
+    upperBodyCoverage: clamp01(sample.upperBodyCoverage ?? 0),
+    visibleUpperBodyKeypoints: Number(sample.visibleUpperBodyKeypoints ?? 0),
+    armsVisible: Number(sample.armsVisible ?? 0),
+    armActivity: clamp01(sample.armActivity ?? 0),
+  };
+  if (timestamp !== null) safe.timestamp = round(timestamp, 2);
+  if (sample.shoulderAngle !== null && sample.shoulderAngle !== undefined) includeFinite(safe, 'shoulderAngle', sample.shoulderAngle, 2);
+  if (sample.shoulderWidthPx !== null && sample.shoulderWidthPx !== undefined) includeFinite(safe, 'shoulderWidthPx', sample.shoulderWidthPx, 2);
+  return safe;
+}
+
+export function buildPostulationSignalContext({
+  faceSamples = [],
+  gazeSamples = [],
+  postureSamples = [],
+  upperBodySamples = [],
+  latestGaze = null,
+  latestPosture = null,
+  moveNetPose = null,
+  runtime = {},
+} = {}) {
+  return {
+    schemaVersion: SIGNAL_CONTEXT_SCHEMA,
+    faceSamples: sanitizeFaceHistory(faceSamples),
+    gazeSamples: sanitizeHistory(gazeSamples, sanitizeGazeSample, MAX_GAZE_SAMPLES),
+    postureSamples: sanitizeHistory(postureSamples, sanitizePostureSample, MAX_POSTURE_SAMPLES),
+    upperBodySamples: sanitizeHistory(upperBodySamples, sanitizeUpperBodySample, MAX_UPPER_BODY_SAMPLES),
+    latestGaze: sanitizeGazeSample(latestGaze),
+    latestPosture: sanitizePostureSample(latestPosture),
+    moveNetPose: sanitizeUpperBodySample(moveNetPose),
+    runtime: {
+      delegate: runtime.delegate ?? null,
+      source: 'postulation_demo_background_orchestrator',
+    },
+    privacy: {
+      mediaStreamStored: false,
+      frameDataStored: false,
+      landmarkDataStored: false,
+      pointerPathStored: false,
+      gameEventLogStored: false,
+      aggregateContextOnly: true,
+    },
+  };
 }
 
 function workerError(faceWorker) {
@@ -86,10 +216,13 @@ export function buildPostulationSignalSnapshot({
   };
 }
 
-export default function BackgroundSignalOrchestrator({ active = false, eventCount = 0, mode = 'setup', onSnapshot }) {
+export default function BackgroundSignalOrchestrator({ active = false, eventCount = 0, mode = 'setup', onSnapshot, onSignalContext }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const faceSamplesRef = useRef([]);
+  const gazeSamplesRef = useRef([]);
+  const postureSamplesRef = useRef([]);
+  const upperBodySamplesRef = useRef([]);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState(null);
   const [cameraDevices, setCameraDevices] = useState([]);
@@ -137,6 +270,9 @@ export default function BackgroundSignalOrchestrator({ active = false, eventCoun
       resetGazeEstimator();
       resetUpperBodyPostureState();
       faceSamplesRef.current = [];
+      gazeSamplesRef.current = [];
+      postureSamplesRef.current = [];
+      upperBodySamplesRef.current = [];
       setLatestFaceSample(null);
       setLatestGaze(null);
       setLatestPose(null);
@@ -165,14 +301,21 @@ export default function BackgroundSignalOrchestrator({ active = false, eventCoun
   const recordFaceSample = useCallback((sample, landmarks) => {
     if (!sample?.blendshapes) return;
     const safeSample = sanitizeFaceSampleForAggregation(sample);
-    faceSamplesRef.current = appendBounded(faceSamplesRef.current, safeSample);
+    const timestamp = finiteOrNull(safeSample.timestamp) ?? nowMs();
+    faceSamplesRef.current = appendBounded(faceSamplesRef.current, safeSample, MAX_FACE_SAMPLES);
     setLatestFaceSample(safeSample);
     if (landmarks) {
       try {
-        const gaze = estimateGaze(landmarks);
-        setLatestGaze(gaze);
-        const posture = estimateUpperBodyPosture(landmarks);
-        setLatestPose(posture);
+        const gaze = sanitizeGazeSample({ ...estimateGaze(landmarks), timestamp });
+        if (gaze) {
+          gazeSamplesRef.current = appendBounded(gazeSamplesRef.current, gaze, MAX_GAZE_SAMPLES);
+          setLatestGaze(gaze);
+        }
+        const posture = sanitizePostureSample({ ...estimateUpperBodyPosture(landmarks), timestamp });
+        if (posture) {
+          postureSamplesRef.current = appendBounded(postureSamplesRef.current, posture, MAX_POSTURE_SAMPLES);
+          setLatestPose(posture);
+        }
       } catch {
         // Optional background signal; keep gameplay resilient.
       }
@@ -188,7 +331,11 @@ export default function BackgroundSignalOrchestrator({ active = false, eventCoun
   });
 
   const moveNetSample = useCallback((sample) => {
-    if (sample?.metrics) setMoveNetPose(sample.metrics);
+    if (!sample?.metrics) return;
+    const safeMoveNetPose = sanitizeUpperBodySample({ timestamp: finiteOrNull(sample.timestamp) ?? nowMs(), ...sample.metrics });
+    if (!safeMoveNetPose) return;
+    upperBodySamplesRef.current = appendBounded(upperBodySamplesRef.current, safeMoveNetPose, MAX_UPPER_BODY_SAMPLES);
+    setMoveNetPose(safeMoveNetPose);
   }, []);
 
   const moveNet = useMoveNet({ videoRef, active: cameraActive, fps: 6, onSample: moveNetSample });
@@ -206,9 +353,24 @@ export default function BackgroundSignalOrchestrator({ active = false, eventCoun
     events: eventCount,
   }), [active, cameraActive, cameraError, eventCount, faceWorker, latestFaceSample, latestGaze, latestPose, moveNet, moveNetPose]);
 
+  const signalContext = useMemo(() => buildPostulationSignalContext({
+    faceSamples: faceSamplesRef.current,
+    gazeSamples: gazeSamplesRef.current,
+    postureSamples: postureSamplesRef.current,
+    upperBodySamples: upperBodySamplesRef.current,
+    latestGaze,
+    latestPosture: latestPose,
+    moveNetPose,
+    runtime: { delegate: faceWorker.delegate ?? null },
+  }), [faceWorker.delegate, latestFaceSample, latestGaze, latestPose, moveNetPose]);
+
   useEffect(() => {
     onSnapshot?.(snapshot);
   }, [onSnapshot, snapshot]);
+
+  useEffect(() => {
+    onSignalContext?.(signalContext);
+  }, [onSignalContext, signalContext]);
 
   if (mode === 'hidden') {
     return (

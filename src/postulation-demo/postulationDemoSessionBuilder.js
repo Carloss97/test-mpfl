@@ -4,6 +4,9 @@ import { buildTalentProfile } from '../assessment/talentProfile.js';
 import { generateTalentReport } from '../assessment/talentReportGenerator.js';
 import { buildLocalReportBundle } from '../assessment/reportSubmissionClient.js';
 import { normalizeGameEvent, summarizeGameEvents } from '../telemetry/gameTelemetry.js';
+import { correlateGameWithMultimodalSignals } from '../telemetry/gameCorrelation.js';
+import { buildGameFeatureVectorV2 } from '../telemetry/gameFeatureVector.js';
+import { runEdgeAIInference } from '../telemetry/edgeAiEngine.js';
 import { POSTULATION_DEMO_BATTERY } from './postulationDemoConfig.js';
 
 export const POSTULATION_DEMO_ARTIFACTS_SCHEMA = 'krumm_postulation_demo_artifacts_v1';
@@ -26,6 +29,10 @@ function mean(values, fallback = 0) {
   const numeric = values.map(Number).filter(Number.isFinite);
   if (!numeric.length) return fallback;
   return numeric.reduce((sum, value) => sum + value, 0) / numeric.length;
+}
+
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
 }
 
 function stripForbidden(value) {
@@ -62,8 +69,8 @@ function summarizeCompletedBlocks(blocks = []) {
   const completedTrialCounts = blocks.map((block) => finite(block.result?.completedTrialCount ?? block.trialCount));
   const trialCounts = blocks.map((block) => finite(block.result?.trialCount ?? block.trialCount));
   const accuracies = blocks.map((block) => finite(block.result?.accuracy, NaN)).filter(Number.isFinite);
-  const scores = blocks.map((block) => finite(block.result?.score, NaN)).filter(Number.isFinite);
-  const reactionTimes = blocks.map((block) => finite(block.result?.meanReactionTimeMs, NaN)).filter(Number.isFinite);
+  const scores = blocks.map((block) => finite(block.result?.score ?? block.result?.meanScore, NaN)).filter(Number.isFinite);
+  const reactionTimes = blocks.map((block) => finite(block.result?.meanReactionTimeMs ?? block.result?.meanRT, NaN)).filter(Number.isFinite);
   return {
     trialCount: trialCounts.reduce((sum, value) => sum + value, 0),
     completedTrialCount: completedTrialCounts.reduce((sum, value) => sum + value, 0),
@@ -101,22 +108,39 @@ export function buildPostulationDemoGameSummary({ gameEvents = [], completedDemo
   };
 }
 
-function qualityFromSignalSnapshot(signalSnapshot = null) {
+function buildPostulationGameCorrelation({ normalizedEvents = [], signalContext = null } = {}) {
+  const signal = signalContext ?? {};
+  const correlation = correlateGameWithMultimodalSignals({
+    gameEvents: normalizedEvents,
+    faceSamples: safeArray(signal.faceSamples),
+    pointerSamples: [],
+    gazeSamples: safeArray(signal.gazeSamples),
+    postureSamples: safeArray(signal.postureSamples),
+    upperBodySamples: safeArray(signal.upperBodySamples),
+  });
+  return (correlation.aggregate?.trialCount ?? 0) > 0 ? correlation : null;
+}
+
+function qualityFromSignalSnapshot(signalSnapshot = null, { gameSummary = null, gameCorrelation = null, edgeAIResult = null } = {}) {
   const snapshot = signalSnapshot ?? {};
   const sampleCount = finite(snapshot.sampleCount);
   const facePresenceRatio = clamp01(snapshot.facePresenceRatio);
   const meanConfidence = clamp01(snapshot.meanConfidence);
+  const correlatedTrialCount = Number(gameCorrelation?.aggregate?.completedTrialCount ?? 0);
+  const gameTrialCount = Number(gameSummary?.performance?.completedTrialCount ?? gameSummary?.completedTrialCount ?? 0);
   const caveats = Array.isArray(snapshot.caveats) ? [...snapshot.caveats] : [];
   if (sampleCount === 0) caveats.push('camera_not_enabled_or_no_samples');
   if (sampleCount < 20) caveats.push('low_sample_count');
   if (facePresenceRatio < 0.7) caveats.push('low_face_presence');
   if (meanConfidence < 0.55) caveats.push('low_face_confidence');
+  if (gameTrialCount > 0 && correlatedTrialCount <= 0) caveats.push('missing_game_correlation');
+  if (edgeAIResult && Number(edgeAIResult?.confidence?.score ?? 1) < 0.55) caveats.push('low_model_confidence');
   return {
     sampleCount,
     facePresenceRatio,
     meanConfidence,
     fpsEstimate: finite(snapshot.fpsEstimate),
-    correlatedTrialCount: 0,
+    correlatedTrialCount,
     caveats: [...new Set(caveats)],
   };
 }
@@ -144,7 +168,7 @@ function channel(value, evidence = []) {
   return { score: score100(value), evidence };
 }
 
-function buildAggregateEdgeAIResult({ gameSummary, qualitySummary }) {
+function buildAggregateEdgeAIResult({ gameSummary, qualitySummary, extraCaveats = [] }) {
   const performance = gameSummary.performance ?? {};
   const accuracy = clamp01(performance.accuracy);
   const trialCount = finite(performance.trialCount);
@@ -175,7 +199,59 @@ function buildAggregateEdgeAIResult({ gameSummary, qualitySummary }) {
       stressResponse: channel(1 - quality, ['inverse_signal_quality_proxy']),
       fatigueIndex: channel(1 - completion, ['incomplete_demo_proxy']),
     },
-    caveats: [...new Set(['aggregate_proxy_only', ...(qualitySummary.caveats ?? [])])],
+    caveats: [...new Set(['aggregate_proxy_only', ...(qualitySummary.caveats ?? []), ...extraCaveats])],
+  };
+}
+
+function buildRouteEdgeAIResult({ gameSummary, gameCorrelation, signalContext, qualitySummary }) {
+  const signal = signalContext ?? {};
+  const faceSamples = safeArray(signal.faceSamples);
+  if (faceSamples.length >= 2) {
+    try {
+      return runEdgeAIInference({
+        faceSamples,
+        pointerSamples: [],
+        taskEvents: [],
+        runtime: signal.runtime ?? { delegate: null },
+        latestGaze: signal.latestGaze ?? null,
+        latestPosture: signal.latestPosture ?? null,
+        moveNetPose: signal.moveNetPose ?? null,
+        gameSummary,
+        gameCorrelation,
+      });
+    } catch {
+      return buildAggregateEdgeAIResult({
+        gameSummary,
+        qualitySummary,
+        extraCaveats: ['edge_ai_route_inference_failed'],
+      });
+    }
+  }
+  return buildAggregateEdgeAIResult({ gameSummary, qualitySummary });
+}
+
+function buildPostulationFeatureVectorV2({ runId, generatedAt, gameSummary, gameCorrelation, edgeAIResult, signalContext }) {
+  const performance = gameSummary.performance ?? {};
+  const hasGameData = Number(performance.completedTrialCount ?? 0) > 0 || Number(gameSummary.eventCount ?? 0) > 0;
+  if (!hasGameData) return null;
+  const vector = buildGameFeatureVectorV2({
+    runId,
+    generatedAt,
+    gameSummary,
+    gameCorrelation: gameCorrelation ?? {},
+    edgeModelOutput: edgeAIResult,
+    runtime: signalContext?.runtime ?? { delegate: null, source: 'postulation_demo' },
+  });
+  return {
+    ...vector,
+    privacy: {
+      videoStored: false,
+      frameDataStored: false,
+      landmarkDataStored: false,
+      pointerPathStored: false,
+      gameEventLogStored: false,
+      payloadContainsAggregatesOnly: true,
+    },
   };
 }
 
@@ -187,6 +263,7 @@ export function buildPostulationDemoArtifacts({
   completedDemo = {},
   gameEvents = [],
   signalSnapshot = null,
+  signalContext = null,
   generatedAt = nowIso(),
   runId = `postulation-demo-${Date.now()}`,
   participant = {},
@@ -205,9 +282,20 @@ export function buildPostulationDemoArtifacts({
       endedAt: null,
       result: null,
     }));
-  const gameSummary = buildPostulationDemoGameSummary({ gameEvents, completedDemo: { blocks: fallbackBlocks.map((block) => ({ block, summary: block.result ?? {} })) } });
-  const qualitySummary = qualityFromSignalSnapshot(signalSnapshot);
-  const edgeAIResult = buildAggregateEdgeAIResult({ gameSummary, qualitySummary });
+  const normalizedEvents = gameEvents.map((event) => normalizeGameEvent(event));
+  const gameSummary = buildPostulationDemoGameSummary({ gameEvents: normalizedEvents, completedDemo: { blocks: fallbackBlocks.map((block) => ({ block, summary: block.result ?? {} })) } });
+  const gameCorrelation = buildPostulationGameCorrelation({ normalizedEvents, signalContext });
+  const baseQualitySummary = qualityFromSignalSnapshot(signalSnapshot, { gameSummary, gameCorrelation });
+  const edgeAIResult = buildRouteEdgeAIResult({ gameSummary, gameCorrelation, signalContext, qualitySummary: baseQualitySummary });
+  const qualitySummary = qualityFromSignalSnapshot(signalSnapshot, { gameSummary, gameCorrelation, edgeAIResult });
+  const featureVectorV2 = buildPostulationFeatureVectorV2({
+    runId,
+    generatedAt,
+    gameSummary,
+    gameCorrelation,
+    edgeAIResult,
+    signalContext,
+  });
   const assessmentSession = buildUnifiedAssessmentSession({
     batterySession: buildBatterySession({ blocks: fallbackBlocks, generatedAt, runId }),
     generatedAt,
@@ -218,9 +306,9 @@ export function buildPostulationDemoArtifacts({
     },
     telemetry: qualitySummary,
     gameSummary,
-    gameCorrelation: null,
+    gameCorrelation,
     edgeAIResult,
-    featureVectorV2: null,
+    featureVectorV2,
     qualitySummary,
   });
   const talentProfile = buildTalentProfile({ assessmentSession });

@@ -660,7 +660,7 @@ Resultado:
 
 # Fase D — Synchronization engine y sesión final real
 
-**Estado:** [x] D v1 implementada — 2026-07-09  
+**Estado:** [x] D v2 implementada — 2026-07-09
 **Prioridad:** 4  
 **Objetivo:** garantizar que juegos, cámara, gaze, postura y MoveNet alimenten un reporte real y sincronizado.
 
@@ -689,22 +689,29 @@ bundle
 5. Si no hay cámara o muestras, el reporte se genera con caveats (`camera_not_enabled_or_no_samples`, `low_sample_count`, `low_face_presence`, `low_face_confidence`) y confianza baja.
 6. Preview final muestra runId, validación privacy-safe, conteo de archivos y primeras líneas del reporte Markdown.
 
-## Pendiente para D v2
+## D v2 implementado
 
-- Incorporar `gameCorrelation.aggregate` real de la ruta `/postulaciones-demo` usando histories bounded de gaze/postura/upperBody.
-- Construir `assessment_feature_vector_v2` específico de esta ruta en vez de dejarlo `null`.
+- `BackgroundSignalOrchestrator` mantiene histories bounded route-specific de face samples sanitizadas, gaze, postura y upperBody/MoveNet, usando `performance.now()` y sin conservar landmarks/keypoints en el contexto final.
+- `PostulationDemoApp` recibe `signalContext` en un ref para evitar reinicios/re-render loops y lo entrega al cierre de la demo.
+- `postulationDemoSessionBuilder.js` calcula `gameCorrelation.aggregate` con `correlateGameWithMultimodalSignals()` cuando hay pares `stimulus_shown`/`response`.
+- Construye `assessment_feature_vector_v2` con `buildGameFeatureVectorV2()` y lo sanitiza antes de pasarlo a sesión/payload.
+- Si hay face samples suficientes, usa `runEdgeAIInference()` v9.1 con gameSummary + gameCorrelation; si no, conserva fallback agregado/caveated sin inventar señal.
+
+Pendiente posterior a D v2:
+
 - Añadir botones de descarga directa desde el preview de reporte o reutilizar `FinalReportPanel` con una variante productizada.
 
 ## Evidencia
 
 ```bash
-NODE_ENV=test npx vitest run src/postulation-demo/postulationDemoSessionBuilder.test.js src/postulation-demo/PostulationDemoApp.test.jsx --pool=forks --maxWorkers=1 --reporter=default
+NODE_ENV=test npx vitest run src/postulation-demo/postulationDemoSessionBuilder.test.js src/postulation-demo/BackgroundSignalOrchestrator.test.jsx src/postulation-demo/PostulationDemoApp.test.jsx --pool=forks --maxWorkers=1 --reporter=default
 ```
 
-Resultado en tests focales:
+Resultado en tests focales Dv2:
 
 ```text
-postulationDemoSessionBuilder.test.js: 2 tests passed
+postulationDemoSessionBuilder.test.js: 3 tests passed
+BackgroundSignalOrchestrator.test.jsx: 3 tests passed
 PostulationDemoApp.test.jsx: 5 tests passed
 ```
 
@@ -713,7 +720,8 @@ PostulationDemoApp.test.jsx: 5 tests passed
 - [x] Final payload valida con `validateFinalAssessmentPayload()`.
 - [x] No contiene keys prohibidas en session/payload/manifest.
 - [x] Sin cámara, el reporte conserva caveats y no inventa calidad facial.
-- [ ] D v2: correlación usa ventanas agregadas reales de esta ruta.
+- [x] D v2: correlación usa ventanas agregadas reales de esta ruta.
+- [x] D v2: `assessment_feature_vector_v2` queda integrado en sesión/payload final sin ventanas crudas ni eventos crudos.
 
 ---
 

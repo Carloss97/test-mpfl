@@ -17,6 +17,7 @@ function reportPreviewText(artifacts) {
 
 export default function PostulationDemoApp({ gameComponents } = {}) {
   const gameEventsRef = useRef([]);
+  const signalContextRef = useRef(null);
   const [phase, setPhase] = useState('landing');
   const [backgroundActive, setBackgroundActive] = useState(false);
   const [signalSnapshot, setSignalSnapshot] = useState(null);
@@ -29,10 +30,15 @@ export default function PostulationDemoApp({ gameComponents } = {}) {
     setSignalSnapshot((previous) => (sameSnapshot(previous, nextSnapshot) ? previous : nextSnapshot));
   }, []);
 
+  const handleSignalContext = useCallback((nextContext) => {
+    signalContextRef.current = nextContext;
+  }, []);
+
   const goLanding = useCallback(() => {
     setBackgroundActive(false);
     setGameEventCount(0);
     gameEventsRef.current = [];
+    signalContextRef.current = null;
     setDemoSummary(null);
     setDemoArtifacts(null);
     setReportError(null);
@@ -51,6 +57,7 @@ export default function PostulationDemoApp({ gameComponents } = {}) {
         completedDemo: summary,
         gameEvents: gameEventsRef.current,
         signalSnapshot,
+        signalContext: signalContextRef.current,
       });
       setDemoArtifacts(artifacts);
       setReportError(null);
@@ -71,7 +78,7 @@ export default function PostulationDemoApp({ gameComponents } = {}) {
           onContinue={() => setPhase('gameplay')}
           onBack={goLanding}
         >
-          <BackgroundSignalOrchestrator active={backgroundActive} eventCount={gameEventCount} onSnapshot={handleSnapshot} />
+          <BackgroundSignalOrchestrator active={backgroundActive} eventCount={gameEventCount} onSnapshot={handleSnapshot} onSignalContext={handleSignalContext} />
         </PostulationConsentSetup>
       </div>
     );
@@ -80,7 +87,7 @@ export default function PostulationDemoApp({ gameComponents } = {}) {
   if (phase === 'gameplay') {
     return (
       <div className="postulation-demo postulation-demo--gameplay" data-demo-phase="gameplay">
-        <BackgroundSignalOrchestrator active={backgroundActive} eventCount={gameEventCount} mode="hidden" onSnapshot={handleSnapshot} />
+        <BackgroundSignalOrchestrator active={backgroundActive} eventCount={gameEventCount} mode="hidden" onSnapshot={handleSnapshot} onSignalContext={handleSignalContext} />
         <PostulationGameStage
           gameComponents={gameComponents}
           signalSnapshot={signalSnapshot}
