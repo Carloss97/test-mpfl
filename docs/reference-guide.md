@@ -180,3 +180,16 @@ Resumen del avance acumulado: la app pasó de medir AUs/FACS y señales multimod
 | O-Q Validación/export | Completado | Dificultad adaptativa, escenarios sintéticos y export JSONL/CSV de investigación. |
 | R-X Assessment final | Completado | Batería guiada, sesión unificada, perfil de talento, payload final, reporte y bundle de entrega. |
 | Y-Z Cierre técnico | Cerrado técnicamente | Protocolo manual para cámara real + smoke sintético integral + suite/build/audit/scans. |
+
+## Demo MVP de postulaciones
+
+La nueva superficie `/postulaciones-demo` separa la experiencia de producto del dashboard técnico: la persona postulante ve landing, preparación de señales y juegos fullscreen; cámara, FaceMesh, AUs/FACS, gaze, postura y MoveNet corren en segundo plano cuando se habilitan.
+
+| Fase | Módulo | Estado | Resultado práctico |
+|---|---|---|---|
+| A — Shell producto | `postulation-demo/PostulationDemoApp.jsx` + `PostulationLanding.jsx` | Completada | Ruta aislada `/postulaciones-demo` sin router nuevo ni cambios en la app técnica. |
+| B — Setup/señales | `PostulationConsentSetup.jsx`, `BackgroundSignalOrchestrator.jsx`, `BehindTheScenesMiniHud.jsx` | Completada | Consentimiento, cámara local opcional, worker facial, MoveNet bajo FPS y HUD compacto de fondo. |
+| C — Game stage | `PostulationGameStage.jsx`, `PostulationProgressHeader.jsx`, `postulationDemoConfig.js` | Completada | Juegos principales en fullscreen con progreso y HUD discreto; eventos `game_event_v1` con `performance.now()`. |
+| D — Reporte v1 | `postulationDemoSessionBuilder.js` + `PostulationDemoApp.jsx` | D v1 implementada | Genera `assessmentSession`, `talentProfile`, payload final, reportes Markdown/HTML/JSON y bundle local desde agregados; D v2 queda para correlación/vector específicos. |
+
+Privacidad: la demo no muestra el dashboard técnico ni guarda video, frames, landmarks crudos, eventos crudos ni trayectorias de puntero. El reporte seguirá siendo de revisión humana y sin decisión automatizada.

@@ -23,7 +23,7 @@ export default function ReferenceGuide() {
         <div><span>Estado</span><strong>A-Z cerrado técnicamente</strong></div>
         <div><span>Uso principal</span><strong>Revisión humana</strong></div>
         <div><span>Privacidad</span><strong>Agregados, sin crudos</strong></div>
-        <div><span>Demo</span><strong>AC preview · AD modo demo · AE readiness · AF guion</strong></div>
+        <div><span>Demo</span><strong>Postulaciones A-C · AC-AF readiness</strong></div>
       </div>
 
       <Section title="Cómo leer esta guía y cerrar una sesión">
@@ -228,6 +228,20 @@ export default function ReferenceGuide() {
             <tr><td>Gobernanza</td><td>Declaración de revisión humana, sin decisión automática y sin export crudo.</td><td>Marco de uso responsable y privacy-by-design.</td></tr>
           </tbody>
         </table>
+      </Section>
+
+      <Section title="Demo MVP de postulaciones">
+        <p className="caption">La ruta <code>/postulaciones-demo</code> separa la experiencia producto del dashboard técnico: juegos al frente, señales locales en segundo plano y HUD discreto.</p>
+        <table className="guide-table">
+          <thead><tr><th>Fase</th><th>Módulo</th><th>Estado</th><th>Resultado práctico</th></tr></thead>
+          <tbody>
+            <tr><td>A — Shell producto</td><td>postulation-demo/PostulationDemoApp.jsx + PostulationLanding.jsx</td><td>Completada</td><td>Ruta aislada <code>/postulaciones-demo</code> sin router nuevo ni cambios en la app técnica.</td></tr>
+            <tr><td>B — Setup/señales</td><td>PostulationConsentSetup.jsx, BackgroundSignalOrchestrator.jsx, BehindTheScenesMiniHud.jsx</td><td>Completada</td><td>Consentimiento, cámara local opcional, worker facial, MoveNet bajo FPS y HUD compacto de fondo.</td></tr>
+            <tr><td>C — Game stage</td><td>PostulationGameStage.jsx, PostulationProgressHeader.jsx, postulationDemoConfig.js</td><td>Completada</td><td>Juegos principales en fullscreen con progreso y HUD discreto; eventos <code>game_event_v1</code> con <code>performance.now()</code>.</td></tr>
+            <tr><td>D — Reporte v1</td><td>postulationDemoSessionBuilder.js + PostulationDemoApp.jsx</td><td>D v1 implementada</td><td>Genera <code>assessmentSession</code>, perfil, payload final, reportes Markdown/HTML/JSON y bundle local desde agregados; D v2 queda para correlación/vector específicos.</td></tr>
+          </tbody>
+        </table>
+        <p className="caption">Privacidad: no muestra el dashboard técnico ni guarda video, frames, landmarks crudos, eventos crudos ni trayectorias de puntero. Reporte siempre para revisión humana, sin decisión automatizada.</p>
       </Section>
 
       <Section title="Revisión retroactiva A-Z">
