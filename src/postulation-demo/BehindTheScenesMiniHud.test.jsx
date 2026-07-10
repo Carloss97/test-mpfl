@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import BehindTheScenesMiniHud, { buildBehindTheScenesStatus } from './BehindTheScenesMiniHud.jsx';
 
@@ -39,5 +39,22 @@ describe('BehindTheScenesMiniHud', () => {
       readyCount: 0,
       totalCount: 5,
     });
+  });
+
+  it('opens a live explanation drawer with local inference steps and no reconstructive telemetry labels', () => {
+    render(<BehindTheScenesMiniHud snapshot={{ camera: 'ok', face: 'ok', signal: 'ok', events: 18, report: 'pending' }} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Ver qué pasa detrás/i }));
+
+    expect(screen.getByText(/LOCAL INFERENCE/i)).toBeInTheDocument();
+    expect(screen.getByText(/performance\.now\(\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/gameCorrelation\.aggregate/i)).toBeInTheDocument();
+    expect(screen.getByText(/assessment_feature_vector_v2/i)).toBeInTheDocument();
+    expect(screen.getByText(/No contiene datos reconstructivos/i)).toBeInTheDocument();
+
+    const visibleText = document.body.textContent;
+    for (const forbidden of ['landmarks', 'keypoints', 'rawGameEvents', 'pointerSamples']) {
+      expect(visibleText).not.toContain(forbidden);
+    }
   });
 });

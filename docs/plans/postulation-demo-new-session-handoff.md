@@ -3,8 +3,8 @@
 **Fecha:** 2026-07-09  
 **Repo:** `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/test-mpfl`  
 **Ruta demo:** `/postulaciones-demo`  
-**Estado actual:** Dv2 implementada — correlación/vector específicos de la ruta de postulaciones.
-**Próximo foco recomendado:** Fase F/E — pantalla de reporte productizada y HUD/drawer refinado.
+**Estado actual:** Fases E/F/G implementadas — HUD/drawer vivo, reporte productizado, descargas locales y fixture sintético `?fixture=1`.
+**Próximo foco recomendado:** Fase J/I — smoke manual completo, QA visual responsive y preparación de demo piloto.
 
 ---
 
@@ -19,7 +19,7 @@ Retomar el trabajo de la demo separada para postulaciones, tipo producto MVP:
 - sin dashboard técnico como superficie principal;
 - sin video, frames, landmarks crudos, eventos crudos ni trayectorias de puntero persistidas/exportadas.
 
-El siguiente agente debe continuar desde **Fase Dv2 completada** hacia la productización de descargas/reporte visual.
+El siguiente agente debe continuar desde **Fase E/G completadas** hacia smoke manual, QA visual y endurecimiento de demo piloto.
 
 ---
 
@@ -138,6 +138,56 @@ Implementado:
 - Usa `runEdgeAIInference()` v9.1 cuando hay face samples suficientes; si no, conserva fallback agregado/caveated sin inventar señal.
 - La salida final sigue exportando solo agregados: `assessmentSession.gameCorrelation.aggregate`, `payload.behavioral.gameCorrelationAggregate` y `featureVectorV2` sin `windows`, eventos crudos, landmarks, keypoints ni samples crudos.
 
+### Fase F — Report screen productizado
+
+Implementado:
+
+- `src/postulation-demo/PostulationReportScreen.jsx`
+- `src/postulation-demo/PostulationReportSummary.js`
+- `src/postulation-demo/PostulationReportTechnicalDrawer.jsx`
+- `src/postulation-demo/PostulationReportScreen.test.jsx`
+- integración en `src/postulation-demo/PostulationDemoApp.jsx`
+
+Capacidades:
+
+- pantalla “Reporte listo para revisión humana” en vez de preview Markdown crudo;
+- cards de calidad/validación, perfil de capacidades y resultados por juego;
+- drawer “Qué se procesó en segundo plano” con inferencia local, correlación, feature vector y gobernanza;
+- descargas locales: reporte Markdown, HTML, JSON, payload, manifiesto y bundle técnico;
+- descargas bloqueadas si validación no es OK;
+- lenguaje conservador: revisión humana, sin decisión automatizada, sin selección automática ni diagnóstico.
+
+### Fase E — HUD/drawer vivo
+
+Implementado:
+
+- `src/postulation-demo/BehindTheScenesMiniHud.jsx`
+- `src/postulation-demo/BehindTheScenesDrawer.jsx`
+- `src/postulation-demo/BehindTheScenesMiniHud.test.jsx`
+
+Capacidades:
+
+- HUD compacto en gameplay con cámara, rostro, señal, eventos y reporte;
+- botón `Ver qué pasa detrás` que abre drawer en vivo;
+- pipeline explícito: `performance.now()` → `LOCAL INFERENCE` → `gameCorrelation.aggregate` → `assessment_feature_vector_v2` → reporte para revisión humana;
+- mensaje `No contiene datos reconstructivos` y sin labels de datos crudos/reconstructivos.
+
+### Fase G — Fixture sintético
+
+Implementado:
+
+- `src/postulation-demo/postulationDemoFixture.js`
+- `src/postulation-demo/postulationDemoFixture.test.js`
+- integración `?fixture=1` en `PostulationDemoApp`
+- banner sintético en `PostulationReportScreen`
+
+Capacidades:
+
+- `/postulaciones-demo?fixture=1` abre directo la pantalla de reporte;
+- fixture deterministic local con cuatro juegos completos, correlación agregada, `assessment_feature_vector_v2`, reportes y bundle;
+- aviso visual `Datos sintéticos de demostración` / `Fixture local privacy-safe`;
+- no se mezcla con sesión real sin etiqueta visual.
+
 Caveat: si no hay cámara/muestras, no inventa calidad; genera reporte con:
 
 ```text
@@ -149,25 +199,15 @@ low_face_confidence
 
 ---
 
-## 3. Próximo trabajo: Dv2
+## 3. Próximo trabajo: Fase J/I
 
-Objetivo Dv2:
+Objetivo recomendado:
 
-1. Añadir histories bounded específicas de `/postulaciones-demo` para:
-   - face samples sanitizadas;
-   - gaze;
-   - postura;
-   - upperBody/MoveNet;
-   - eventos de juego normalizados.
-2. Construir `gameCorrelation.aggregate` real para esta ruta usando `src/telemetry/gameCorrelation.js`.
-3. Construir `assessment_feature_vector_v2` usando `src/telemetry/gameFeatureVector.js`.
-4. Reemplazar o enriquecer el Edge summary D v1 con una salida más alineada a `edgeAiEngine.js`, sin inventar señal.
-5. Integrar el vector/correlación en `postulationDemoSessionBuilder.js`.
-6. Añadir tests RED/GREEN:
-   - `postulationDemoSessionBuilder.test.js` debe exigir `gameCorrelation.aggregate` y `featureVectorV2` cuando hay datos suficientes;
-   - test con cámara ausente debe seguir pasando con caveats;
-   - privacidad: no `video`, `frames`, `landmarks`, `faceSamples`, `pointerSamples`, `rawGameEvents`, `windows` exportadas.
-7. Luego avanzar a productized downloads / Fase E HUD refinado.
+1. Ejecutar smoke manual con cámara permitida, cámara denegada, gameplay completo, drawer vivo, reporte final y descargas.
+2. Capturar QA visual en 1366×768, 1440×900 y 1920×1080 para landing/setup/gameplay/reporte/fixture.
+3. Ajustar responsive si HUD o reporte compiten con el juego.
+4. Preparar checklist de demo piloto y script final de reunión.
+5. Seguir posponiendo backend/LLM/dashboard HR hasta tener contrato de datos y aprobación de alcance.
 
 ---
 

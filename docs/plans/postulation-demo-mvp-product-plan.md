@@ -727,14 +727,14 @@ PostulationDemoApp.test.jsx: 5 tests passed
 
 # Fase E — Mini HUD “lo que pasa detrás”
 
-**Estado:** [ ] Por implementar  
+**Estado:** [x] Implementada — 2026-07-09
 **Prioridad:** 5  
 **Objetivo:** mostrar procesamiento en segundo plano sin convertir la demo en panel técnico.
 
 ## Archivos
 
-- Crear o completar: `src/postulation-demo/BehindTheScenesMiniHud.jsx`
-- Crear: `src/postulation-demo/BehindTheScenesDrawer.jsx`
+- Completado: `src/postulation-demo/BehindTheScenesMiniHud.jsx`
+- Creado: `src/postulation-demo/BehindTheScenesDrawer.jsx`
 - Test: `src/postulation-demo/BehindTheScenesMiniHud.test.jsx`
 
 ## HUD compacto
@@ -765,73 +765,119 @@ Señales locales
 - Nunca mostrar expresiones como conclusión psicológica.
 - Siempre etiquetar como observacional/local.
 
+## Implementado
+
+1. HUD compacto conserva estado de cámara, rostro, señal, eventos y reporte.
+2. Botón `Ver qué pasa detrás` abre drawer vivo sin salir del stage de juegos.
+3. Drawer muestra la ruta local: `performance.now()` → `LOCAL INFERENCE` → `gameCorrelation.aggregate` → `assessment_feature_vector_v2` → reporte para revisión humana.
+4. El detalle evita labels reconstructivos y mantiene el mensaje `No contiene datos reconstructivos`.
+5. CSS limita altura del HUD en gameplay y permite interacción sin tapar toda la pantalla.
+
+## Evidencia
+
+```bash
+NODE_ENV=test npx vitest run src/postulation-demo/BehindTheScenesMiniHud.test.jsx src/postulation-demo/postulationDemoFixture.test.js src/postulation-demo/PostulationDemoApp.test.jsx --pool=forks --maxWorkers=1 --reporter=default
+```
+
+Resultado inicial E/G:
+
+```text
+3 test files passed
+11 tests passed
+```
+
 ---
 
 # Fase F — Report screen pulido
 
-**Estado:** [ ] Por implementar  
+**Estado:** [x] Implementada — 2026-07-09
 **Prioridad:** 6  
 **Objetivo:** transformar el reporte técnico en una pantalla MVP atractiva para postulaciones.
 
 ## Archivos
 
-- Crear: `src/postulation-demo/PostulationReportScreen.jsx`
-- Crear: `src/postulation-demo/PostulationReportSummary.jsx`
-- Crear: `src/postulation-demo/PostulationReportTechnicalDrawer.jsx`
+- Creado: `src/postulation-demo/PostulationReportScreen.jsx`
+- Creado: `src/postulation-demo/PostulationReportSummary.js`
+- Creado: `src/postulation-demo/PostulationReportTechnicalDrawer.jsx`
 - Test: `src/postulation-demo/PostulationReportScreen.test.jsx`
+- Integrado: `src/postulation-demo/PostulationDemoApp.jsx`
 
-## Tareas
+## Implementado
 
-1. Test RED: renderiza “Reporte listo para revisión humana”.
-2. Mostrar cards de juegos completados.
-3. Mostrar perfil de habilidades observacionales.
-4. Mostrar calidad y caveats.
-5. Integrar descargas desde `buildLocalReportBundle()`.
-6. Añadir sección “Qué pasó detrás”.
-7. Mantener lenguaje conservador.
+1. Test RED confirmado por import faltante de `PostulationReportScreen.jsx`.
+2. Pantalla productizada con título “Reporte listo para revisión humana”, estado `OK privacy-safe`, calidad de sesión y caveats.
+3. Cards de `Perfil de capacidades` con score/confianza/evidencia por dimensión observacional.
+4. Cards de `Resultados por juego` con trials, accuracy, score y RT.
+5. Drawer “Qué se procesó en segundo plano” con inferencia local, correlación, feature vector y gobernanza sin mostrar datos crudos.
+6. Descargas de reporte local Markdown, HTML, JSON, payload, manifiesto y bundle técnico vía descriptors.
+7. `PostulationDemoApp` reemplaza el preview Markdown técnico por `PostulationReportScreen` y dispara descargas locales con Blob.
+8. Lenguaje conservador: revisión humana, sin decisión automatizada, sin selección automática ni diagnóstico.
+
+## Evidencia
+
+```bash
+NODE_ENV=test npx vitest run src/postulation-demo/PostulationReportScreen.test.jsx src/postulation-demo/PostulationDemoApp.test.jsx src/postulation-demo/postulationDemoSessionBuilder.test.js src/postulation-demo/BackgroundSignalOrchestrator.test.jsx --pool=forks --maxWorkers=1 --reporter=default
+```
+
+Resultado focal:
+
+```text
+4 test files passed
+14 tests passed
+```
 
 ## Criterios de éxito
 
-- La primera vista parece producto MVP.
-- El reporte técnico sigue disponible, pero no domina la UI.
-- No hay claims de decisión automática.
+- [x] La primera vista parece producto MVP.
+- [x] El reporte técnico sigue disponible, pero no domina la UI.
+- [x] No hay claims de decisión automática.
+- [x] Descargas locales quedan disponibles solo cuando la validación es OK.
 
 ---
 
 # Fase G — Modo fallback y demo fixture
 
-**Estado:** [ ] Por implementar  
+**Estado:** [x] Implementada — 2026-07-09
 **Prioridad:** 7  
 **Objetivo:** permitir una demo estable incluso si la cámara falla o la reunión no permite jugar todo.
 
 ## Archivos
 
-- Crear: `src/postulation-demo/postulationDemoFixture.js`
-- Crear: `src/postulation-demo/PostulationFallbackReport.jsx`
+- Creado: `src/postulation-demo/postulationDemoFixture.js`
+- Integrado: `src/postulation-demo/PostulationDemoApp.jsx`
+- Reutilizado: `src/postulation-demo/PostulationReportScreen.jsx`
 - Test: `src/postulation-demo/postulationDemoFixture.test.js`
 
 ## Tareas
 
-1. Crear fixture de payload final privacy-safe.
-2. Crear modo URL:
+1. [x] Crear fixture de payload final privacy-safe.
+2. [x] Crear modo URL:
 
 ```text
 /postulaciones-demo?fixture=1
 ```
 
-3. Mostrar aviso claro:
+3. [x] Mostrar aviso claro:
 
 ```text
 Datos sintéticos de demostración
 ```
 
-4. Prohibir mezclar fixture con sesión real sin etiqueta.
+4. [x] Prohibir mezclar fixture con sesión real sin etiqueta.
+
+## Implementado
+
+- `buildPostulationDemoFixture()` genera una sesión sintética determinística con cuatro juegos completos, correlación agregada, `assessment_feature_vector_v2`, reports y bundle local.
+- `isPostulationFixtureMode()` activa el modo solo con `?fixture=1`.
+- `PostulationDemoApp` inicia directamente en `report-preview` con el fixture cuando la URL lo pide.
+- `PostulationReportScreen` muestra banner `Datos sintéticos de demostración` y `Fixture local privacy-safe`.
+- El fixture se etiqueta en `artifacts.fixture` y no se mezcla con sesión real sin aviso visual.
 
 ## Criterios de éxito
 
-- Plan B usable en reuniones.
-- Fixture no contiene PII ni raw telemetry.
-- El usuario puede mostrar reporte si cámara falla.
+- [x] Plan B usable en reuniones.
+- [x] Fixture no contiene PII ni raw telemetry en artefactos exportados.
+- [x] El usuario puede mostrar reporte si cámara falla.
 
 ---
 

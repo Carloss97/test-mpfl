@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import PostulationDemoApp from './PostulationDemoApp.jsx';
 import { isPostulationDemoPath } from './postulationDemoRoute.js';
 
@@ -38,6 +38,10 @@ const MOCK_GAMES = {
   color_interference: MockGame,
   visual_search: MockGame,
 };
+
+afterEach(() => {
+  window.history.pushState({}, '', '/');
+});
 
 describe('PostulationDemoApp shell and flow', () => {
   it('detects the isolated postulation demo route without matching the technical app root', () => {
@@ -85,7 +89,7 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(screen.queryByText(/Dashboard/i)).not.toBeInTheDocument();
   });
 
-  it('generates a privacy-safe report preview after completing the mocked candidate game stage', () => {
+  it('generates a productized privacy-safe report screen after completing the mocked candidate game stage', () => {
     render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Comenzar demo de postulación/i }));
@@ -95,9 +99,22 @@ describe('PostulationDemoApp shell and flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /Completar color_interference/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar visual_search/i }));
 
-    expect(screen.getByRole('heading', { name: /Reporte generado/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Reporte listo para revisión humana/i })).toBeInTheDocument();
     expect(screen.getByText(/OK privacy-safe/i)).toBeInTheDocument();
-    expect(screen.getByText(/KRUMM — Reporte de Evaluación Gamificada/i)).toBeInTheDocument();
-    expect(screen.getByText(/payload validado/i)).toBeInTheDocument();
+    expect(screen.getByText(/Perfil de capacidades/i)).toBeInTheDocument();
+    expect(screen.getByText(/Resultados por juego/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Descargar reporte local/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Descargar bundle técnico/i })).toBeInTheDocument();
+  });
+
+  it('opens directly into a synthetic fixture report when ?fixture=1 is present', () => {
+    window.history.pushState({}, '', '/postulaciones-demo?fixture=1');
+
+    render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
+
+    expect(screen.getByRole('heading', { name: /Reporte listo para revisión humana/i })).toBeInTheDocument();
+    expect(screen.getByText(/Datos sintéticos de demostración/i)).toBeInTheDocument();
+    expect(screen.getByText(/Fixture local privacy-safe/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /KRUMM Postulaciones/i })).not.toBeInTheDocument();
   });
 });

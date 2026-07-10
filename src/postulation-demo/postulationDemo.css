@@ -466,6 +466,81 @@
   line-height: 1.45;
 }
 
+.postulation-demo__hud-toggle {
+  min-height: 38px;
+  border: 1px solid rgba(79, 70, 229, 0.18);
+  border-radius: 14px;
+  background: rgba(79, 70, 229, 0.08);
+  color: var(--postulation-primary-strong);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.postulation-demo__hud-drawer {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(79, 70, 229, 0.16);
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.postulation-demo__hud-drawer-head {
+  display: grid;
+  gap: 4px;
+}
+
+.postulation-demo__hud-drawer-head strong {
+  color: #1e293b;
+}
+
+.postulation-demo__hud-drawer-head span,
+.postulation-demo__hud-pipeline-step p {
+  color: var(--postulation-muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.postulation-demo__hud-pipeline {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.postulation-demo__hud-pipeline-step {
+  padding: 10px;
+  border-radius: 14px;
+  border-left: 4px solid #cbd5e1;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.postulation-demo__hud-pipeline-step--ok { border-left-color: var(--postulation-success); }
+.postulation-demo__hud-pipeline-step--warning { border-left-color: var(--postulation-warning); }
+.postulation-demo__hud-pipeline-step--pending { border-left-color: var(--postulation-accent); }
+
+.postulation-demo__hud-pipeline-step span {
+  display: block;
+  color: var(--postulation-primary-strong);
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.postulation-demo__hud-pipeline-step strong {
+  display: block;
+  margin-top: 4px;
+  color: #1e293b;
+  font-size: 0.84rem;
+}
+
+.postulation-demo__hud-pipeline-step p {
+  margin: 6px 0 0;
+}
+
 .postulation-demo__signal-orchestrator {
   display: grid;
   gap: 12px;
@@ -608,9 +683,333 @@
 
 .postulation-demo__game-hud-corner .postulation-demo__hud {
   background: rgba(255, 255, 255, 0.9);
+  max-height: min(78dvh, 720px);
+  overflow: auto;
+  pointer-events: auto;
+}
+
+.postulation-demo__report-screen {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 56px) 0 64px;
+  display: grid;
+  gap: 20px;
+}
+
+.postulation-demo__report-hero,
+.postulation-demo__governance-card,
+.postulation-demo__technical-drawer {
+  border: 1px solid var(--postulation-line);
+  border-radius: 32px;
+  background: var(--postulation-surface);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.postulation-demo__report-hero {
+  padding: clamp(26px, 5vw, 46px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  gap: clamp(18px, 4vw, 36px);
+  align-items: end;
+}
+
+.postulation-demo__report-hero h1 {
+  margin: 14px 0 14px;
+  max-width: 820px;
+  font-size: clamp(2.5rem, 7vw, 5.6rem);
+  line-height: 0.9;
+  letter-spacing: -0.075em;
+}
+
+.postulation-demo__report-hero p,
+.postulation-demo__report-section-head p,
+.postulation-demo__governance-card p,
+.postulation-demo__technical-drawer p {
+  margin: 0;
+  color: var(--postulation-muted);
+  line-height: 1.65;
+}
+
+.postulation-demo__report-status-card {
+  padding: 20px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(6, 182, 212, 0.1));
+  border: 1px solid rgba(79, 70, 229, 0.18);
+}
+
+.postulation-demo__report-status-card span {
+  display: inline-flex;
+  margin-bottom: 12px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.postulation-demo__report-status-card strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--postulation-primary-strong);
+  font-size: 1.05rem;
+  margin-bottom: 10px;
+}
+
+.postulation-demo__fixture-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 22px;
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(255, 255, 255, 0.84));
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+}
+
+.postulation-demo__fixture-banner strong {
+  color: #92400e;
+  font-size: 1rem;
+}
+
+.postulation-demo__fixture-banner span {
+  color: var(--postulation-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.postulation-demo__quality-grid,
+.postulation-demo__talent-grid,
+.postulation-demo__game-results-grid,
+.postulation-demo__technical-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.postulation-demo__quality-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.postulation-demo__quality-card,
+.postulation-demo__talent-card,
+.postulation-demo__game-result-card {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+}
+
+.postulation-demo__quality-card {
+  min-height: 98px;
+  padding: 16px;
+  display: grid;
+  align-content: space-between;
+  gap: 10px;
+}
+
+.postulation-demo__quality-card span,
+.postulation-demo__game-result-card span {
+  color: var(--postulation-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.postulation-demo__quality-card strong {
+  color: var(--postulation-primary-strong);
+  font-size: 1.22rem;
+  overflow-wrap: anywhere;
+}
+
+.postulation-demo__quality-card--ok { border-color: rgba(16, 185, 129, 0.34); }
+.postulation-demo__quality-card--warn { border-color: rgba(245, 158, 11, 0.36); }
+.postulation-demo__quality-card--danger { border-color: rgba(239, 68, 68, 0.36); }
+
+.postulation-demo__report-section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 8px;
+}
+
+.postulation-demo__report-section-head h2,
+.postulation-demo__governance-card h2,
+.postulation-demo__technical-drawer h3,
+.postulation-demo__talent-card h3,
+.postulation-demo__game-result-card h3 {
+  margin: 0;
+  letter-spacing: -0.025em;
+  color: #1e293b;
+}
+
+.postulation-demo__talent-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.postulation-demo__talent-card {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 14px;
+}
+
+.postulation-demo__talent-score {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: linear-gradient(135deg, var(--postulation-primary), var(--postulation-accent));
+  font-weight: 950;
+  font-size: 1.2rem;
+}
+
+.postulation-demo__talent-card p,
+.postulation-demo__talent-card li,
+.postulation-demo__game-result-card dd,
+.postulation-demo__game-result-card dt,
+.postulation-demo__technical-drawer li {
+  color: var(--postulation-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.postulation-demo__talent-card p {
+  margin: 8px 0 0;
+}
+
+.postulation-demo__talent-card ul,
+.postulation-demo__technical-drawer ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+.postulation-demo__game-results-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.postulation-demo__game-result-card {
+  padding: 18px;
+}
+
+.postulation-demo__game-result-card h3 {
+  margin-top: 10px;
+  min-height: 2.4em;
+}
+
+.postulation-demo__game-result-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+}
+
+.postulation-demo__game-result-card dt,
+.postulation-demo__game-result-card dd {
+  margin: 0;
+}
+
+.postulation-demo__game-result-card dd {
+  color: var(--postulation-primary-strong);
+  font-weight: 900;
+}
+
+.postulation-demo__governance-card {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(260px, 1.2fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.postulation-demo__caveat-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.postulation-demo__caveat-list span {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.postulation-demo__technical-drawer {
+  padding: 0;
+}
+
+.postulation-demo__technical-drawer summary {
+  cursor: pointer;
+  padding: 20px 22px;
+  color: var(--postulation-primary-strong);
+  font-weight: 950;
+  list-style-position: inside;
+}
+
+.postulation-demo__technical-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 0 22px 20px;
+}
+
+.postulation-demo__technical-grid > div {
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 20px;
+  background: rgba(248, 250, 252, 0.74);
+}
+
+.postulation-demo__download-actions,
+.postulation-demo__report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.postulation-demo__download-actions {
+  padding: 0 22px 22px;
+}
+
+.postulation-demo__download-actions button,
+.postulation-demo__report-actions button {
+  min-height: 46px;
+}
+
+.postulation-demo__download-actions button:disabled,
+.postulation-demo__report-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
 }
 
 @media (max-width: 900px) {
+  .postulation-demo__report-hero,
+  .postulation-demo__governance-card,
+  .postulation-demo__technical-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .postulation-demo__fixture-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .postulation-demo__quality-grid,
+  .postulation-demo__talent-grid,
+  .postulation-demo__game-results-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .postulation-demo__setup {
     grid-template-columns: 1fr;
   }
@@ -679,5 +1078,21 @@
 
   .postulation-demo__game-shell {
     padding: 10px;
+  }
+
+  .postulation-demo__quality-grid,
+  .postulation-demo__talent-grid,
+  .postulation-demo__game-results-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .postulation-demo__talent-card {
+    grid-template-columns: 1fr;
+  }
+
+  .postulation-demo__download-actions button,
+  .postulation-demo__report-actions button {
+    width: 100%;
+    justify-content: center;
   }
 }

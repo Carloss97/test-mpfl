@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import BehindTheScenesDrawer from './BehindTheScenesDrawer.jsx';
 
 const STATUS_LABEL = Object.freeze({
   ok: 'OK',
@@ -52,6 +53,7 @@ function StatusRow({ label, status, value }) {
 }
 
 export default function BehindTheScenesMiniHud({ snapshot }) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const status = buildBehindTheScenesStatus(snapshot);
   return (
     <aside className="postulation-demo__hud" aria-label="Procesamiento en segundo plano">
@@ -71,6 +73,15 @@ export default function BehindTheScenesMiniHud({ snapshot }) {
           {status.caveats.slice(0, 2).map((caveat) => <span key={caveat}>{caveat}</span>)}
         </div>
       )}
+      <button
+        type="button"
+        className="postulation-demo__hud-toggle"
+        aria-expanded={drawerOpen}
+        onClick={() => setDrawerOpen((open) => !open)}
+      >
+        {drawerOpen ? 'Ocultar detalle' : 'Ver qué pasa detrás'}
+      </button>
+      {drawerOpen && <BehindTheScenesDrawer status={status} />}
       <p className="postulation-demo__hud-note">Señales locales agregadas · revisión humana</p>
     </aside>
   );
