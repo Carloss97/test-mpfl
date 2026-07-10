@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KRUMM — Flujo, inferencia y roadmap HR</title>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #5b6472;
+      --paper: #ffffff;
+      --surface: #f6f8fc;
+      --line: #94a3b8;
+      --browser: #dff3ff;
+      --browser-stroke: #54a7d8;
+      --server: #f0ebff;
+      --server-stroke: #8b5cf6;
+      --hr: #ffdfb7;
+      --hr-stroke: #f59e0b;
+      --done: #169b62;
+      --work: #f59e0b;
+      --next: #2563eb;
+      --pending: #64748b;
+      --risk: #dc2626;
+      --future: #7c3aed;
+      --shadow: 0 18px 55px rgba(15, 23, 42, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top left, #eef6ff 0, rgba(238,246,255,0) 34rem), linear-gradient(180deg, #ffffff 0%, #f5f7fb 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .page { width: min(1840px, calc(100vw - 32px)); margin: 0 auto; padding: 28px 0 64px; }
+    header { display: grid; grid-template-columns: 1fr auto; gap: 22px; align-items: end; margin-bottom: 18px; }
+    .eyebrow { color: var(--future); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; font-weight: 900; }
+    h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.04; letter-spacing: -.035em; }
+    .subtitle { max-width: 1100px; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
+    .meta { text-align: right; color: var(--muted); font-size: 12px; line-height: 1.55; white-space: nowrap; }
+    code { background: #eef2ff; color: #3730a3; border-radius: 7px; padding: 1px 6px; font-size: 11px; }
+    .card { background: var(--paper); border: 1px solid #e2e8f0; border-radius: 28px; box-shadow: var(--shadow); overflow: hidden; }
+    .card.pad { padding: 22px; }
+    .diagram-shell { padding: 18px; }
+    svg { width: 100%; height: auto; display: block; }
+    .legend { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; padding: 14px 18px 2px; font-size: 12px; color: var(--muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 8px; }
+    .dot { width: 11px; height: 11px; display: inline-block; border-radius: 999px; }
+    .dot.done { background: var(--done); } .dot.work { background: var(--work); } .dot.next { background: var(--next); }
+    .dot.pending { background: var(--pending); } .dot.risk { background: var(--risk); } .dot.future { background: var(--future); }
+    h2 { margin: 0 0 12px; font-size: 21px; letter-spacing: -.02em; }
+    h3 { margin: 18px 0 9px; font-size: 15px; }
+    .grid2 { margin-top: 18px; display: grid; grid-template-columns: 1.05fr .95fr; gap: 18px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { border-bottom: 1px solid #e6edf5; padding: 9px 8px; text-align: left; vertical-align: top; }
+    th { background: #f8fafc; color: #334155; font-weight: 900; }
+    td { color: #2f3b4c; }
+    .pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 8px; color: white; font-weight: 900; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+    .pill.done { background: var(--done); } .pill.work { background: var(--work); } .pill.next { background: var(--next); }
+    .pill.pending { background: var(--pending); } .pill.risk { background: var(--risk); } .pill.future { background: var(--future); }
+    ul { margin: 8px 0 0 18px; padding: 0; color: #334155; font-size: 13px; line-height: 1.55; }
+    .roadmap { margin-top: 18px; display: grid; grid-template-columns: 1fr; gap: 18px; }
+    .kanban { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .lane { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 18px; padding: 12px; }
+    .lane h3 { margin: 0 0 10px; font-size: 13px; display: flex; align-items: center; justify-content: space-between; }
+    .task { background: white; border: 1px solid #dfe7f0; border-left: 5px solid var(--pending); border-radius: 13px; padding: 10px; margin-bottom: 9px; box-shadow: 0 6px 18px rgba(15,23,42,.06); }
+    .task.next { border-left-color: var(--next); } .task.work { border-left-color: var(--work); } .task.future { border-left-color: var(--future); } .task.risk { border-left-color: var(--risk); }
+    .task strong { display: block; font-size: 12px; margin-bottom: 4px; }
+    .task p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .gantt { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 18px; background: #fbfdff; }
+    .gantt-grid { min-width: 1280px; display: grid; grid-template-columns: 220px repeat(12, 1fr); }
+    .gantt-grid > div { border-bottom: 1px solid #e2e8f0; border-right: 1px solid #edf2f7; min-height: 42px; padding: 8px; font-size: 11px; color: #334155; }
+    .gantt-grid .head { background: #f1f5f9; font-weight: 900; text-align: center; }
+    .gantt-grid .row-title { font-weight: 800; background: white; }
+    .bar { height: 24px; border-radius: 999px; color: white; font-weight: 900; text-align: center; line-height: 24px; font-size: 10px; box-shadow: 0 6px 14px rgba(15,23,42,.13); }
+    .bar.done { background: var(--done); } .bar.next { background: var(--next); } .bar.work { background: var(--work); } .bar.future { background: var(--future); } .bar.risk { background: var(--risk); }
+    .plan-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .step { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px; }
+    .step strong { display: block; margin-bottom: 5px; }
+    .note { margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    @media print {
+      body { background: white; }
+      .page { width: 100%; padding: 10px; }
+      .card { box-shadow: none; break-inside: avoid; }
+      .grid2, .kanban, .plan-grid { grid-template-columns: 1fr 1fr; }
+      .gantt { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <div class="eyebrow">KRUMM · data flow · inferencia explícita · roadmap HR</div>
+        <h1>Arquitectura actual y plan de cierre: de inputs del postulante al dashboard de RR.HH.</h1>
+        <p class="subtitle">Diagrama mejorado del estado real de <code>/postulaciones-demo</code>. Distingue inferencia local en navegador, inferencia/LLM de servidor como etapa futura, reporte local actual, dashboard HR pendiente y sprint/Kanban/Gantt para completar el MVP hacia piloto.</p>
+      </div>
+      <div class="meta">
+        Repo: <code>test-mpfl</code><br />
+        Estado base: <code>Dv2</code><br />
+        No incluye commit/push
+      </div>
+    </header>
+
+    <section class="card diagram-shell" aria-label="Diagrama principal de flujo">
+      <svg viewBox="0 0 1820 1080" role="img" aria-labelledby="flowTitle flowDesc">
+        <title id="flowTitle">KRUMM data flow with local and server inference</title>
+        <desc id="flowDesc">Current and future data flow from candidate inputs through local inference, optional server inference, final report and HR dashboard.</desc>
+        <defs>
+          <marker id="arrowDark" markerWidth="13" markerHeight="13" refX="10" refY="6.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L11,6.5 L1,12 Z" fill="#111827" /></marker>
+          <marker id="arrowBlue" markerWidth="13" markerHeight="13" refX="10" refY="6.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L11,6.5 L1,12 Z" fill="#2563eb" /></marker>
+          <marker id="arrowPurple" markerWidth="13" markerHeight="13" refX="10" refY="6.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L11,6.5 L1,12 Z" fill="#7c3aed" /></marker>
+          <marker id="arrowGray" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L10,6 L1,11 Z" fill="#94a3b8" /></marker>
+          <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#0f172a" flood-opacity=".14" /></filter>
+          <style>
+            .title { font: 900 26px Inter, Arial, sans-serif; fill: #0f172a; letter-spacing: -.01em; }
+            .panel { font: 900 18px Inter, Arial, sans-serif; fill: #0f172a; letter-spacing: .04em; }
+            .caption { font: 700 10.5px Inter, Arial, sans-serif; fill: #64748b; }
+            .boxTitle { font: 900 12.5px Inter, Arial, sans-serif; fill: #111827; letter-spacing: .03em; }
+            .boxText { font: 650 10px Inter, Arial, sans-serif; fill: #475569; }
+            .mini { font: 700 9px Inter, Arial, sans-serif; fill: #64748b; }
+            .status { font: 900 8.5px Inter, Arial, sans-serif; fill: white; letter-spacing: .05em; }
+            .whiteBox { fill: white; stroke: #dbe5ef; stroke-width: 1.3; filter: url(#softShadow); }
+            .done { stroke: #169b62; stroke-width: 2.4; }
+            .work { stroke: #f59e0b; stroke-width: 2.4; }
+            .next { stroke: #2563eb; stroke-width: 2.4; }
+            .pending { stroke: #64748b; stroke-width: 2.4; stroke-dasharray: 8 6; }
+            .risk { stroke: #dc2626; stroke-width: 2.2; stroke-dasharray: 6 5; }
+            .flow { fill: none; stroke: #111827; stroke-width: 4; marker-end: url(#arrowDark); }
+            .flowBlue { fill: none; stroke: #2563eb; stroke-width: 3.5; marker-end: url(#arrowBlue); }
+            .flowPurple { fill: none; stroke: #7c3aed; stroke-width: 3.3; marker-end: url(#arrowPurple); }
+            .flowFuture { fill: none; stroke: #7c3aed; stroke-width: 3; stroke-dasharray: 9 8; marker-end: url(#arrowPurple); }
+            .flowGray { fill: none; stroke: #94a3b8; stroke-width: 2.2; marker-end: url(#arrowGray); }
+          </style>
+        </defs>
+
+        <rect x="0" y="0" width="1820" height="1080" rx="28" fill="#fbfdff" />
+        <text class="title" x="910" y="44" text-anchor="middle">KRUMM PRODUCT DATA FLOW: LOCAL INFERENCE NOW → SERVER INFERENCE + HR DASHBOARD NEXT</text>
+        <text class="caption" x="910" y="70" text-anchor="middle">El flujo actual termina en reportes locales para revisión humana. El servidor/LLM y dashboard HR están modelados como próximos bloques, no como capacidades ya productivas.</text>
+
+        <!-- panels -->
+        <rect x="240" y="110" width="890" height="790" rx="34" fill="#dff3ff" stroke="#54a7d8" stroke-width="2" />
+        <rect x="1160" y="110" width="300" height="790" rx="34" fill="#f0ebff" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="10 7" />
+        <rect x="1490" y="110" width="290" height="790" rx="34" fill="#ffdfb7" stroke="#f59e0b" stroke-width="2" />
+        <text class="panel" x="685" y="145" text-anchor="middle">USER BROWSER ENVIRONMENT — ZERO CLOUD</text>
+        <text class="caption" x="685" y="166" text-anchor="middle">Datos sensibles vivos en memoria local; solo agregados salen al reporte.</text>
+        <text class="panel" x="1310" y="145" text-anchor="middle">SERVER INFERENCE LANE</text>
+        <text class="caption" x="1310" y="166" text-anchor="middle">Pendiente/opcional para CV, LLM y HR API.</text>
+        <text class="panel" x="1635" y="145" text-anchor="middle">HR WORKSPACE</text>
+        <text class="caption" x="1635" y="166" text-anchor="middle">Dashboard recruiter pendiente.</text>
+
+        <!-- user -->
+        <circle cx="108" cy="238" r="56" fill="#fff" stroke="#cbd5e1" stroke-width="3" filter="url(#softShadow)" />
+        <circle cx="108" cy="214" r="20" fill="#1f2937" />
+        <path d="M69 276 C80 244,136 244,148 276" fill="#ec80aa" stroke="#1f2937" stroke-width="2" />
+        <text class="boxTitle" x="108" y="324" text-anchor="middle">POSTULANTE</text>
+        <text class="mini" x="108" y="341" text-anchor="middle">inputs humanos</text>
+
+        <!-- inputs -->
+        <g>
+          <rect class="whiteBox done" x="42" y="390" width="154" height="74" rx="16" />
+          <rect x="54" y="399" width="42" height="16" rx="8" fill="#169b62" /><text class="status" x="75" y="411" text-anchor="middle">DONE</text>
+          <text class="boxTitle" x="119" y="426" text-anchor="middle">Juegos</text>
+          <text class="mini" x="119" y="446" text-anchor="middle">click, respuesta, RT</text>
+        </g>
+        <g>
+          <rect class="whiteBox done" x="42" y="488" width="154" height="74" rx="16" />
+          <rect x="54" y="497" width="42" height="16" rx="8" fill="#169b62" /><text class="status" x="75" y="509" text-anchor="middle">DONE</text>
+          <text class="boxTitle" x="119" y="524" text-anchor="middle">Cámara</text>
+          <text class="mini" x="119" y="544" text-anchor="middle">opcional / local</text>
+        </g>
+        <g>
+          <rect class="whiteBox pending" x="42" y="586" width="154" height="74" rx="16" />
+          <rect x="54" y="595" width="54" height="16" rx="8" fill="#64748b" /><text class="status" x="81" y="607" text-anchor="middle">FALTA</text>
+          <text class="boxTitle" x="119" y="622" text-anchor="middle">CV + rol</text>
+          <text class="mini" x="119" y="642" text-anchor="middle">upload/parsing</text>
+        </g>
+
+        <!-- browser blocks -->
+        <g>
+          <rect class="whiteBox done" x="282" y="202" width="210" height="92" rx="18" />
+          <rect x="296" y="212" width="42" height="16" rx="8" fill="#169b62" /><text class="status" x="317" y="224" text-anchor="middle">DONE</text>
+          <text class="boxTitle" x="387" y="235" text-anchor="middle">1. Landing / Consent</text>
+          <text class="boxText" x="387" y="258" text-anchor="middle">PostulationDemoApp</text>
+          <text class="mini" x="387" y="276" text-anchor="middle">phase routing + camera consent</text>
+        </g>
+        <g>
+          <rect class="whiteBox done" x="282" y="330" width="250" height="170" rx="18" />
+          <rect x="296" y="340" width="42" height="16" rx="8" fill="#169b62" /><text class="status" x="317" y="352" text-anchor="middle">DONE</text>
+          <text class="boxTitle" x="407" y="364" text-anchor="middle">2. Captura y sincronización</text>
+          <text class="mini" x="407" y="389" text-anchor="middle">requestCameraWithFallback()</text>
+          <text class="mini" x="407" y="407" text-anchor="middle">FaceLandmarker worker</text>
+          <text class="mini" x="407" y="425" text-anchor="middle">estimateGaze()</text>
+          <text class="mini" x="407" y="443" text-anchor="middle">estimateUpperBodyPosture()</text>
+          <text class="mini" x="407" y="461" text-anchor="middle">MoveNet real low-FPS</text>
+          <text class="mini" x="407" y="479" text-anchor="middle">performance.now()</text>
+        </g>
+        <g>
+          <rect class="whiteBox done" x="570" y="202" width="245" height="150" rx="18" />
+          <rect x="584" y="212" width="42" height="16" rx="8" fill="#169b62" /><text class="status" x="605" y="224" text-anchor="middle">DONE</text>
+          <text class="boxTitle" x="693" y="237" text-anchor="middle">3. Buffers sanitizados</text>
+          <text class="mini" x="693" y="262" text-anchor="middle">faceSamplesRef[]</text>
+          <text class="mini" x="693" y="280" text-anchor="middle">gazeSamplesRef[]</text>
+          <text class="mini" x="693" y="298" text-anchor="middle">postureSamplesRef[]</text>
+          <text class="mini" x="693" y="316" text-anchor="middle">upperBodySamplesRef[]</text>
+          <text class="mini" x="693" y="334" text-anchor="middle">bounded signalContext</text>
+        </g>
+        <g>
+          <rect class="whiteBox done" x="570" y="392" width="245" height="138" rx="18" />
+          <rect x="584" y="402" width="42" height="16" rx="8" fill="#169b62" /><text class="status" x="605" y="414" text-anchor="middle">DONE</text>
+          <text class="boxTitle" x="693" y="428" text-anchor="middle">4. Game Stage</text>
+          <text class="mini" x="693" y="453" text-anchor="middle">Precision · Go/No-Go</text>
+          <text class="mini" x="693" y="471" text-anchor="middle">Color Interference · Visual Search</text>
+          <text class="mini" x="693" y="489" text-anchor="middle">game_event_v1</text>
+          <text class="mini" x="693" y="507" text-anchor="middle">completedDemo.blocks</text>
+        </g>
+
+        <!-- local inference highlighted -->
+        <g>
+          <rect x="854" y="184" width="240" height="236" rx="24" fill="#0f172a" stroke="#2563eb" stroke-width="3" filter="url(#softShadow)" />
+          <rect x="870" y="200" width="86" height="18" rx="9" fill="#2563eb" /><text class="status" x="913" y="213" text-anchor="middle">LOCAL IA</text>
+          <text x="974" y="242" text-anchor="middle" font-family="Inter, Arial" font-size="16" font-weight="900" fill="#fff">LOCAL INFERENCE</text>
+          <text x="974" y="264" text-anchor="middle" font-family="Inter, Arial" font-size="12" font-weight="800" fill="#bfdbfe">Browser / Edge AI</text>
+          <text x="974" y="300" text-anchor="middle" class="mini" fill="#cbd5e1">runEdgeAIInference()</text>
+          <text x="974" y="318" text-anchor="middle" class="mini" fill="#cbd5e1">gameCorrelation.aggregate</text>
+          <text x="974" y="336" text-anchor="middle" class="mini" fill="#cbd5e1">assessment_feature_vector_v2</text>
+          <text x="974" y="354" text-anchor="middle" class="mini" fill="#cbd5e1">talentProfile</text>
+          <text x="974" y="384" text-anchor="middle" class="mini" fill="#cbd5e1">Salida: señales observacionales</text>
+          <text x="974" y="402" text-anchor="middle" class="mini" fill="#cbd5e1">sin decisión automática</text>
+        </g>
+
+        <g>
+          <rect class="whiteBox risk" x="570" y="592" width="245" height="152" rx="18" />
+          <rect x="584" y="602" width="70" height="16" rx="8" fill="#dc2626" /><text class="status" x="619" y="614" text-anchor="middle">GUARD</text>
+          <text class="boxTitle" x="693" y="630" text-anchor="middle">Privacy Boundary</text>
+          <text class="mini" x="693" y="656" text-anchor="middle">NO video · NO frames</text>
+          <text class="mini" x="693" y="674" text-anchor="middle">NO landmarks/keypoints</text>
+          <text class="mini" x="693" y="692" text-anchor="middle">NO raw windows</text>
+          <text class="mini" x="693" y="710" text-anchor="middle">NO raw game event dump</text>
+          <text class="mini" x="693" y="728" text-anchor="middle">validateFinalAssessmentPayload()</text>
+        </g>
+
+        <g>
+          <rect class="whiteBox work" x="854" y="486" width="240" height="190" rx="24" />
+          <rect x="870" y="502" width="82" height="18" rx="9" fill="#f59e0b" /><text class="status" x="911" y="515" text-anchor="middle">LOCAL</text>
+          <text class="boxTitle" x="974" y="538" text-anchor="middle">Reporte actual</text>
+          <text class="mini" x="974" y="564" text-anchor="middle">Markdown / HTML / JSON</text>
+          <text class="mini" x="974" y="582" text-anchor="middle">local bundle + manifest</text>
+          <text class="mini" x="974" y="600" text-anchor="middle">quality + caveats</text>
+          <text class="mini" x="974" y="618" text-anchor="middle">10 dimensiones de talento</text>
+          <text class="mini" x="974" y="646" text-anchor="middle">Falta: pantalla final pulida</text>
+        </g>
+
+        <!-- server lane -->
+        <g>
+          <rect class="whiteBox pending" x="1185" y="205" width="250" height="214" rx="22" />
+          <rect x="1200" y="221" width="54" height="16" rx="8" fill="#64748b" /><text class="status" x="1227" y="233" text-anchor="middle">FALTA</text>
+          <text class="boxTitle" x="1310" y="255" text-anchor="middle">SERVER INFERENCE / LLM</text>
+          <text class="mini" x="1310" y="282" text-anchor="middle">CV parsing + role matching</text>
+          <text class="mini" x="1310" y="300" text-anchor="middle">LLM explicativo del reporte</text>
+          <text class="mini" x="1310" y="318" text-anchor="middle">normalización a schema HR</text>
+          <text class="mini" x="1310" y="336" text-anchor="middle">controles de prompts/modelo</text>
+          <text class="mini" x="1310" y="354" text-anchor="middle">human-review only</text>
+          <text class="mini" x="1310" y="388" text-anchor="middle">Entrada futura: CV + payload local</text>
+          <text class="mini" x="1310" y="406" text-anchor="middle">Salida futura: report_enriched_v1</text>
+        </g>
+        <g>
+          <rect class="whiteBox pending" x="1185" y="498" width="250" height="170" rx="22" />
+          <rect x="1200" y="514" width="54" height="16" rx="8" fill="#64748b" /><text class="status" x="1227" y="526" text-anchor="middle">FALTA</text>
+          <text class="boxTitle" x="1310" y="552" text-anchor="middle">HR API / Backend</text>
+          <text class="mini" x="1310" y="578" text-anchor="middle">submitAssessmentReport()</text>
+          <text class="mini" x="1310" y="596" text-anchor="middle">auth + tenant + consent</text>
+          <text class="mini" x="1310" y="614" text-anchor="middle">storage aggregate-only</text>
+          <text class="mini" x="1310" y="632" text-anchor="middle">retención/deleción/auditoría</text>
+          <text class="mini" x="1310" y="650" text-anchor="middle">export/share links</text>
+        </g>
+
+        <!-- HR blocks -->
+        <g>
+          <rect class="whiteBox work" x="1518" y="205" width="230" height="166" rx="22" />
+          <rect x="1534" y="221" width="82" height="18" rx="9" fill="#f59e0b" /><text class="status" x="1575" y="234" text-anchor="middle">LOCAL</text>
+          <text class="boxTitle" x="1633" y="260" text-anchor="middle">Talent Report</text>
+          <text class="mini" x="1633" y="286" text-anchor="middle">disponible como archivo local</text>
+          <text class="mini" x="1633" y="304" text-anchor="middle">revisión humana</text>
+          <text class="mini" x="1633" y="322" text-anchor="middle">evidencia + caveats</text>
+          <text class="mini" x="1633" y="340" text-anchor="middle">sin hire/reject</text>
+        </g>
+        <g>
+          <rect class="whiteBox pending" x="1518" y="420" width="230" height="232" rx="22" />
+          <rect x="1534" y="436" width="54" height="16" rx="8" fill="#64748b" /><text class="status" x="1561" y="448" text-anchor="middle">FALTA</text>
+          <text class="boxTitle" x="1633" y="473" text-anchor="middle">HR Dashboard</text>
+          <text class="mini" x="1633" y="500" text-anchor="middle">recruiter login</text>
+          <text class="mini" x="1633" y="518" text-anchor="middle">candidate list + filters</text>
+          <text class="mini" x="1633" y="536" text-anchor="middle">candidate detail/report viewer</text>
+          <text class="mini" x="1633" y="554" text-anchor="middle">comparison / shortlisting</text>
+          <text class="mini" x="1633" y="572" text-anchor="middle">download/share bundle</text>
+          <text class="mini" x="1633" y="590" text-anchor="middle">quality/caveat badges</text>
+          <text class="mini" x="1633" y="608" text-anchor="middle">audit + delete request</text>
+          <text class="mini" x="1633" y="626" text-anchor="middle">pilot-ready missing block</text>
+        </g>
+        <g>
+          <rect x="1518" y="716" width="230" height="118" rx="22" fill="#fff7ed" stroke="#fb923c" stroke-width="1.7" />
+          <text class="boxTitle" x="1633" y="746" text-anchor="middle">Final HR Output</text>
+          <text class="mini" x="1633" y="773" text-anchor="middle">candidate report</text>
+          <text class="mini" x="1633" y="791" text-anchor="middle">talent/capability profile</text>
+          <text class="mini" x="1633" y="809" text-anchor="middle">decision support, not decision</text>
+        </g>
+
+        <!-- flows -->
+        <path class="flowGray" d="M164 238 C205 218,236 224,282 236" />
+        <path class="flowGray" d="M196 426 C232 423,248 423,282 423" />
+        <path class="flowGray" d="M196 526 C238 506,248 466,282 446" />
+        <path class="flowPurple" d="M196 623 C418 790,928 790,1185 318" />
+        <path class="flow" d="M492 246 C535 246,535 246,570 246" />
+        <path class="flow" d="M532 416 C550 416,552 416,570 416" />
+        <path class="flowBlue" d="M815 276 C838 270,840 264,854 260" />
+        <path class="flowBlue" d="M815 460 C838 448,840 410,854 372" />
+        <path class="flowBlue" d="M815 668 C840 668,842 617,854 598" />
+        <path class="flow" d="M1094 314 C1118 314,1132 314,1160 314" />
+        <path class="flow" d="M1094 560 C1130 560,1145 560,1185 578" />
+        <path class="flow" d="M1094 314 C1230 274,1384 268,1518 276" />
+        <path class="flowFuture" d="M1435 312 C1468 312,1484 292,1518 292" />
+        <path class="flowFuture" d="M1435 582 C1470 582,1485 536,1518 536" />
+        <path class="flow" d="M1633 371 L1633 716" />
+
+        <!-- bottom note -->
+        <rect x="240" y="930" width="1540" height="108" rx="24" fill="#ffffff" stroke="#e2e8f0" />
+        <text class="boxTitle" x="272" y="964">Estado de arquitectura</text>
+        <text class="boxText" x="272" y="992">Ahora: inferencia local completa en navegador para reporte agregado. Próximo: pantalla final, descargas y fixture. Futuro HR: inferencia servidor/LLM con CV, API, persistencia aggregate-only y dashboard recruiter.</text>
+        <text class="boxText" x="272" y="1018">Regla no negociable: mantener privacy-safe estricto y lenguaje de revisión humana; no automatizar decisiones de contratación.</text>
+      </svg>
+      <div class="legend">
+        <span><i class="dot done"></i>Implementado/probado</span>
+        <span><i class="dot work"></i>Funciona local; falta UX</span>
+        <span><i class="dot next"></i>Siguiente sprint</span>
+        <span><i class="dot pending"></i>Pendiente</span>
+        <span><i class="dot risk"></i>Guardarraíl privacidad</span>
+        <span><i class="dot future"></i>Futuro/opcional</span>
+      </div>
+    </section>
+
+    <section class="grid2" aria-label="Variables detalladas y estado">
+      <article class="card pad">
+        <h2>Inputs, variables intermedias y salidas</h2>
+        <table>
+          <thead><tr><th>Bloque</th><th>Input / variable</th><th>Estado</th><th>Salida / uso</th></tr></thead>
+          <tbody>
+            <tr><td>Postulante</td><td>Clicks, respuestas, RT, score, outcome</td><td><span class="pill done">hecho</span></td><td><code>game_event_v1</code>, resumen por juego y <code>completedDemo.blocks</code>.</td></tr>
+            <tr><td>Postulante</td><td>Cámara local opcional</td><td><span class="pill done">hecho</span></td><td><code>MediaStream</code> transitorio; no persiste video/frames.</td></tr>
+            <tr><td>Postulante</td><td>CV, rol objetivo, metadata candidato</td><td><span class="pill pending">falta</span></td><td>Debe alimentar CV parser + server inference sin mezclar datos crudos con reporte local.</td></tr>
+            <tr><td>Captura facial</td><td>MediaPipe blendshapes + quality</td><td><span class="pill done">hecho</span></td><td><code>faceSamplesRef[]</code> sanitizado; AUs/FACS para inferencia local.</td></tr>
+            <tr><td>Gaze/postura</td><td>Landmarks transitorios</td><td><span class="pill done">hecho</span></td><td><code>gazeSamplesRef[]</code>, <code>postureSamplesRef[]</code>; landmarks no salen.</td></tr>
+            <tr><td>MoveNet</td><td>Keypoints transitorios</td><td><span class="pill done">hecho</span></td><td><code>upperBodySamplesRef[]</code>; keypoints removidos, sin fallback geométrico falso.</td></tr>
+            <tr><td>Inferencia local</td><td>face + gaze + posture + upperBody + game</td><td><span class="pill done">Dv2</span></td><td><code>runEdgeAIInference()</code>, <code>gameCorrelation.aggregate</code>, <code>assessment_feature_vector_v2</code>.</td></tr>
+            <tr><td>Sesión</td><td>Battery blocks + telemetry + Edge AI</td><td><span class="pill done">hecho</span></td><td><code>krumm_unified_assessment_session_v1</code> con governance y privacy validation.</td></tr>
+            <tr><td>Perfil</td><td>assessmentSession</td><td><span class="pill done">hecho</span></td><td><code>krumm_talent_profile_v1</code>: 10 dimensiones observacionales.</td></tr>
+            <tr><td>Reporte local</td><td>finalPayload + talentProfile</td><td><span class="pill work">local</span></td><td>Markdown/HTML/JSON + bundle local; falta pantalla y descargas productizadas.</td></tr>
+            <tr><td>Inferencia servidor</td><td>CV + payload local agregado</td><td><span class="pill pending">falta</span></td><td>LLM explicativo/enriquecimiento; debe ser opcional y con permisos/retención.</td></tr>
+            <tr><td>Dashboard HR</td><td>Reportes agregados persistidos</td><td><span class="pill pending">falta</span></td><td>Login recruiter, lista candidatos, filtros, detalle, comparación, descarga, auditoría.</td></tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="card pad">
+        <h2>Lectura del estado actual</h2>
+        <h3><span class="pill done">Trabajado y terminado</span></h3>
+        <ul>
+          <li>Ruta separada <code>/postulaciones-demo</code>, landing, setup, stage de juegos y reporte local.</li>
+          <li>Señales locales en segundo plano y Dv2: correlación agregada + vector v2.</li>
+          <li>Inferencia local explícita en navegador con Edge AI v9.1 cuando hay señal suficiente.</li>
+          <li>Validación privacy-safe y artefactos finales sin muestras crudas/reconstructivas.</li>
+        </ul>
+        <h3><span class="pill work">En trabajo inmediato</span></h3>
+        <ul>
+          <li>Reporte final productizado: pantalla bonita, cards, descargas y drawer técnico.</li>
+          <li>HUD detrás de escena con explicación visual de inferencia local.</li>
+          <li>Fixture sintético para demo estable sin cámara/juegos completos.</li>
+        </ul>
+        <h3><span class="pill pending">Falta para completar producto HR</span></h3>
+        <ul>
+          <li>CV/rol + inferencia servidor/LLM opcional.</li>
+          <li>Backend/API con almacenamiento aggregate-only, auth, auditoría y borrado.</li>
+          <li>Dashboard recruiter para acceder, filtrar, comparar y descargar resultados.</li>
+          <li>QA multi-dispositivo, legal/privacy/security y validación piloto.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="roadmap" aria-label="Sprint, Gantt y Kanban">
+      <article class="card pad">
+        <h2>Sprint / carta Gantt / Kanban de tareas restantes</h2>
+        <div class="gantt" aria-label="Carta Gantt de 12 semanas">
+          <div class="gantt-grid">
+            <div class="head">Bloque</div><div class="head">S1</div><div class="head">S2</div><div class="head">S3</div><div class="head">S4</div><div class="head">S5</div><div class="head">S6</div><div class="head">S7</div><div class="head">S8</div><div class="head">S9</div><div class="head">S10</div><div class="head">S11</div><div class="head">S12</div>
+            <div class="row-title">0. Base Dv2</div><div><div class="bar done">hecho</div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+            <div class="row-title">1. Report UX + descargas</div><div><div class="bar next">Fase F</div></div><div><div class="bar next">descargas</div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+            <div class="row-title">2. HUD/drawer + fixture</div><div></div><div><div class="bar next">HUD</div></div><div><div class="bar next">fixture</div></div><div><div class="bar work">QA visual</div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+            <div class="row-title">3. CV + server inference design</div><div></div><div></div><div><div class="bar future">CV schema</div></div><div><div class="bar future">parser</div></div><div><div class="bar future">LLM PoC</div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+            <div class="row-title">4. HR Dashboard frontend</div><div></div><div></div><div></div><div></div><div><div class="bar future">wireframes</div></div><div><div class="bar future">list/detail</div></div><div><div class="bar future">viewer</div></div><div></div><div></div><div></div><div></div><div></div>
+            <div class="row-title">5. Backend/API/storage</div><div></div><div></div><div></div><div></div><div></div><div><div class="bar future">contract</div></div><div><div class="bar future">API</div></div><div><div class="bar future">auth</div></div><div><div class="bar future">audit</div></div><div></div><div></div><div></div>
+            <div class="row-title">6. Pilot hardening</div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><div class="bar risk">security</div></div><div><div class="bar risk">privacy</div></div><div><div class="bar risk">device QA</div></div><div><div class="bar risk">pilot</div></div><div><div class="bar risk">docs</div></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card pad">
+        <h2>Kanban de cierre MVP</h2>
+        <div class="kanban">
+          <div class="lane"><h3>Done / base <span class="pill done">cerrado</span></h3>
+            <div class="task"><strong>Dv2 route-specific</strong><p>Correlation aggregate, feature vector v2, local Edge AI, privacy scan.</p></div>
+            <div class="task"><strong>Candidate stage</strong><p>Landing, setup, games, HUD básico y preview de reporte.</p></div>
+          </div>
+          <div class="lane"><h3>Next sprint <span class="pill next">S1-S2</span></h3>
+            <div class="task next"><strong>PostulationReportScreen</strong><p>Summary cards, skill profile, game results, caveats, governance.</p></div>
+            <div class="task next"><strong>Download bundle UX</strong><p>Botones de Markdown/HTML/JSON/manifest, validación y tests.</p></div>
+            <div class="task next"><strong>Behind-the-scenes drawer</strong><p>Explicar inferencia local, señales disponibles y límites privacy-safe.</p></div>
+          </div>
+          <div class="lane"><h3>Backlog priorizado <span class="pill pending">S3-S8</span></h3>
+            <div class="task future"><strong>Fixture sintético</strong><p><code>?fixture=1</code> para demo estable con datos etiquetados.</p></div>
+            <div class="task future"><strong>CV/rol schema</strong><p>Upload, parsing, alias/role target, sin mezclar raw con reporte.</p></div>
+            <div class="task future"><strong>HR dashboard</strong><p>Login, candidate list, detail/report viewer, filters, comparison.</p></div>
+            <div class="task future"><strong>Backend/API</strong><p>Submit, persistence aggregate-only, tenant/auth, audit, deletion.</p></div>
+          </div>
+          <div class="lane"><h3>Hardening/piloto <span class="pill risk">S8-S12</span></h3>
+            <div class="task risk"><strong>Security/privacy review</strong><p>Threat model, retention policy, DPIA/consent copy.</p></div>
+            <div class="task risk"><strong>Device/browser matrix</strong><p>Chrome/Edge, cámaras múltiples, low-light, laptop 1366×768.</p></div>
+            <div class="task risk"><strong>Pilot protocol</strong><p>Manual smoke, rubric, support, validation and caveat language.</p></div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="card pad" style="margin-top:18px;">
+      <h2>Plan recomendado replanteado</h2>
+      <div class="plan-grid">
+        <div class="step"><strong>1. Cerrar experiencia local end-to-end</strong>Implementar Fase F: reporte final visual, descargas y drawer. Esto convierte lo ya probado en una demo mostrable.</div>
+        <div class="step"><strong>2. Asegurar demo confiable</strong>Fixture sintético, QA visual, smoke manual con/sin cámara, runbook. Objetivo: no depender de condiciones de sala.</div>
+        <div class="step"><strong>3. Diseñar contrato HR antes de backend</strong>Definir JSON/API, permisos, retención y borrado. No construir dashboard sin contrato de datos estable.</div>
+        <div class="step"><strong>4. Añadir CV/rol como módulo aislado</strong>Primero schema + parsing local/fake, luego LLM server opcional. Mantener separación entre evidencia conductual y CV.</div>
+        <div class="step"><strong>5. Construir dashboard recruiter MVP</strong>Lista de candidatos, detalle, reporte, filtros, descargas, caveats y governance visible. Sin ranking automático.</div>
+        <div class="step"><strong>6. Endurecer para piloto</strong>Seguridad, privacy/legal, device/browser QA, protocolo piloto y validación psicométrica inicial.</div>
+      </div>
+      <p class="note">Orden recomendado: no saltar directo al servidor/LLM. Primero hacer excelente el reporte local y la demo reproducible; luego diseñar contrato HR; recién después implementar backend/dashboard.</p>
+    </section>
+  </main>
+</body>
+</html>
