@@ -447,14 +447,14 @@ Pendiente principal: botones/targets con contraste alto y estados claros en todo
 |---|---|---|---|
 | QA-001 | Se aumentó contraste de camera card y selector de cámara; borde/fondo/texto/focus más visibles. | [x] Validado en segunda pasada | [X ] PASS [ ] FAIL |
 | QA-002 | HUD/drawer ahora se vuelve estático bajo 1180px o altura menor a 820px; tiene max-height/scroll interno y copy más humano. | [x] Resuelto condicional: PASS si estático en baja resolución | [ X] PASS [ ] FAIL |
-| QA-003 | DG-0 refuerza tokens y contraste base de botones; requiere re-test visual en Interferencia. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-004 | DG-0 refuerza focus ring/estados; requiere re-test visual en Interferencia. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
+| QA-003 | DG-2 transforma Interferencia en tarjetas de color con helper, alto contraste y feedback inmediato. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
+| QA-004 | DG-2 diferencia tarjetas/focus/feedback; requiere re-test visual de estado seleccionado vs foco. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
 | QA-005 | Labels se hicieron más explícitos: `Pregunta N de M`, `Tipo: incongruente`, `Procesos listos N de M`, `Eventos capturados`, `Reporte: se generará al finalizar`. | [x] Validado en segunda pasada | [X ] PASS [ ] FAIL |
 | QA-006 | Logs clasificados: INFO/WARN MediaPipe/TFLite no críticos si no hay crash, chunk missing ni asset crítico fallido. | [x] Clasificado como no bloqueante | [X ] PASS [ ] FAIL |
 | QA-007 | DG-0 compacta hero/quality cards bajo altura <800px y españoliza labels visibles. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-008 | DG-0 agrega tokens de alto contraste y hooks CSS por juego; requiere re-test visual. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
+| QA-008 | DG-2/DG-3 refuerzan botones/targets/distractores: Stroop tarjetas y Visual Search tiles responsive. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
 | QA-009 | DG-0 añade `overflow-x: hidden` en stage y guardrails responsive; requiere smoke de overflow. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-010 | DG-1 inicia reemplazo dinámico con Go/No-Go como “Semáforo de impulso”; DG-2 pendiente. | [x] En progreso | [ ] PASS [ ] FAIL |
+| QA-010 | DG-1/DG-2/DG-3 implementados; queda DG-4 Precisión visomotora. | [x] En progreso | [ ] PASS [ ] FAIL |
 ![alt text](image-2.png)
 ![alt text](image-3.png)
 ![alt text](image-4.png)
@@ -472,6 +472,8 @@ Pendiente principal: botones/targets con contraste alto y estados claros en todo
 - [ X] Adjuntar `image-2.png` si se mantiene referencia o reemplazarla por screenshot real.
 - [ ] Re-test DG-0: botones/targets/chips con contraste alto.
 - [ ] Re-test DG-1: Go/No-Go “Semáforo de impulso” con GO/NO-GO claros.
+- [ ] Re-test DG-2: Interferencia cognitiva como tarjetas con feedback inmediato.
+- [ ] Re-test DG-3: Búsqueda visual con panel activo y tiles visibles.
 
 Notas segunda pasada:
 
@@ -483,7 +485,7 @@ Estado actualizado:
 - Pendiente principal: UI/UX de juegos. Las imágenes muestran botones, targets, chips y distractores demasiado pálidos; en baja resolución parecen deshabilitados o difíciles de distinguir.
 - Pendiente responsive: reproducir y corregir scroll horizontal bajo 1366×768 si persiste.
 - Pendiente reporte: compactar hero/labels bajo alturas <800px y mejorar consistencia de idioma.
-- Siguiente fase: DG-0 implementado para contraste/overflow/reporte compacto; DG-1 inició reemplazo dinámico con Go/No-Go como “Semáforo de impulso”. Próximo: DG-2 Interferencia cognitiva.
+- Siguiente fase: DG-0/DG-1/DG-2/DG-3 implementados. Próximo: DG-4 Precisión visomotora como ruta de precisión adaptativa, más re-test visual de contraste/overflow.
 ```
 
 ---
@@ -519,7 +521,7 @@ Funcionalmente la demo completa el flujo y no presenta bloqueo crítico. El draw
 Próxima acción acordada:
 
 ```text
-1. Re-test DG-0/DG-1 en navegador: contraste, overflow y Go/No-Go semáforo.
-2. Ejecutar DG-2: Interferencia cognitiva como Stroop interactivo de tarjetas.
+1. Re-test DG-0/DG-1/DG-2/DG-3 en navegador: contraste, overflow, semáforo, Stroop tarjetas y búsqueda visual.
+2. Ejecutar DG-4: Precisión visomotora como ruta de precisión adaptativa.
 3. Mantener `game_event_v1`, `gameCorrelation.aggregate`, `assessment_feature_vector_v2`, fixture y privacy-safe estricto.
 ```

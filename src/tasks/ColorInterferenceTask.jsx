@@ -60,6 +60,26 @@ export function buildColorInterferenceTrials({ count = 8 } = {}) {
   });
 }
 
+export function buildColorInterferenceChoiceCards(trial = {}) {
+  const expectedResponse = String(trial?.expectedResponse ?? trial?.ink ?? '').toLowerCase();
+  return COLOR_OPTIONS.map((option) => ({
+    ...option,
+    isExpected: option.value === expectedResponse,
+    ariaLabel: `Elegir tinta ${option.label}`,
+    className: `secondary color-interference-task__option color-interference-task__choice-card color-interference-task__choice-card--${option.value}`,
+  }));
+}
+
+export function buildColorInterferenceFeedback(scored = {}) {
+  const expectedLabel = labelForColor(scored.expectedResponse ?? scored.ink);
+  const correct = scored.correct === true;
+  return {
+    tone: correct ? 'correct' : 'incorrect',
+    label: correct ? 'Correcto' : 'Interferencia detectada',
+    detail: `Tinta esperada: ${expectedLabel}`,
+  };
+}
+
 export function scoreColorInterferenceResponse({ trial, response, shownAt = 0, timestamp = 0 } = {}) {
   const normalizedResponse = String(response ?? '').toLowerCase();
   const expectedResponse = String(trial?.expectedResponse ?? trial?.ink ?? '').toLowerCase();
@@ -108,12 +128,17 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
   const onCompleteRef = useRef(onComplete);
   const [current, setCurrent] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [feedback, setFeedback] = useState(null);
   const resultsRef = useRef([]);
   const shownAtRef = useRef(0);
   const trial = trials[current];
 
   useEffect(() => { emitRef.current = emit; }, [emit]);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+
+  useEffect(() => {
+    setFeedback(null);
+  }, [current]);
 
   useEffect(() => {
     if (!trial || finished) return;
@@ -138,11 +163,12 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
   }, [current, finished, trial]);
 
   const handleResponse = useCallback((response) => {
-    if (!trial || finished) return;
+    if (!trial || finished || feedback) return;
     const now = performance.now();
     const scored = scoreColorInterferenceResponse({ trial, response, shownAt: shownAtRef.current, timestamp: now });
     const nextResults = [...resultsRef.current, scored];
     resultsRef.current = nextResults;
+    setFeedback(buildColorInterferenceFeedback(scored));
     emitRef.current({
       eventType: 'response',
       trialId: trial.trialId,
@@ -165,14 +191,16 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
     });
     const next = current + 1;
     if (next >= trials.length) {
-      const summary = summarizeColorInterferenceResults(nextResults);
-      setFinished(true);
-      emitRef.current({ eventType: 'game_end', timestamp: now, gameState: { score: summary.meanScore, level: trials.length, difficulty: 'mixed_interference' } });
-      onCompleteRef.current?.(summary);
+      setTimeout(() => {
+        const summary = summarizeColorInterferenceResults(nextResults);
+        setFinished(true);
+        emitRef.current({ eventType: 'game_end', timestamp: performance.now(), gameState: { score: summary.meanScore, level: trials.length, difficulty: 'mixed_interference' } });
+        onCompleteRef.current?.(summary);
+      }, itiMs);
     } else {
       setTimeout(() => setCurrent(next), itiMs);
     }
-  }, [current, finished, itiMs, trial, trials.length]);
+  }, [current, feedback, finished, itiMs, trial, trials.length]);
 
   if (finished) {
     const summary = summarizeColorInterferenceResults(resultsRef.current);
@@ -185,19 +213,21 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
   }
 
   if (!trial) return null;
+  const choiceCards = buildColorInterferenceChoiceCards(trial);
 
   return (
     <div className="color-interference-task">
       <div className="task-header">
-        <span className="task-title">🌈 Interferencia color-palabra</span>
+        <span className="task-title">🌈 Tarjetas de color</span>
         <span className="task-progress">Pregunta {current + 1} de {trials.length}</span>
         <span className="task-progress">Tipo: {trial.congruent ? 'congruente' : 'incongruente'}</span>
       </div>
       <div className="task-area" data-testid="color-task-area" style={{ width: 520, minHeight: 260, display: 'grid', placeItems: 'center' }}>
-        <div style={{ textAlign: 'center', minWidth: 0, maxWidth: '100%' }}>
+        <div className="color-interference-task__card-stage">
+          <p className="color-interference-task__prompt">Elige la tinta, ignora el texto.</p>
           <div
             data-testid="color-stimulus"
-            className={classifyStimulusWordLength(trial.word)}
+            className={`color-interference-task__stimulus-card ${classifyStimulusWordLength(trial.word)}`}
             style={{
               color: cssForColor(trial.ink),
               fontSize: classifyStimulusWordLength(trial.word) === 'long-word' ? '2.5rem' : '3rem',
@@ -210,13 +240,19 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
             {trial.word}
           </div>
           <p className="caption">Selecciona el color de la tinta, no la palabra.</p>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {COLOR_OPTIONS.map((option) => (
-              <button key={option.value} type="button" className="secondary color-interference-task__option" onClick={() => handleResponse(option.value)}>
+          <div className="color-interference-task__choice-grid">
+            {choiceCards.map((option) => (
+              <button key={option.value} type="button" aria-label={option.ariaLabel} className={option.className} onClick={() => handleResponse(option.value)}>
                 {option.label}
               </button>
             ))}
           </div>
+          {feedback && (
+            <div className={`color-interference-task__feedback color-interference-task__feedback--${feedback.tone}`} role="status">
+              <strong>{feedback.label}</strong>
+              <span>{feedback.detail}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

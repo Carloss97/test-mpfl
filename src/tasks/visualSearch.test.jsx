@@ -1,7 +1,12 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import VisualSearchTask, { buildVisualSearchTrials, summarizeVisualSearchResults } from './VisualSearchTask.jsx';
+import VisualSearchTask, {
+  buildVisualSearchGridMetrics,
+  buildVisualSearchTilePresentation,
+  buildVisualSearchTrials,
+  summarizeVisualSearchResults,
+} from './VisualSearchTask.jsx';
 
 describe('VisualSearchTask helpers', () => {
   it('builds trials with one target among distractors and increasing set sizes', () => {
@@ -11,6 +16,34 @@ describe('VisualSearchTask helpers', () => {
     expect(trials[0].items.filter((item) => item.isTarget)).toHaveLength(1);
     expect(trials[1].items.length).toBeGreaterThan(trials[0].items.length);
     expect(trials.every((trial) => trial.items.every((item) => item.x >= 0 && item.x <= 600 && item.y >= 0 && item.y <= 400))).toBe(true);
+  });
+
+  it('computes responsive visual-search grid metrics for compact viewports', () => {
+    expect(buildVisualSearchGridMetrics({ width: 360, height: 240, setSize: 8 })).toMatchObject({
+      cols: 4,
+      rows: 2,
+      tileSize: 42,
+      compact: true,
+    });
+
+    expect(buildVisualSearchGridMetrics({ width: 720, height: 460, setSize: 16 })).toMatchObject({
+      cols: expect.any(Number),
+      rows: expect.any(Number),
+      compact: false,
+    });
+  });
+
+  it('builds target and distractor tile presentation with explicit affordance classes', () => {
+    expect(buildVisualSearchTilePresentation({ isTarget: true, symbol: '●' })).toMatchObject({
+      className: expect.stringContaining('visual-search-task__tile--target'),
+      ariaLabel: 'Objetivo: punto sólido',
+      label: '●',
+    });
+    expect(buildVisualSearchTilePresentation({ isTarget: false, symbol: '◇' })).toMatchObject({
+      className: expect.stringContaining('visual-search-task__tile--distractor'),
+      ariaLabel: 'Distractor: forma geométrica',
+      label: '◇',
+    });
   });
 
   it('summarizes visual search accuracy, RT and search efficiency', () => {
@@ -63,5 +96,16 @@ describe('VisualSearchTask', () => {
     expect(responseEvent.response.visualSearch).toMatchObject({ setSize: expect.any(Number), distractorCount: expect.any(Number), searchEfficiency: expect.any(Number) });
     expect(JSON.stringify(responseEvent)).not.toContain('items');
     expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ gameId: 'visual_search', totalTrials: 1, accuracy: 1 }));
+  });
+
+  it('renders visual search as a high-contrast active panel with responsive tiles', () => {
+    render(<VisualSearchTask active trialCount={1} width={360} height={240} onGameEvent={vi.fn()} onComplete={vi.fn()} />);
+
+    expect(screen.getByText(/Panel de búsqueda activa/i)).toBeInTheDocument();
+    expect(screen.getByText(/Objetivo: punto sólido/i)).toBeInTheDocument();
+    const target = screen.getByRole('button', { name: /Objetivo: punto sólido/i });
+    expect(target).toHaveClass('visual-search-task__tile');
+    expect(target).toHaveClass('visual-search-task__tile--target');
+    expect(target.style.width).toBe('42px');
   });
 });

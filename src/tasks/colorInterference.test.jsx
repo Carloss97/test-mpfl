@@ -2,6 +2,8 @@ import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ColorInterferenceTask, {
+  buildColorInterferenceChoiceCards,
+  buildColorInterferenceFeedback,
   buildColorInterferenceTrials,
   classifyStimulusWordLength,
   scoreColorInterferenceResponse,
@@ -23,6 +25,20 @@ describe('ColorInterferenceTask helpers', () => {
     expect(classifyStimulusWordLength('AMARILLO')).toBe('long-word');
   });
 
+  it('builds high-contrast response cards for Stroop choices', () => {
+    const trial = buildColorInterferenceTrials({ count: 1 })[0];
+    const cards = buildColorInterferenceChoiceCards(trial);
+
+    expect(cards).toHaveLength(4);
+    expect(cards[0]).toMatchObject({
+      label: 'Rojo',
+      value: 'red',
+      className: expect.stringContaining('color-interference-task__choice-card'),
+      ariaLabel: 'Elegir tinta Rojo',
+    });
+    expect(cards.find((card) => card.isExpected)).toMatchObject({ value: trial.expectedResponse });
+  });
+
   it('scores correct/incorrect responses and computes conflict cost', () => {
     const congruent = { trialId: 'c', word: 'ROJO', ink: 'red', expectedResponse: 'red', congruent: true };
     const incongruent = { trialId: 'i', word: 'AMARILLO', ink: 'green', expectedResponse: 'green', congruent: false };
@@ -35,6 +51,19 @@ describe('ColorInterferenceTask helpers', () => {
       scoreColorInterferenceResponse({ trial: incongruent, response: 'green', shownAt: 0, timestamp: 380 }),
     ]);
     expect(summary).toMatchObject({ totalTrials: 2, accuracy: 1, congruentAccuracy: 1, incongruentAccuracy: 1, conflictCostMs: 180 });
+  });
+
+  it('builds immediate feedback copy for correct and incorrect Stroop responses', () => {
+    expect(buildColorInterferenceFeedback({ correct: true, expectedResponse: 'red' })).toMatchObject({
+      tone: 'correct',
+      label: 'Correcto',
+      detail: 'Tinta esperada: Rojo',
+    });
+    expect(buildColorInterferenceFeedback({ correct: false, expectedResponse: 'green' })).toMatchObject({
+      tone: 'incorrect',
+      label: 'Interferencia detectada',
+      detail: 'Tinta esperada: Verde',
+    });
   });
 });
 
@@ -88,5 +117,26 @@ describe('ColorInterferenceTask', () => {
     expect(responses[1].response.interference).toMatchObject({ congruent: false, expectedResponse: 'green' });
     expect(JSON.stringify(responses)).not.toContain('samples');
     expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ gameId: 'color_interference', totalTrials: 2, accuracy: 1, conflictCostMs: expect.any(Number) }));
+  });
+
+  it('renders the Stroop game as high-contrast cards with immediate feedback', async () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+
+    render(<ColorInterferenceTask active trialCount={2} itiMs={200} onGameEvent={vi.fn()} onComplete={vi.fn()} />);
+
+    expect(screen.getByText(/Tarjetas de color/i)).toBeInTheDocument();
+    expect(screen.getByText(/Elige la tinta, ignora el texto/i)).toBeInTheDocument();
+
+    const rojo = screen.getByRole('button', { name: /Elegir tinta Rojo/i });
+    expect(rojo).toHaveClass('color-interference-task__choice-card');
+
+    await act(async () => {
+      now = 220;
+      fireEvent.click(rojo);
+    });
+
+    expect(screen.getByText(/Correcto/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tinta esperada: Rojo/i)).toBeInTheDocument();
   });
 });

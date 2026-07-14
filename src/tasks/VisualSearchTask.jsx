@@ -19,9 +19,38 @@ function distance(a, b) {
   return Math.hypot(Number(b.x) - Number(a.x), Number(b.y) - Number(a.y));
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+export function buildVisualSearchGridMetrics({ width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT, setSize = 8 } = {}) {
+  const safeWidth = Math.max(260, Number(width) || DEFAULT_WIDTH);
+  const safeHeight = Math.max(200, Number(height) || DEFAULT_HEIGHT);
+  const safeSetSize = Math.max(1, Math.floor(Number(setSize) || 8));
+  const cols = Math.ceil(Math.sqrt(safeSetSize * (safeWidth / Math.max(1, safeHeight))));
+  const rows = Math.ceil(safeSetSize / cols);
+  const cellW = safeWidth / cols;
+  const cellH = safeHeight / rows;
+  const tileSize = clamp(Math.floor(Math.min(cellW, cellH) * 0.47), 42, 64);
+  return {
+    cols,
+    rows,
+    tileSize,
+    compact: safeWidth < 480 || safeHeight < 320,
+  };
+}
+
+export function buildVisualSearchTilePresentation(item = {}) {
+  const target = item.isTarget === true;
+  return {
+    label: item.symbol ?? (target ? TARGET_SYMBOL : '○'),
+    ariaLabel: target ? 'Objetivo: punto sólido' : 'Distractor: forma geométrica',
+    className: `visual-search-task__item visual-search-task__tile ${target ? 'visual-search-task__tile--target visual-search-task__item--target' : 'visual-search-task__tile--distractor visual-search-task__item--distractor'}`,
+  };
+}
+
 function gridPositions(width, height, count) {
-  const cols = Math.ceil(Math.sqrt(count * (width / Math.max(1, height))));
-  const rows = Math.ceil(count / cols);
+  const { cols, rows } = buildVisualSearchGridMetrics({ width, height, setSize: count });
   const cellW = width / cols;
   const cellH = height / rows;
   return Array.from({ length: count }, (_, index) => {
@@ -40,6 +69,7 @@ export function buildVisualSearchTrials({ width = DEFAULT_WIDTH, height = DEFAUL
   const trialCount = Math.max(1, Math.floor(Number(count) || DEFAULT_TRIAL_COUNT));
   return Array.from({ length: trialCount }, (_, trialIndex) => {
     const setSize = 8 + (trialIndex % 4) * 4;
+    const metrics = buildVisualSearchGridMetrics({ width: safeWidth, height: safeHeight, setSize });
     const positions = gridPositions(safeWidth, safeHeight, setSize);
     const targetIndex = (trialIndex * 5 + 3) % setSize;
     const items = positions.map((position, index) => {
@@ -51,6 +81,7 @@ export function buildVisualSearchTrials({ width = DEFAULT_WIDTH, height = DEFAUL
         isTarget,
         symbol: isTarget ? TARGET_SYMBOL : DISTRACTOR_SYMBOLS[(index + trialIndex) % DISTRACTOR_SYMBOLS.length],
         color: isTarget ? '#7df0cb' : '#9fb0c2',
+        tileSize: metrics.tileSize,
       };
     });
     return {
@@ -61,6 +92,7 @@ export function buildVisualSearchTrials({ width = DEFAULT_WIDTH, height = DEFAUL
       distractorCount: setSize - 1,
       target: items[targetIndex],
       items,
+      grid: metrics,
     };
   });
 }
@@ -192,33 +224,41 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
         <span className="task-progress">Panel {current + 1} de {trials.length}</span>
         <span className="task-progress">{trial.setSize} estímulos</span>
       </div>
+      <div className="visual-search-task__panel-brief">
+        <strong>Panel de búsqueda activa</strong>
+        <span>Objetivo: punto sólido</span>
+      </div>
       <p className="caption" style={{ margin: '4px 0 8px' }}>
         Encuentra el punto sólido entre distractores. Mide eficiencia de búsqueda, distracción y precisión bajo carga visual.
       </p>
       <div className="task-area" data-testid="visual-search-area" style={{ width, height, position: 'relative', cursor: 'pointer' }}>
-        {trial.items.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            data-testid={item.isTarget ? 'visual-search-target' : 'visual-search-distractor'}
-            data-x={item.x}
-            data-y={item.y}
-            className={`visual-search-task__item ${item.isTarget ? 'visual-search-task__item--target' : 'visual-search-task__item--distractor'}`}
-            aria-label={item.isTarget ? 'Objetivo de búsqueda visual' : 'Distractor de búsqueda visual'}
-            onClick={(event) => handleItemClick(event, item)}
-            style={{
-              position: 'absolute',
-              left: item.x - 16,
-              top: item.y - 16,
-              width: 32,
-              height: 32,
-              fontSize: '1.2rem',
-              fontWeight: 900,
-            }}
-          >
-            {item.symbol}
-          </button>
-        ))}
+        {trial.items.map((item) => {
+          const presentation = buildVisualSearchTilePresentation(item);
+          const tileSize = Number(item.tileSize ?? trial.grid?.tileSize ?? 42);
+          return (
+            <button
+              key={item.id}
+              type="button"
+              data-testid={item.isTarget ? 'visual-search-target' : 'visual-search-distractor'}
+              data-x={item.x}
+              data-y={item.y}
+              className={presentation.className}
+              aria-label={presentation.ariaLabel}
+              onClick={(event) => handleItemClick(event, item)}
+              style={{
+                position: 'absolute',
+                left: item.x - tileSize / 2,
+                top: item.y - tileSize / 2,
+                width: tileSize,
+                height: tileSize,
+                fontSize: `${Math.max(1.2, tileSize / 28)}rem`,
+                fontWeight: 900,
+              }}
+            >
+              {presentation.label}
+            </button>
+          );
+        })}
         {feedback && (
           <div className="trial-feedback" style={{ left: '50%', top: '50%' }}>
             <span style={{ fontSize: '2rem' }}>{feedback.correct ? '✓' : '✗'}</span>

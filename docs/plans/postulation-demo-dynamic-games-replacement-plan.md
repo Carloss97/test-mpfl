@@ -256,7 +256,7 @@ TDD:
 
 ### Fase DG-2 — Reemplazo de Interferencia cognitiva
 
-**Estado:** [ ] Pendiente — siguiente fase recomendada.
+**Estado:** [x] Implementada — Stroop como tarjetas interactivas de alto contraste, helper `buildColorInterferenceChoiceCards()`, feedback inmediato `buildColorInterferenceFeedback()`, y contratos de scoring/telemetry preservados.
 
 Motivo: impacto directo en la captura principal de referencia y contrastes.
 
@@ -269,6 +269,8 @@ TDD:
 
 ### Fase DG-3 — Reemplazo de Búsqueda visual
 
+**Estado:** [x] Implementada — panel de búsqueda activa, objetivo explícito, tiles responsive de alto contraste con `buildVisualSearchGridMetrics()` y `buildVisualSearchTilePresentation()`, manteniendo click-distance agregado y sin exportar grillas/items crudos.
+
 Motivo: requiere diseño de tiles/set size y validación de visibilidad.
 
 TDD:
@@ -279,6 +281,8 @@ TDD:
 - Fit en 1366×768/1280×720.
 
 ### Fase DG-4 — Reemplazo de Precisión visomotora
+
+**Estado:** [ ] Pendiente — siguiente fase recomendada.
 
 Motivo: mayor complejidad por path/target/Fitts, pero alto valor demo.
 
