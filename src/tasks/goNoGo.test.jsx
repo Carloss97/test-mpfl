@@ -1,7 +1,12 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import GoNoGoTask, { buildGoNoGoTrials, scoreGoNoGoResponse, summarizeGoNoGoResults } from './GoNoGoTask.jsx';
+import GoNoGoTask, {
+  buildGoNoGoCuePresentation,
+  buildGoNoGoTrials,
+  scoreGoNoGoResponse,
+  summarizeGoNoGoResults,
+} from './GoNoGoTask.jsx';
 
 describe('GoNoGoTask helpers', () => {
   it('builds deterministic GO/NO-GO trials with both cue types', () => {
@@ -37,6 +42,24 @@ describe('GoNoGoTask helpers', () => {
       commissionErrorRate: 0.5,
       omissionErrorRate: 0.5,
       correctGoRT: 220,
+    });
+  });
+
+  it('builds dynamic semaphore presentation copy without changing inhibition semantics', () => {
+    expect(buildGoNoGoCuePresentation({ cue: 'GO', responseRequired: true })).toMatchObject({
+      state: 'go',
+      heading: 'Semáforo de impulso',
+      instruction: 'Pulsa responder solo cuando aparezca GO.',
+      buttonLabel: 'Responder ahora',
+      cueClassName: 'go-nogo-task__cue--go',
+    });
+
+    expect(buildGoNoGoCuePresentation({ cue: 'NO-GO', responseRequired: false })).toMatchObject({
+      state: 'no-go',
+      heading: 'Semáforo de impulso',
+      instruction: 'NO-GO: espera sin pulsar para inhibir la respuesta.',
+      buttonLabel: 'No pulsar · esperar',
+      cueClassName: 'go-nogo-task__cue--no-go',
     });
   });
 });
@@ -91,5 +114,25 @@ describe('GoNoGoTask', () => {
     expect(responses[1].response.inhibition).toMatchObject({ responseRequired: false, cue: 'NO-GO' });
     expect(JSON.stringify(responses)).not.toContain('samples');
     expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ gameId: 'go_nogo', totalTrials: 2, accuracy: 1 }));
+  });
+
+  it('shows dynamic semaphore instructions for GO and NO-GO states', async () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+
+    render(<GoNoGoTask active trialCount={2} stimulusMs={300} itiMs={20} onGameEvent={vi.fn()} onComplete={vi.fn()} />);
+
+    expect(screen.getByText(/Semáforo de impulso/i)).toBeInTheDocument();
+    expect(screen.getByText(/Pulsa responder solo cuando aparezca GO/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Responder ahora/i })).toHaveClass('go-nogo-task__response');
+
+    await act(async () => {
+      now = 160;
+      fireEvent.click(screen.getByRole('button', { name: /Responder ahora/i }));
+      vi.advanceTimersByTime(25);
+    });
+
+    expect(screen.getByText(/NO-GO: espera sin pulsar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /No pulsar · esperar/i })).toHaveAttribute('data-state', 'no-go');
   });
 });

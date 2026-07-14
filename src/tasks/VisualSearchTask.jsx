@@ -189,7 +189,7 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
     <div className="visual-search-task">
       <div className="task-header">
         <span className="task-title">🔎 Búsqueda visual</span>
-        <span className="task-progress">{current + 1}/{trials.length}</span>
+        <span className="task-progress">Panel {current + 1} de {trials.length}</span>
         <span className="task-progress">{trial.setSize} estímulos</span>
       </div>
       <p className="caption" style={{ margin: '4px 0 8px' }}>
@@ -203,6 +203,7 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
             data-testid={item.isTarget ? 'visual-search-target' : 'visual-search-distractor'}
             data-x={item.x}
             data-y={item.y}
+            className={`visual-search-task__item ${item.isTarget ? 'visual-search-task__item--target' : 'visual-search-task__item--distractor'}`}
             aria-label={item.isTarget ? 'Objetivo de búsqueda visual' : 'Distractor de búsqueda visual'}
             onClick={(event) => handleItemClick(event, item)}
             style={{
@@ -211,10 +212,6 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
               top: item.y - 16,
               width: 32,
               height: 32,
-              border: '1px solid rgba(255,255,255,0.18)',
-              borderRadius: '10px',
-              background: item.isTarget ? 'rgba(77,212,172,0.16)' : 'rgba(255,255,255,0.04)',
-              color: item.color,
               fontSize: '1.2rem',
               fontWeight: 900,
             }}

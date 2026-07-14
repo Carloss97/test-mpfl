@@ -26,10 +26,10 @@ function GameCard({ game }) {
       <span>{game.status === 'not_completed' ? 'Pendiente' : 'Completado'}</span>
       <h3>{game.label}</h3>
       <dl>
-        <div><dt>Trials</dt><dd>{game.trialCount}</dd></div>
-        <div><dt>Accuracy</dt><dd>{game.accuracy}</dd></div>
-        <div><dt>Score</dt><dd>{game.score}</dd></div>
-        <div><dt>RT</dt><dd>{game.meanRt}</dd></div>
+        <div><dt>Ensayos</dt><dd>{game.trialCount}</dd></div>
+        <div><dt>Precisión</dt><dd>{game.accuracy}</dd></div>
+        <div><dt>Puntaje</dt><dd>{game.score}</dd></div>
+        <div><dt>Tiempo</dt><dd>{game.meanRt}</dd></div>
       </dl>
     </article>
   );

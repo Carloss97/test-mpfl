@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GameRuntime from './GameRuntime.jsx';
 
 const COLOR_OPTIONS = Object.freeze([
-  { value: 'red', label: 'Rojo', word: 'ROJO', css: '#ff6b6b' },
-  { value: 'blue', label: 'Azul', word: 'AZUL', css: '#74a7ff' },
-  { value: 'green', label: 'Verde', word: 'VERDE', css: '#4dd4ac' },
-  { value: 'yellow', label: 'Amarillo', word: 'AMARILLO', css: '#ffd166' },
+  { value: 'red', label: 'Rojo', word: 'ROJO', css: '#dc2626' },
+  { value: 'blue', label: 'Azul', word: 'AZUL', css: '#2563eb' },
+  { value: 'green', label: 'Verde', word: 'VERDE', css: '#059669' },
+  { value: 'yellow', label: 'Amarillo', word: 'AMARILLO', css: '#b45309' },
 ]);
 
 const TRIAL_PATTERN = Object.freeze([

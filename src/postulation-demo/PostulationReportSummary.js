@@ -24,7 +24,7 @@ export function getPostulationQualityCards(artifacts = null) {
     { label: 'Muestras', value: String(quality.sampleCount ?? 0), tone: safeNumber(quality.sampleCount) >= 20 ? 'ok' : 'warn' },
     { label: 'Rostro presente', value: pct(quality.facePresenceRatio), tone: safeNumber(quality.facePresenceRatio) >= 0.7 ? 'ok' : 'warn' },
     { label: 'Confianza facial', value: pct(quality.meanConfidence), tone: safeNumber(quality.meanConfidence) >= 0.55 ? 'ok' : 'warn' },
-    { label: 'Trials correlacionados', value: String(quality.correlatedTrialCount ?? 0), tone: safeNumber(quality.correlatedTrialCount) > 0 ? 'ok' : 'warn' },
+    { label: 'Ensayos correlacionados', value: String(quality.correlatedTrialCount ?? 0), tone: safeNumber(quality.correlatedTrialCount) > 0 ? 'ok' : 'warn' },
   ];
 }
 

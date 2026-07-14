@@ -224,7 +224,7 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
     <div className="precision-targeting-task">
       <div className="task-header">
         <span className="task-title">🎯 Precisión visomotora · Fitts Law</span>
-        <span className="task-progress">{current + 1}/{trials.length}</span>
+        <span className="task-progress">Objetivo {current + 1} de {trials.length}</span>
         <span className="task-progress">Fitts ID {trial.fittsId.toFixed(2)}</span>
       </div>
       <p className="caption" style={{ margin: '4px 0 8px' }}>
@@ -241,6 +241,7 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
         <button
           type="button"
           data-testid="precision-start-pad"
+          className="precision-targeting-task__start-pad"
           onClick={beginMovement}
           disabled={phase !== 'ready'}
           style={{
@@ -250,9 +251,6 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
             width: 56,
             height: 56,
             borderRadius: '999px',
-            border: '2px solid #7df0cb',
-            background: phase === 'ready' ? 'rgba(77,212,172,0.18)' : 'rgba(77,212,172,0.06)',
-            color: '#dff8ff',
             fontWeight: 800,
             zIndex: 2,
           }}
@@ -271,7 +269,7 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
               <line x1={trial.origin.x} y1={trial.origin.y} x2={trial.target.x} y2={trial.target.y} stroke="#7df0cb" strokeDasharray="6 6" strokeWidth="2" />
             </svg>
             <div
-              className="rt-target"
+              className="rt-target precision-targeting-task__target"
               data-testid="precision-target"
               data-x={trial.target.x}
               data-y={trial.target.y}

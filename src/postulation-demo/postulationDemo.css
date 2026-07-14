@@ -10,6 +10,13 @@
   --postulation-warning: #f59e0b;
   --postulation-danger: #ef4444;
   --postulation-surface: rgba(255, 255, 255, 0.86);
+  --postulation-game-surface: #ffffff;
+  --postulation-game-control-bg: #f8fafc;
+  --postulation-game-control-text: #0f172a;
+  --postulation-game-control-border: rgba(49, 46, 129, 0.42);
+  --postulation-game-target: #0f766e;
+  --postulation-game-distractor: #334155;
+  --postulation-game-focus-ring: rgba(79, 70, 229, 0.78);
 }
 
 .postulation-demo {
@@ -679,10 +686,180 @@
   min-height: 0;
   height: 100%;
   overflow: auto;
+  overflow-x: hidden;
   border-radius: 30px;
   padding: clamp(12px, 2vw, 22px);
   display: grid;
   place-items: center;
+}
+
+.postulation-demo .task-header {
+  width: min(100%, 760px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto 12px;
+}
+
+.postulation-demo .task-title,
+.postulation-demo .task-progress {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--postulation-game-control-border);
+  background: var(--postulation-game-control-bg);
+  color: var(--postulation-game-control-text);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.postulation-demo .task-title {
+  padding: 7px 12px;
+  font-size: 0.92rem;
+  font-weight: 950;
+}
+
+.postulation-demo .task-progress {
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.postulation-demo .caption {
+  color: #334155;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.postulation-demo .task-area {
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(49, 46, 129, 0.16);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(20, 184, 166, 0.08), transparent 18rem),
+    var(--postulation-game-surface);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9), 0 18px 42px rgba(15, 23, 42, 0.08);
+}
+
+.postulation-demo .secondary,
+.go-nogo-task__response,
+.color-interference-task__option {
+  min-height: 48px;
+  border: 1.5px solid var(--postulation-game-control-border);
+  border-radius: 16px;
+  background: var(--postulation-game-control-bg);
+  color: var(--postulation-game-control-text);
+  font-weight: 950;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+}
+
+.postulation-demo .secondary:hover,
+.go-nogo-task__response:hover,
+.color-interference-task__option:hover,
+.visual-search-task__item:hover,
+.precision-targeting-task__start-pad:hover {
+  border-color: rgba(79, 70, 229, 0.65);
+  transform: translateY(-1px);
+}
+
+.postulation-demo .secondary:focus-visible,
+.go-nogo-task__response:focus-visible,
+.color-interference-task__option:focus-visible,
+.visual-search-task__item:focus-visible,
+.precision-targeting-task__start-pad:focus-visible {
+  outline: 3px solid var(--postulation-game-focus-ring);
+  outline-offset: 3px;
+}
+
+.go-nogo-task__response {
+  margin-top: 16px;
+  padding: 0 24px;
+}
+
+.go-nogo-task__response[data-state="go"] {
+  border-color: rgba(15, 118, 110, 0.72);
+  background: #ccfbf1;
+  color: #134e4a;
+}
+
+.go-nogo-task__response[data-state="no-go"] {
+  border-color: rgba(190, 18, 60, 0.5);
+  background: #fff1f2;
+  color: #881337;
+}
+
+.go-nogo-task__cue-card {
+  min-width: min(100%, 280px);
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.go-nogo-task__cue {
+  width: min(100%, 220px);
+  padding: 16px 18px;
+  border-radius: 28px;
+  border: 2px solid var(--postulation-game-control-border);
+  background: var(--postulation-game-control-bg);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+}
+
+.go-nogo-task__cue--go {
+  border-color: rgba(15, 118, 110, 0.75);
+  color: #0f766e;
+  background: #ccfbf1;
+}
+
+.go-nogo-task__cue--no-go {
+  border-color: rgba(190, 18, 60, 0.62);
+  color: #be123c;
+  background: #fff1f2;
+}
+
+.go-nogo-task__instruction {
+  max-width: 300px;
+  margin: 0;
+  color: #334155;
+  font-size: 0.92rem;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.visual-search-task__item {
+  border: 1.5px solid var(--postulation-game-control-border);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--postulation-game-distractor);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+}
+
+.visual-search-task__item--target {
+  border-color: rgba(15, 118, 110, 0.8);
+  background: rgba(20, 184, 166, 0.18);
+  color: var(--postulation-game-target);
+}
+
+.precision-targeting-task__start-pad {
+  border: 2px solid rgba(15, 118, 110, 0.8);
+  background: rgba(20, 184, 166, 0.18);
+  color: #134e4a;
+  box-shadow: 0 12px 26px rgba(15, 118, 110, 0.18);
+}
+
+.precision-targeting-task__start-pad:disabled {
+  opacity: 0.72;
+}
+
+.precision-targeting-task__target,
+.rt-target.precision-targeting-task__target {
+  border: 3px solid var(--postulation-game-target);
+  background: rgba(20, 184, 166, 0.18);
+  box-shadow: 0 0 0 8px rgba(20, 184, 166, 0.12), 0 0 28px rgba(15, 118, 110, 0.28);
 }
 
 .postulation-demo__game-hud-corner {
@@ -804,7 +981,7 @@
 }
 
 .postulation-demo__quality-grid {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
 }
 
 .postulation-demo__quality-card,
@@ -905,7 +1082,7 @@
 }
 
 .postulation-demo__game-results-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 }
 
 .postulation-demo__game-result-card {
@@ -1111,6 +1288,33 @@
 
   .postulation-demo__game-hud-corner .postulation-demo__hud-row {
     padding: 8px 10px;
+  }
+}
+
+@media (max-height: 800px) {
+  .postulation-demo__report-screen {
+    padding-top: 18px;
+    gap: 14px;
+  }
+
+  .postulation-demo__report-hero {
+    padding: clamp(20px, 3vw, 30px);
+    align-items: center;
+  }
+
+  .postulation-demo__report-hero h1 {
+    margin: 10px 0;
+    font-size: clamp(2.1rem, 5vw, 4.2rem);
+    line-height: 0.95;
+  }
+
+  .postulation-demo__quality-card {
+    min-height: 82px;
+    padding: 13px;
+  }
+
+  .postulation-demo__report-section-head {
+    margin-top: 2px;
   }
 }
 

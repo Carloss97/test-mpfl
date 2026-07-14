@@ -35,6 +35,26 @@ export function buildGoNoGoTrials({ count = DEFAULT_TRIAL_COUNT, noGoEvery = 3 }
   });
 }
 
+export function buildGoNoGoCuePresentation(trial = {}) {
+  const responseRequired = trial?.responseRequired !== false;
+  if (responseRequired) {
+    return {
+      state: 'go',
+      heading: 'Semáforo de impulso',
+      instruction: 'Pulsa responder solo cuando aparezca GO.',
+      buttonLabel: 'Responder ahora',
+      cueClassName: 'go-nogo-task__cue--go',
+    };
+  }
+  return {
+    state: 'no-go',
+    heading: 'Semáforo de impulso',
+    instruction: 'NO-GO: espera sin pulsar para inhibir la respuesta.',
+    buttonLabel: 'No pulsar · esperar',
+    cueClassName: 'go-nogo-task__cue--no-go',
+  };
+}
+
 export function scoreGoNoGoResponse({ trial, response, shownAt = 0, timestamp = 0 } = {}) {
   const normalizedResponse = String(response ?? '').toLowerCase();
   const cue = trial?.cue ?? 'GO';
@@ -198,28 +218,35 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, onComplete }) {
   }
 
   if (!trial) return null;
+  const presentation = buildGoNoGoCuePresentation(trial);
 
   return (
     <div className="go-nogo-task">
       <div className="task-header">
-        <span className="task-title">🟢 Go/No-Go</span>
-        <span className="task-progress">{current + 1}/{trials.length}</span>
+        <span className="task-title">🚦 {presentation.heading}</span>
+        <span className="task-progress">Señal {current + 1} de {trials.length}</span>
       </div>
       <div className="task-area" data-testid="gonogo-task-area" style={{ width: 420, height: 220, display: 'grid', placeItems: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
+        <div className="go-nogo-task__cue-card">
           <div
             data-testid="gonogo-cue"
+            className={`go-nogo-task__cue ${presentation.cueClassName}`}
             style={{
               fontSize: '3rem',
               fontWeight: 800,
               letterSpacing: '0.08em',
-              color: trial.responseRequired ? '#4dd4ac' : '#ff6b7a',
             }}
           >
             {trial.cue}
           </div>
-          <button type="button" className="secondary" onClick={() => finalizeTrial('press')} style={{ marginTop: '16px' }}>
-            Responder
+          <p className="go-nogo-task__instruction">{presentation.instruction}</p>
+          <button
+            type="button"
+            className="secondary go-nogo-task__response"
+            data-state={presentation.state}
+            onClick={() => finalizeTrial('press')}
+          >
+            {presentation.buttonLabel}
           </button>
         </div>
       </div>

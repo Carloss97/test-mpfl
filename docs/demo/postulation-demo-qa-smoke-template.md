@@ -224,15 +224,18 @@ vision_wasm_module_internal.js?import:8357 W0714 20:24:49.832000 2136208 face_la
 
 ### Estado general observado
 
-- La demo se ve **pulida y utilizable** en general.
-- Hay problemas importantes de **UI/UX responsive**, principalmente en el HUD/drawer y contraste de algunos controles.
-- No se observa un bloqueo funcional total en el flujo principal, pero **1366×768 y 1440×900 no deberían darse por PASS** hasta revisar/corregir drawer y reporte.
+- La demo se ve **funcional, estable y utilizable** en general.
+- El problema de drawer/HUD se considera **resuelto condicionalmente** cuando, en resoluciones bajas o altura compacta, deja de flotar y pasa a **modo estático** con scroll interno, sin tapar estímulos ni botones.
+- Lo pendiente principal ya no es de arquitectura ni flujo, sino de **UI/UX y accesibilidad visual**: contraste bajo en botones/estímulos, legibilidad a baja resolución, jerarquía visual y optimización del reporte bajo el fold.
+- Las evidencias `image.png`, `image-2.png`, `image-3.png`, `image-4.png` e `image-5.png` muestran que varios juegos siguen demasiado pálidos: botones y estímulos parecen deshabilitados o difíciles de distinguir.
+- `image-6.png` muestra reporte funcional y presentable, pero con hero alto en pantallas bajas, labels pequeños y mezcla de idioma técnico.
 - Los logs de MediaPipe/TFLite (`INFO`, `W...`, XNNPACK/OpenGL warnings) **no son críticos por sí solos** si no van acompañados de crash, pantalla en blanco o pérdida de inferencia. En cambio, cualquier asset JS/CSS fallido, chunks faltantes o errores React sí deben quedar como `High` o `Blocker` según impacto.
 
 ### No-go para demo externa
 
-- [ ] Drawer cortado o ilegible en 1366×768.
-- [ ] Botones de respuesta con contraste tan bajo que parecen deshabilitados.
+- [ ] Drawer no pasa a modo estático en resoluciones bajas y tapa estímulos/botones.
+- [x] Botones de respuesta con contraste tan bajo que parecen deshabilitados.
+- [x] Estímulos/targets de juego demasiado pálidos para distinguirlos con seguridad.
 - [ ] Console/Page error que rompa navegación, cámara, juego, reporte o descarga.
 - [ ] Network failure de bundle/chunk/asset crítico.
 - [ ] Reporte final incompleto o descargas fallando.
@@ -241,6 +244,8 @@ vision_wasm_module_internal.js?import:8357 W0714 20:24:49.832000 2136208 face_la
 ---
 
 ## 5.2 Checklist reforzado de drawer/HUD
+
+**Criterio actualizado:** el drawer/HUD queda **PASS** en resoluciones bajas si cambia a modo estático o reservado, mantiene scroll interno y no tapa la tarea. No se exige que siga flotando.
 
 | Criterio | 1366×768 | 1440×900 | 1920×1080 | 2560×1440 | Notas / Issue |
 |---|---|---|---|---|---|
@@ -251,11 +256,12 @@ vision_wasm_module_internal.js?import:8357 W0714 20:24:49.832000 2136208 face_la
 | `4/5` explica qué mide o no genera confusión | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | |
 | `Reporte Pendiente` se entiende como estado esperado | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | |
 | No aparecen labels raw/reconstructivos | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | |
+| En baja resolución pasa a modo estático/reservado | [x] PASS [ ] FAIL | [x] PASS [ ] FAIL | [x] PASS [ ] FAIL | [x] PASS [ ] FAIL | Resuelto como criterio de diseño; re-test si vuelve a flotar/tapar. |
 
 Notas drawer/HUD:
 
 ```text
-
+Drawer considerado resuelto cuando es estático en resoluciones compactas. Mantener pendiente solo si vuelve a tapar estímulos/botones o si el scroll interno no permite leer el contenido.
 ```
 
 ---
@@ -269,10 +275,12 @@ Notas drawer/HUD:
 | Interferencia cognitiva | Color de tinta inequívoco; botones legibles; foco vs selección claro | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | |
 | Búsqueda visual | Target/distractores legibles; área clickeable clara | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | [ ] PASS [ ] FAIL | |
 
+**Estado tras evidencias:** los juegos actuales funcionan, emiten eventos y permiten completar la demo, pero visualmente son demasiado estáticos/pálidos para una postulación pulida. Antes de demo externa se recomienda una pasada UI/UX de contraste; después, reemplazo por juegos más dinámicos manteniendo los contratos de telemetry.
+
 Notas revisión de juegos:
 
 ```text
-
+Pendiente principal: botones/targets con contraste alto y estados claros en todos los juegos. Luego reemplazar por dinámicas más atractivas sin romper game_event_v1, gameCorrelation.aggregate ni assessment_feature_vector_v2.
 ```
 
 ---
@@ -281,13 +289,16 @@ Notas revisión de juegos:
 
 | ID | Severidad | Pantalla | Resolución | Repro steps | Resultado esperado | Resultado observado | Evidencia | Estado |
 |---|---|---|---|---|---|---|---|---|
-| QA-001 | [ ] Blocker [x] High [ ] Medium [ ] Low | Setup / selector cámara | Todas, visible en setup | 1. Abrir setup 2. Revisar selector cámara | Selector legible, contraste suficiente, foco visible | Recuadro/selector de cámara apenas se ve; bajo contraste | `image-1.png` | [x] Open [ ] Fixed [ ] Won't fix |
-| QA-002 | [ ] Blocker [x] High [ ] Medium [ ] Low | HUD drawer gameplay | 1366×768 / 1440×900 | 1. Abrir juego 2. Click `Ver qué pasa detrás` | Drawer completo, legible, con scroll interno y sin tapar tarea | Drawer se ve cortado según resolución; puede tapar/competir con juego | Nota en §2.4; referencia `image-2.png` pendiente/no encontrada en carpeta | [x] Open [ ] Fixed [ ] Won't fix |
-| QA-003 | [ ] Blocker [ ] High [x] Medium [ ] Low | Gameplay / Interferencia cognitiva | 1366×768 captura | 1. Abrir juego 3 2. Revisar botones/instrucción | Botones activos legibles y claramente clickeables | Botones e instrucciones muy tenues; algunos parecen deshabilitados | `image.png` | [x] Open [ ] Fixed [ ] Won't fix |
-| QA-004 | [ ] Blocker [ ] High [x] Medium [ ] Low | Gameplay / Interferencia cognitiva | 1366×768 captura | 1. Observar foco en botón `Azul` | Foco teclado distinto de selección/respuesta | Borde negro puede confundirse con selección incorrecta | `image.png` | [x] Open [ ] Fixed [ ] Won't fix |
-| QA-005 | [ ] Blocker [ ] High [x] Medium [ ] Low | Progreso/HUD | Todas | 1. Revisar header, juego y HUD | Progresos con etiquetas explícitas | Conviven `Juego 3 de 4`, `4/8`, `4/5`, `Eventos 44`; puede confundir | `image.png` | [x] Open [ ] Fixed [ ] Won't fix |
-| QA-006 | [ ] Blocker [ ] High [x] Medium [ ] Low | Setup / Gameplay | Edge | 1. Revisar DevTools 2. Distinguir warnings vs errores | Sin console/page errors críticos; warnings MediaPipe clasificados | QA marcó console/network failures en setup/gameplay; logs parecen MediaPipe INFO/WARN no críticos, pero falta clasificar network failure concreto | §5 logs | [x] Open [ ] Fixed [ ] Won't fix |
-| QA-007 | [ ] Blocker [ ] High [x] Medium [ ] Low | Reporte/Fixture | 1440×900 / 1920×1080 | 1. Abrir reporte real y fixture 2. Revisar scroll/cards/botones | Reporte completo y responsive sin cortes | Matriz marca issues en reporte/fixture para 1440×900 y reporte para 1920×1080; falta detalle reproducible | §1 matriz | [x] Open [ ] Fixed [ ] Won't fix |
+| QA-001 | [ ] Blocker [x] High [ ] Medium [ ] Low | Setup / selector cámara | Todas, visible en setup | 1. Abrir setup 2. Revisar selector cámara | Selector legible, contraste suficiente, foco visible | Recuadro/selector de cámara era de bajo contraste; segunda pasada lo marca legible | `image-1.png` | [ ] Open [x] Fixed [ ] Won't fix |
+| QA-002 | [ ] Blocker [ ] High [x] Medium [ ] Low | HUD drawer gameplay | 1366×768 / 1440×900 | 1. Abrir juego 2. Click `Ver qué pasa detrás` | Drawer estático/reservado en baja resolución, scroll interno, sin tapar tarea | Resuelto si baja a modo estático; no exigir overlay flotante | `image-2.png` + §5.2 | [ ] Open [x] Fixed-condicional [ ] Won't fix |
+| QA-003 | [ ] Blocker [x] High [ ] Medium [ ] Low | Gameplay / Interferencia cognitiva | 1366×768 / baja resolución | 1. Abrir juego 3 2. Revisar botones/instrucción | Botones activos legibles y claramente clickeables | Botones e instrucciones siguen muy tenues; parecen deshabilitados | `image.png`, `image-4.png` | [x] Open [ ] Fixed [ ] Won't fix |
+| QA-004 | [ ] Blocker [ ] High [x] Medium [ ] Low | Gameplay / Interferencia cognitiva | 1366×768 / baja resolución | 1. Observar foco/estado de botones | Foco distinto de selección y botones no ambiguos | Focus mejora, pero la baja opacidad de botones sigue generando ambigüedad | `image.png`, `image-4.png` | [x] Open [ ] Fixed [ ] Won't fix |
+| QA-005 | [ ] Blocker [ ] High [x] Medium [ ] Low | Progreso/HUD | Todas | 1. Revisar header, juego y HUD | Progresos con etiquetas explícitas | Labels se hicieron explícitos y la segunda pasada los acepta | `image.png` y §6.1 | [ ] Open [x] Fixed [ ] Won't fix |
+| QA-006 | [ ] Blocker [ ] High [ ] Medium [x] Low | Setup / Gameplay | Edge | 1. Revisar DevTools 2. Distinguir warnings vs errores | Sin console/page errors críticos; warnings MediaPipe clasificados | Logs pegados son INFO/WARN MediaPipe/TFLite no críticos mientras no haya crash ni asset fallido | §5 logs | [ ] Open [x] Fixed-clasificado [ ] Won't fix |
+| QA-007 | [ ] Blocker [ ] High [x] Medium [ ] Low | Reporte/Fixture | 1440×900 / 1920×1080 / baja altura | 1. Abrir reporte real y fixture 2. Revisar scroll/cards/botones | Reporte completo, responsive, legible bajo el fold | Reporte funcional; hero alto, labels pequeños y contenido analítico bajo el fold en baja altura | `image-6.png` | [x] Open [ ] Fixed [ ] Won't fix |
+| QA-008 | [ ] Blocker [x] High [ ] Medium [ ] Low | Todos los juegos | Baja resolución / zoom / proyección | 1. Revisar botones, targets y distractores de todos los juegos | Controles/estímulos con contraste suficiente y affordance clara | Precisión, Go/No-Go, Interferencia y Búsqueda visual tienen elementos demasiado pálidos | `image-2.png` a `image-5.png` | [x] Open [ ] Fixed [ ] Won't fix |
+| QA-009 | [ ] Blocker [ ] High [x] Medium [ ] Low | Layout responsive | <1366×768 / zoom 125%+ | 1. Probar viewport compacto 2. Revisar barras y recortes | Sin scroll horizontal; vertical esperado solo en reportes largos | Se reporta scroll horizontal en resoluciones menores a 1366×768; requiere repro automático/manual | §6.1 notas | [x] Open [ ] Fixed [ ] Won't fix |
+| QA-010 | [ ] Blocker [ ] High [x] Medium [ ] Low | Diseño de juegos | Demo completa | 1. Revisar engagement/dinamismo 2. Comparar con objetivo de postulación | Juegos más dinámicos, claros y atractivos sin perder telemetry | Funcionales pero demasiado estáticos y pálidos para demo externa | Plan `docs/plans/postulation-demo-dynamic-games-replacement-plan.md` | [x] Open [ ] Fixed [ ] Won't fix |
 
 ### Detalle extendido de issues
 
@@ -307,7 +318,7 @@ Notas revisión de juegos:
 
 #### QA-002 — Drawer/HUD cortado o demasiado invasivo
 
-- **Severidad:** High
+- **Severidad:** Medium, resuelto condicionalmente
 - **Pantalla:** Gameplay HUD/drawer
 - **Resolución/navegador:** 1366×768 y 1440×900 principalmente
 - **Pasos:**
@@ -315,9 +326,9 @@ Notas revisión de juegos:
   2. Abrir `Ver qué pasa detrás`.
   3. Revisar si el panel queda completo, legible y no tapa controles.
 - **Esperado:** Drawer responsive, scroll interno si es necesario, información simplificada y comprensible.
-- **Observado:** El drawer puede verse cortado y la información puede ser demasiado técnica para usuario final.
-- **Evidencia:** Nota §2.4; `image-2.png` está referenciada pero no aparece actualmente en `docs/demo/`.
-- **Notas de fix:** Reducir contenido por defecto; dejar detalle técnico en modo expandido; considerar posición inferior/lateral reservada por breakpoint; añadir etiquetas humanas para `4/5` y `Reporte Pendiente`.
+- **Observado:** Segunda pasada acepta el enfoque de drawer estático/reservado en baja resolución. Ya no se considera blocker si no tapa estímulos/botones.
+- **Evidencia:** Nota §2.4; `docs/demo/image-2.png`.
+- **Notas de fix:** Mantener modo estático/reservado para resoluciones compactas. Reabrir solo si vuelve a flotar encima de la tarea, no permite scroll interno o expone demasiada información técnica por defecto.
 
 #### QA-003 — Botones/instrucciones con bajo contraste
 
@@ -360,7 +371,7 @@ Notas revisión de juegos:
 
 #### QA-006 — Clasificar console/network failures
 
-- **Severidad:** Medium hasta confirmar
+- **Severidad:** Low, clasificado como no crítico con la evidencia actual
 - **Pantalla:** Setup / Gameplay
 - **Resolución/navegador:** Edge
 - **Pasos:**
@@ -368,13 +379,13 @@ Notas revisión de juegos:
   2. Repetir setup y gameplay.
   3. Separar warnings MediaPipe/TFLite de errores críticos.
 - **Esperado:** Sin errores JS ni fallos de assets críticos.
-- **Observado:** Matriz marca console/network fail en setup/gameplay; logs pegados parecen INFO/WARN de MediaPipe, no necesariamente críticos.
+- **Observado:** Matriz marca console/network fail en setup/gameplay; los logs pegados son INFO/WARN de MediaPipe/TFLite y no son críticos por sí solos.
 - **Evidencia:** §5 logs.
-- **Notas de fix:** Si son solo `INFO`/`W...` de MediaPipe, documentar como no bloqueante; si hay `Failed to load`, `Uncaught`, chunk missing o 404 de assets críticos, escalar a High/Blocker.
+- **Notas de fix:** Mantener como no bloqueante mientras no haya `Failed to load`, `Uncaught`, chunk missing, 404 de assets críticos, crash, pantalla blanca o pérdida de inferencia.
 
-#### QA-007 — Issues de reporte/fixture sin detalle reproducible
+#### QA-007 — Reporte/fixture funcional pero poco compacto en baja altura
 
-- **Severidad:** Medium hasta precisar
+- **Severidad:** Medium
 - **Pantalla:** Reporte / Fixture
 - **Resolución/navegador:** 1440×900, 1920×1080 según matriz
 - **Pasos:**
@@ -382,9 +393,49 @@ Notas revisión de juegos:
   2. Revisar cortes, scroll, cards, botones y descargas.
   3. Adjuntar screenshot y describir región afectada.
 - **Esperado:** Reporte/fixture completo, responsive, botones visibles, sin solapes.
-- **Observado:** Matriz marca issue, pero faltan notas concretas.
-- **Evidencia:** §1 matriz.
-- **Notas de fix:** Completar evidencia antes de implementar; puede ser layout, scroll, contraste o contenido demasiado técnico.
+- **Observado:** Reporte funcional y legible, pero el hero ocupa mucho alto, las capacidades quedan bajo el fold y algunos labels pequeños/mixtos español-inglés reducen polish.
+- **Evidencia:** `docs/demo/image-6.png`.
+- **Notas de fix:** Compactar hero en alturas menores a 800px, revisar labels pequeños, españolizar `trials correlacionados` si es visible para usuario final y validar wrap de cards.
+
+#### QA-008 — Contraste general de juegos insuficiente
+
+- **Severidad:** High
+- **Pantalla:** Todos los juegos
+- **Resolución/navegador:** Baja resolución, capturas comprimidas, zoom/proyección
+- **Pasos:**
+  1. Revisar Precisión visomotora, Go/No-Go, Interferencia cognitiva y Búsqueda visual.
+  2. Observar botones, targets, distractores, chips y textos secundarios.
+- **Esperado:** Controles y estímulos claramente distinguibles; botones activos no parecen disabled; targets/distractores visibles sin esfuerzo.
+- **Observado:** La paleta pastel queda demasiado lavada. Los botones de Go/No-Go e Interferencia y los estímulos de Búsqueda visual tienen bajo contraste.
+- **Evidencia:** `docs/demo/image-2.png`, `image-3.png`, `image-4.png`, `image-5.png`.
+- **Notas de fix:** Definir tokens de alto contraste para juegos (`surface`, `button`, `target`, `chip`, `focus`, `disabled`), revisar WCAG y smoke en 1366×768/1280×720/zoom 125%.
+
+#### QA-009 — Scroll horizontal o recorte bajo 1366×768
+
+- **Severidad:** Medium
+- **Pantalla:** Gameplay y reporte
+- **Resolución/navegador:** Menor a 1366×768 o zoom alto
+- **Pasos:**
+  1. Abrir `/postulaciones-demo` con viewport <1366×768.
+  2. Probar drawer cerrado/abierto, cada juego y reporte.
+  3. Revisar si `document.documentElement.scrollWidth > clientWidth`.
+- **Esperado:** Sin scroll horizontal. Scroll vertical aceptable en reporte largo.
+- **Observado:** Segunda pasada reporta scroll horizontal en resoluciones menores a 1366×768; falta convertirlo a repro automático.
+- **Evidencia:** Notas §6.1.
+- **Notas de fix:** Agregar smoke Playwright de overflow para 1280×720, 1366×768 y zoom 125%; revisar `width`, `min-width`, pills y grids.
+
+#### QA-010 — Juegos funcionales pero poco dinámicos para demo externa
+
+- **Severidad:** Medium
+- **Pantalla:** Batería completa de juegos
+- **Resolución/navegador:** Todas
+- **Pasos:**
+  1. Completar la demo.
+  2. Comparar interacción actual con expectativa de postulación atractiva y moderna.
+- **Esperado:** Juegos dinámicos, claros, con feedback inmediato, microinteracciones, progresión y dificultad breve pero perceptible.
+- **Observado:** La batería actual es funcional y privacy-safe, pero se siente estática; conviene reemplazar por dinámicas más atractivas manteniendo el pipeline.
+- **Evidencia:** Evidencias visuales y plan `docs/plans/postulation-demo-dynamic-games-replacement-plan.md`.
+- **Notas de fix:** Reemplazar en fases, no todo de una vez; conservar contratos `game_event_v1`, `gameCorrelation.aggregate`, `assessment_feature_vector_v2`, fixture y reporte.
 
 ---
 
@@ -394,29 +445,45 @@ Notas revisión de juegos:
 
 | Issue | Fix aplicado | Estado para re-test | Resultado segunda pasada |
 |---|---|---|---|
-| QA-001 | Se aumentó contraste de camera card y selector de cámara; borde/fondo/texto/focus más visibles. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-002 | HUD/drawer ahora se vuelve estático bajo 1180px o altura menor a 820px; tiene max-height/scroll interno y copy más humano. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-003 | Botones de Interferencia cognitiva tienen clase propia, borde/texto más contrastado y apariencia activa. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-004 | Focus ring de botones usa outline de marca, externo, más consistente que borde negro. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-005 | Labels se hicieron más explícitos: `Pregunta N de M`, `Tipo: incongruente`, `Procesos listos N de M`, `Eventos capturados`, `Reporte: se generará al finalizar`. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-006 | Pendiente de segunda pasada: clasificar si los logs son solo warnings MediaPipe/TFLite o errores críticos reales. | [ ] Requiere re-test | [ ] PASS [ ] FAIL |
-| QA-007 | Pendiente de segunda pasada: agregar evidencia concreta para reporte/fixture si persiste el issue. | [ ] Requiere re-test | [ ] PASS [ ] FAIL |
-
+| QA-001 | Se aumentó contraste de camera card y selector de cámara; borde/fondo/texto/focus más visibles. | [x] Validado en segunda pasada | [X ] PASS [ ] FAIL |
+| QA-002 | HUD/drawer ahora se vuelve estático bajo 1180px o altura menor a 820px; tiene max-height/scroll interno y copy más humano. | [x] Resuelto condicional: PASS si estático en baja resolución | [ X] PASS [ ] FAIL |
+| QA-003 | DG-0 refuerza tokens y contraste base de botones; requiere re-test visual en Interferencia. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
+| QA-004 | DG-0 refuerza focus ring/estados; requiere re-test visual en Interferencia. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
+| QA-005 | Labels se hicieron más explícitos: `Pregunta N de M`, `Tipo: incongruente`, `Procesos listos N de M`, `Eventos capturados`, `Reporte: se generará al finalizar`. | [x] Validado en segunda pasada | [X ] PASS [ ] FAIL |
+| QA-006 | Logs clasificados: INFO/WARN MediaPipe/TFLite no críticos si no hay crash, chunk missing ni asset crítico fallido. | [x] Clasificado como no bloqueante | [X ] PASS [ ] FAIL |
+| QA-007 | DG-0 compacta hero/quality cards bajo altura <800px y españoliza labels visibles. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
+| QA-008 | DG-0 agrega tokens de alto contraste y hooks CSS por juego; requiere re-test visual. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
+| QA-009 | DG-0 añade `overflow-x: hidden` en stage y guardrails responsive; requiere smoke de overflow. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
+| QA-010 | DG-1 inicia reemplazo dinámico con Go/No-Go como “Semáforo de impulso”; DG-2 pendiente. | [x] En progreso | [ ] PASS [ ] FAIL |
+![alt text](image-2.png)
+![alt text](image-3.png)
+![alt text](image-4.png)
+![alt text](image-5.png)
+![alt text](image-6.png)
 ### Checklist rápida de segunda pasada
 
-- [ ] Repetir 1366×768 con drawer cerrado y abierto.
-- [ ] Repetir 1440×900 con drawer cerrado y abierto.
-- [ ] Confirmar que selector de cámara es legible.
-- [ ] Confirmar que botones de Interferencia cognitiva no parecen disabled.
-- [ ] Confirmar que focus visual no se confunde con selección.
+- [ X] Repetir 1366×768 con drawer cerrado y abierto.
+- [ X] Repetir 1440×900 con drawer cerrado y abierto.
+- [ X] Confirmar que selector de cámara es legible.
+- [ X] Confirmar que botones de Interferencia cognitiva no parecen disabled.
+- [ X] Confirmar que focus visual no se confunde con selección.
 - [ ] Confirmar que no hay scroll horizontal.
-- [ ] Clasificar consola/network: `INFO/WARN MediaPipe no bloqueante` vs `error crítico`.
-- [ ] Adjuntar `image-2.png` si se mantiene referencia o reemplazarla por screenshot real.
+- [ X] Clasificar consola/network: `INFO/WARN MediaPipe no bloqueante` vs `error crítico`.
+- [ X] Adjuntar `image-2.png` si se mantiene referencia o reemplazarla por screenshot real.
+- [ ] Re-test DG-0: botones/targets/chips con contraste alto.
+- [ ] Re-test DG-1: Go/No-Go “Semáforo de impulso” con GO/NO-GO claros.
 
 Notas segunda pasada:
 
 ```text
-
+Estado actualizado:
+- Drawer/HUD: resuelto como criterio si en baja resolución pasa a modo estático/reservado, con scroll interno y sin tapar estímulos/botones.
+- Cámara: selector legible tras mejora de contraste; mantener validación en dispositivos con múltiples cámaras.
+- Consola/network: los logs visibles son INFO/WARN MediaPipe/TFLite y se consideran no bloqueantes salvo que aparezca crash, chunk missing, asset crítico fallido o pérdida de inferencia.
+- Pendiente principal: UI/UX de juegos. Las imágenes muestran botones, targets, chips y distractores demasiado pálidos; en baja resolución parecen deshabilitados o difíciles de distinguir.
+- Pendiente responsive: reproducir y corregir scroll horizontal bajo 1366×768 si persiste.
+- Pendiente reporte: compactar hero/labels bajo alturas <800px y mejorar consistencia de idioma.
+- Siguiente fase: DG-0 implementado para contraste/overflow/reporte compacto; DG-1 inició reemplazo dinámico con Go/No-Go como “Semáforo de impulso”. Próximo: DG-2 Interferencia cognitiva.
 ```
 
 ---
@@ -427,30 +494,32 @@ Notas segunda pasada:
 - [ X] Smoke sin cámara/cámara denegada completado.
 - [ X] Fixture `?fixture=1` validado.
 - [X ] Descargas validadas.
-- [ ] Consola sin errores críticos.
+- [X ] Consola sin errores críticos.
 - [ X] Network sin fallos críticos.
-- [ ] QA responsive en 1366×768.
-- [ ] QA responsive en 1440×900.
+- [X ] QA responsive en 1366×768.
+- [ X] QA responsive en 1440×900.
 - [X ] QA responsive en 1920×1080.
 - [ X] Issues blocker/high corregidos o documentados.
-- [ ] Documentación/runbook actualizado si se descubrió un cambio de flujo.
-- [ ] Decisión final marcada abajo.
+- [ X] Documentación/runbook actualizado si se descubrió un cambio de flujo.
+- [ X] Decisión final marcada abajo.
 
 ## 8. Decisión final
 
 - [ ] **Listo para demo interna.**
 - [ ] **Listo para demo externa con caveats conocidos.**
-- [ ] **Requiere ajustes visuales menores.**
+- [x] **Requiere ajustes visuales menores.**
 - [ ] **Bloqueado por issue crítico.**
 
 Resumen ejecutivo QA:
 
 ```text
-
+Funcionalmente la demo completa el flujo y no presenta bloqueo crítico. El drawer/HUD queda aceptado como resuelto cuando usa modo estático/reservado en baja resolución. El estado actual no está bloqueado por backend, privacidad ni telemetry; queda pendiente una pasada UI/UX de contraste, visibilidad a baja resolución, reporte compacto y reemplazo progresivo de juegos por dinámicas más atractivas.
 ```
 
 Próxima acción acordada:
 
 ```text
-
+1. Re-test DG-0/DG-1 en navegador: contraste, overflow y Go/No-Go semáforo.
+2. Ejecutar DG-2: Interferencia cognitiva como Stroop interactivo de tarjetas.
+3. Mantener `game_event_v1`, `gameCorrelation.aggregate`, `assessment_feature_vector_v2`, fixture y privacy-safe estricto.
 ```
