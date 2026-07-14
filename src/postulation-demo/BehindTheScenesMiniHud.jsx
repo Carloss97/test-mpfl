@@ -17,6 +17,11 @@ function countReady(statuses) {
   return statuses.filter((status) => status === 'ok').length;
 }
 
+function reportValue(status) {
+  if (status === 'pending') return 'Se generará al finalizar';
+  return STATUS_LABEL[status];
+}
+
 export function buildBehindTheScenesStatus(snapshot = {}) {
   const safeSnapshot = snapshot ?? {};
   const camera = normalizeStatus(safeSnapshot.camera);
@@ -33,6 +38,7 @@ export function buildBehindTheScenesStatus(snapshot = {}) {
     events: eventCount,
     eventStatus,
     report,
+    reportText: reportValue(report),
     readyCount: Number.isFinite(Number(safeSnapshot.readyCount)) ? Number(safeSnapshot.readyCount) : countReady(statuses),
     totalCount: Number.isFinite(Number(safeSnapshot.totalCount)) ? Number(safeSnapshot.totalCount) : 5,
     caveats: Array.isArray(safeSnapshot.caveats) ? safeSnapshot.caveats : [],
@@ -59,14 +65,14 @@ export default function BehindTheScenesMiniHud({ snapshot }) {
     <aside className="postulation-demo__hud" aria-label="Procesamiento en segundo plano">
       <div className="postulation-demo__hud-topline">
         <span className="postulation-demo__hud-badge">Procesando en segundo plano</span>
-        <strong>{status.readyCount}/{status.totalCount}</strong>
+        <strong>Procesos listos {status.readyCount} de {status.totalCount}</strong>
       </div>
       <div className="postulation-demo__hud-grid">
         <StatusRow label="Cámara" status={status.camera} />
         <StatusRow label="Rostro" status={status.face} />
         <StatusRow label="Señal" status={status.signal} />
-        <StatusRow label="Eventos" status={status.eventStatus} value={String(status.events)} />
-        <StatusRow label="Reporte" status={status.report} />
+        <StatusRow label="Eventos capturados" status={status.eventStatus} value={String(status.events)} />
+        <StatusRow label={status.report === 'pending' ? 'Reporte: se generará al finalizar' : 'Reporte'} status={status.report} value={status.reportText} />
       </div>
       {status.caveats.length > 0 && (
         <div className="postulation-demo__hud-caveats">

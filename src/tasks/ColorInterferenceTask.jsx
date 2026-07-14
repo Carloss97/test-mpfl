@@ -190,8 +190,8 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
     <div className="color-interference-task">
       <div className="task-header">
         <span className="task-title">🌈 Interferencia color-palabra</span>
-        <span className="task-progress">{current + 1}/{trials.length}</span>
-        <span className="task-progress">{trial.congruent ? 'congruente' : 'incongruente'}</span>
+        <span className="task-progress">Pregunta {current + 1} de {trials.length}</span>
+        <span className="task-progress">Tipo: {trial.congruent ? 'congruente' : 'incongruente'}</span>
       </div>
       <div className="task-area" data-testid="color-task-area" style={{ width: 520, minHeight: 260, display: 'grid', placeItems: 'center' }}>
         <div style={{ textAlign: 'center', minWidth: 0, maxWidth: '100%' }}>
@@ -212,7 +212,7 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
           <p className="caption">Selecciona el color de la tinta, no la palabra.</p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {COLOR_OPTIONS.map((option) => (
-              <button key={option.value} type="button" className="secondary" onClick={() => handleResponse(option.value)}>
+              <button key={option.value} type="button" className="secondary color-interference-task__option" onClick={() => handleResponse(option.value)}>
                 {option.label}
               </button>
             ))}

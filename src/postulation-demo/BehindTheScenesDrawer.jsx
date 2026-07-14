@@ -4,32 +4,37 @@ const PIPELINE_STEPS = Object.freeze([
   {
     id: 'sync',
     kicker: 'Sincronización',
-    title: 'performance.now()',
-    body: 'Eventos de juego y señales disponibles se alinean con un reloj común de navegador.',
+    title: 'Reloj único de la sesión',
+    body: 'KRUMM alinea juegos y señales locales con el mismo tiempo interno para que el reporte sea consistente.',
+    technical: 'performance.now()',
   },
   {
     id: 'local-inference',
-    kicker: 'LOCAL INFERENCE',
-    title: 'Browser / Edge AI',
-    body: 'El navegador estima calidad de señal, resumen multimodal y canales observacionales sin enviar medios a servidor.',
+    kicker: 'Procesamiento local',
+    title: 'Procesamiento local en navegador',
+    body: 'La cámara, calidad de señal y eventos del juego se resumen en tu navegador antes de generar evidencia agregada.',
+    technical: 'LOCAL INFERENCE · Browser / Edge AI',
   },
   {
     id: 'correlation',
-    kicker: 'Agregado temporal',
-    title: 'gameCorrelation.aggregate',
-    body: 'Los trials se cruzan con ventanas resumidas antes/reacción/después para obtener métricas agregadas.',
+    kicker: 'Evidencia agregada',
+    title: 'Cruce de juego y señales',
+    body: 'El sistema resume qué ocurrió alrededor de cada respuesta sin guardar rutas de puntero ni datos reconstructivos.',
+    technical: 'gameCorrelation.aggregate',
   },
   {
     id: 'feature-vector',
-    kicker: 'Vector estable',
-    title: 'assessment_feature_vector_v2',
-    body: 'La sesión se compacta en variables numéricas versionadas para reporte y análisis posterior.',
+    kicker: 'Resumen estable',
+    title: 'Vector de evaluación',
+    body: 'Las métricas quedan compactadas en variables versionadas para el reporte y futura revisión de RR.HH.',
+    technical: 'assessment_feature_vector_v2',
   },
   {
     id: 'report',
-    kicker: 'Cierre',
+    kicker: 'Cierre humano',
     title: 'Reporte para revisión humana',
-    body: 'El reporte final combina desempeño, calidad, caveats y gobernanza; no toma decisiones automáticas.',
+    body: 'Al terminar, KRUMM prepara un reporte observacional con caveats. No toma decisiones automáticas.',
+    technical: 'human-review-only report bundle',
   },
 ]);
 
@@ -48,7 +53,7 @@ export default function BehindTheScenesDrawer({ status }) {
     <div className="postulation-demo__hud-drawer" aria-label="Detalle del procesamiento local">
       <div className="postulation-demo__hud-drawer-head">
         <strong>Qué pasa detrás</strong>
-        <span>No contiene datos reconstructivos</span>
+        <span>Sin video, frames ni rutas reconstructivas. Solo señales locales agregadas.</span>
       </div>
       <ol className="postulation-demo__hud-pipeline">
         {steps.map((step) => (
@@ -59,6 +64,13 @@ export default function BehindTheScenesDrawer({ status }) {
           </li>
         ))}
       </ol>
+      <details className="postulation-demo__hud-technical-details">
+        <summary>Detalle técnico</summary>
+        <ul>
+          {steps.map((step) => <li key={`${step.id}-technical`}>{step.technical}</li>)}
+        </ul>
+        <p>No contiene datos reconstructivos.</p>
+      </details>
     </div>
   );
 }

@@ -553,6 +553,9 @@
   align-items: center;
   border-radius: 22px;
   padding: 12px;
+  border: 1.5px solid rgba(49, 46, 129, 0.24);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
 }
 
 .postulation-demo__camera-preview {
@@ -585,18 +588,28 @@
 
 .postulation-demo__device-label {
   display: grid;
-  gap: 6px;
-  color: var(--postulation-muted);
-  font-size: 0.82rem;
-  font-weight: 800;
+  gap: 8px;
+  color: var(--postulation-ink);
+  font-size: 0.88rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
 }
 
 .postulation-demo__device-label select {
-  min-height: 42px;
-  border: 1px solid var(--postulation-line);
+  min-height: 46px;
+  border: 1.5px solid rgba(49, 46, 129, 0.45);
   border-radius: 14px;
-  padding: 8px 10px;
-  background: white;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: var(--postulation-ink);
+  font-weight: 800;
+  outline: none;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.postulation-demo__device-label select:focus-visible {
+  border-color: var(--postulation-primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
 }
 
 .postulation-demo--gameplay {
@@ -990,6 +1003,115 @@
   opacity: 0.55;
   cursor: not-allowed;
   transform: none;
+}
+
+.postulation-demo__game-progress strong {
+  color: var(--postulation-ink);
+}
+
+.postulation-demo__game-progress span {
+  color: #475569;
+  font-weight: 750;
+}
+
+.postulation-demo__hud-topline strong {
+  color: var(--postulation-primary-strong);
+  font-size: 0.8rem;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.postulation-demo__hud-row strong {
+  color: #1e293b;
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+.postulation-demo__hud-toggle:focus-visible,
+.color-interference-task__option:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.72);
+  outline-offset: 3px;
+}
+
+.postulation-demo__hud-drawer {
+  max-height: min(52dvh, 430px);
+  overflow: auto;
+}
+
+.postulation-demo__hud-technical-details {
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(79, 70, 229, 0.06);
+  color: #334155;
+  font-size: 0.76rem;
+}
+
+.postulation-demo__hud-technical-details summary {
+  cursor: pointer;
+  color: var(--postulation-primary-strong);
+  font-weight: 900;
+}
+
+.postulation-demo__hud-technical-details ul {
+  margin: 8px 0;
+  padding-left: 18px;
+}
+
+.postulation-demo .color-interference-task .caption {
+  color: #334155;
+  font-weight: 750;
+}
+
+.postulation-demo .color-interference-task .task-title {
+  color: #1e293b;
+  font-weight: 900;
+}
+
+.postulation-demo .color-interference-task .task-progress {
+  border: 1px solid rgba(49, 46, 129, 0.2);
+  background: rgba(79, 70, 229, 0.08);
+  color: var(--postulation-primary-strong);
+  font-weight: 900;
+}
+
+.color-interference-task__option {
+  min-height: 46px;
+  border: 1.5px solid rgba(49, 46, 129, 0.28);
+  background: rgba(255, 255, 255, 0.96);
+  color: #1e293b;
+  font-weight: 900;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.color-interference-task__option:hover {
+  border-color: rgba(79, 70, 229, 0.55);
+  background: #ffffff;
+}
+
+@media (max-width: 1180px), (max-height: 820px) {
+  .postulation-demo__game-body {
+    gap: 12px;
+  }
+
+  .postulation-demo__game-hud-corner {
+    position: static;
+    width: min(100%, 760px);
+    justify-self: center;
+    align-self: end;
+    order: 2;
+  }
+
+  .postulation-demo__game-hud-corner .postulation-demo__hud {
+    max-height: 42dvh;
+  }
+
+  .postulation-demo__game-hud-corner .postulation-demo__hud-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .postulation-demo__game-hud-corner .postulation-demo__hud-row {
+    padding: 8px 10px;
+  }
 }
 
 @media (max-width: 900px) {
