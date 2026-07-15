@@ -74,7 +74,8 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
   const movesRef = useRef(0);
   const solvedRef = useRef(0);
   const violationsRef = useRef(0);
-  const startTimeRef = useRef(now());
+  const gameStartTimeRef = useRef(now());
+  const levelStartTimeRef = useRef(now());
   const shownLevelsRef = useRef(new Set());
 
   const level = levels[levelIndex];
@@ -88,12 +89,12 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
   useEffect(() => {
     if (!level || finished || shownLevelsRef.current.has(level.id)) return;
     shownLevelsRef.current.add(level.id);
-    startTimeRef.current = now();
+    levelStartTimeRef.current = now();
     emitRef.current({
       eventType: 'stimulus_shown',
       trialId: level.id,
       targetId: `${level.id}-antennas`,
-      timestamp: startTimeRef.current,
+      timestamp: levelStartTimeRef.current,
       stimulus: {
         kind: 'laser_puzzle_level',
         payload: {
@@ -141,7 +142,7 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
   }, [finished, grid, level, selectedKey]);
 
   const finishGame = useCallback((lastSolved) => {
-    const totalTime = now() - startTimeRef.current;
+    const totalTime = now() - gameStartTimeRef.current;
     const parTotal = levels.reduce((sum, item) => sum + item.par, 0);
     const aggregate = buildLaserResponseAggregate({
       completed: true,
@@ -175,14 +176,14 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
       levelCount: levels.length,
       moveCount: movesRef.current,
       parTotal: levels.reduce((sum, item) => sum + item.par, 0),
-      timeMs: checkTime - startTimeRef.current,
+      timeMs: checkTime - gameStartTimeRef.current,
       ruleViolationCount: violationsRef.current,
       reconfigurationCount: movesRef.current,
     });
     const response = sanitizeLaserResponsePayload({
       correct: solved,
       outcome: solved ? 'level_solved' : 'level_incomplete',
-      reactionTimeMs: checkTime - startTimeRef.current,
+      reactionTimeMs: checkTime - levelStartTimeRef.current,
       score: levelAggregate.score,
       laserPuzzle: levelAggregate,
     });

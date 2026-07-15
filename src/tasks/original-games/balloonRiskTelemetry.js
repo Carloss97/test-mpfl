@@ -64,10 +64,10 @@ export function buildBalloonResponseAggregate({
   const completedRounds = Math.max(0, Math.round(Number(roundsCompleted) || 0));
   const total = Math.max(1, Math.round(Number(totalRounds) || 1));
   const averagePumps = mean(pumpCounts, 2);
-  const score = Math.max(0, Math.round(Number(totalScore) || 0));
-  const riskEfficiency = round((score / Math.max(1, total * 100)) * (1 - Math.min(0.6, Number(popCount) * 0.12)), 4);
+  const points = Math.max(0, Math.round(Number(totalScore) || 0));
+  const riskEfficiency = round((points / Math.max(1, total * 100)) * (1 - Math.min(0.6, Number(popCount) * 0.12)), 4);
   return {
-    score,
+    score: riskEfficiency,
     completed: completedRounds >= total,
     roundsCompleted: completedRounds,
     totalRounds: total,

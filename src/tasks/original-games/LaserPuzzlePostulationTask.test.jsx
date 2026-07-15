@@ -3,13 +3,16 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import LaserPuzzlePostulationTask, { buildLaserDemoLevels } from './LaserPuzzlePostulationTask.jsx';
 
-function completeFirstLevel() {
-  const level = buildLaserDemoLevels()[0];
+function completeLevel(level) {
   for (const [fromKey, toKey] of level.solutionPlacements) {
     fireEvent.click(screen.getByTestId(`laser-cell-${fromKey}`));
     fireEvent.click(screen.getByTestId(`laser-cell-${toKey}`));
   }
   fireEvent.click(screen.getByRole('button', { name: /comprobar ruta/i }));
+}
+
+function completeFirstLevel() {
+  completeLevel(buildLaserDemoLevels()[0]);
 }
 
 describe('LaserPuzzlePostulationTask', () => {
@@ -68,5 +71,24 @@ describe('LaserPuzzlePostulationTask', () => {
     fireEvent.click(screen.getByTestId('laser-cell-7,7'));
     expect(screen.getByText(/Pieza seleccionada/i)).toBeInTheDocument();
     expect(Number(screen.getByTestId('event-count').textContent)).toBe(2);
+  });
+
+  it('completes both authored levels used by the controlled original battery', async () => {
+    const onComplete = vi.fn();
+    render(<LaserPuzzlePostulationTask active width={606} height={338} trialCount={2} onGameEvent={vi.fn()} onComplete={onComplete} />);
+
+    const levels = buildLaserDemoLevels();
+    completeLevel(levels[0]);
+    expect(await screen.findByText(/Nivel 2 de 2/i)).toBeInTheDocument();
+    completeLevel(levels[1]);
+
+    expect(screen.getByTestId('laser-puzzle-finished')).toBeInTheDocument();
+    expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({
+      gameId: 'laser_puzzle',
+      completed: true,
+      solvedLevels: 2,
+      levelCount: 2,
+      aggregateOnly: true,
+    }));
   });
 });

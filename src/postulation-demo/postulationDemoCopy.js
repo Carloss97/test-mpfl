@@ -19,16 +19,16 @@ export const postulationDemoCopy = Object.freeze({
     },
     {
       title: 'Señales de fondo',
-      body: 'FaceMesh, AUs/FACS, gaze, postura, MoveNet y eventos de juego se integrarán sin convertir la pantalla en un laboratorio.',
+      body: 'FaceMesh, AUs/FACS, gaze, postura, MoveNet y eventos de juego se integran localmente sin convertir la pantalla en un laboratorio.',
     },
     {
       title: 'Reporte al final',
-      body: 'El cierre mostrará evidencia agregada, caveats y descarga local de un reporte privacy-safe.',
+      body: 'El cierre muestra evidencia agregada, caveats y un payload privacy-safe preparado para entrega controlada y revisión humana.',
     },
   ],
   setupPreview: {
     title: 'Preparación de demo',
-    body: 'La cámara y telemetría se activarán en la siguiente fase. En esta Fase A dejamos aislada la experiencia visual y el flujo base para no tocar todavía el pipeline de captura.',
+    body: 'La cámara es opcional y las señales habilitadas se procesan localmente; si faltan, la sesión continúa con caveats explícitos.',
     back: 'Volver al inicio',
   },
 });

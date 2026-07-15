@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { validateFinalAssessmentPayload } from '../assessment/finalAssessmentPayload.js';
 import { validateAssessmentSessionPrivacy } from '../assessment/assessmentSession.js';
 import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.js';
+import { POSTULATION_DEMO_BATTERY_MODES } from './postulationDemoConfig.js';
 
 const completedDemo = Object.freeze({
   completedCount: 2,
@@ -9,7 +10,14 @@ const completedDemo = Object.freeze({
   blocks: [
     {
       block: { gameId: 'precision_targeting', label: 'Precisión visomotora', skill: 'visuomotor_precision', trialCount: 4 },
-      summary: { completedTrialCount: 4, trialCount: 4, accuracy: 0.9, score: 0.82, meanReactionTimeMs: 520 },
+      summary: {
+        completedTrialCount: 4,
+        trialCount: 4,
+        accuracy: 0.9,
+        score: 0.82,
+        meanReactionTimeMs: 520,
+        trials: [{ target: { x: 120, y: 80 }, click: { x: 119, y: 81 } }],
+      },
     },
     {
       block: { gameId: 'go_nogo', label: 'Control inhibitorio', skill: 'inhibitory_control', trialCount: 8 },
@@ -79,6 +87,8 @@ describe('postulationDemoSessionBuilder', () => {
     expect(artifacts.assessmentSession.schemaVersion).toBe('krumm_unified_assessment_session_v1');
     expect(artifacts.assessmentSession.mode).toBe('postulation_demo');
     expect(artifacts.assessmentSession.blocks).toHaveLength(2);
+    expect(artifacts.assessmentSession.blocks[0].result).not.toHaveProperty('trials');
+    expect(artifacts.payload.behavioral.gameResults[0].result).not.toHaveProperty('trials');
     expect(artifacts.assessmentSession.gameSummary.performance.completedTrialCount).toBeGreaterThan(0);
     expect(artifacts.talentProfile.schemaVersion).toBe('krumm_talent_profile_v1');
     expect(validateFinalAssessmentPayload(artifacts.payload).ok).toBe(true);
@@ -93,14 +103,20 @@ describe('postulationDemoSessionBuilder', () => {
       completedDemo,
       gameEvents: [],
       signalSnapshot: null,
+      cameraConsent: true,
       generatedAt: '2026-07-09T17:31:00.000Z',
       runId: 'postulation-demo-no-camera',
     });
 
     expect(artifacts.assessmentSession.qualitySummary.sampleCount).toBe(0);
+    expect(artifacts.assessmentSession.consent.camera).toBe(true);
     expect(artifacts.assessmentSession.qualitySummary.facePresenceRatio).toBe(0);
     expect(artifacts.assessmentSession.qualitySummary.caveats).toEqual(expect.arrayContaining(['low_sample_count', 'low_face_presence', 'low_face_confidence']));
     expect(artifacts.payload.validation.ok).toBe(true);
+    expect(artifacts.assessmentSession.edgeAI.channels.visualAttention.score).toBe(50);
+    expect(artifacts.assessmentSession.edgeAI.channels.stressResponse.score).toBe(50);
+    expect(artifacts.assessmentSession.edgeAI.channels.fatigueIndex.score).toBe(50);
+    expect(artifacts.assessmentSession.edgeAI.caveats).toContain('biometric_channels_not_inferred_without_signal_context');
     const serializedSafePayloads = JSON.stringify({
       assessmentSession: artifacts.assessmentSession,
       payload: artifacts.payload,
@@ -154,5 +170,52 @@ describe('postulationDemoSessionBuilder', () => {
     for (const forbiddenKey of ['windows', 'land' + 'marks', 'face' + 'Samples', 'pointer' + 'Samples', 'raw' + 'GameEvents', 'stimuli', 'items', 'keypoints']) {
       expect(serializedSafeOutputs).not.toContain(forbiddenKey);
     }
+  });
+
+  it('preserves original-game aggregate results and battery identity with an explicit R-6 mapping caveat', () => {
+    const originalCompletedDemo = {
+      batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES,
+      completedCount: 3,
+      totalCount: 3,
+      blocks: [
+        {
+          block: { gameId: 'laser_puzzle', label: 'Puzzle láser', skill: 'spatial_planning', trialCount: 2 },
+          summary: { score: 0.88, completed: true, solvedLevels: 2, levelCount: 2, solutionEfficiency: 0.9, aggregateOnly: true },
+        },
+        {
+          block: { gameId: 'balloon_risk', label: 'Globo de riesgo', skill: 'risk_feedback_adjustment', trialCount: 8 },
+          summary: { score: 0.72, completed: true, roundsCompleted: 8, riskEfficiency: 0.72, aggregateOnly: true },
+        },
+        {
+          block: { gameId: 'passenger_routes', label: 'Optimización de rutas de pasajeros', skill: 'constraint_planning', trialCount: 2 },
+          summary: { score: 0.84, completed: true, passengersDelivered: 3, destinationCount: 3, routeEfficiency: 0.84, aggregateOnly: true },
+        },
+      ],
+    };
+    const artifacts = buildPostulationDemoArtifacts({
+      completedDemo: originalCompletedDemo,
+      batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES,
+      gameEvents: [],
+      signalSnapshot: { sampleCount: 48, facePresenceRatio: 0.9, meanConfidence: 0.82, fpsEstimate: 15, caveats: [] },
+      cameraConsent: true,
+      generatedAt: '2026-07-15T20:00:00.000Z',
+      runId: 'postulation-original-test',
+    });
+
+    expect(artifacts.batteryMode).toBe('original_games');
+    expect(artifacts.batteryId).toMatch(/original/);
+    expect(artifacts.assessmentSession.mode).toBe('postulation_demo_original_games');
+    expect(artifacts.assessmentSession.qualitySummary.caveats).toContain('original_games_metrics_pending_r6_mapping');
+    expect(artifacts.assessmentSession.edgeAI.channels.visuomotorPrecision.score).toBe(50);
+    expect(artifacts.assessmentSession.edgeAI.channels.inhibitionControl.score).toBe(50);
+    expect(artifacts.assessmentSession.edgeAI.channels.visualSearchEfficiency.score).toBe(50);
+    expect(Object.values(artifacts.talentProfile.dimensions).every((dimension) => dimension.score === 50)).toBe(true);
+    expect(Object.values(artifacts.talentProfile.dimensions).every((dimension) => dimension.confidence <= 0.25)).toBe(true);
+    expect(artifacts.payload.behavioral.gameResults).toEqual([
+      expect.objectContaining({ gameId: 'laser_puzzle', result: expect.objectContaining({ solutionEfficiency: 0.9 }) }),
+      expect.objectContaining({ gameId: 'balloon_risk', result: expect.objectContaining({ riskEfficiency: 0.72 }) }),
+      expect.objectContaining({ gameId: 'passenger_routes', result: expect.objectContaining({ routeEfficiency: 0.84 }) }),
+    ]);
+    expect(artifacts.validation.ok).toBe(true);
   });
 });

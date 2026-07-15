@@ -149,11 +149,33 @@ describe('assessmentSession', () => {
         faceSamples: [],
         rawGameEvents: [],
         pointerSamples: [],
+        fullRoute: ['0,0', '1,0'],
+        routeTrace: [{ x: 0, y: 0 }],
+        visitedCells: ['0,0'],
+        stepByStepPath: ['right'],
+        keypoints: [{ x: 0.5, y: 0.5 }],
+        normalizedKeypoints: [{ x: 0.5, y: 0.5 }],
+        clickTrace: [{ t: 1 }],
+        eventLog: [{ type: 'move' }],
+        trials: [{ x: 1, y: 2 }],
       },
     };
     const result = validateAssessmentSessionPrivacy(unsafe);
     expect(result.ok).toBe(false);
-    expect(result.violations).toEqual(expect.arrayContaining(['faceSamples', 'rawGameEvents', 'pointerSamples']));
+    expect(result.violations).toEqual(expect.arrayContaining([
+      'faceSamples',
+      'rawGameEvents',
+      'pointerSamples',
+      'fullRoute',
+      'routeTrace',
+      'visitedCells',
+      'stepByStepPath',
+      'keypoints',
+      'normalizedKeypoints',
+      'clickTrace',
+      'eventLog',
+      'trials',
+    ]));
     expect(ASSESSMENT_FORBIDDEN_KEYS).toContain('landmarks');
   });
 });

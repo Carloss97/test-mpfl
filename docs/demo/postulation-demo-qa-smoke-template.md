@@ -4,6 +4,8 @@
 **Repo:** `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/test-mpfl`  
 **Ruta real:** `http://127.0.0.1:5173/postulaciones-demo`  
 **Ruta fixture:** `http://127.0.0.1:5173/postulaciones-demo?fixture=1`  
+**Ruta batería original interna:** `http://127.0.0.1:5173/postulaciones-demo?battery=original`
+**Fixture batería original:** `http://127.0.0.1:5173/postulaciones-demo?fixture=1&battery=original`
 **Fecha QA:** __13__ / __10__ / __2023__  
 **Responsable:** ___Carlos Saldivia Heinz_______________________  
 **Navegador:** ______Edge____________________  
@@ -197,6 +199,41 @@ Notas / issues:
 ```text
 
 ```
+
+---
+
+## 4.1 Smoke R-5 — modos stable/original
+
+### Contrato de selección
+
+- [x] `/postulaciones-demo` conserva `stable_dg` como fallback predeterminado.
+- [x] `?battery=original` activa exactamente Laser Puzzle, Balloon Risk y Passenger Routes.
+- [x] Un valor desconocido de `battery` vuelve a `stable_dg`.
+- [x] El modo queda fijado durante la sesión; un re-render no cambia batería ni reinicia juego.
+- [x] El landing original muestra `Validación interna · juegos originales`.
+
+### Fixture original
+
+- [x] `?fixture=1&battery=original` abre reporte directo.
+- [x] Muestra los tres resultados originales y el caveat de mapping pendiente.
+- [x] Scores visibles no presentan escalas corruptas (`8400%`, `7200%`, etc.).
+- [x] Dimensiones de talento permanecen neutrales y con confianza máxima `25%` hasta R-6.
+- [x] Payload y bundle contienen solo agregados; no incluyen `trials`, rutas, traces, keypoints ni raw events.
+
+### Evidencia automatizada 2026-07-15
+
+```text
+Playwright + Vite development
+Viewports: 1280×720 y 390×844
+Rutas por viewport: stable landing, original gameplay, stable fixture, original fixture
+Resultado: 8/8 PASS
+Console errors: 0
+Page errors: 0
+Request failures: 0
+Horizontal overflow: 0
+```
+
+El primer intento reprodujo `scrollWidth=399 > clientWidth=390` en el reporte original móvil. El fix añadió un track raíz `minmax(0, 1fr)`, `min-width: 0` a hijos directos y wrap de caveats. La repetición completa pasó.
 
 ---
 

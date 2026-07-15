@@ -4,12 +4,18 @@ import { describe, expect, it, vi } from 'vitest';
 import PostulationGameStage, { getPostulationGameViewport } from './PostulationGameStage.jsx';
 import { buildOriginalGamePostulationBlocks } from './originalGameBlueprints.js';
 
-function MockGame({ active, block, onComplete }) {
+function MockGame({ active, block, onComplete, onGameEvent }) {
+  React.useEffect(() => {
+    onGameEvent?.({ type: 'game_event_v1', eventType: 'game_start', gameId: block.gameId, timestamp: performance.now() });
+  }, [block.gameId, onGameEvent]);
   return (
     <div aria-label={`mock-${block.gameId}`}>
       <p>Mock activo: {String(active)}</p>
       <p>Juego actual: {block.label}</p>
-      <button type="button" onClick={() => onComplete?.({ gameId: block.gameId, completedTrialCount: 2, accuracy: 0.9 })}>
+      <button type="button" onClick={() => {
+        onGameEvent?.({ type: 'game_event_v1', eventType: 'game_end', gameId: block.gameId, timestamp: performance.now() });
+        onComplete?.({ gameId: block.gameId, completedTrialCount: 2, accuracy: 0.9 });
+      }}>
         Completar {block.gameId}
       </button>
     </div>
@@ -59,8 +65,9 @@ describe('PostulationGameStage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Completar go_nogo/i }));
     expect(onCompleteDemo).toHaveBeenCalledWith(expect.objectContaining({ completedCount: 2, totalCount: 2 }));
-    expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'game_start', gameId: 'precision_targeting' }));
-    expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'game_end', gameId: 'go_nogo' }));
+    const events = onGameEvent.mock.calls.map(([event]) => event);
+    expect(events.filter((event) => event.eventType === 'game_start' && event.gameId === 'precision_targeting')).toHaveLength(1);
+    expect(events.filter((event) => event.eventType === 'game_end' && event.gameId === 'go_nogo')).toHaveLength(1);
   });
 
   it('can render the planned Laser original game block through the default component map', () => {

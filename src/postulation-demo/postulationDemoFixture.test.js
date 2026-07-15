@@ -4,6 +4,7 @@ import {
   buildPostulationDemoFixture,
   isPostulationFixtureMode,
 } from './postulationDemoFixture.js';
+import { POSTULATION_DEMO_BATTERY_MODES } from './postulationDemoConfig.js';
 
 function stringifyCoreArtifacts(fixture) {
   return JSON.stringify({
@@ -34,5 +35,28 @@ describe('postulationDemoFixture', () => {
     for (const forbidden of ['rawGameEvents', 'pointerSamples', 'faceSamples', 'landmarks', 'keypoints', 'normalizedKeypoints', 'windows']) {
       expect(text).not.toContain(forbidden);
     }
+  });
+
+  it('builds an original-games fixture with mode metadata and aggregate-only game summaries', () => {
+    const fixture = buildPostulationDemoFixture({
+      generatedAt: '2026-07-09T22:00:00.000Z',
+      batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES,
+    });
+
+    expect(fixture.summary.batteryMode).toBe('original_games');
+    expect(fixture.summary.completedCount).toBe(3);
+    expect(fixture.summary.blocks.map((entry) => entry.block.gameId)).toEqual([
+      'laser_puzzle',
+      'balloon_risk',
+      'passenger_routes',
+    ]);
+    expect(fixture.artifacts.batteryMode).toBe('original_games');
+    expect(fixture.artifacts.assessmentSession.blocks).toHaveLength(3);
+    expect(fixture.artifacts.payload.behavioral.gameResults.map((result) => result.gameId)).toEqual([
+      'laser_puzzle',
+      'balloon_risk',
+      'passenger_routes',
+    ]);
+    expect(stringifyCoreArtifacts(fixture)).not.toMatch(/fullRoute|routeTrace|visitedCells|rawGameEvents|pointerSamples/i);
   });
 });

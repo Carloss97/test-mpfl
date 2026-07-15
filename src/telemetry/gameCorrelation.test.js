@@ -99,4 +99,24 @@ describe('gameCorrelation v3', () => {
     expect(correlation.trials[0].completedAt).toBe(null);
     expect(correlation.trials[0].outcome).toBe('incomplete');
   });
+
+  it('pairs responses by gameId and trialId when different games reuse trial identifiers', () => {
+    const correlation = correlateGameWithMultimodalSignals({
+      gameEvents: [
+        { type: 'game_event_v1', eventType: 'stimulus_shown', timestamp: 1000, gameId: 'laser_puzzle', trialId: 'trial-1', targetId: 'laser-target' },
+        { type: 'game_event_v1', eventType: 'response', timestamp: 1150, gameId: 'balloon_risk', trialId: 'trial-1', targetId: 'balloon-target', response: { correct: false, outcome: 'pop' } },
+        { type: 'game_event_v1', eventType: 'response', timestamp: 1320, gameId: 'laser_puzzle', trialId: 'trial-1', targetId: 'laser-target', response: { correct: true, outcome: 'level_solved' } },
+      ],
+      faceSamples,
+    });
+
+    expect(correlation.trials).toHaveLength(1);
+    expect(correlation.trials[0]).toMatchObject({
+      gameId: 'laser_puzzle',
+      targetId: 'laser-target',
+      completedAt: 1320,
+      outcome: 'level_solved',
+      correct: true,
+    });
+  });
 });

@@ -106,14 +106,29 @@ export function summarizeSignalWindow({
   };
 }
 
+function trialPairKey(event = {}) {
+  return `${event.gameId ?? 'unknown_game'}::${event.trialId ?? ''}`;
+}
+
 function findTrialPairs(events = []) {
   const normalized = events
     .filter((event) => event?.eventType && Number.isFinite(Number(event?.timestamp)))
     .sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
   const shown = normalized.filter((event) => event.eventType === 'stimulus_shown' && event.trialId);
-  const responses = normalized.filter((event) => event.eventType === 'response' && event.trialId);
+  const responsesByTrial = new Map();
+  for (const response of normalized) {
+    if (response.eventType !== 'response' || !response.trialId) continue;
+    const key = trialPairKey(response);
+    const bucket = responsesByTrial.get(key) ?? [];
+    bucket.push(response);
+    responsesByTrial.set(key, bucket);
+  }
   return shown.map((stimulus) => {
-    const response = responses.find((candidate) => candidate.trialId === stimulus.trialId && Number(candidate.timestamp) >= Number(stimulus.timestamp));
+    const responses = responsesByTrial.get(trialPairKey(stimulus)) ?? [];
+    const response = responses.find((candidate) => (
+      Number(candidate.timestamp) >= Number(stimulus.timestamp)
+      && (!stimulus.targetId || !candidate.targetId || candidate.targetId === stimulus.targetId)
+    ));
     return { stimulus, response: response ?? null };
   });
 }

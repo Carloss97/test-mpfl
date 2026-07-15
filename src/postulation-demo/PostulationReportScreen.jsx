@@ -108,7 +108,7 @@ export default function PostulationReportScreen({
     <section className="postulation-demo__report-screen" aria-labelledby="postulation-report-title">
       <div className="postulation-demo__report-hero">
         <div>
-          <span className="postulation-demo__eyebrow">Reporte final · Fase F</span>
+          <span className="postulation-demo__eyebrow">Reporte final</span>
           <h1 id="postulation-report-title">Reporte listo para revisión humana</h1>
           <p>
             Completaste {completedCount} de {totalCount} juegos. KRUMM generó un perfil observacional de talentos y capacidades con artefactos locales validados, sin decisión automatizada.
@@ -125,6 +125,13 @@ export default function PostulationReportScreen({
         <div className="postulation-demo__fixture-banner" role="note">
           <strong>{artifacts.fixture.label}</strong>
           <span>Fixture local privacy-safe · {artifacts.fixture.description}</span>
+        </div>
+      )}
+
+      {artifacts.batteryMode === 'original_games' && (
+        <div className="postulation-demo__fixture-banner" role="note">
+          <strong>Batería original en validación interna</strong>
+          <span>Las métricas agregadas por juego están preservadas; su mapeo específico a dimensiones de talento continúa bajo validación y revisión humana.</span>
         </div>
       )}
 

@@ -64,6 +64,8 @@ describe('Postulation QA visual fixes', () => {
     expect(css).toContain('@media (max-height: 800px)');
     expect(css).toContain('.postulation-demo__report-hero');
     expect(css).toContain('grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));');
+    expect(css).toContain('.postulation-demo__report-screen > *');
+    expect(css).toContain('grid-template-columns: minmax(0, 1fr);');
   });
 
   it('DG-0 gives every current game explicit high-contrast interactive hooks', () => {

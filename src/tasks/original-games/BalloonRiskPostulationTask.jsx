@@ -59,14 +59,14 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete }) {
     });
   }, [finished, round, roundIndex, rounds.length, totalScore]);
 
-  const completeGame = useCallback(() => {
+  const completeGame = useCallback((finalScore) => {
     const aggregate = buildBalloonResponseAggregate({
       roundsCompleted: rounds.length,
       totalRounds: rounds.length,
       pumpCounts: pumpCountsRef.current,
       cashoutCount: cashoutsRef.current,
       popCount: popsRef.current,
-      totalScore,
+      totalScore: finalScore,
       postPopAdjustments: postPopAdjustmentsRef.current,
       timeMs: now() - startTimeRef.current,
     });
@@ -77,7 +77,7 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete }) {
       gameState: { level: rounds.length, difficulty: 'risk_feedback', score: aggregate.riskEfficiency },
     });
     onCompleteRef.current?.({ gameId: 'balloon_risk', ...aggregate });
-  }, [rounds.length, totalScore]);
+  }, [rounds.length]);
 
   const finishRound = useCallback((outcome, finalPumpCount, gainedPoints) => {
     const nextPumpCounts = [...pumpCountsRef.current, finalPumpCount];
@@ -120,7 +120,7 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete }) {
 
     const nextIndex = roundIndex + 1;
     if (nextIndex >= rounds.length) {
-      completeGame();
+      completeGame(nextTotalScore);
       return;
     }
     setRoundIndex(nextIndex);

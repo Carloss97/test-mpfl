@@ -27,7 +27,10 @@ function mean(values) {
 }
 
 function appendBounded(list, item, max = 600) {
-  return [...list, item].slice(-max);
+  const target = Array.isArray(list) ? list : [];
+  target.push(item);
+  if (target.length > max) target.splice(0, target.length - max);
+  return target;
 }
 
 function nowMs() {

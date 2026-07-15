@@ -301,12 +301,14 @@ export function buildPassengerRouteResponseAggregate({
   const violationCount = Math.max(0, Math.round(Number(constraintViolationCount) || 0));
   const replans = Math.max(0, Math.round(Number(replanCount) || 0));
   const score = round(clamp(
-    ((completionRate * 0.4) + (routeEfficiency * 0.35) + ((satisfaction / 100) * 0.25)) * 100
-      - (violationCount * 2)
-      - (replans * 0.5),
+    (completionRate * 0.4)
+      + (routeEfficiency * 0.35)
+      + ((satisfaction / 100) * 0.25)
+      - (violationCount * 0.02)
+      - (replans * 0.005),
     0,
-    100,
-  ), 2);
+    1,
+  ), 4);
 
   return {
     score,

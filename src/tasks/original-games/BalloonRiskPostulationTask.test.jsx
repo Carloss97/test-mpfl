@@ -33,6 +33,8 @@ describe('BalloonRiskPostulationTask', () => {
       completed: true,
       roundsCompleted: 2,
       cashoutCount: 2,
+      score: 0.16,
+      riskEfficiency: 0.16,
       aggregateOnly: true,
     }));
 

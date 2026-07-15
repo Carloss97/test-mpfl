@@ -14,6 +14,12 @@ function safeNumber(value, fallback = 0) {
   return Number.isFinite(numeric) ? numeric : fallback;
 }
 
+function formatGameScore(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return '—';
+  return Math.abs(numeric) <= 1 ? pct(numeric) : `${Math.round(numeric)}`;
+}
+
 export function getPostulationQualityCards(artifacts = null) {
   const quality = artifacts?.assessmentSession?.qualitySummary ?? artifacts?.payload?.quality ?? {};
   const consent = artifacts?.assessmentSession?.consent ?? {};
@@ -47,7 +53,7 @@ export function getPostulationGameCards(artifacts = null, completedDemo = null) 
       status: block.status ?? 'completed',
       trialCount: result.trialCount ?? result.completedTrialCount ?? result.totalTrials ?? block.trialCount ?? 0,
       accuracy: Number.isFinite(Number(accuracy)) ? pct(accuracy) : '—',
-      score: Number.isFinite(Number(scoreValue)) ? pct(scoreValue) : '—',
+      score: formatGameScore(scoreValue),
       meanRt: Number.isFinite(Number(meanRt)) && Number(meanRt) > 0 ? `${Math.round(Number(meanRt))}ms` : '—',
     };
   });

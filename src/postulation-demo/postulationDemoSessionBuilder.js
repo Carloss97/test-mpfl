@@ -7,10 +7,17 @@ import { normalizeGameEvent, summarizeGameEvents } from '../telemetry/gameTeleme
 import { correlateGameWithMultimodalSignals } from '../telemetry/gameCorrelation.js';
 import { buildGameFeatureVectorV2 } from '../telemetry/gameFeatureVector.js';
 import { runEdgeAIInference } from '../telemetry/edgeAiEngine.js';
-import { POSTULATION_DEMO_BATTERY } from './postulationDemoConfig.js';
+import {
+  POSTULATION_DEMO_BATTERY_IDS,
+  POSTULATION_DEMO_BATTERY_MODES,
+  getPostulationDemoBattery,
+  getPostulationDemoBatteryId,
+  listVisiblePostulationBlocks,
+  normalizePostulationDemoBatteryMode,
+} from './postulationDemoConfig.js';
 
 export const POSTULATION_DEMO_ARTIFACTS_SCHEMA = 'krumm_postulation_demo_artifacts_v1';
-export const POSTULATION_DEMO_BATTERY_ID = 'krumm_postulation_demo_mvp_v1';
+export const POSTULATION_DEMO_BATTERY_ID = POSTULATION_DEMO_BATTERY_IDS.stable_dg;
 
 function nowIso() {
   return new Date().toISOString();
@@ -81,7 +88,9 @@ function summarizeCompletedBlocks(blocks = []) {
 }
 
 export function buildPostulationDemoGameSummary({ gameEvents = [], completedDemo = {} } = {}) {
-  const normalizedEvents = gameEvents.map((event) => normalizeGameEvent(event));
+  const normalizedEvents = gameEvents.map((event) => (
+    event?.type === 'game_event_v1' ? event : normalizeGameEvent(event)
+  ));
   const eventSummary = summarizeGameEvents(normalizedEvents);
   const blocks = normalizeCompletedBlocks(completedDemo);
   const blockSummary = summarizeCompletedBlocks(blocks);
@@ -121,14 +130,22 @@ function buildPostulationGameCorrelation({ normalizedEvents = [], signalContext 
   return (correlation.aggregate?.trialCount ?? 0) > 0 ? correlation : null;
 }
 
-function qualityFromSignalSnapshot(signalSnapshot = null, { gameSummary = null, gameCorrelation = null, edgeAIResult = null } = {}) {
+function qualityFromSignalSnapshot(signalSnapshot = null, {
+  gameSummary = null,
+  gameCorrelation = null,
+  edgeAIResult = null,
+  additionalCaveats = [],
+} = {}) {
   const snapshot = signalSnapshot ?? {};
   const sampleCount = finite(snapshot.sampleCount);
   const facePresenceRatio = clamp01(snapshot.facePresenceRatio);
   const meanConfidence = clamp01(snapshot.meanConfidence);
   const correlatedTrialCount = Number(gameCorrelation?.aggregate?.completedTrialCount ?? 0);
   const gameTrialCount = Number(gameSummary?.performance?.completedTrialCount ?? gameSummary?.completedTrialCount ?? 0);
-  const caveats = Array.isArray(snapshot.caveats) ? [...snapshot.caveats] : [];
+  const caveats = [
+    ...(Array.isArray(snapshot.caveats) ? snapshot.caveats : []),
+    ...(Array.isArray(additionalCaveats) ? additionalCaveats : []),
+  ];
   if (sampleCount === 0) caveats.push('camera_not_enabled_or_no_samples');
   if (sampleCount < 20) caveats.push('low_sample_count');
   if (facePresenceRatio < 0.7) caveats.push('low_face_presence');
@@ -145,11 +162,13 @@ function qualityFromSignalSnapshot(signalSnapshot = null, { gameSummary = null, 
   };
 }
 
-function buildBatterySession({ blocks, generatedAt, runId }) {
+function buildBatterySession({ blocks, generatedAt, runId, batteryMode, batteryId }) {
   return {
     runId,
-    batteryId: POSTULATION_DEMO_BATTERY_ID,
-    mode: 'postulation_demo',
+    batteryId,
+    mode: batteryMode === POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES
+      ? 'postulation_demo_original_games'
+      : 'postulation_demo',
     createdAt: generatedAt,
     startedAt: generatedAt,
     completedAt: generatedAt,
@@ -180,7 +199,7 @@ function buildAggregateEdgeAIResult({ gameSummary, qualitySummary, extraCaveats 
     schemaVersion: 'edge_ai_model_output_v8',
     modelVersion: 'krumm-postulation-demo-aggregate-v0.1',
     composite: {
-      score: score100(mean([taskPerformance, quality], 0)),
+      score: score100(taskPerformance),
       label: 'aggregate_postulation_demo',
     },
     confidence: {
@@ -189,17 +208,22 @@ function buildAggregateEdgeAIResult({ gameSummary, qualitySummary, extraCaveats 
     },
     channels: {
       taskPerformance: channel(taskPerformance, ['postulation_demo_game_summary']),
-      visualAttention: channel(quality, ['signal_quality_snapshot']),
+      visualAttention: channel(0.5, ['not_inferred_without_signal_context']),
       visuomotorPrecision: channel(taskPerformance, ['candidate_game_stage']),
       inhibitionControl: channel(taskPerformance, ['candidate_game_stage']),
       visualSearchEfficiency: channel(taskPerformance, ['candidate_game_stage']),
       adaptiveResilience: channel(mean([taskPerformance, completion], 0), ['demo_completion']),
-      motorControl: channel(mean([taskPerformance, quality], 0), ['aggregate_only']),
+      motorControl: channel(taskPerformance, ['aggregate_game_performance_only']),
       cognitiveLoad: channel(1 - taskPerformance, ['inverse_task_performance_proxy']),
-      stressResponse: channel(1 - quality, ['inverse_signal_quality_proxy']),
-      fatigueIndex: channel(1 - completion, ['incomplete_demo_proxy']),
+      stressResponse: channel(0.5, ['not_inferred_without_signal_context']),
+      fatigueIndex: channel(0.5, ['not_inferred_without_signal_context']),
     },
-    caveats: [...new Set(['aggregate_proxy_only', ...(qualitySummary.caveats ?? []), ...extraCaveats])],
+    caveats: [...new Set([
+      'aggregate_proxy_only',
+      'biometric_channels_not_inferred_without_signal_context',
+      ...(qualitySummary.caveats ?? []),
+      ...extraCaveats,
+    ])],
   };
 }
 
@@ -228,6 +252,24 @@ function buildRouteEdgeAIResult({ gameSummary, gameCorrelation, signalContext, q
     }
   }
   return buildAggregateEdgeAIResult({ gameSummary, qualitySummary });
+}
+
+function applyBatteryModeChannelGuard(edgeAIResult, batteryMode) {
+  if (batteryMode !== POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES) return edgeAIResult;
+  const pendingMapping = channel(0.5, ['original_games_mapping_pending_r6']);
+  return {
+    ...edgeAIResult,
+    channels: {
+      ...edgeAIResult?.channels,
+      visuomotorPrecision: pendingMapping,
+      inhibitionControl: pendingMapping,
+      visualSearchEfficiency: pendingMapping,
+    },
+    caveats: [...new Set([
+      ...(edgeAIResult?.caveats ?? []),
+      'original_games_metrics_pending_r6_mapping',
+    ])],
+  };
 }
 
 function buildPostulationFeatureVectorV2({ runId, generatedAt, gameSummary, gameCorrelation, edgeAIResult, signalContext }) {
@@ -267,10 +309,17 @@ export function buildPostulationDemoArtifacts({
   generatedAt = nowIso(),
   runId = `postulation-demo-${Date.now()}`,
   participant = {},
+  batteryMode: requestedBatteryMode = null,
+  cameraConsent = null,
 } = {}) {
+  const batteryMode = normalizePostulationDemoBatteryMode(requestedBatteryMode ?? completedDemo?.batteryMode);
+  const batteryId = getPostulationDemoBatteryId(batteryMode);
+  const selectedBattery = listVisiblePostulationBlocks(getPostulationDemoBattery(batteryMode));
+  const modeCaveats = batteryMode === POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES
+    ? ['original_games_metrics_pending_r6_mapping']
+    : [];
   const blocks = normalizeCompletedBlocks(completedDemo);
-  const fallbackBlocks = blocks.length ? blocks : POSTULATION_DEMO_BATTERY
-    .filter((block) => block.visible !== false)
+  const fallbackBlocks = blocks.length ? blocks : selectedBattery
     .map((block, index) => ({
       index,
       gameId: block.gameId,
@@ -285,9 +334,21 @@ export function buildPostulationDemoArtifacts({
   const normalizedEvents = gameEvents.map((event) => normalizeGameEvent(event));
   const gameSummary = buildPostulationDemoGameSummary({ gameEvents: normalizedEvents, completedDemo: { blocks: fallbackBlocks.map((block) => ({ block, summary: block.result ?? {} })) } });
   const gameCorrelation = buildPostulationGameCorrelation({ normalizedEvents, signalContext });
-  const baseQualitySummary = qualityFromSignalSnapshot(signalSnapshot, { gameSummary, gameCorrelation });
-  const edgeAIResult = buildRouteEdgeAIResult({ gameSummary, gameCorrelation, signalContext, qualitySummary: baseQualitySummary });
-  const qualitySummary = qualityFromSignalSnapshot(signalSnapshot, { gameSummary, gameCorrelation, edgeAIResult });
+  const baseQualitySummary = qualityFromSignalSnapshot(signalSnapshot, {
+    gameSummary,
+    gameCorrelation,
+    additionalCaveats: modeCaveats,
+  });
+  const edgeAIResult = applyBatteryModeChannelGuard(
+    buildRouteEdgeAIResult({ gameSummary, gameCorrelation, signalContext, qualitySummary: baseQualitySummary }),
+    batteryMode,
+  );
+  const qualitySummary = qualityFromSignalSnapshot(signalSnapshot, {
+    gameSummary,
+    gameCorrelation,
+    edgeAIResult,
+    additionalCaveats: modeCaveats,
+  });
   const featureVectorV2 = buildPostulationFeatureVectorV2({
     runId,
     generatedAt,
@@ -297,10 +358,10 @@ export function buildPostulationDemoArtifacts({
     signalContext,
   });
   const assessmentSession = buildUnifiedAssessmentSession({
-    batterySession: buildBatterySession({ blocks: fallbackBlocks, generatedAt, runId }),
+    batterySession: buildBatterySession({ blocks: fallbackBlocks, generatedAt, runId, batteryMode, batteryId }),
     generatedAt,
     consent: {
-      camera: Boolean(signalSnapshot?.sampleCount),
+      camera: cameraConsent == null ? Boolean(signalSnapshot?.sampleCount) : cameraConsent === true,
       aggregateExport: true,
       humanReviewOnly: true,
     },
@@ -320,6 +381,8 @@ export function buildPostulationDemoArtifacts({
     schemaVersion: POSTULATION_DEMO_ARTIFACTS_SCHEMA,
     generatedAt,
     runId,
+    batteryMode,
+    batteryId,
     assessmentSession,
     talentProfile,
     payload,

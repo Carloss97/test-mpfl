@@ -22,10 +22,6 @@ const DEFAULT_GAME_COMPONENTS = Object.freeze({
   passenger_routes: PassengerRouteOptimizationTask,
 });
 
-function now() {
-  return globalThis.performance?.now?.() ?? Date.now();
-}
-
 function getCurrentViewport() {
   if (typeof window === 'undefined') return { width: 1440, height: 900 };
   return {
@@ -65,15 +61,6 @@ function usePostulationGameViewport() {
   return viewport;
 }
 
-function emitEvent(onGameEvent, event) {
-  onGameEvent?.({
-    type: 'game_event_v1',
-    timestamp: now(),
-    privacy: { rawPointer: false },
-    ...event,
-  });
-}
-
 export default function PostulationGameStage({
   blocks = listVisiblePostulationBlocks(POSTULATION_DEMO_BATTERY),
   gameComponents = {},
@@ -94,28 +81,8 @@ export default function PostulationGameStage({
   useEffect(() => { onGameEventRef.current = onGameEvent; }, [onGameEvent]);
   useEffect(() => { onCompleteDemoRef.current = onCompleteDemo; }, [onCompleteDemo]);
 
-  useEffect(() => {
-    if (!currentBlock) return;
-    emitEvent(onGameEventRef.current, {
-      eventType: 'game_start',
-      gameId: currentBlock.gameId,
-      gameState: { phase: currentBlock.phase, skill: currentBlock.skill },
-    });
-  }, [currentBlock]);
-
   const completeBlock = useCallback((summary = {}) => {
     if (!currentBlock) return;
-    emitEvent(onGameEventRef.current, {
-      eventType: 'game_end',
-      gameId: currentBlock.gameId,
-      response: {
-        outcome: 'completed',
-        correct: true,
-        score: Number(summary.score ?? summary.accuracy ?? 1) || 0,
-      },
-      gameState: { phase: currentBlock.phase, skill: currentBlock.skill },
-    });
-
     const nextCompleted = [...completed, { block: currentBlock, summary }];
     setCompleted(nextCompleted);
 

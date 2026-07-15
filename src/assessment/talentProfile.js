@@ -72,7 +72,28 @@ function qualityCaveats(session = {}) {
   return session.qualitySummary?.caveats ?? [];
 }
 
+function hasPendingOriginalGameMapping(session = {}) {
+  return session.mode === 'postulation_demo_original_games'
+    || qualityCaveats(session).includes('original_games_metrics_pending_r6_mapping');
+}
+
+function buildPendingMappingDimensions(session = {}) {
+  const caveats = [...new Set([
+    ...qualityCaveats(session),
+    'original_games_metrics_pending_r6_mapping',
+  ])];
+  const confidence = Math.min(0.25, qualityConfidence(session.qualitySummary, session.edgeAI));
+  return Object.fromEntries(Object.keys(TALENT_DIMENSION_DEFINITIONS).map((id) => [id, dimension({
+    id,
+    rawScore: 0.5,
+    confidence,
+    evidence: ['Métricas agregadas preservadas; mapeo específico pendiente de validación.'],
+    caveats,
+  })]));
+}
+
 function buildDimensions(session) {
+  if (hasPendingOriginalGameMapping(session)) return buildPendingMappingDimensions(session);
   const game = session.gameSummary ?? {};
   const performance = game.performance ?? {};
   const motor = game.motor ?? {};
@@ -184,7 +205,8 @@ function globalSummary(dimensions, confidence) {
 
 export function buildTalentProfile({ assessmentSession }) {
   const dimensions = buildDimensions(assessmentSession ?? {});
-  const confidence = qualityConfidence(assessmentSession?.qualitySummary, assessmentSession?.edgeAI);
+  const rawConfidence = qualityConfidence(assessmentSession?.qualitySummary, assessmentSession?.edgeAI);
+  const confidence = hasPendingOriginalGameMapping(assessmentSession) ? Math.min(0.25, rawConfidence) : rawConfidence;
   return {
     schemaVersion: 'krumm_talent_profile_v1',
     runId: assessmentSession?.runId ?? null,

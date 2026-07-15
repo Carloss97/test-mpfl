@@ -1,7 +1,14 @@
 import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.js';
-import { listVisiblePostulationBlocks, POSTULATION_DEMO_BATTERY } from './postulationDemoConfig.js';
+import {
+  POSTULATION_DEMO_BATTERY_MODES,
+  getPostulationDemoBattery,
+  getPostulationDemoBatteryId,
+  listVisiblePostulationBlocks,
+  normalizePostulationDemoBatteryMode,
+} from './postulationDemoConfig.js';
 
 export const POSTULATION_DEMO_FIXTURE_RUN_ID = 'postulation-demo-fixture-v1';
+export const POSTULATION_DEMO_ORIGINAL_FIXTURE_RUN_ID = 'postulation-demo-original-games-fixture-v1';
 export const POSTULATION_DEMO_FIXTURE_LABEL = 'Datos sintéticos de demostración';
 
 export function isPostulationFixtureMode(search = globalThis.location?.search ?? '') {
@@ -10,6 +17,60 @@ export function isPostulationFixtureMode(search = globalThis.location?.search ??
 }
 
 function blockSummary(block, index) {
+  if (block.gameId === 'laser_puzzle') {
+    return {
+      gameId: block.gameId,
+      completed: true,
+      completedTrialCount: block.trialCount,
+      trialCount: block.trialCount,
+      score: 0.88,
+      levelCount: block.trialCount,
+      solvedLevels: block.trialCount,
+      moveCount: 7,
+      reconfigurationCount: 7,
+      hintCount: 0,
+      timeMs: 74_000,
+      solutionEfficiency: 0.9,
+      ruleViolationCount: 0,
+      aggregateOnly: true,
+    };
+  }
+  if (block.gameId === 'balloon_risk') {
+    return {
+      gameId: block.gameId,
+      completed: true,
+      completedTrialCount: block.trialCount,
+      trialCount: block.trialCount,
+      score: 0.72,
+      roundsCompleted: block.trialCount,
+      totalRounds: block.trialCount,
+      averagePumps: 5.8,
+      cashoutCount: 6,
+      popCount: 2,
+      postPopAdjustment: -1.5,
+      riskEfficiency: 0.72,
+      timeMs: 68_000,
+      aggregateOnly: true,
+    };
+  }
+  if (block.gameId === 'passenger_routes') {
+    return {
+      gameId: block.gameId,
+      completed: true,
+      completedTrialCount: block.trialCount,
+      trialCount: block.trialCount,
+      score: 0.84,
+      passengersDelivered: 3,
+      destinationCount: 3,
+      routeEfficiency: 0.84,
+      replanCount: 1,
+      stationUseCount: 1,
+      constraintViolationCount: 0,
+      satisfactionScore: 88,
+      timeMs: 92_000,
+      aggregateOnly: true,
+    };
+  }
   const accuracy = [0.88, 0.76, 0.82, 0.9][index] ?? 0.82;
   const score = [0.84, 0.72, 0.8, 0.87][index] ?? 0.8;
   const meanReactionTimeMs = [520, 610, 680, 740][index] ?? 620;
@@ -20,6 +81,23 @@ function blockSummary(block, index) {
     accuracy,
     score,
     meanReactionTimeMs,
+  };
+}
+
+function fixtureResponse(block, index) {
+  const summary = blockSummary(block, index);
+  const base = {
+    correct: index !== 1,
+    outcome: index === 1 ? 'controlled_error' : 'correct_response',
+    reactionTimeMs: 420 + (index * 35),
+    score: summary.score,
+  };
+  if (block.gameId === 'laser_puzzle') return { ...base, correct: true, outcome: 'level_solved', laserPuzzle: summary };
+  if (block.gameId === 'balloon_risk') return { ...base, outcome: 'cashout', balloonRisk: summary };
+  if (block.gameId === 'passenger_routes') return { ...base, correct: true, outcome: 'route_completed', passengerRoutes: summary };
+  return {
+    ...base,
+    pointerSummary: { pathEfficiency: 0.78 + (index * 0.03), correctionCount: index === 1 ? 2 : 0 },
   };
 }
 
@@ -43,13 +121,7 @@ function syntheticGameEvents(blocks) {
         trialId: `${block.gameId}-fixture-1`,
         targetId: `${block.gameId}-cue-1`,
         timestamp: base + 420 + (index * 35),
-        response: {
-          correct: index !== 1,
-          outcome: index === 1 ? 'controlled_error' : 'correct_response',
-          reactionTimeMs: 420 + (index * 35),
-          score: [0.86, 0.68, 0.82, 0.9][index] ?? 0.8,
-          pointerSummary: { pathEfficiency: 0.78 + (index * 0.03), correctionCount: index === 1 ? 2 : 0 },
-        },
+        response: fixtureResponse(block, index),
       },
     ];
   });
@@ -89,9 +161,19 @@ function syntheticSignalContext() {
   };
 }
 
-export function buildPostulationDemoFixture({ generatedAt = '2026-07-09T22:00:00.000Z' } = {}) {
-  const blocks = listVisiblePostulationBlocks(POSTULATION_DEMO_BATTERY);
+export function buildPostulationDemoFixture({
+  generatedAt = '2026-07-09T22:00:00.000Z',
+  batteryMode: requestedBatteryMode = POSTULATION_DEMO_BATTERY_MODES.STABLE_DG,
+} = {}) {
+  const batteryMode = normalizePostulationDemoBatteryMode(requestedBatteryMode);
+  const batteryId = getPostulationDemoBatteryId(batteryMode);
+  const blocks = listVisiblePostulationBlocks(getPostulationDemoBattery(batteryMode));
+  const runId = batteryMode === POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES
+    ? POSTULATION_DEMO_ORIGINAL_FIXTURE_RUN_ID
+    : POSTULATION_DEMO_FIXTURE_RUN_ID;
   const completedDemo = {
+    batteryMode,
+    batteryId,
     completedCount: blocks.length,
     totalCount: blocks.length,
     blocks: blocks.map((block, index) => ({ block, summary: blockSummary(block, index) })),
@@ -112,7 +194,9 @@ export function buildPostulationDemoFixture({ generatedAt = '2026-07-09T22:00:00
     },
     signalContext: syntheticSignalContext(),
     generatedAt,
-    runId: POSTULATION_DEMO_FIXTURE_RUN_ID,
+    runId,
+    batteryMode,
+    cameraConsent: true,
     participant: { mode: 'synthetic_demo_fixture' },
   });
   return {
@@ -121,6 +205,7 @@ export function buildPostulationDemoFixture({ generatedAt = '2026-07-09T22:00:00
       ...artifacts,
       fixture: {
         synthetic: true,
+        batteryMode,
         label: POSTULATION_DEMO_FIXTURE_LABEL,
         description: 'Fixture local privacy-safe para reuniones, QA visual y fallback sin cámara.',
       },

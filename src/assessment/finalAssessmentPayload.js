@@ -30,6 +30,18 @@ function sanitizeFeatureVector(vector = null) {
   };
 }
 
+function sanitizeGameResults(blocks = []) {
+  return (Array.isArray(blocks) ? blocks : []).map((block, index) => ({
+    index: Number(block?.index ?? index),
+    gameId: block?.gameId ?? null,
+    label: block?.label ?? null,
+    skill: block?.skill ?? null,
+    status: block?.status ?? 'unknown',
+    trialCount: Number(block?.trialCount ?? 0),
+    result: clonePlain(block?.result ?? null),
+  }));
+}
+
 function sanitizeTalentProfile(profile = null) {
   if (!profile) return null;
   return {
@@ -89,6 +101,7 @@ export function buildFinalAssessmentPayload({
       gameCorrelationAggregate: clonePlain(assessmentSession?.gameCorrelation?.aggregate ?? null),
       adaptiveDifficultyTrace: clonePlain(assessmentSession?.adaptiveDifficultyTrace ?? []),
       featureVectorV2: sanitizeFeatureVector(assessmentSession?.featureVectorV2 ?? null),
+      gameResults: sanitizeGameResults(assessmentSession?.blocks ?? []),
     },
     talentProfile: sanitizeTalentProfile(talentProfile),
     edgeAI: sanitizeEdgeAI(assessmentSession?.edgeAI ?? null),

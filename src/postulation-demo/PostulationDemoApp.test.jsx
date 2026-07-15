@@ -5,6 +5,14 @@ import PostulationDemoApp from './PostulationDemoApp.jsx';
 import { isPostulationDemoPath } from './postulationDemoRoute.js';
 
 function MockGame({ block, onComplete, onGameEvent }) {
+  React.useEffect(() => {
+    onGameEvent?.({
+      type: 'game_event_v1',
+      eventType: 'game_start',
+      gameId: block.gameId,
+      timestamp: performance.now(),
+    });
+  }, [block.gameId, onGameEvent]);
   return (
     <div aria-label={`mock-${block.gameId}`}>
       <button
@@ -15,6 +23,12 @@ function MockGame({ block, onComplete, onGameEvent }) {
             gameId: block.gameId,
             trialId: `${block.gameId}-1`,
             response: { correct: true, reactionTimeMs: 500, score: 0.8 },
+          });
+          onGameEvent?.({
+            type: 'game_event_v1',
+            eventType: 'game_end',
+            gameId: block.gameId,
+            timestamp: performance.now(),
           });
           onComplete?.({
             gameId: block.gameId,
@@ -37,6 +51,9 @@ const MOCK_GAMES = {
   go_nogo: MockGame,
   color_interference: MockGame,
   visual_search: MockGame,
+  laser_puzzle: MockGame,
+  balloon_risk: MockGame,
+  passenger_routes: MockGame,
 };
 
 afterEach(() => {
@@ -116,5 +133,35 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(screen.getByText(/Datos sintéticos de demostración/i)).toBeInTheDocument();
     expect(screen.getByText(/Fixture local privacy-safe/i)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /KRUMM Postulaciones/i })).not.toBeInTheDocument();
+  });
+
+  it('activates the original games only through the explicit battery query and completes all three blocks', () => {
+    window.history.pushState({}, '', '/postulaciones-demo?battery=original');
+    render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
+
+    expect(screen.getByText(/Validación interna · juegos originales/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Comenzar demo de postulación/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Continuar a juegos/i }));
+
+    expect(screen.getByRole('heading', { name: /Puzzle láser/i })).toBeInTheDocument();
+    expect(screen.getByText(/Juego 1 de 3/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Completar laser_puzzle/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Completar balloon_risk/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Completar passenger_routes/i }));
+
+    expect(screen.getByRole('heading', { name: /Reporte listo para revisión humana/i })).toBeInTheDocument();
+    expect(screen.getByText(/Completaste 3 de 3 juegos/i)).toBeInTheDocument();
+    expect(document.querySelector('[data-battery-mode="original_games"]')).toBeInTheDocument();
+  });
+
+  it('opens the original-games synthetic fixture when fixture and battery flags are combined', () => {
+    window.history.pushState({}, '', '/postulaciones-demo?fixture=1&battery=original');
+    render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
+
+    expect(screen.getByRole('heading', { name: /Reporte listo para revisión humana/i })).toBeInTheDocument();
+    expect(screen.getByText(/Completaste 3 de 3 juegos/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Puzzle láser/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Globo de riesgo/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Optimización de rutas de pasajeros/i })).toBeInTheDocument();
   });
 });

@@ -15,6 +15,12 @@ function completeIntroRoute() {
   fireEvent.click(screen.getByRole('button', { name: /^Derecha$/i }));
 }
 
+function move(direction, count = 1) {
+  for (let index = 0; index < count; index += 1) {
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${direction}$`, 'i') }));
+  }
+}
+
 describe('PassengerRouteOptimizationTask', () => {
   it('renders a compact passenger route board with rethemed constraints and accessible controls', () => {
     const onGameEvent = vi.fn();
@@ -84,5 +90,42 @@ describe('PassengerRouteOptimizationTask', () => {
       }),
     });
     expect(JSON.stringify({ events, completion: onComplete.mock.calls })).not.toMatch(FORBIDDEN_ROUTE_FIELDS);
+  });
+
+  it('completes both configured circuits through a physical support stop', async () => {
+    const onComplete = vi.fn();
+    render(
+      <PassengerRouteOptimizationTask
+        active
+        width={606}
+        height={338}
+        trialCount={2}
+        onGameEvent={vi.fn()}
+        onComplete={onComplete}
+      />,
+    );
+
+    completeIntroRoute();
+    expect(await screen.findByText(/Circuito 2 de 2/i)).toBeInTheDocument();
+
+    move('Derecha', 5);
+    move('Arriba');
+    move('Izquierda', 2);
+    expect(screen.getByText(/presupuesto operativo restaurado/i)).toBeInTheDocument();
+    move('Derecha');
+    move('Arriba', 3);
+    move('Izquierda', 4);
+
+    expect(screen.getByTestId('passenger-route-finished')).toBeInTheDocument();
+    expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({
+      gameId: 'passenger_routes',
+      completed: true,
+      passengersDelivered: 3,
+      destinationCount: 3,
+      stationUseCount: 1,
+      routeEfficiency: 1,
+      score: 1,
+      aggregateOnly: true,
+    }));
   });
 });

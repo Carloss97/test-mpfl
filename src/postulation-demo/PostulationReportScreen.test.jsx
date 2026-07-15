@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import PostulationReportScreen from './PostulationReportScreen.jsx';
+import { getPostulationGameCards } from './PostulationReportSummary.js';
 import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.js';
 
 const completedDemo = Object.freeze({
@@ -91,5 +92,20 @@ describe('PostulationReportScreen', () => {
     for (const forbidden of ['rawGameEvents', 'pointerSamples', 'faceSamples', 'landmarks', 'keypoints', 'windows']) {
       expect(visibleText).not.toContain(forbidden);
     }
+  });
+
+  it('formats normalized and historical point scores without impossible percentages', () => {
+    const cards = getPostulationGameCards({
+      assessmentSession: {
+        blocks: [
+          { gameId: 'laser_puzzle', label: 'Puzzle', status: 'completed', result: { score: 0.84 } },
+          { gameId: 'passenger_routes', label: 'Rutas legacy', status: 'completed', result: { score: 84 } },
+          { gameId: 'balloon_risk', label: 'Globo legacy', status: 'completed', result: { score: 120 } },
+        ],
+      },
+    });
+
+    expect(cards.map((card) => card.score)).toEqual(['84%', '84', '120']);
+    expect(cards.map((card) => card.score).join(' ')).not.toMatch(/8400%|12000%/);
   });
 });

@@ -42,6 +42,9 @@ describe('balloon risk postulation telemetry helpers', () => {
       postPopAdjustment: -3,
       aggregateOnly: true,
     });
+    expect(aggregate.score).toBe(aggregate.riskEfficiency);
+    expect(aggregate.score).toBeGreaterThanOrEqual(0);
+    expect(aggregate.score).toBeLessThanOrEqual(1);
     expect(JSON.stringify(aggregate)).not.toMatch(/rawGameEvents|clickTrace|pointerSamples|pumpSequence/i);
   });
 

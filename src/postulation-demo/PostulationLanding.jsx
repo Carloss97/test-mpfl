@@ -1,12 +1,16 @@
 import React from 'react';
 import { postulationDemoCopy } from './postulationDemoCopy.js';
+import { POSTULATION_DEMO_BATTERY_MODES } from './postulationDemoConfig.js';
 
-export default function PostulationLanding({ onStart }) {
+export default function PostulationLanding({ onStart, batteryMode }) {
+  const isOriginalMode = batteryMode === POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES;
   return (
     <main className="postulation-demo__landing" aria-labelledby="postulation-demo-title">
       <section className="postulation-demo__hero">
         <div className="postulation-demo__hero-copy">
-          <span className="postulation-demo__eyebrow">{postulationDemoCopy.eyebrow}</span>
+          <span className="postulation-demo__eyebrow">
+            {isOriginalMode ? 'Validación interna · juegos originales' : postulationDemoCopy.eyebrow}
+          </span>
           <h1 id="postulation-demo-title">{postulationDemoCopy.title}</h1>
           <p className="postulation-demo__subtitle">{postulationDemoCopy.subtitle}</p>
           <p className="postulation-demo__description">{postulationDemoCopy.description}</p>
@@ -27,7 +31,7 @@ export default function PostulationLanding({ onStart }) {
           </div>
           <div>
             <span>Modo</span>
-            <strong>Browser-local</strong>
+            <strong>{isOriginalMode ? 'Browser-local · original' : 'Browser-local'}</strong>
           </div>
           <div>
             <span>Resultado</span>

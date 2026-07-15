@@ -189,7 +189,7 @@ Decisión inicial: usar `GridFlowGame.jsx` como base robusta para rutas/pasajero
 - pumps promedio por ronda;
 - cashouts;
 - pops;
-- puntos totales;
+- score normalizado `[0, 1]` y eficiencia de riesgo;
 - ajuste post-pop;
 - tiempo por ronda.
 
@@ -300,36 +300,73 @@ rawGameEvents
 
 ## Fase R-5 — Integración de batería nueva y modo fallback
 
-**Estado:** `[ ] Por implementar`
+**Estado:** `[x] Completada con activación controlada`
 
 **Prioridad:** Alta.
 
 **Objetivo:** Activar la nueva batería original manteniendo la batería DG actual como fallback.
 
-**Archivos previstos:**
+**Contrato implementado:**
 
-- Modificar: `src/postulation-demo/postulationDemoConfig.js`
-- Modificar: `src/postulation-demo/PostulationGameStage.jsx`
-- Modificar: `src/postulation-demo/PostulationDemoApp.jsx`
-- Modificar: `src/postulation-demo/postulationDemoFixture.js`
-- Modificar tests de app/config/fixture.
+```text
+stable_dg       → fallback predeterminado, 4 juegos DG
+original_games  → modo interno controlado, 3 juegos originales
+```
 
-**Estrategia:**
+Seleccionar sin cambiar código:
 
-Agregar modo controlado por config, no reemplazo irreversible:
+```text
+/postulaciones-demo                         → stable_dg
+/postulaciones-demo?battery=original        → original_games
+/postulaciones-demo?fixture=1               → fixture stable_dg
+/postulaciones-demo?fixture=1&battery=original → fixture original_games
+```
+
+**Constantes y reversibilidad:**
 
 ```text
 POSTULATION_DEMO_BATTERY_STABLE_DG
 POSTULATION_DEMO_BATTERY_ORIGINAL_GAMES
+POSTULATION_DEMO_DEFAULT_BATTERY_MODE = stable_dg
+krumm_postulation_demo_stable_dg_v1
+krumm_postulation_demo_original_games_v1
 ```
 
-Inicialmente usar original games solo detrás de flag interna o constante explícita.
+La selección queda fijada al inicio de la sesión. Valores de query desconocidos vuelven de forma segura a `stable_dg`. Los blueprints fuente continúan `ported_hidden`; la config runtime crea copias allowlist sin `sourceGame` ni rutas locales.
+
+**Backtrack técnico realizado:**
+
+1. Eliminados eventos lifecycle duplicados del stage; cada juego conserva un único `game_start`/`game_end` mediante `GameRuntime`.
+2. Correlación trial-aware exige `gameId + trialId` para evitar cruces entre juegos que reutilicen IDs.
+3. Scores de Laser/Balloon/Passenger quedan en escala `[0, 1]`; el reporte tolera payloads históricos sin mostrar porcentajes absurdos.
+4. Corregido Balloon Risk para incluir el score de la última ronda y Laser para separar reloj total de reloj por nivel.
+5. Passenger y Laser tienen cobertura de finalización de todos los niveles autorados.
+6. La lista global de campos prohibidos incluye rutas, keypoints, trazas, secuencias y resultados por trial; `trials` nunca entra a sesión/payload final.
+7. El payload final incluye `behavioral.gameResults` aggregate-only y el bundle HTTP contiene el payload estructurado requerido por backend.
+8. Sin señal biométrica no se fabrican estrés, fatiga o atención: esos canales quedan neutrales con caveat.
+9. Mientras R-6 no tenga mappings validados, la batería original neutraliza dimensiones no soportadas y limita confianza a `0.25`; preserva métricas por juego sin sobreinterpretarlas.
+10. Buffers de señales/eventos son acotados in-place para evitar copias crecientes en el hot path.
+11. Consentimiento de cámara se separó de disponibilidad/calidad de muestras.
+12. Smoke móvil detectó y corrigió overflow del reporte mediante tracks `minmax(0, 1fr)` y `min-width: 0`.
 
 **Criterios de éxito:**
 
-- Se puede volver a batería DG estable sin tocar código profundo.
-- Fixture tiene versión con juegos originales.
-- Smoke valida ambas rutas o al menos fallback estable + original en modo test.
+- [x] Se vuelve a batería DG estable sin tocar código.
+- [x] Fixture tiene versión con juegos originales.
+- [x] Smoke valida stable/original y sus fixtures en 1280×720 y 390×844.
+- [x] Default DG permanece intacto.
+- [x] Consola, page errors, requests fallidos y overflow horizontal: cero en el smoke automatizado.
+
+**Verificación final R-5 (2026-07-15):**
+
+```text
+Focal original-games: 10 files / 44 tests
+Focal R-5/pipeline: 12 files / 52 tests
+Suite completa: 80 files / 331 tests
+Build: 1380 modules, OK en 3.12s
+Audit producción: 0 vulnerabilidades
+Smoke Playwright: 2 viewports × 4 rutas, PASS
+```
 
 ---
 
@@ -421,4 +458,6 @@ URLs:
 ```text
 http://127.0.0.1:5173/postulaciones-demo
 http://127.0.0.1:5173/postulaciones-demo?fixture=1
+http://127.0.0.1:5173/postulaciones-demo?battery=original
+http://127.0.0.1:5173/postulaciones-demo?fixture=1&battery=original
 ```

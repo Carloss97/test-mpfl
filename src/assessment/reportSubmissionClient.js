@@ -6,6 +6,10 @@ function stringifyContent(content) {
   return typeof content === 'string' ? content : JSON.stringify(content);
 }
 
+function clonePlain(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 function assertSafePayload(payload) {
   const validation = validateFinalAssessmentPayload(payload);
   if (!validation.ok) {
@@ -32,10 +36,12 @@ export function buildLocalReportBundle({ payload, reports = [], researchExports 
     batteryId: payload.batteryId ?? null,
     generatedAt,
     validation,
+    payload: clonePlain(payload),
     manifest: {
       fileCount: reports.length + researchExports.length,
       reportFormats: reports.map((report) => report.format ?? report.mimeType ?? 'unknown'),
       researchExportCount: researchExports.length,
+      includesStructuredPayload: true,
     },
     files: createReportDownloadDescriptors({ payload, reports, researchExports }),
   };
@@ -44,7 +50,10 @@ export function buildLocalReportBundle({ payload, reports = [], researchExports 
 export async function submitAssessmentReport({ payload, reports = [], researchExports = [], endpoint, fetchImpl = globalThis.fetch } = {}) {
   if (!endpoint) throw new Error('endpoint_required');
   if (typeof fetchImpl !== 'function') throw new Error('fetch_unavailable');
-  const bundle = buildLocalReportBundle({ payload, reports, researchExports });
+  const bundle = {
+    ...buildLocalReportBundle({ payload, reports, researchExports }),
+    deliveryMode: 'http',
+  };
   const response = await fetchImpl(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

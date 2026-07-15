@@ -11,6 +11,9 @@ const assessmentSession = {
   batteryId: 'krumm_unified_battery_v1',
   generatedAt: '2026-06-19T01:00:00.000Z',
   qualitySummary: { sampleCount: 150, facePresenceRatio: 0.91, meanConfidence: 0.84, correlatedTrialCount: 18, caveats: [] },
+  blocks: [
+    { index: 0, gameId: 'laser_puzzle', label: 'Puzzle láser', skill: 'spatial_planning', trialCount: 2, status: 'completed', result: { score: 0.88, solvedLevels: 2, solutionEfficiency: 0.9, aggregateOnly: true } },
+  ],
   gameSummary: {
     eventCount: 80,
     performance: { trialCount: 18, completedTrialCount: 18, accuracy: 0.84, meanReactionTimeMs: 410, meanScore: 0.8 },
@@ -75,6 +78,7 @@ describe('finalAssessmentPayload', () => {
         gameSummary: { performance: { accuracy: 0.84 } },
         gameCorrelationAggregate: { completedTrialCount: 18 },
         featureVectorV2: { type: 'assessment_feature_vector_v2' },
+        gameResults: [expect.objectContaining({ gameId: 'laser_puzzle', result: expect.objectContaining({ solutionEfficiency: 0.9 }) })],
       },
       talentProfile: { schemaVersion: 'krumm_talent_profile_v1' },
       edgeAI: { modelVersion: 'krumm-edge-ai-v9.1.0-game-aware', composite: { score: 76 } },
@@ -94,11 +98,11 @@ describe('finalAssessmentPayload', () => {
     const unsafe = {
       schemaVersion: FINAL_ASSESSMENT_PAYLOAD_SCHEMA,
       governance: { humanReviewOnly: false, noAutomatedDecision: true, observationalOnly: true, privacySafe: true },
-      behavioral: { rawGameEvents: [], faceSamples: [], gameCorrelation: { windows: [] } },
+      behavioral: { rawGameEvents: [], faceSamples: [], gameCorrelation: { windows: [] }, gameResults: [{ result: { fullRoute: ['0,0'], visitedCells: ['0,0'] } }] },
     };
 
     const validation = validateFinalAssessmentPayload(unsafe);
     expect(validation.ok).toBe(false);
-    expect(validation.violations).toEqual(expect.arrayContaining(['rawGameEvents', 'faceSamples', 'windows', 'humanReviewOnly_false']));
+    expect(validation.violations).toEqual(expect.arrayContaining(['rawGameEvents', 'faceSamples', 'windows', 'fullRoute', 'visitedCells', 'humanReviewOnly_false']));
   });
 });

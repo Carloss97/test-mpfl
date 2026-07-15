@@ -6,7 +6,7 @@
 **Ruta demo:** `/postulaciones-demo`  
 **Fixture:** `/postulaciones-demo?fixture=1`  
 **Estado producto:** listo para pruebas internas.  
-**Estado reemplazo juegos originales:** R-0/R-1/R-2/R-3/R-4 avanzadas; próximo foco R-5 integración controlada de batería y fallback.
+**Estado reemplazo juegos originales:** R-0 a R-5 completadas; próximo foco R-6 mappings validados de juegos originales → dimensiones de talento/reporte HR.
 
 ---
 
@@ -25,7 +25,7 @@ El usuario quiere reemplazar progresivamente esos juegos por juegos preparados e
 2. Balloon Risk.
 3. Optimización de rutas para pasajeros.
 
-Ya se creó el plan por fases y se portaron **Laser Puzzle**, **Balloon Risk** y **Passenger Routes** como componentes ocultos disponibles para `PostulationGameStage`; todavía **no se activó la batería nueva por defecto**. El próximo trabajo técnico es **R-5 — integración controlada de batería original + fallback DG**.
+Se portaron **Laser Puzzle**, **Balloon Risk** y **Passenger Routes** y R-5 los activó como una batería interna seleccionable. La batería DG continúa siendo el default y fallback; no hubo reemplazo irreversible. El próximo trabajo técnico es **R-6 — mappings científicamente conservadores para feature vector, talento y narrativa HR**.
 
 ---
 
@@ -409,16 +409,41 @@ Oxlint: 0 warnings, 0 errors
 
 ### R-5 — Activar batería nueva + fallback
 
-Pendiente. R-4 ya está completada; no activar sin implementar el modo controlado y validar fallback.
+**Estado:** completada con modo controlado.
 
-Estrategia recomendada:
+Contratos runtime:
 
 ```text
 POSTULATION_DEMO_BATTERY_STABLE_DG
 POSTULATION_DEMO_BATTERY_ORIGINAL_GAMES
+POSTULATION_DEMO_DEFAULT_BATTERY_MODE = stable_dg
 ```
 
-Mantener fallback estable DG. Inicialmente activar original games por flag/constante interna o solo en test.
+Rutas:
+
+```text
+/postulaciones-demo                             → stable_dg
+/postulaciones-demo?battery=original            → original_games
+/postulaciones-demo?fixture=1                   → fixture stable_dg
+/postulaciones-demo?fixture=1&battery=original  → fixture original_games
+```
+
+El modo se fija al iniciar sesión; un valor desconocido vuelve a `stable_dg`. Los blueprints conservan `ported_hidden`, mientras la config runtime genera bloques activos allowlist sin `sourceGame`.
+
+Backtrack R-5 relevante para retomar:
+
+- Stage dejó de duplicar `game_start`/`game_end`.
+- `gameCorrelation` empareja por `gameId + trialId`.
+- Scores de los tres juegos originales son ratios `[0, 1]`.
+- Balloon incluye la última ronda; Laser separa reloj de juego y reloj de nivel.
+- Sesión/payload eliminan `trials`, rutas, trazas, keypoints, secuencias y raw logs.
+- `behavioral.gameResults` conserva agregados por juego para backend.
+- El bundle de submission incluye el payload estructurado además de reportes.
+- Sin señal no se fabrican canales biométricos; quedan neutrales con caveat.
+- Hasta R-6, batería original produce dimensiones neutrales (`50`) y confianza máxima `0.25`, evitando claims sin mapping validado.
+- Consentimiento de cámara y calidad/disponibilidad de señal son conceptos separados.
+- Buffer de señal/eventos acotado sin copia de arrays en cada muestra.
+- Reporte responsive corregido tras repro Playwright de overflow a 390×844.
 
 ### R-6 — Reporte, feature vector y narrativa HR
 
@@ -441,6 +466,39 @@ Validar batería DG estable vs batería original o batería mixta.
 ---
 
 ## 7. Verificación más reciente antes de este handoff
+
+### Verificación final R-5 — batería controlada + backtrack
+
+```text
+Focal original-games/fallback (forks, 1 worker): 10 files / 44 tests
+Focal R-5/pipeline (threads): 12 files / 52 tests
+Suite completa (threads): 80 files / 331 tests
+Build: 1380 módulos, 3.12s, OK
+Audit producción: found 0 vulnerabilities
+```
+
+Warnings conocidos de suite completa, sin regresión:
+
+```text
+HTMLCanvasElement.getContext() no implementado en jsdom
+React act(...) warnings existentes en App.test.jsx
+```
+
+Smoke Playwright real con Vite development:
+
+```text
+Viewports: 1280×720 y 390×844
+Rutas por viewport: stable landing, original gameplay, stable fixture, original fixture
+Resultado: 8/8 rutas PASS
+Console errors: 0
+Page errors: 0
+Request failures: 0
+Horizontal overflow: 0
+```
+
+El primer smoke móvil detectó `scrollWidth=399` con `clientWidth=390` en el fixture original. Se corrigió el track raíz del reporte con `minmax(0, 1fr)` y `min-width: 0`; el smoke completo posterior quedó verde.
+
+El lint focal de los directorios tocados se mantiene como gate. Una exploración deliberadamente más amplia de todo `src/telemetry` expone warnings históricos fuera del diff de R-5; no deben confundirse con regresiones de esta fase.
 
 ### Verificación final R-4 — Passenger Routes
 
@@ -605,15 +663,15 @@ React act(...) warnings existentes en App.test.jsx
 
 ---
 
-## 8. Estado git/puertos al crear este handoff
+## 8. Estado git/puertos al actualizar este handoff
 
-Al iniciar esta documentación, `git status --short --branch --untracked-files=all` mostró:
+Al iniciar R-5, `git status --short --branch --untracked-files=all` mostró:
 
 ```text
 ## main...Test-camara/main
 ```
 
-Es decir, el working tree se observó limpio antes de escribir este handoff.
+El working tree estaba limpio antes de R-5. Ahora contiene únicamente el conjunto de cambios R-5/backtrack sin commit; no se hizo commit ni push.
 
 Puertos Vite:
 
@@ -621,7 +679,7 @@ Puertos Vite:
 5173/5174 sin listener
 ```
 
-Después de crear este documento y el prompt asociado, habrá cambios documentales nuevos.
+El servidor Vite usado para smoke fue detenido al terminar.
 
 ---
 
@@ -641,8 +699,13 @@ docs/plans/postulation-demo-original-games-integration-plan.md
 docs/plans/postulation-demo-original-games-new-agent-handoff.md
 src/postulation-demo/originalGameBlueprints.js
 src/postulation-demo/PostulationGameStage.jsx
+src/postulation-demo/postulationDemoConfig.js
+src/postulation-demo/PostulationDemoApp.jsx
+src/postulation-demo/postulationDemoFixture.js
+src/postulation-demo/postulationDemoSessionBuilder.js
 src/tasks/original-games/LaserPuzzlePostulationTask.jsx
 src/tasks/original-games/BalloonRiskPostulationTask.jsx
+src/tasks/original-games/PassengerRouteOptimizationTask.jsx
 ```
 
 Focal rápido para estado actual:
@@ -677,6 +740,8 @@ URLs:
 ```text
 http://127.0.0.1:5173/postulaciones-demo
 http://127.0.0.1:5173/postulaciones-demo?fixture=1
+http://127.0.0.1:5173/postulaciones-demo?battery=original
+http://127.0.0.1:5173/postulaciones-demo?fixture=1&battery=original
 ```
 
 ---

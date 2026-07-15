@@ -1251,7 +1251,12 @@
   margin: 0 auto;
   padding: clamp(24px, 4vw, 56px) 0 64px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
+}
+
+.postulation-demo__report-screen > * {
+  min-width: 0;
 }
 
 .postulation-demo__report-hero,
@@ -1527,6 +1532,7 @@
   color: #92400e;
   font-size: 0.78rem;
   font-weight: 850;
+  overflow-wrap: anywhere;
 }
 
 .postulation-demo__technical-drawer {

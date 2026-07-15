@@ -6,6 +6,13 @@ import BackgroundSignalOrchestrator from './BackgroundSignalOrchestrator.jsx';
 import PostulationReportScreen from './PostulationReportScreen.jsx';
 import { buildPostulationDemoFixture, isPostulationFixtureMode } from './postulationDemoFixture.js';
 import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.js';
+import {
+  getPostulationDemoBattery,
+  getPostulationDemoBatteryId,
+  listVisiblePostulationBlocks,
+  normalizePostulationDemoBatteryMode,
+  resolvePostulationDemoBatteryMode,
+} from './postulationDemoConfig.js';
 import './postulationDemo.css';
 
 function sameSnapshot(a, b) {
@@ -25,21 +32,30 @@ function triggerDownload(descriptor) {
   URL.revokeObjectURL(url);
 }
 
-function buildInitialDemoState() {
+function buildInitialDemoState(requestedBatteryMode) {
+  const batteryMode = requestedBatteryMode == null
+    ? resolvePostulationDemoBatteryMode()
+    : normalizePostulationDemoBatteryMode(requestedBatteryMode);
+  const batteryId = getPostulationDemoBatteryId(batteryMode);
+  const blocks = listVisiblePostulationBlocks(getPostulationDemoBattery(batteryMode));
   if (!isPostulationFixtureMode()) {
-    return { phase: 'landing', demoSummary: null, demoArtifacts: null };
+    return { phase: 'landing', demoSummary: null, demoArtifacts: null, batteryMode, batteryId, blocks };
   }
-  const fixture = buildPostulationDemoFixture();
+  const fixture = buildPostulationDemoFixture({ batteryMode });
   return {
     phase: 'report-preview',
     demoSummary: fixture.summary,
     demoArtifacts: fixture.artifacts,
+    batteryMode,
+    batteryId,
+    blocks,
   };
 }
 
-export default function PostulationDemoApp({ gameComponents } = {}) {
+export default function PostulationDemoApp({ gameComponents, batteryMode: requestedBatteryMode } = {}) {
   const initialStateRef = useRef(null);
-  if (initialStateRef.current === null) initialStateRef.current = buildInitialDemoState();
+  if (initialStateRef.current === null) initialStateRef.current = buildInitialDemoState(requestedBatteryMode);
+  const { batteryMode, batteryId, blocks } = initialStateRef.current;
   const gameEventsRef = useRef([]);
   const signalContextRef = useRef(null);
   const [phase, setPhase] = useState(initialStateRef.current.phase);
@@ -70,7 +86,11 @@ export default function PostulationDemoApp({ gameComponents } = {}) {
   }, []);
 
   const handleGameEvent = useCallback((event) => {
-    if (event) gameEventsRef.current = [...gameEventsRef.current, event].slice(-1000);
+    if (!event) return;
+    gameEventsRef.current.push(event);
+    if (gameEventsRef.current.length > 1000) {
+      gameEventsRef.current.splice(0, gameEventsRef.current.length - 1000);
+    }
     setGameEventCount((count) => count + 1);
   }, []);
 
@@ -83,10 +103,13 @@ export default function PostulationDemoApp({ gameComponents } = {}) {
   }, []);
 
   const finishDemo = useCallback((summary) => {
-    setDemoSummary(summary);
+    const completedDemo = { ...summary, batteryMode, batteryId };
+    setDemoSummary(completedDemo);
     try {
       const artifacts = buildPostulationDemoArtifacts({
-        completedDemo: summary,
+        completedDemo,
+        batteryMode,
+        cameraConsent: backgroundActive,
         gameEvents: gameEventsRef.current,
         signalSnapshot,
         signalContext: signalContextRef.current,
@@ -98,11 +121,11 @@ export default function PostulationDemoApp({ gameComponents } = {}) {
       setReportError(error?.message ?? String(error));
     }
     setPhase('report-preview');
-  }, [signalSnapshot]);
+  }, [backgroundActive, batteryId, batteryMode, signalSnapshot]);
 
   if (phase === 'setup') {
     return (
-      <div className="postulation-demo" data-demo-phase="setup">
+      <div className="postulation-demo" data-demo-phase="setup" data-battery-mode={batteryMode}>
         <PostulationConsentSetup
           backgroundActive={backgroundActive}
           signalSnapshot={signalSnapshot}
@@ -118,9 +141,10 @@ export default function PostulationDemoApp({ gameComponents } = {}) {
 
   if (phase === 'gameplay') {
     return (
-      <div className="postulation-demo postulation-demo--gameplay" data-demo-phase="gameplay">
+      <div className="postulation-demo postulation-demo--gameplay" data-demo-phase="gameplay" data-battery-mode={batteryMode}>
         <BackgroundSignalOrchestrator active={backgroundActive} eventCount={gameEventCount} mode="hidden" onSnapshot={handleSnapshot} onSignalContext={handleSignalContext} />
         <PostulationGameStage
+          blocks={blocks}
           gameComponents={gameComponents}
           signalSnapshot={signalSnapshot}
           onGameEvent={handleGameEvent}
@@ -132,7 +156,7 @@ export default function PostulationDemoApp({ gameComponents } = {}) {
 
   if (phase === 'report-preview') {
     return (
-      <div className="postulation-demo" data-demo-phase="report-preview">
+      <div className="postulation-demo" data-demo-phase="report-preview" data-battery-mode={batteryMode}>
         <PostulationReportScreen
           artifacts={demoArtifacts}
           completedDemo={demoSummary}
@@ -146,8 +170,8 @@ export default function PostulationDemoApp({ gameComponents } = {}) {
   }
 
   return (
-    <div className="postulation-demo" data-demo-phase="landing">
-      <PostulationLanding onStart={() => setPhase('setup')} />
+    <div className="postulation-demo" data-demo-phase="landing" data-battery-mode={batteryMode}>
+      <PostulationLanding batteryMode={batteryMode} onStart={() => setPhase('setup')} />
     </div>
   );
 }

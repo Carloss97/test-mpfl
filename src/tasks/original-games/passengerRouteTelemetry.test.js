@@ -35,7 +35,7 @@ describe('passenger route privacy-safe telemetry helpers', () => {
       aggregateOnly: true,
     });
     expect(aggregate.score).toBeGreaterThan(0);
-    expect(aggregate.score).toBeLessThanOrEqual(100);
+    expect(aggregate.score).toBeLessThanOrEqual(1);
     expect(JSON.stringify(aggregate)).not.toMatch(FORBIDDEN_ROUTE_FIELDS);
   });
 

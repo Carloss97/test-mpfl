@@ -36,6 +36,8 @@ describe('reportSubmissionClient', () => {
       validation: { ok: true, violations: [] },
     });
     expect(bundle.files.map((file) => file.fileName)).toEqual(['report.md', 'report.html', 'report.json', 'research.jsonl']);
+    expect(bundle.payload).toEqual(payload);
+    expect(bundle.manifest.includesStructuredPayload).toBe(true);
     expect(JSON.stringify(bundle)).not.toContain('faceSamples');
   });
 
@@ -52,7 +54,10 @@ describe('reportSubmissionClient', () => {
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(fetchImpl.mock.calls[0][0]).toBe('/api/assessment-reports');
-    expect(JSON.parse(fetchImpl.mock.calls[0][1].body).schemaVersion).toBe(REPORT_DELIVERY_BUNDLE_SCHEMA);
+    const submitted = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(submitted.schemaVersion).toBe(REPORT_DELIVERY_BUNDLE_SCHEMA);
+    expect(submitted.deliveryMode).toBe('http');
+    expect(submitted.payload).toMatchObject({ schemaVersion: FINAL_ASSESSMENT_PAYLOAD_SCHEMA, runId: 'run-x-001' });
     expect(result).toEqual({ ok: true, status: 201, id: 'remote-report-1' });
   });
 
