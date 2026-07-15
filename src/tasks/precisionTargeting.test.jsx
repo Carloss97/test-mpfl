@@ -1,7 +1,13 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import PrecisionTargetingTask, { buildPrecisionTrials, computeFittsIndex } from './PrecisionTargetingTask.jsx';
+import PrecisionTargetingTask, {
+  buildPrecisionResponseAggregate,
+  buildPrecisionRouteGuide,
+  buildPrecisionTrialFeedback,
+  buildPrecisionTrials,
+  computeFittsIndex,
+} from './PrecisionTargetingTask.jsx';
 
 describe('PrecisionTargetingTask helpers', () => {
   it('computes Fitts index of difficulty from distance and target width', () => {
@@ -16,6 +22,55 @@ describe('PrecisionTargetingTask helpers', () => {
     expect(new Set(trials.map((trial) => trial.target.radius)).size).toBeGreaterThan(1);
     expect(trials.every((trial) => trial.fittsId >= 0)).toBe(true);
     expect(trials[0]).toMatchObject({ trialId: 'precision-0', targetId: 'precision-target-0' });
+  });
+
+  it('builds an adaptive route guide without user pointer path data', () => {
+    const [trial] = buildPrecisionTrials({ width: 600, height: 400, count: 1 });
+    const guide = buildPrecisionRouteGuide(trial);
+
+    expect(guide).toMatchObject({
+      label: 'Ruta de precisión adaptativa',
+      corridorLabel: 'Corredor ideal',
+      startLabel: 'Inicio controlado',
+      targetLabel: 'Blanco activo',
+    });
+    expect(guide.corridorWidthPx).toBeGreaterThanOrEqual(trial.target.radius * 2);
+    expect(JSON.stringify(guide)).not.toMatch(/samples|path|pointer/i);
+  });
+
+  it('summarizes adaptive precision as aggregate feedback only', () => {
+    const aggregate = buildPrecisionResponseAggregate({
+      clickDistanceToTargetPx: 42,
+      pointerSummary: {
+        pathEfficiency: 0.68,
+        overshootCount: 2,
+        correctionCount: 3,
+        dwellTimeMs: 40,
+        deviationRmsPx: 18,
+      },
+    });
+    const feedback = buildPrecisionTrialFeedback({
+      correct: false,
+      reactionTimeMs: 620,
+      clickDistanceToTargetPx: 42,
+      score: 0.25,
+      pointerSummary: aggregate,
+    });
+
+    expect(aggregate).toMatchObject({ routeLabel: 'Ruta con correcciones', aggregateOnly: true });
+    expect(feedback).toMatchObject({
+      tone: 'warn',
+      headline: 'Ajuste fino requerido',
+      routeLabel: 'Ruta con correcciones',
+      aggregate: {
+        pathEfficiency: 0.68,
+        overshootCount: 2,
+        correctionCount: 3,
+        dwellTimeMs: 40,
+        deviationRmsPx: 18,
+      },
+    });
+    expect(JSON.stringify(feedback)).not.toMatch(/samples|clientX|clientY/i);
   });
 });
 
@@ -35,11 +90,14 @@ describe('PrecisionTargetingTask', () => {
     render(<PrecisionTargetingTask active trialCount={1} width={600} height={400} onGameEvent={onGameEvent} />);
 
     expect(screen.getAllByText(/toca el punto de inicio/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Ruta de precisión adaptativa/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Corredor ideal/i)).toBeInTheDocument();
     expect(screen.queryByTestId('precision-target')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('precision-start-pad'), { clientX: 300, clientY: 200 });
 
     expect(screen.getByTestId('precision-target')).toBeInTheDocument();
+    expect(screen.getAllByText(/Blanco activo/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Fitts/i).length).toBeGreaterThan(0);
     expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'stimulus_shown', trialId: 'precision-0' }));
   });
@@ -86,6 +144,13 @@ describe('PrecisionTargetingTask', () => {
     expect(responseEvent).toBeTruthy();
     expect(responseEvent.response).toMatchObject({ correct: true, outcome: 'hit', score: 1 });
     expect(responseEvent.response.fitts).toMatchObject({ distancePx: expect.any(Number), targetWidthPx: expect.any(Number), indexDifficulty: expect.any(Number), throughput: expect.any(Number) });
+    expect(responseEvent.response.adaptivePrecision).toMatchObject({
+      routeLabel: expect.any(String),
+      pathEfficiency: expect.any(Number),
+      overshootCount: expect.any(Number),
+      correctionCount: expect.any(Number),
+      dwellTimeMs: expect.any(Number),
+    });
     expect(responseEvent.response.pointerSummary.privacy.rawPointerPathStored).toBe(false);
     expect(JSON.stringify(responseEvent)).not.toContain('samples');
 

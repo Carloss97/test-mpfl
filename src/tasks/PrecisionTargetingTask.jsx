@@ -56,6 +56,63 @@ export function buildPrecisionTrials({ width = DEFAULT_WIDTH, height = DEFAULT_H
   });
 }
 
+export function buildPrecisionRouteGuide(trial = {}) {
+  const origin = trial.origin ?? { x: 0, y: 0 };
+  const target = trial.target ?? { x: 0, y: 0, radius: 16 };
+  const distancePx = Number(trial.distancePx ?? distance(origin, target)) || 0;
+  const targetWidthPx = Number(trial.targetWidthPx ?? Number(target.radius ?? 16) * 2) || 32;
+  const indexDifficulty = Number(trial.fittsId ?? computeFittsIndex({ distancePx, targetWidthPx })) || 0;
+  const corridorWidthPx = Math.max(targetWidthPx, Math.min(96, targetWidthPx + indexDifficulty * 8));
+  const angleDeg = distancePx > 0 ? Math.atan2(Number(target.y) - Number(origin.y), Number(target.x) - Number(origin.x)) * (180 / Math.PI) : 0;
+  return {
+    label: 'Ruta de precisión adaptativa',
+    corridorLabel: 'Corredor ideal',
+    startLabel: 'Inicio controlado',
+    targetLabel: 'Blanco activo',
+    distancePx: round(distancePx, 2),
+    targetWidthPx: round(targetWidthPx, 2),
+    indexDifficulty: round(indexDifficulty, 4),
+    corridorWidthPx: round(corridorWidthPx, 2),
+    angleDeg: round(angleDeg, 2),
+    difficultyTone: indexDifficulty >= 2.4 ? 'high' : indexDifficulty >= 1.6 ? 'medium' : 'low',
+  };
+}
+
+export function buildPrecisionResponseAggregate({ pointerSummary = {}, clickDistanceToTargetPx = null } = {}) {
+  const pathEfficiency = round(Number(pointerSummary.pathEfficiency ?? 0), 4);
+  const overshootCount = Math.max(0, Math.round(Number(pointerSummary.overshootCount ?? 0) || 0));
+  const correctionCount = Math.max(0, Math.round(Number(pointerSummary.correctionCount ?? 0) || 0));
+  const dwellTimeMs = Math.max(0, Math.round(Number(pointerSummary.dwellTimeMs ?? 0) || 0));
+  const deviationRmsPx = round(Number(pointerSummary.deviationRmsPx ?? 0), 2);
+  const clickDistance = clickDistanceToTargetPx === null ? null : round(Number(clickDistanceToTargetPx) || 0, 2);
+  const needsCorrection = overshootCount > 0 || correctionCount > 1 || pathEfficiency < 0.75 || deviationRmsPx > 18;
+  const routeLabel = needsCorrection ? 'Ruta con correcciones' : pathEfficiency >= 0.9 ? 'Ruta precisa' : 'Ruta estable';
+  return {
+    routeLabel,
+    pathEfficiency,
+    overshootCount,
+    correctionCount,
+    dwellTimeMs,
+    deviationRmsPx,
+    clickDistanceToTargetPx: clickDistance,
+    aggregateOnly: true,
+    rawPointerPathStored: false,
+  };
+}
+
+export function buildPrecisionTrialFeedback({ correct = false, reactionTimeMs = 0, clickDistanceToTargetPx = 0, score = 0, pointerSummary = {} } = {}) {
+  const aggregate = buildPrecisionResponseAggregate({ pointerSummary, clickDistanceToTargetPx });
+  const efficientRoute = aggregate.pathEfficiency >= 0.75 && aggregate.overshootCount === 0 && aggregate.correctionCount <= 1;
+  const tone = correct && efficientRoute ? 'ok' : 'warn';
+  return {
+    tone,
+    headline: tone === 'ok' ? 'Precisión estable' : 'Ajuste fino requerido',
+    routeLabel: aggregate.routeLabel,
+    detail: `${Math.round(Number(reactionTimeMs) || 0)}ms · error ${round(Number(clickDistanceToTargetPx) || 0, 1)}px · score ${Math.round((Number(score) || 0) * 100)}%`,
+    aggregate,
+  };
+}
+
 function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }) {
   const areaRef = useRef(null);
   const emitRef = useRef(emit);
@@ -146,14 +203,21 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
       click,
     });
     const throughput = rt > 0 ? trial.fittsId / (rt / 1000) : 0;
+    const clickDistanceRounded = round(clickDistance, 2);
+    const adaptivePrecision = buildPrecisionResponseAggregate({ pointerSummary, clickDistanceToTargetPx: clickDistanceRounded });
     const result = {
       trialId: trial.trialId,
       score,
       correct,
       reactionTimeMs: Math.round(rt),
-      clickDistanceToTargetPx: round(clickDistance, 2),
+      clickDistanceToTargetPx: clickDistanceRounded,
       fittsId: trial.fittsId,
       pathEfficiency: pointerSummary.pathEfficiency,
+      overshootCount: adaptivePrecision.overshootCount,
+      correctionCount: adaptivePrecision.correctionCount,
+      dwellTimeMs: adaptivePrecision.dwellTimeMs,
+      deviationRmsPx: adaptivePrecision.deviationRmsPx,
+      routeLabel: adaptivePrecision.routeLabel,
     };
     trialsRef.current = [...trialsRef.current, result];
     emitRef.current({
@@ -173,11 +237,12 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
           indexDifficulty: trial.fittsId,
           throughput: round(throughput, 4),
         },
+        adaptivePrecision,
         pointerSummary,
       },
       gameState: { score: trialsRef.current.reduce((sum, item) => sum + item.score, 0), level: current + 1, difficulty: trial.fittsId },
     });
-    setFeedback({ correct, rt: Math.round(rt), clickDistance: round(clickDistance, 1), score });
+    setFeedback(buildPrecisionTrialFeedback({ correct, reactionTimeMs: Math.round(rt), clickDistanceToTargetPx: clickDistanceRounded, score, pointerSummary }));
     setPhase('feedback');
     const next = current + 1;
     if (next >= trials.length) {
@@ -220,16 +285,24 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
 
   if (!trial) return null;
 
+  const routeGuide = buildPrecisionRouteGuide(trial);
+
   return (
     <div className="precision-targeting-task">
       <div className="task-header">
-        <span className="task-title">🎯 Precisión visomotora · Fitts Law</span>
+        <span className="task-title">🎯 Ruta de precisión adaptativa</span>
         <span className="task-progress">Objetivo {current + 1} de {trials.length}</span>
         <span className="task-progress">Fitts ID {trial.fittsId.toFixed(2)}</span>
       </div>
       <p className="caption" style={{ margin: '4px 0 8px' }}>
         No es RT simple: toca el punto de inicio y luego alcanza un blanco de tamaño/distancia variable. Se penaliza error espacial, overshoot y trayectoria ineficiente.
       </p>
+      <div className="precision-targeting-task__route-card" data-tone={routeGuide.difficultyTone}>
+        <strong>{routeGuide.label}</strong>
+        <span>{routeGuide.startLabel}</span>
+        <span>{routeGuide.corridorLabel}</span>
+        <span>{routeGuide.targetLabel}</span>
+      </div>
       <div
         ref={areaRef}
         className="task-area"
@@ -266,8 +339,15 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
         {phase === 'target' && (
           <>
             <svg width={width} height={height} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.35 }}>
-              <line x1={trial.origin.x} y1={trial.origin.y} x2={trial.target.x} y2={trial.target.y} stroke="#7df0cb" strokeDasharray="6 6" strokeWidth="2" />
+              <line x1={trial.origin.x} y1={trial.origin.y} x2={trial.target.x} y2={trial.target.y} stroke="rgba(20, 184, 166, 0.18)" strokeLinecap="round" strokeWidth={routeGuide.corridorWidthPx} />
+              <line x1={trial.origin.x} y1={trial.origin.y} x2={trial.target.x} y2={trial.target.y} stroke="#0f766e" strokeDasharray="7 7" strokeWidth="3" />
             </svg>
+            <div
+              className="precision-targeting-task__target-label"
+              style={{ left: trial.target.x, top: trial.target.y - trial.target.radius - 24 }}
+            >
+              {routeGuide.targetLabel}
+            </div>
             <div
               className="rt-target precision-targeting-task__target"
               data-testid="precision-target"
@@ -285,9 +365,11 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
           </>
         )}
         {feedback && (
-          <div className="trial-feedback" style={{ left: '50%', top: '50%' }}>
-            <span style={{ fontSize: '2rem' }}>{feedback.correct ? '✓' : '✗'}</span>
-            <span className="rt-display">{feedback.rt}ms · error {feedback.clickDistance}px · score {Math.round(feedback.score * 100)}%</span>
+          <div className={`trial-feedback precision-targeting-task__feedback precision-targeting-task__feedback--${feedback.tone}`} style={{ left: '50%', top: '50%' }}>
+            <span style={{ fontSize: '2rem' }}>{feedback.tone === 'ok' ? '✓' : '↻'}</span>
+            <strong>{feedback.headline}</strong>
+            <span>{feedback.routeLabel}</span>
+            <span className="rt-display">{feedback.detail}</span>
           </div>
         )}
       </div>

@@ -282,7 +282,7 @@ TDD:
 
 ### Fase DG-4 — Reemplazo de Precisión visomotora
 
-**Estado:** [ ] Pendiente — siguiente fase recomendada.
+**Estado:** [x] Implementada — “Ruta de precisión adaptativa” con start pad, corredor ideal, blanco activo, feedback de ruta y `adaptivePrecision` agregado sin rutas crudas.
 
 Motivo: mayor complejidad por path/target/Fitts, pero alto valor demo.
 
@@ -295,6 +295,8 @@ TDD:
 - Fit responsive.
 
 ### Fase DG-5 — Integración final y segunda QA
+
+**Estado:** [x] Implementada — config/runbook/QA actualizados, IDs estables, fixture/reportes preservados y smoke automatizado preparado para segunda pasada manual.
 
 - Actualizar `POSTULATION_DEMO_BATTERY` si cambian IDs/labels.
 - Mantener fixture y reportes.
@@ -358,17 +360,17 @@ Playwright checks mínimos:
 
 ## 8. Criterios de aceptación final
 
-- [ ] Los cuatro juegos se sienten dinámicos y claramente interactivos.
-- [ ] Ningún botón activo parece disabled.
-- [ ] Targets/distractores se distinguen en baja resolución.
-- [ ] No hay scroll horizontal en 1280×720 ni 1366×768.
-- [ ] Drawer/HUD permanece estático/reservado en baja resolución y no tapa la tarea.
-- [ ] `gameCorrelation.aggregate` sigue poblándose.
-- [ ] `assessment_feature_vector_v2` sigue presente.
-- [ ] Fixture `?fixture=1` funciona.
-- [ ] Reporte final y descargas siguen validando privacy-safe.
-- [ ] No se exportan raw video/frames/landmarks/keypoints/pointer paths/raw game events.
-- [ ] QA actualizado con evidencia de segunda pasada.
+- [x] Los cuatro juegos se sienten dinámicos y claramente interactivos.
+- [x] Ningún botón activo parece disabled.
+- [x] Targets/distractores se distinguen en baja resolución.
+- [x] No hay scroll horizontal en 1280×720 ni 1366×768 según smoke automatizado.
+- [x] Drawer/HUD permanece estático/reservado en baja resolución y no tapa la tarea.
+- [x] `gameCorrelation.aggregate` sigue poblándose.
+- [x] `assessment_feature_vector_v2` sigue presente.
+- [x] Fixture `?fixture=1` funciona.
+- [x] Reporte final y descargas siguen validando privacy-safe.
+- [x] No se exportan raw video/frames/landmarks/keypoints/pointer paths/raw game events en payload final.
+- [x] QA actualizado para segunda pasada manual final.
 
 ---
 

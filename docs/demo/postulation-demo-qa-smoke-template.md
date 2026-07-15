@@ -447,14 +447,14 @@ Pendiente principal: botones/targets con contraste alto y estados claros en todo
 |---|---|---|---|
 | QA-001 | Se aumentó contraste de camera card y selector de cámara; borde/fondo/texto/focus más visibles. | [x] Validado en segunda pasada | [X ] PASS [ ] FAIL |
 | QA-002 | HUD/drawer ahora se vuelve estático bajo 1180px o altura menor a 820px; tiene max-height/scroll interno y copy más humano. | [x] Resuelto condicional: PASS si estático en baja resolución | [ X] PASS [ ] FAIL |
-| QA-003 | DG-2 transforma Interferencia en tarjetas de color con helper, alto contraste y feedback inmediato. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-004 | DG-2 diferencia tarjetas/focus/feedback; requiere re-test visual de estado seleccionado vs foco. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
+| QA-003 | DG-2 transforma Interferencia en tarjetas de color con helper, alto contraste y feedback inmediato. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
+| QA-004 | DG-2 diferencia tarjetas/focus/feedback; requiere re-test visual de estado seleccionado vs foco. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
 | QA-005 | Labels se hicieron más explícitos: `Pregunta N de M`, `Tipo: incongruente`, `Procesos listos N de M`, `Eventos capturados`, `Reporte: se generará al finalizar`. | [x] Validado en segunda pasada | [X ] PASS [ ] FAIL |
 | QA-006 | Logs clasificados: INFO/WARN MediaPipe/TFLite no críticos si no hay crash, chunk missing ni asset crítico fallido. | [x] Clasificado como no bloqueante | [X ] PASS [ ] FAIL |
-| QA-007 | DG-0 compacta hero/quality cards bajo altura <800px y españoliza labels visibles. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-008 | DG-2/DG-3 refuerzan botones/targets/distractores: Stroop tarjetas y Visual Search tiles responsive. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-009 | DG-0 añade `overflow-x: hidden` en stage y guardrails responsive; requiere smoke de overflow. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
-| QA-010 | DG-1/DG-2/DG-3 implementados; queda DG-4 Precisión visomotora. | [x] En progreso | [ ] PASS [ ] FAIL |
+| QA-007 | DG-0 compacta hero/quality cards bajo altura <800px y españoliza labels visibles. | [x] Validado por fixture/report smoke | [X] PASS [ ] FAIL |
+| QA-008 | DG-2/DG-3 refuerzan botones/targets/distractores: Stroop tarjetas y Visual Search tiles responsive. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
+| QA-009 | DG-0 añade `overflow-x: hidden` en stage y guardrails responsive; smoke confirma sin overflow en 1280×720/1366×768. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
+| QA-010 | DG-1/DG-2/DG-3/DG-4 implementados: semáforo, tarjetas Stroop, panel de búsqueda y ruta de precisión adaptativa. | [x] Validado por smoke final DG-5 | [X] PASS [ ] FAIL |
 ![alt text](image-2.png)
 ![alt text](image-3.png)
 ![alt text](image-4.png)
@@ -467,13 +467,15 @@ Pendiente principal: botones/targets con contraste alto y estados claros en todo
 - [ X] Confirmar que selector de cámara es legible.
 - [ X] Confirmar que botones de Interferencia cognitiva no parecen disabled.
 - [ X] Confirmar que focus visual no se confunde con selección.
-- [ ] Confirmar que no hay scroll horizontal.
+- [ X] Confirmar que no hay scroll horizontal.
 - [ X] Clasificar consola/network: `INFO/WARN MediaPipe no bloqueante` vs `error crítico`.
 - [ X] Adjuntar `image-2.png` si se mantiene referencia o reemplazarla por screenshot real.
-- [ ] Re-test DG-0: botones/targets/chips con contraste alto.
-- [ ] Re-test DG-1: Go/No-Go “Semáforo de impulso” con GO/NO-GO claros.
-- [ ] Re-test DG-2: Interferencia cognitiva como tarjetas con feedback inmediato.
-- [ ] Re-test DG-3: Búsqueda visual con panel activo y tiles visibles.
+- [ X] Re-test DG-0: botones/targets/chips con contraste alto.
+- [ X] Re-test DG-1: Go/No-Go “Semáforo de impulso” con GO/NO-GO claros.
+- [ X] Re-test DG-2: Interferencia cognitiva como tarjetas con feedback inmediato.
+- [ X] Re-test DG-3: Búsqueda visual con panel activo y tiles visibles.
+- [ X] Re-test DG-4: Ruta de precisión adaptativa con corredor ideal, blanco activo y feedback agregado.
+- [ X] Re-test DG-5: fixture/reporte/descargas y contratos privacy-safe tras integración final.
 
 Notas segunda pasada:
 
@@ -482,10 +484,10 @@ Estado actualizado:
 - Drawer/HUD: resuelto como criterio si en baja resolución pasa a modo estático/reservado, con scroll interno y sin tapar estímulos/botones.
 - Cámara: selector legible tras mejora de contraste; mantener validación en dispositivos con múltiples cámaras.
 - Consola/network: los logs visibles son INFO/WARN MediaPipe/TFLite y se consideran no bloqueantes salvo que aparezca crash, chunk missing, asset crítico fallido o pérdida de inferencia.
-- Pendiente principal: UI/UX de juegos. Las imágenes muestran botones, targets, chips y distractores demasiado pálidos; en baja resolución parecen deshabilitados o difíciles de distinguir.
-- Pendiente responsive: reproducir y corregir scroll horizontal bajo 1366×768 si persiste.
-- Pendiente reporte: compactar hero/labels bajo alturas <800px y mejorar consistencia de idioma.
-- Siguiente fase: DG-0/DG-1/DG-2/DG-3 implementados. Próximo: DG-4 Precisión visomotora como ruta de precisión adaptativa, más re-test visual de contraste/overflow.
+- DG-5 smoke automatizado PASS: flujo completo no-cámara 1280×720, fixture 1366×768 y activación con fake camera; sin overflow horizontal ni page errors.
+- Consola: `INFO: Created TensorFlow Lite XNNPACK delegate for CPU` clasificado como no bloqueante.
+- Juegos dinámicos DG-1 a DG-4 validados: semáforo, tarjetas Stroop, panel de búsqueda y ruta de precisión adaptativa.
+- Próximo recomendado antes de demo externa: segunda pasada visual manual en equipo real, con cámara real, descargas y revisión humana.
 ```
 
 ---
@@ -507,21 +509,21 @@ Estado actualizado:
 
 ## 8. Decisión final
 
-- [ ] **Listo para demo interna.**
+- [x] **Listo para demo interna.**
 - [ ] **Listo para demo externa con caveats conocidos.**
-- [x] **Requiere ajustes visuales menores.**
+- [ ] **Requiere ajustes visuales menores.**
 - [ ] **Bloqueado por issue crítico.**
 
 Resumen ejecutivo QA:
 
 ```text
-Funcionalmente la demo completa el flujo y no presenta bloqueo crítico. El drawer/HUD queda aceptado como resuelto cuando usa modo estático/reservado en baja resolución. El estado actual no está bloqueado por backend, privacidad ni telemetry; queda pendiente una pasada UI/UX de contraste, visibilidad a baja resolución, reporte compacto y reemplazo progresivo de juegos por dinámicas más atractivas.
+Funcionalmente la demo completa el flujo y no presenta bloqueo crítico. El drawer/HUD queda aceptado como resuelto cuando usa modo estático/reservado en baja resolución. DG-0 a DG-5 quedan integrados con juegos dinámicos, reporte productizado, fixture y contratos privacy-safe preservados. Para demo externa se recomienda una última pasada manual con cámara real/dispositivos reales.
 ```
 
 Próxima acción acordada:
 
 ```text
-1. Re-test DG-0/DG-1/DG-2/DG-3 en navegador: contraste, overflow, semáforo, Stroop tarjetas y búsqueda visual.
-2. Ejecutar DG-4: Precisión visomotora como ruta de precisión adaptativa.
+1. Ejecutar QA manual final en equipo real: cámara real permitida/denegada, descargas y drawer abierto/cerrado.
+2. Preparar guion corto de demo interna/piloto.
 3. Mantener `game_event_v1`, `gameCorrelation.aggregate`, `assessment_feature_vector_v2`, fixture y privacy-safe estricto.
 ```

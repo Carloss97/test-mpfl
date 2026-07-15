@@ -855,11 +855,94 @@
   opacity: 0.72;
 }
 
+.precision-targeting-task__route-card {
+  width: min(100%, 620px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(0, 0.8fr));
+  gap: 8px;
+  align-items: center;
+  margin: 0 auto 10px;
+  padding: 10px;
+  border: 1px solid rgba(49, 46, 129, 0.16);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.precision-targeting-task__route-card strong,
+.precision-targeting-task__route-card span {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 6px 9px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.precision-targeting-task__route-card strong {
+  background: rgba(79, 70, 229, 0.12);
+  color: var(--postulation-primary-strong);
+}
+
+.precision-targeting-task__route-card span {
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  background: #ccfbf1;
+  color: #134e4a;
+}
+
+.precision-targeting-task__route-card[data-tone="high"] span:nth-child(3) {
+  border-color: rgba(245, 158, 11, 0.42);
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.precision-targeting-task__target-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  pointer-events: none;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #134e4a;
+  font-size: 0.72rem;
+  font-weight: 950;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
 .precision-targeting-task__target,
 .rt-target.precision-targeting-task__target {
   border: 3px solid var(--postulation-game-target);
   background: rgba(20, 184, 166, 0.18);
   box-shadow: 0 0 0 8px rgba(20, 184, 166, 0.12), 0 0 28px rgba(15, 118, 110, 0.28);
+}
+
+.precision-targeting-task__feedback {
+  min-width: min(100%, 280px);
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 12px 16px;
+  border-radius: 20px;
+}
+
+.precision-targeting-task__feedback strong {
+  font-size: 0.95rem;
+}
+
+.precision-targeting-task__feedback--ok {
+  border: 1px solid rgba(15, 118, 110, 0.32);
+  background: #ccfbf1;
+  color: #134e4a;
+}
+
+.precision-targeting-task__feedback--warn {
+  border: 1px solid rgba(245, 158, 11, 0.34);
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .postulation-demo__game-hud-corner {

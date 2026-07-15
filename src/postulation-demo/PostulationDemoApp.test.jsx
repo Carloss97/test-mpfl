@@ -82,7 +82,7 @@ describe('PostulationDemoApp shell and flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /Comenzar demo de postulación/i }));
     fireEvent.click(screen.getByRole('button', { name: /Continuar a juegos/i }));
 
-    expect(screen.getByRole('heading', { name: /Precisión visomotora/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Ruta de precisión adaptativa/i })).toBeInTheDocument();
     expect(screen.getByText(/Juego 1 de 4/i)).toBeInTheDocument();
     expect(screen.getByRole('complementary', { name: /Procesamiento en segundo plano/i })).toBeInTheDocument();
     expect(screen.queryByText(/KRUMM Edge Fusion PoC/i)).not.toBeInTheDocument();

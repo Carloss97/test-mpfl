@@ -12,14 +12,14 @@ export const POSTULATION_DEMO_BATTERY = Object.freeze([
   }),
   Object.freeze({
     gameId: 'precision_targeting',
-    label: 'Precisión visomotora',
+    label: 'Ruta de precisión adaptativa',
     shortLabel: 'Precisión',
     skill: 'visuomotor_precision',
     phase: 'postulation_demo',
     durationLabel: '1 min',
     trialCount: 4,
     visible: true,
-    description: 'Toca objetivos de distinto tamaño y distancia priorizando precisión y control.',
+    description: 'Toca inicio, sigue el corredor ideal y alcanza blancos activos de tamaño/distancia variable sin guardar rutas crudas.',
   }),
   Object.freeze({
     gameId: 'go_nogo',

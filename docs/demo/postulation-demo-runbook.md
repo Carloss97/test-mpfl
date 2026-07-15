@@ -1,7 +1,7 @@
 # KRUMM Postulation Demo Runbook
 
 **Ruta:** `/postulaciones-demo`  
-**Estado:** Fases E/F/G implementadas — HUD/drawer vivo + reporte productizado + fixture sintético.  
+**Estado:** DG-5 implementada — HUD/drawer vivo + reporte productizado + fixture sintético + cuatro juegos dinámicos.
 **Objetivo:** ejecutar y validar la demo sin mostrar el dashboard técnico.
 
 ## 1. Arranque local
@@ -37,10 +37,10 @@ http://127.0.0.1:5173/postulaciones-demo?fixture=1
    - continuar a juegos;
    - explicar que el reporte tendrá caveats de señal.
 5. Completar juegos visibles:
-   - Precisión visomotora;
-   - Go/No-Go;
-   - Interferencia cognitiva;
-   - Búsqueda visual.
+   - Ruta de precisión adaptativa;
+   - Semáforo de impulso;
+   - Tarjetas de color;
+   - Panel de búsqueda activa.
 6. Durante juegos:
    - confirmar HUD pequeño en esquina;
    - abrir `Ver qué pasa detrás` si se requiere explicación;
@@ -70,6 +70,8 @@ http://127.0.0.1:5173/postulaciones-demo?fixture=1
 - `/postulaciones-demo?fixture=1` abre directo el reporte sintético etiquetado.
 - Caveats aparecen cuando falta cámara o correlación.
 - Lenguaje conservador: revisión humana, sin decisión automatizada, sin diagnóstico.
+- Los cuatro juegos deben sentirse interactivos: corredor/target activo, semáforo GO/NO-GO, tarjetas Stroop y tiles de búsqueda visual.
+- No debe haber scroll horizontal en 1280×720 ni 1366×768.
 
 ## 5. Smoke automatizado mínimo
 
@@ -81,6 +83,10 @@ NODE_ENV=test npx vitest run \
   src/postulation-demo/PostulationDemoApp.test.jsx \
   src/postulation-demo/postulationDemoSessionBuilder.test.js \
   src/postulation-demo/BackgroundSignalOrchestrator.test.jsx \
+  src/tasks/precisionTargeting.test.jsx \
+  src/tasks/goNoGo.test.jsx \
+  src/tasks/colorInterference.test.jsx \
+  src/tasks/visualSearch.test.jsx \
   --pool=forks --maxWorkers=1 --reporter=default
 ```
 
@@ -94,7 +100,7 @@ npm audit --audit-level=high --omit=dev
 
 ## 7. Próximo bloque recomendado
 
-1. Fase J: smoke manual completo con cámara permitida/denegada, fixture y descargas.
-2. Fase I: QA visual responsive en 1366×768, 1440×900 y 1920×1080.
+1. Ejecutar segunda pasada visual manual en equipos reales: cámara permitida/denegada, fixture y descargas.
+2. QA responsive final en 1366×768, 1440×900 y 1920×1080 con drawer abierto/cerrado.
 3. Preparar script/checklist final de demo piloto.
 4. Después: contrato HR/API antes de dashboard/backend.
