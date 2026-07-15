@@ -72,6 +72,20 @@ describe('PrecisionTargetingTask helpers', () => {
     });
     expect(JSON.stringify(feedback)).not.toMatch(/samples|clientX|clientY/i);
   });
+
+  it('keeps trial feedback as a compact status strip outside the clickable canvas', () => {
+    expect(buildPrecisionTrialFeedback({
+      correct: false,
+      reactionTimeMs: 687,
+      clickDistanceToTargetPx: 12.6,
+      score: 0.84,
+      pointerSummary: { pathEfficiency: 0.72, overshootCount: 1, correctionCount: 2, dwellTimeMs: 0, deviationRmsPx: 12 },
+    })).toMatchObject({
+      tone: 'warn',
+      displayMode: 'status-strip',
+      intrusivePopup: false,
+    });
+  });
 });
 
 describe('PrecisionTargetingTask', () => {
@@ -139,6 +153,9 @@ describe('PrecisionTargetingTask', () => {
       fireEvent.click(taskArea, { clientX: x, clientY: y });
       vi.runOnlyPendingTimers();
     });
+
+    expect(taskArea.querySelector('.precision-targeting-task__feedback')).toBeNull();
+    expect(screen.getByRole('status', { name: /feedback de precisión/i })).toHaveClass('precision-targeting-task__feedback-strip');
 
     const responseEvent = onGameEvent.mock.calls.map(([event]) => event).find((event) => event.eventType === 'response');
     expect(responseEvent).toBeTruthy();

@@ -58,8 +58,10 @@ describe('GoNoGoTask helpers', () => {
       state: 'no-go',
       heading: 'Semáforo de impulso',
       instruction: 'NO-GO: espera sin pulsar para inhibir la respuesta.',
-      buttonLabel: 'No pulsar · esperar',
+      buttonLabel: 'Responder ahora',
       cueClassName: 'go-nogo-task__cue--no-go',
+      noWrap: true,
+      temptationLabel: 'No lo pulses en NO-GO',
     });
   });
 });
@@ -133,6 +135,36 @@ describe('GoNoGoTask', () => {
     });
 
     expect(screen.getByText(/NO-GO: espera sin pulsar/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /No pulsar · esperar/i })).toHaveAttribute('data-state', 'no-go');
+    expect(screen.getByText(/No lo pulses en NO-GO/i)).toBeInTheDocument();
+    const noGoButton = screen.getByRole('button', { name: /Responder ahora/i });
+    expect(noGoButton).toHaveAttribute('data-state', 'no-go');
+    expect(noGoButton).toBeEnabled();
+    expect(screen.getByTestId('gonogo-cue')).toHaveTextContent('NO-GO');
+  });
+
+  it('keeps the GO/NO-GO card at a stable larger size and records NO-GO button clicks as commission errors', async () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const onGameEvent = vi.fn();
+
+    render(<GoNoGoTask active trialCount={2} stimulusMs={300} itiMs={20} onGameEvent={onGameEvent} onComplete={vi.fn()} />);
+
+    expect(screen.getByTestId('gonogo-task-area')).toHaveStyle({ width: '520px', height: '300px' });
+    expect(screen.getByTestId('gonogo-cue')).toHaveStyle({ whiteSpace: 'nowrap' });
+
+    await act(async () => {
+      now = 160;
+      fireEvent.click(screen.getByRole('button', { name: /Responder ahora/i }));
+      vi.advanceTimersByTime(25);
+    });
+
+    expect(screen.getByTestId('gonogo-task-area')).toHaveStyle({ width: '520px', height: '300px' });
+    await act(async () => {
+      now = 240;
+      fireEvent.click(screen.getByRole('button', { name: /Responder ahora/i }));
+    });
+
+    const responses = onGameEvent.mock.calls.map(([event]) => event).filter((event) => event.eventType === 'response');
+    expect(responses.at(-1).response).toMatchObject({ correct: false, outcome: 'commission_error', score: 0 });
   });
 });

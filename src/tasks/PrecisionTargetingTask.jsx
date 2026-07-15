@@ -109,8 +109,25 @@ export function buildPrecisionTrialFeedback({ correct = false, reactionTimeMs = 
     headline: tone === 'ok' ? 'Precisión estable' : 'Ajuste fino requerido',
     routeLabel: aggregate.routeLabel,
     detail: `${Math.round(Number(reactionTimeMs) || 0)}ms · error ${round(Number(clickDistanceToTargetPx) || 0, 1)}px · score ${Math.round((Number(score) || 0) * 100)}%`,
+    displayMode: 'status-strip',
+    intrusivePopup: false,
     aggregate,
   };
+}
+
+function PrecisionFeedbackStrip({ feedback }) {
+  if (!feedback) return null;
+  return (
+    <div
+      className={`precision-targeting-task__feedback-strip precision-targeting-task__feedback-strip--${feedback.tone}`}
+      role="status"
+      aria-label="Feedback de precisión"
+    >
+      <strong>{feedback.headline}</strong>
+      <span>{feedback.routeLabel}</span>
+      <span>{feedback.detail}</span>
+    </div>
+  );
 }
 
 function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }) {
@@ -276,6 +293,7 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
     const meanPathEfficiency = completed.reduce((sum, item) => sum + (item.pathEfficiency ?? 0), 0) / Math.max(1, completed.length);
     return (
       <div className="precision-targeting-task" data-testid="precision-task-finished">
+        <PrecisionFeedbackStrip feedback={feedback} />
         <h3>Precisión completada</h3>
         <p>Precisión espacial: {Math.round(accuracy * 100)}%</p>
         <p>Eficiencia de trayectoria: {Math.round(meanPathEfficiency * 100)}%</p>
@@ -303,6 +321,7 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
         <span>{routeGuide.corridorLabel}</span>
         <span>{routeGuide.targetLabel}</span>
       </div>
+      <PrecisionFeedbackStrip feedback={feedback} />
       <div
         ref={areaRef}
         className="task-area"
@@ -363,14 +382,6 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
               }}
             />
           </>
-        )}
-        {feedback && (
-          <div className={`trial-feedback precision-targeting-task__feedback precision-targeting-task__feedback--${feedback.tone}`} style={{ left: '50%', top: '50%' }}>
-            <span style={{ fontSize: '2rem' }}>{feedback.tone === 'ok' ? '✓' : '↻'}</span>
-            <strong>{feedback.headline}</strong>
-            <span>{feedback.routeLabel}</span>
-            <span className="rt-display">{feedback.detail}</span>
-          </div>
         )}
       </div>
     </div>

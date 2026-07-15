@@ -46,6 +46,8 @@ export function buildVisualSearchTilePresentation(item = {}) {
     label: item.symbol ?? (target ? TARGET_SYMBOL : '○'),
     ariaLabel: target ? 'Objetivo: punto sólido' : 'Distractor: forma geométrica',
     className: `visual-search-task__item visual-search-task__tile ${target ? 'visual-search-task__tile--target visual-search-task__item--target' : 'visual-search-task__tile--distractor visual-search-task__item--distractor'}`,
+    visualTone: 'neutral',
+    preSelectionHighlight: false,
   };
 }
 
@@ -80,7 +82,9 @@ export function buildVisualSearchTrials({ width = DEFAULT_WIDTH, height = DEFAUL
         y: position.y,
         isTarget,
         symbol: isTarget ? TARGET_SYMBOL : DISTRACTOR_SYMBOLS[(index + trialIndex) % DISTRACTOR_SYMBOLS.length],
-        color: isTarget ? '#7df0cb' : '#9fb0c2',
+        color: '#334155',
+        containerTone: 'neutral',
+        preSelectionHighlight: false,
         tileSize: metrics.tileSize,
       };
     });
@@ -244,6 +248,8 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
               data-y={item.y}
               className={presentation.className}
               aria-label={presentation.ariaLabel}
+              data-preselection-highlight={String(presentation.preSelectionHighlight)}
+              data-visual-tone={presentation.visualTone}
               onClick={(event) => handleItemClick(event, item)}
               style={{
                 position: 'absolute',
@@ -253,6 +259,10 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
                 height: tileSize,
                 fontSize: `${Math.max(1.2, tileSize / 28)}rem`,
                 fontWeight: 900,
+                backgroundColor: '#ffffff',
+                borderColor: 'rgba(49, 46, 129, 0.42)',
+                color: item.color,
+                boxShadow: '0 10px 24px rgba(15, 23, 42, 0.1)',
               }}
             >
               {presentation.label}

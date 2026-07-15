@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ColorInterferenceTask, {
   buildColorInterferenceChoiceCards,
   buildColorInterferenceFeedback,
+  buildColorInterferenceTiming,
   buildColorInterferenceTrials,
   classifyStimulusWordLength,
   scoreColorInterferenceResponse,
@@ -64,6 +65,17 @@ describe('ColorInterferenceTask helpers', () => {
       label: 'Interferencia detectada',
       detail: 'Tinta esperada: Verde',
     });
+  });
+
+  it('defines visible time pressure for each Stroop card', () => {
+    expect(buildColorInterferenceTiming({ durationMs: 3200, remainingMs: 1600 })).toMatchObject({
+      durationMs: 3200,
+      remainingMs: 1600,
+      percentRemaining: 50,
+      label: 'Tiempo 1.6s',
+      urgency: 'medium',
+    });
+    expect(buildColorInterferenceTiming({ durationMs: 3200, remainingMs: 500 })).toMatchObject({ urgency: 'high' });
   });
 });
 
@@ -138,5 +150,25 @@ describe('ColorInterferenceTask', () => {
 
     expect(screen.getByText(/Correcto/i)).toBeInTheDocument();
     expect(screen.getByText(/Tinta esperada: Rojo/i)).toBeInTheDocument();
+  });
+
+  it('shows a countdown and records timeout pressure when the user does not answer', async () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const onGameEvent = vi.fn();
+
+    render(<ColorInterferenceTask active trialCount={1} trialDurationMs={1000} itiMs={20} onGameEvent={onGameEvent} onComplete={vi.fn()} />);
+
+    expect(screen.getByRole('timer', { name: /tiempo restante/i })).toHaveTextContent(/Tiempo 1\.0s/i);
+    expect(screen.getByTestId('color-timebar')).toHaveAttribute('data-urgency', 'low');
+
+    await act(async () => {
+      now = 1100;
+      vi.advanceTimersByTime(1010);
+    });
+
+    const responseEvent = onGameEvent.mock.calls.map(([event]) => event).find((event) => event.eventType === 'response');
+    expect(responseEvent.response).toMatchObject({ correct: false, outcome: 'timeout', score: 0 });
+    expect(responseEvent.response.interference).toMatchObject({ timedOut: true, trialDurationMs: 1000 });
   });
 });

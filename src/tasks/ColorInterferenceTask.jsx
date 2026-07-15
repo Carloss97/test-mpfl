@@ -17,6 +17,7 @@ const TRIAL_PATTERN = Object.freeze([
   { word: 'ROJO', ink: 'blue', congruent: false },
 ]);
 const COLOR_INTERFERENCE_GAME_DEFINITION = Object.freeze({ id: 'color_interference', label: 'Interferencia color-palabra', difficulty: 'conflict' });
+const DEFAULT_TRIAL_DURATION_MS = 3200;
 
 function round(value, digits = 4) {
   const numeric = Number(value);
@@ -73,6 +74,13 @@ export function buildColorInterferenceChoiceCards(trial = {}) {
 export function buildColorInterferenceFeedback(scored = {}) {
   const expectedLabel = labelForColor(scored.expectedResponse ?? scored.ink);
   const correct = scored.correct === true;
+  if (scored.outcome === 'timeout') {
+    return {
+      tone: 'incorrect',
+      label: 'Tiempo agotado',
+      detail: `Tinta esperada: ${expectedLabel}`,
+    };
+  }
   return {
     tone: correct ? 'correct' : 'incorrect',
     label: correct ? 'Correcto' : 'Interferencia detectada',
@@ -80,9 +88,23 @@ export function buildColorInterferenceFeedback(scored = {}) {
   };
 }
 
+export function buildColorInterferenceTiming({ durationMs = DEFAULT_TRIAL_DURATION_MS, remainingMs = DEFAULT_TRIAL_DURATION_MS } = {}) {
+  const duration = Math.max(250, Number(durationMs) || DEFAULT_TRIAL_DURATION_MS);
+  const remaining = Math.max(0, Math.min(duration, Number(remainingMs) || 0));
+  const percentRemaining = Math.round((remaining / duration) * 100);
+  return {
+    durationMs: duration,
+    remainingMs: Math.round(remaining),
+    percentRemaining,
+    label: `Tiempo ${(remaining / 1000).toFixed(1)}s`,
+    urgency: percentRemaining <= 25 ? 'high' : percentRemaining <= 55 ? 'medium' : 'low',
+  };
+}
+
 export function scoreColorInterferenceResponse({ trial, response, shownAt = 0, timestamp = 0 } = {}) {
   const normalizedResponse = String(response ?? '').toLowerCase();
   const expectedResponse = String(trial?.expectedResponse ?? trial?.ink ?? '').toLowerCase();
+  const timedOut = normalizedResponse === 'timeout';
   const correct = normalizedResponse === expectedResponse;
   return {
     trialId: trial?.trialId ?? null,
@@ -90,11 +112,12 @@ export function scoreColorInterferenceResponse({ trial, response, shownAt = 0, t
     ink: trial?.ink ?? expectedResponse,
     congruent: trial?.congruent === true,
     expectedResponse,
-    response: normalizedResponse,
+    response: timedOut ? 'timeout' : normalizedResponse,
     correct,
-    outcome: correct ? 'correct' : 'incorrect',
+    outcome: timedOut ? 'timeout' : correct ? 'correct' : 'incorrect',
     reactionTimeMs: Math.max(0, Math.round(Number(timestamp) - Number(shownAt))),
     score: correct ? 1 : 0,
+    timedOut,
   };
 }
 
@@ -122,15 +145,19 @@ export function summarizeColorInterferenceResults(results = []) {
   };
 }
 
-function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
+function ColorInterferenceInner({ emit, trialCount, itiMs, trialDurationMs, onComplete }) {
   const trials = useMemo(() => buildColorInterferenceTrials({ count: trialCount }), [trialCount]);
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
   const [current, setCurrent] = useState(0);
   const [finished, setFinished] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [remainingMs, setRemainingMs] = useState(trialDurationMs);
   const resultsRef = useRef([]);
   const shownAtRef = useRef(0);
+  const timeoutRef = useRef(null);
+  const tickRef = useRef(null);
+  const handleResponseRef = useRef(null);
   const trial = trials[current];
 
   useEffect(() => { emitRef.current = emit; }, [emit]);
@@ -138,11 +165,13 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
 
   useEffect(() => {
     setFeedback(null);
+    setRemainingMs(trialDurationMs);
   }, [current]);
 
   useEffect(() => {
     if (!trial || finished) return;
     shownAtRef.current = performance.now();
+    setRemainingMs(trialDurationMs);
     emitRef.current({
       eventType: 'stimulus_shown',
       trialId: trial.trialId,
@@ -160,10 +189,24 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
       },
       gameState: { score: resultsRef.current.reduce((sum, result) => sum + result.score, 0), level: current + 1, difficulty: trial.congruent ? 'congruent' : 'incongruent' },
     });
-  }, [current, finished, trial]);
+
+    timeoutRef.current = setTimeout(() => {
+      handleResponseRef.current?.('timeout');
+    }, trialDurationMs);
+    tickRef.current = setInterval(() => {
+      const elapsed = performance.now() - shownAtRef.current;
+      setRemainingMs(Math.max(0, trialDurationMs - elapsed));
+    }, 100);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (tickRef.current) clearInterval(tickRef.current);
+    };
+  }, [current, finished, trial, trialDurationMs]);
 
   const handleResponse = useCallback((response) => {
     if (!trial || finished || feedback) return;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (tickRef.current) clearInterval(tickRef.current);
     const now = performance.now();
     const scored = scoreColorInterferenceResponse({ trial, response, shownAt: shownAtRef.current, timestamp: now });
     const nextResults = [...resultsRef.current, scored];
@@ -185,6 +228,8 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
           congruent: trial.congruent,
           expectedResponse: trial.expectedResponse,
           response: scored.response,
+          timedOut: scored.timedOut,
+          trialDurationMs,
         },
       },
       gameState: { score: nextResults.reduce((sum, result) => sum + result.score, 0), level: current + 1, difficulty: trial.congruent ? 'congruent' : 'incongruent' },
@@ -200,7 +245,11 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
     } else {
       setTimeout(() => setCurrent(next), itiMs);
     }
-  }, [current, feedback, finished, itiMs, trial, trials.length]);
+  }, [current, feedback, finished, itiMs, trial, trialDurationMs, trials.length]);
+
+  useEffect(() => {
+    handleResponseRef.current = handleResponse;
+  }, [handleResponse]);
 
   if (finished) {
     const summary = summarizeColorInterferenceResults(resultsRef.current);
@@ -214,6 +263,7 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
 
   if (!trial) return null;
   const choiceCards = buildColorInterferenceChoiceCards(trial);
+  const timing = buildColorInterferenceTiming({ durationMs: trialDurationMs, remainingMs });
 
   return (
     <div className="color-interference-task">
@@ -221,9 +271,13 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
         <span className="task-title">🌈 Tarjetas de color</span>
         <span className="task-progress">Pregunta {current + 1} de {trials.length}</span>
         <span className="task-progress">Tipo: {trial.congruent ? 'congruente' : 'incongruente'}</span>
+        <span className="task-progress color-interference-task__timer" role="timer" aria-label="Tiempo restante">{timing.label}</span>
       </div>
       <div className="task-area" data-testid="color-task-area" style={{ width: 520, minHeight: 260, display: 'grid', placeItems: 'center' }}>
         <div className="color-interference-task__card-stage">
+          <div className="color-interference-task__timebar" data-testid="color-timebar" data-urgency={timing.urgency}>
+            <span style={{ width: `${timing.percentRemaining}%` }} />
+          </div>
           <p className="color-interference-task__prompt">Elige la tinta, ignora el texto.</p>
           <div
             data-testid="color-stimulus"
@@ -259,7 +313,7 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, onComplete }) {
   );
 }
 
-export default function ColorInterferenceTask({ active = false, trialCount = 8, itiMs = 250, onGameEvent, onComplete }) {
+export default function ColorInterferenceTask({ active = false, trialCount = 8, itiMs = 250, trialDurationMs = DEFAULT_TRIAL_DURATION_MS, onGameEvent, onComplete }) {
   return (
     <GameRuntime
       active={active}
@@ -271,6 +325,7 @@ export default function ColorInterferenceTask({ active = false, trialCount = 8, 
           emit={emit}
           trialCount={trialCount}
           itiMs={itiMs}
+          trialDurationMs={trialDurationMs}
           onComplete={onComplete}
         />
       )}

@@ -38,12 +38,24 @@ describe('VisualSearchTask helpers', () => {
       className: expect.stringContaining('visual-search-task__tile--target'),
       ariaLabel: 'Objetivo: punto sólido',
       label: '●',
+      visualTone: 'neutral',
+      preSelectionHighlight: false,
     });
     expect(buildVisualSearchTilePresentation({ isTarget: false, symbol: '◇' })).toMatchObject({
       className: expect.stringContaining('visual-search-task__tile--distractor'),
       ariaLabel: 'Distractor: forma geométrica',
       label: '◇',
     });
+  });
+
+  it('does not reveal the correct target through container color or preselection styling', () => {
+    const [trial] = buildVisualSearchTrials({ width: 600, height: 400, count: 1 });
+    const target = trial.items.find((item) => item.isTarget);
+    const distractor = trial.items.find((item) => !item.isTarget);
+
+    expect(target.color).toBe(distractor.color);
+    expect(target.containerTone).toBe('neutral');
+    expect(target.preSelectionHighlight).toBe(false);
   });
 
   it('summarizes visual search accuracy, RT and search efficiency', () => {
@@ -106,6 +118,7 @@ describe('VisualSearchTask', () => {
     const target = screen.getByRole('button', { name: /Objetivo: punto sólido/i });
     expect(target).toHaveClass('visual-search-task__tile');
     expect(target).toHaveClass('visual-search-task__tile--target');
+    expect(target).toHaveAttribute('data-preselection-highlight', 'false');
     expect(target.style.width).toBe('42px');
   });
 });

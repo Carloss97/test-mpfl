@@ -20,6 +20,45 @@ function now() {
   return globalThis.performance?.now?.() ?? Date.now();
 }
 
+function getCurrentViewport() {
+  if (typeof window === 'undefined') return { width: 1440, height: 900 };
+  return {
+    width: window.innerWidth || 1440,
+    height: window.innerHeight || 900,
+  };
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+export function getPostulationGameViewport(viewport = getCurrentViewport()) {
+  const width = Math.max(320, Number(viewport.width) || 1440);
+  const height = Math.max(320, Number(viewport.height) || 900);
+  const compact = width <= 1366 || height <= 820;
+  if (!compact) return { width: 720, height: 460, compact: false };
+  return {
+    width: clamp(Math.floor(width - 760), 500, 620),
+    height: clamp(Math.floor(height - 430), 280, 340),
+    compact: true,
+  };
+}
+
+function usePostulationGameViewport() {
+  const [viewport, setViewport] = useState(() => getPostulationGameViewport(getCurrentViewport()));
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const update = () => setViewport(getPostulationGameViewport(getCurrentViewport()));
+    window.addEventListener('resize', update);
+    window.visualViewport?.addEventListener?.('resize', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.visualViewport?.removeEventListener?.('resize', update);
+    };
+  }, []);
+  return viewport;
+}
+
 function emitEvent(onGameEvent, event) {
   onGameEvent?.({
     type: 'game_event_v1',
@@ -44,6 +83,7 @@ export default function PostulationGameStage({
   const currentBlock = blockList[currentIndex] ?? null;
   const componentMap = useMemo(() => ({ ...DEFAULT_GAME_COMPONENTS, ...gameComponents }), [gameComponents]);
   const CurrentGame = currentBlock ? componentMap[currentBlock.gameId] : null;
+  const gameViewport = usePostulationGameViewport();
 
   useEffect(() => { onGameEventRef.current = onGameEvent; }, [onGameEvent]);
   useEffect(() => { onCompleteDemoRef.current = onCompleteDemo; }, [onCompleteDemo]);
@@ -102,8 +142,8 @@ export default function PostulationGameStage({
             block={currentBlock}
             trialCount={currentBlock.trialCount}
             durationMs={currentBlock.durationMs}
-            width={720}
-            height={460}
+            width={gameViewport.width}
+            height={gameViewport.height}
             onGameEvent={onGameEventRef.current}
             onComplete={completeBlock}
           />

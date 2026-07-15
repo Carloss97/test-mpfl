@@ -455,6 +455,12 @@ Pendiente principal: botones/targets con contraste alto y estados claros en todo
 | QA-008 | DG-2/DG-3 refuerzan botones/targets/distractores: Stroop tarjetas y Visual Search tiles responsive. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
 | QA-009 | DG-0 añade `overflow-x: hidden` en stage y guardrails responsive; smoke confirma sin overflow en 1280×720/1366×768. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
 | QA-010 | DG-1/DG-2/DG-3/DG-4 implementados: semáforo, tarjetas Stroop, panel de búsqueda y ruta de precisión adaptativa. | [x] Validado por smoke final DG-5 | [X] PASS [ ] FAIL |
+| QA-011 | Prueba manual 2026-07-14: feedback de Precisión aparecía como popup y tapaba el canvas. Se movió a status strip fuera del área clicable. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
+| QA-012 | Prueba manual 2026-07-14: juegos/recursos se percibían recortados por recuadro/HUD. Se agregó viewport compacto 1366×768/1280×720 y guardrails de overflow. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
+| QA-013 | Prueba manual 2026-07-14: Interferencia no tenía presión temporal. Se agregó countdown visible, timebar y timeout telemetry. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
+| QA-014 | Prueba manual 2026-07-14: Búsqueda visual marcaba demasiado el target correcto. Se neutralizó color/borde/fondo del contenedor preselección. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
+| QA-015 | Prueba manual 2026-07-14: revisar informe. Se agregó resumen para revisión con lectura humana y sin vocabulario raw/forbidden visible. | [x] Validado por tests/smoke | [X] PASS [ ] FAIL |
+| QA-016 | Prueba manual 2026-07-14: Go/No-Go cambiaba tamaño y NO-GO no mostraba control accionable. Se estabilizó área/cue sin wrap y se mantiene botón `Responder ahora` visible/clickeable en NO-GO como error de comisión si se pulsa. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
 ![alt text](image-2.png)
 ![alt text](image-3.png)
 ![alt text](image-4.png)
@@ -476,6 +482,11 @@ Pendiente principal: botones/targets con contraste alto y estados claros en todo
 - [ X] Re-test DG-3: Búsqueda visual con panel activo y tiles visibles.
 - [ X] Re-test DG-4: Ruta de precisión adaptativa con corredor ideal, blanco activo y feedback agregado.
 - [ X] Re-test DG-5: fixture/reporte/descargas y contratos privacy-safe tras integración final.
+- [ X] Confirmar que Precisión no muestra popup sobre el canvas tras cada click.
+- [ X] Confirmar timer visible en Interferencia cognitiva.
+- [ X] Confirmar que target correcto de Búsqueda visual no está pre-marcado por color/fondo/borde.
+- [ X] Confirmar resumen ejecutivo del informe sin términos raw visibles.
+- [ ] Confirmar que Go/No-Go mantiene tamaño estable y botón visible/clickeable en GO y NO-GO.
 
 Notas segunda pasada:
 
@@ -487,6 +498,9 @@ Estado actualizado:
 - DG-5 smoke automatizado PASS: flujo completo no-cámara 1280×720, fixture 1366×768 y activación con fake camera; sin overflow horizontal ni page errors.
 - Consola: `INFO: Created TensorFlow Lite XNNPACK delegate for CPU` clasificado como no bloqueante.
 - Juegos dinámicos DG-1 a DG-4 validados: semáforo, tarjetas Stroop, panel de búsqueda y ruta de precisión adaptativa.
+- Corrección post-prueba manual: feedback de Precisión movido a status strip; Interferencia tiene countdown/timebar; Búsqueda visual ya no resalta el target antes de selección; informe agrega resumen para lectura humana.
+- Corrección adicional post-prueba manual: Go/No-Go mantiene `NO-GO` en una línea, usa recuadro estable y deja `Responder ahora` visible; pulsarlo en NO-GO registra `commission_error` para no romper semántica de inhibición.
+- Smoke post-corrección PASS: 1366×768 flujo completo, 1280×720 fixture, fake-camera activation; sin overflow horizontal, sin page errors y sin forbidden raw labels visibles en informe.
 - Próximo recomendado antes de demo externa: segunda pasada visual manual en equipo real, con cámara real, descargas y revisión humana.
 ```
 

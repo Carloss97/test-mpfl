@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import PostulationGameStage from './PostulationGameStage.jsx';
+import PostulationGameStage, { getPostulationGameViewport } from './PostulationGameStage.jsx';
 
 function MockGame({ active, block, onComplete }) {
   return (
@@ -21,6 +21,21 @@ const BLOCKS = Object.freeze([
 ]);
 
 describe('PostulationGameStage', () => {
+  it('computes compact game viewport dimensions for low-height manual QA screens', () => {
+    expect(getPostulationGameViewport({ width: 1366, height: 768 })).toMatchObject({
+      width: expect.any(Number),
+      height: expect.any(Number),
+      compact: true,
+    });
+    const compact = getPostulationGameViewport({ width: 1366, height: 768 });
+    expect(compact.width).toBeLessThanOrEqual(620);
+    expect(compact.height).toBeLessThanOrEqual(340);
+
+    const small = getPostulationGameViewport({ width: 1280, height: 720 });
+    expect(small.width).toBeLessThanOrEqual(580);
+    expect(small.height).toBeLessThanOrEqual(300);
+  });
+
   it('renders a fullscreen game stage with progress and advances through blocks', () => {
     const onCompleteDemo = vi.fn();
     const onGameEvent = vi.fn();

@@ -62,6 +62,8 @@ describe('PostulationReportScreen', () => {
     expect(screen.getByText(/Perfil de capacidades/i)).toBeInTheDocument();
     expect(screen.getByText(/Resultados por juego/i)).toBeInTheDocument();
     expect(screen.getByText(/Qué se procesó en segundo plano/i)).toBeInTheDocument();
+    expect(screen.getByText(/Resumen para revisión/i)).toBeInTheDocument();
+    expect(screen.getByText(/lectura humana/i)).toBeInTheDocument();
     expect(screen.getAllByText(/sin decisión automatizada/i).length).toBeGreaterThan(0);
   });
 

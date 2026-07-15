@@ -622,6 +622,7 @@
 .postulation-demo--gameplay {
   min-height: 100dvh;
   overflow: hidden;
+  overflow-x: hidden;
 }
 
 .postulation-demo__game-shell {
@@ -680,6 +681,7 @@
   position: relative;
   min-height: 0;
   display: grid;
+  overflow: hidden;
 }
 
 .postulation-demo__game-stage {
@@ -776,8 +778,9 @@
 }
 
 .go-nogo-task__response {
-  margin-top: 16px;
-  padding: 0 24px;
+  width: min(100%, 260px);
+  margin-top: 8px;
+  padding: 0 28px;
 }
 
 .go-nogo-task__response[data-state="go"] {
@@ -787,26 +790,33 @@
 }
 
 .go-nogo-task__response[data-state="no-go"] {
-  border-color: rgba(190, 18, 60, 0.5);
+  border-color: rgba(190, 18, 60, 0.62);
   background: #fff1f2;
   color: #881337;
 }
 
 .go-nogo-task__cue-card {
-  min-width: min(100%, 280px);
+  width: min(100%, 380px);
+  min-height: 250px;
   display: grid;
   justify-items: center;
-  gap: 10px;
+  align-content: center;
+  gap: 12px;
   text-align: center;
 }
 
 .go-nogo-task__cue {
-  width: min(100%, 220px);
-  padding: 16px 18px;
-  border-radius: 28px;
+  width: min(100%, 330px);
+  min-height: 116px;
+  display: grid;
+  place-items: center;
+  padding: 16px 24px;
+  border-radius: 30px;
   border: 2px solid var(--postulation-game-control-border);
   background: var(--postulation-game-control-bg);
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+  line-height: 0.95;
+  white-space: nowrap;
 }
 
 .go-nogo-task__cue--go {
@@ -822,12 +832,19 @@
 }
 
 .go-nogo-task__instruction {
-  max-width: 300px;
+  max-width: 360px;
   margin: 0;
   color: #334155;
   font-size: 0.92rem;
   font-weight: 850;
   line-height: 1.35;
+}
+
+.go-nogo-task__temptation {
+  margin: -4px 0 0;
+  color: #881337;
+  font-size: 0.82rem;
+  font-weight: 900;
 }
 
 .visual-search-task__item {
@@ -839,9 +856,17 @@
 }
 
 .visual-search-task__item--target {
-  border-color: rgba(15, 118, 110, 0.8);
-  background: rgba(20, 184, 166, 0.18);
-  color: var(--postulation-game-target);
+  border-color: var(--postulation-game-control-border);
+  background: #ffffff;
+  color: var(--postulation-game-distractor);
+}
+
+.visual-search-task__item[data-preselection-highlight="false"] {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+}
+
+.visual-search-task__tile--target[data-preselection-highlight="false"] {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
 }
 
 .precision-targeting-task__start-pad {
@@ -945,6 +970,40 @@
   color: #92400e;
 }
 
+.precision-targeting-task__feedback-strip {
+  width: min(100%, 620px);
+  min-height: 38px;
+  margin: -2px auto 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  font-size: 0.82rem;
+  font-weight: 850;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.precision-targeting-task__feedback-strip strong,
+.precision-targeting-task__feedback-strip span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.precision-targeting-task__feedback-strip--ok {
+  border: 1px solid rgba(15, 118, 110, 0.28);
+  background: #ccfbf1;
+  color: #134e4a;
+}
+
+.precision-targeting-task__feedback-strip--warn {
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  background: #fef3c7;
+  color: #92400e;
+}
+
 .postulation-demo__game-hud-corner {
   position: absolute;
   right: 18px;
@@ -970,6 +1029,7 @@
 }
 
 .postulation-demo__report-hero,
+.postulation-demo__review-summary,
 .postulation-demo__governance-card,
 .postulation-demo__technical-drawer {
   border: 1px solid var(--postulation-line);
@@ -1053,6 +1113,32 @@
   color: var(--postulation-muted);
   font-size: 0.92rem;
   line-height: 1.45;
+}
+
+.postulation-demo__review-summary {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.8fr);
+  gap: 18px;
+  align-items: center;
+}
+
+.postulation-demo__review-summary h2 {
+  margin: 8px 0 8px;
+  color: var(--postulation-primary-strong);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  letter-spacing: -0.04em;
+}
+
+.postulation-demo__review-summary p,
+.postulation-demo__review-summary li {
+  color: var(--postulation-muted);
+  line-height: 1.55;
+}
+
+.postulation-demo__review-summary ul {
+  margin: 0;
+  padding-left: 18px;
 }
 
 .postulation-demo__quality-grid,
@@ -1367,6 +1453,38 @@
   gap: 10px;
 }
 
+.color-interference-task__timer {
+  border-color: rgba(245, 158, 11, 0.34);
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.color-interference-task__timebar {
+  width: min(100%, 420px);
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.24);
+}
+
+.color-interference-task__timebar span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  transition: width 120ms linear;
+  background: #14b8a6;
+}
+
+.color-interference-task__timebar[data-urgency="medium"] span {
+  background: #f59e0b;
+}
+
+.color-interference-task__timebar[data-urgency="high"] span {
+  background: #ef4444;
+}
+
 .color-interference-task__option {
   min-height: 46px;
   border: 1.5px solid rgba(49, 46, 129, 0.28);
@@ -1452,12 +1570,12 @@
 }
 
 .visual-search-task__tile--target {
-  border-width: 2px;
-  box-shadow: 0 0 0 6px rgba(20, 184, 166, 0.1), 0 10px 26px rgba(15, 118, 110, 0.18);
+  border-width: 1.5px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
 }
 
 .visual-search-task__tile--distractor {
-  background: #f8fafc;
+  background: #ffffff;
 }
 
 @media (max-width: 1180px), (max-height: 820px) {

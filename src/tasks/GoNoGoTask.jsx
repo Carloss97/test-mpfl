@@ -50,8 +50,10 @@ export function buildGoNoGoCuePresentation(trial = {}) {
     state: 'no-go',
     heading: 'Semáforo de impulso',
     instruction: 'NO-GO: espera sin pulsar para inhibir la respuesta.',
-    buttonLabel: 'No pulsar · esperar',
+    buttonLabel: 'Responder ahora',
     cueClassName: 'go-nogo-task__cue--no-go',
+    noWrap: true,
+    temptationLabel: 'No lo pulses en NO-GO',
   };
 }
 
@@ -226,20 +228,24 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, onComplete }) {
         <span className="task-title">🚦 {presentation.heading}</span>
         <span className="task-progress">Señal {current + 1} de {trials.length}</span>
       </div>
-      <div className="task-area" data-testid="gonogo-task-area" style={{ width: 420, height: 220, display: 'grid', placeItems: 'center' }}>
+      <div className="task-area" data-testid="gonogo-task-area" style={{ width: 520, height: 300, display: 'grid', placeItems: 'center' }}>
         <div className="go-nogo-task__cue-card">
           <div
             data-testid="gonogo-cue"
             className={`go-nogo-task__cue ${presentation.cueClassName}`}
             style={{
-              fontSize: '3rem',
+              fontSize: 'clamp(3rem, 9vw, 4.8rem)',
               fontWeight: 800,
               letterSpacing: '0.08em',
+              whiteSpace: 'nowrap',
             }}
           >
             {trial.cue}
           </div>
           <p className="go-nogo-task__instruction">{presentation.instruction}</p>
+          {presentation.temptationLabel && (
+            <p className="go-nogo-task__temptation">{presentation.temptationLabel}</p>
+          )}
           <button
             type="button"
             className="secondary go-nogo-task__response"

@@ -128,6 +128,21 @@ export default function PostulationReportScreen({
         </div>
       )}
 
+      <section className="postulation-demo__review-summary" aria-label="Resumen para revisión">
+        <div>
+          <span className="postulation-demo__eyebrow">Resumen para revisión</span>
+          <h2>Lectura humana, no decisión automática</h2>
+          <p>
+            Este informe prioriza señales agregadas de los juegos y calidad de captura para orientar una conversación de revisión humana. No contiene video, frames, puntos reconstructivos faciales/corporales ni rutas crudas de puntero.
+          </p>
+        </div>
+        <ul>
+          <li>{completedCount} de {totalCount} juegos completados.</li>
+          <li>{validationOk ? 'Artefactos locales validados como privacy-safe.' : 'Validación pendiente: descargas bloqueadas.'}</li>
+          <li>{caveats.length ? `${caveats.length} caveat(s) a revisar antes de interpretar.` : 'Sin caveats críticos visibles.'}</li>
+        </ul>
+      </section>
+
       <div className="postulation-demo__quality-grid" aria-label="Calidad de sesión y validación">
         {qualityCards.map((card) => <QualityCard key={card.label} card={card} />)}
       </div>
