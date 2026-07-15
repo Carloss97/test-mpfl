@@ -9,6 +9,8 @@ export const FORBIDDEN_ORIGINAL_GAME_FIELDS = Object.freeze([
   'screenshot',
   'fullRoute',
   'routeTrace',
+  'visitedCells',
+  'stepByStepPath',
   'clickTrace',
   'eventLog',
 ]);
@@ -92,7 +94,7 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
       phase: 'original_games_replacement',
       durationLabel: '3 min',
       trialCount: 2,
-      description: 'Planifica rutas para recoger pasajeros y llevarlos a destino bajo restricciones de tiempo/energía.',
+      description: 'Planifica rutas para recoger pasajeros y llevarlos a destino bajo restricciones de tiempo y presupuesto operativo.',
     }),
     allowedAggregateFields: Object.freeze([
       'score',
@@ -107,7 +109,7 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
       'timeMs',
     ]),
     reportDimension: 'Planificación bajo restricciones y eficiencia de rutas; lectura observacional para revisión humana.',
-    activation: Object.freeze({ status: 'planned', phase: 'R-4' }),
+    activation: Object.freeze({ status: 'ported_hidden', phase: 'R-4' }),
   }),
 ]);
 

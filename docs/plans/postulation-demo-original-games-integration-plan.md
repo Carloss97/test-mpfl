@@ -215,31 +215,37 @@ Decisión inicial: usar `GridFlowGame.jsx` como base robusta para rutas/pasajero
 
 ## Fase R-4 — Portar rutas/pasajeros desde GridFlow
 
-**Estado:** `[ ] Por implementar`
+**Estado:** `[x] Port inicial oculto completado`
 
 **Prioridad:** Alta, pero después de Laser/Balloon.
 
 **Objetivo:** Reconvertir GridFlow en una tarea de planificación de rutas para pasajeros/destinos.
 
-**Archivos previstos:**
+**Archivos implementados:**
 
 - Crear: `src/tasks/original-games/PassengerRouteOptimizationTask.jsx`
-- Crear: `src/tasks/original-games/passengerRouteOptimization.test.jsx`
+- Crear: `src/tasks/original-games/PassengerRouteOptimizationTask.test.jsx`
 - Crear: `src/tasks/original-games/passengerRouteTelemetry.js`
 - Crear: `src/tasks/original-games/passengerRouteTelemetry.test.js`
 - Crear: `src/tasks/original-games/passengerRouteSolvability.test.js`
+- Modificar: `src/postulation-demo/PostulationGameStage.jsx`
+- Modificar: `src/postulation-demo/PostulationGameStage.test.jsx`
+- Modificar: `src/postulation-demo/originalGameBlueprints.js`
+- Modificar: `src/postulation-demo/originalGameBlueprints.test.js`
+- Modificar: `src/tasks/gameRerenderStability.test.jsx`
 - Modificar: `src/postulation-demo/postulationDemo.css`
 
 **Tareas:**
 
-1. Reusar ideas de `GridFlowGame.jsx`: grilla, pickups/drop zones, energía/tiempo, estaciones.
-2. Retematizar:
+1. [x] Reusar ideas de `GridFlowGame.jsx`: grilla, pickups/drop zones, presupuesto operativo y estaciones.
+2. [x] Retematizar:
    - paquetes → pasajeros;
    - drop zones → destinos;
    - estaciones → paradas/recarga/replanificación;
-   - energía → tiempo/combustible operativo.
-3. Verificar solvencia por BFS/Dijkstra antes de activar niveles.
-4. Emitir agregados:
+   - energía → tiempo/combustible operativo/presupuesto de ruta;
+   - satisfacción → satisfacción agregada/cumplimiento.
+3. [x] Verificar solvencia con Dijkstra de costo uniforme y estado de presupuesto, pasajero a bordo, entregas y recargas.
+4. [x] Emitir agregados:
    - pasajeros entregados;
    - distancia eficiente vs distancia mínima;
    - replanificaciones;
@@ -247,12 +253,48 @@ Decisión inicial: usar `GridFlowGame.jsx` como base robusta para rutas/pasajero
    - tiempo;
    - satisfacción agregada;
    - errores de ruta.
+5. [x] Integrar `passenger_routes` en el component map de `PostulationGameStage` sin activarlo en la batería visible.
+6. [x] Mantener callbacks externos en refs y cubrir re-render stability.
 
 **Criterios de éxito:**
 
 - Todos los niveles demo son resolubles.
 - La tarea cabe en 1366×768.
 - No exporta ruta completa ni cada coordenada visitada.
+
+**Agregados implementados:**
+
+```text
+score
+completed
+passengersDelivered
+destinationCount
+routeEfficiency
+replanCount
+stationUseCount
+constraintViolationCount
+satisfactionScore
+timeMs
+aggregateOnly
+```
+
+**Campos eliminados por sanitizer:**
+
+```text
+fullRoute
+routeTrace
+visitedCells
+stepByStepPath
+rawPointerPath
+pointerSamples
+rawGameEvents
+```
+
+**Avance ejecutado:**
+
+```text
+2026-07-15: Passenger Routes portado como componente oculto disponible para `PostulationGameStage`; batería DG estable sin cambios. RED verificado por módulos inexistentes. Focal GREEN integrado: 10 files / 42 tests. Suite completa: 80 files / 320 tests. Oxlint: 0 warnings, 0 errors. Build: OK en 5.94s con warnings no bloqueantes de chunks/PLUGIN_TIMINGS. Audit: 0 vulnerabilidades. `git diff --check`: OK.
+```
 
 ---
 

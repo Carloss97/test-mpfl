@@ -32,7 +32,7 @@ describe('original game integration blueprints', () => {
     expect(buildOriginalGamePostulationBlocks()).toEqual([
       expect.objectContaining({ gameId: 'laser_puzzle', visible: false, phase: 'original_games_replacement', activationStatus: 'ported_hidden' }),
       expect.objectContaining({ gameId: 'balloon_risk', visible: false, phase: 'original_games_replacement', activationStatus: 'ported_hidden' }),
-      expect.objectContaining({ gameId: 'passenger_routes', visible: false, phase: 'original_games_replacement' }),
+      expect.objectContaining({ gameId: 'passenger_routes', visible: false, phase: 'original_games_replacement', activationStatus: 'ported_hidden' }),
     ]);
   });
 
@@ -46,6 +46,10 @@ describe('original game integration blueprints', () => {
       'keypoints',
       'domEvent',
       'screenshot',
+      'fullRoute',
+      'routeTrace',
+      'visitedCells',
+      'stepByStepPath',
     ]));
   });
 

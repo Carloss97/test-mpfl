@@ -78,4 +78,13 @@ describe('PostulationGameStage', () => {
     expect(screen.getAllByRole('heading', { name: /Globo de riesgo/i })).toHaveLength(2);
     expect(screen.getByText(/Infla para acumular puntos/i)).toBeInTheDocument();
   });
+
+  it('can render the hidden Passenger Routes block through the default component map', () => {
+    const passengerBlock = buildOriginalGamePostulationBlocks().find((block) => block.gameId === 'passenger_routes');
+    render(<PostulationGameStage blocks={[{ ...passengerBlock, visible: true, trialCount: 1 }]} onGameEvent={vi.fn()} />);
+
+    expect(screen.getAllByRole('heading', { name: /Optimización de rutas/i })).toHaveLength(2);
+    expect(screen.getByText(/Recoge pasajeros y llévalos a su destino/i)).toBeInTheDocument();
+    expect(screen.getByTestId('passenger-route-board')).toBeInTheDocument();
+  });
 });

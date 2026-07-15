@@ -1,5 +1,7 @@
 # Handoff nueva sesión — KRUMM Postulation Demo MVP
 
+> **Nota 2026-07-15:** este handoff histórico quedó superado por el trabajo de QA interna y port inicial de juegos originales. Para retomar con un agente/modelo nuevo, usar primero `docs/plans/postulation-demo-original-games-new-agent-handoff.md` y `docs/prompts/krumm-postulation-original-games-next-agent-prompt.md`.
+
 **Fecha:** 2026-07-09  
 **Repo:** `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/test-mpfl`  
 **Ruta demo:** `/postulaciones-demo`  

@@ -9,6 +9,7 @@ import ColorInterferenceTask from './ColorInterferenceTask.jsx';
 import VisualSearchTask from './VisualSearchTask.jsx';
 import LaserPuzzlePostulationTask from './original-games/LaserPuzzlePostulationTask.jsx';
 import BalloonRiskPostulationTask from './original-games/BalloonRiskPostulationTask.jsx';
+import PassengerRouteOptimizationTask from './original-games/PassengerRouteOptimizationTask.jsx';
 
 function TelemetryRerenderHarness({ children }) {
   const [events, setEvents] = React.useState(0);
@@ -158,6 +159,20 @@ describe('game telemetry re-render stability', () => {
     expect(eventCount()).toBe(2);
     fireEvent.click(screen.getByRole('button', { name: /Inflar/i }));
     expect(screen.getByText(/Puntos acumulados/i)).toBeInTheDocument();
+    expect(eventCount()).toBe(2);
+  });
+
+  it('does not restart Passenger Routes when telemetry updates re-render the parent', () => {
+    render(
+      <TelemetryRerenderHarness>
+        {(onGameEvent) => <PassengerRouteOptimizationTask active trialCount={1} onGameEvent={onGameEvent} width={606} height={338} />}
+      </TelemetryRerenderHarness>,
+    );
+
+    expect(eventCount()).toBe(2);
+    fireEvent.click(screen.getByRole('button', { name: /^Derecha$/i }));
+    expect(screen.getByText(/Pasajero A a bordo/i)).toBeInTheDocument();
+    expect(screen.getByTestId('passenger-route-player')).toHaveAttribute('data-player-x', '2');
     expect(eventCount()).toBe(2);
   });
 });
