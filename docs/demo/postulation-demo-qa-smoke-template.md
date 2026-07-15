@@ -460,7 +460,7 @@ Pendiente principal: botones/targets con contraste alto y estados claros en todo
 | QA-013 | Prueba manual 2026-07-14: Interferencia no tenía presión temporal. Se agregó countdown visible, timebar y timeout telemetry. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
 | QA-014 | Prueba manual 2026-07-14: Búsqueda visual marcaba demasiado el target correcto. Se neutralizó color/borde/fondo del contenedor preselección. | [x] Validado por smoke automatizado | [X] PASS [ ] FAIL |
 | QA-015 | Prueba manual 2026-07-14: revisar informe. Se agregó resumen para revisión con lectura humana y sin vocabulario raw/forbidden visible. | [x] Validado por tests/smoke | [X] PASS [ ] FAIL |
-| QA-016 | Prueba manual 2026-07-14: Go/No-Go cambiaba tamaño y NO-GO no mostraba control accionable. Se estabilizó área/cue sin wrap y se mantiene botón `Responder ahora` visible/clickeable en NO-GO como error de comisión si se pulsa. | [x] Listo para re-test | [ ] PASS [ ] FAIL |
+| QA-016 | Prueba manual 2026-07-14: Go/No-Go cambiaba tamaño y NO-GO no mostraba control accionable. Se estabilizó área/cue sin wrap y se mantiene botón `Responder ahora` visible/clickeable en NO-GO como error de comisión si se pulsa. | [x] Validado en prueba manual | [X] PASS [ ] FAIL |
 ![alt text](image-2.png)
 ![alt text](image-3.png)
 ![alt text](image-4.png)
@@ -486,7 +486,7 @@ Pendiente principal: botones/targets con contraste alto y estados claros en todo
 - [ X] Confirmar timer visible en Interferencia cognitiva.
 - [ X] Confirmar que target correcto de Búsqueda visual no está pre-marcado por color/fondo/borde.
 - [ X] Confirmar resumen ejecutivo del informe sin términos raw visibles.
-- [ ] Confirmar que Go/No-Go mantiene tamaño estable y botón visible/clickeable en GO y NO-GO.
+- [ X] Confirmar que Go/No-Go mantiene tamaño estable y botón visible/clickeable en GO y NO-GO.
 
 Notas segunda pasada:
 
@@ -501,7 +501,7 @@ Estado actualizado:
 - Corrección post-prueba manual: feedback de Precisión movido a status strip; Interferencia tiene countdown/timebar; Búsqueda visual ya no resalta el target antes de selección; informe agrega resumen para lectura humana.
 - Corrección adicional post-prueba manual: Go/No-Go mantiene `NO-GO` en una línea, usa recuadro estable y deja `Responder ahora` visible; pulsarlo en NO-GO registra `commission_error` para no romper semántica de inhibición.
 - Smoke post-corrección PASS: 1366×768 flujo completo, 1280×720 fixture, fake-camera activation; sin overflow horizontal, sin page errors y sin forbidden raw labels visibles en informe.
-- Próximo recomendado antes de demo externa: segunda pasada visual manual en equipo real, con cámara real, descargas y revisión humana.
+- Estado marcado por prueba manual: listo para pruebas internas. Próximo bloque: preparar piloto interno y planificar reemplazo de juegos por Laser Puzzle, Balloon y optimización de rutas/pasajeros desde la página original.
 ```
 
 ---
@@ -537,7 +537,7 @@ Funcionalmente la demo completa el flujo y no presenta bloqueo crítico. El draw
 Próxima acción acordada:
 
 ```text
-1. Ejecutar QA manual final en equipo real: cámara real permitida/denegada, descargas y drawer abierto/cerrado.
-2. Preparar guion corto de demo interna/piloto.
+1. Preparar guion corto y checklist operativo de pruebas internas.
+2. Planificar reemplazo progresivo de juegos por Laser Puzzle, Balloon y optimización de rutas/pasajeros desde la página original.
 3. Mantener `game_event_v1`, `gameCorrelation.aggregate`, `assessment_feature_vector_v2`, fixture y privacy-safe estricto.
 ```
