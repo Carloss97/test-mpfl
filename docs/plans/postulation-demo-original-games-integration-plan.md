@@ -123,31 +123,33 @@ Decisión inicial: usar `GridFlowGame.jsx` como base robusta para rutas/pasajero
 
 ## Fase R-2 — Portar Laser Puzzle como primer juego original
 
-**Estado:** `[ ] Por implementar`
+**Estado:** `[x] Port inicial oculto completado`
 
 **Prioridad:** Alta.
 
 **Objetivo:** Crear una versión candidata de Laser Puzzle dentro de `test-mpfl`, con UI adaptada a `/postulaciones-demo` y telemetry agregada.
 
-**Archivos previstos:**
+**Archivos implementados:**
 
-- Crear: `src/tasks/original-games/LaserPuzzlePostulationTask.jsx`
-- Crear: `src/tasks/original-games/laserPuzzlePostulation.test.jsx`
-- Crear: `src/tasks/original-games/laserPuzzleTelemetry.js`
-- Crear: `src/tasks/original-games/laserPuzzleTelemetry.test.js`
-- Modificar: `src/postulation-demo/postulationDemo.css`
+- Creado: `src/tasks/original-games/LaserPuzzlePostulationTask.jsx`
+- Creado: `src/tasks/original-games/LaserPuzzlePostulationTask.test.jsx`
+- Creado: `src/tasks/original-games/laserPuzzleTelemetry.js`
+- Creado: `src/tasks/original-games/laserPuzzleTelemetry.test.js`
+- Modificado: `src/postulation-demo/PostulationGameStage.jsx`
+- Modificado: `src/tasks/gameRerenderStability.test.jsx`
+- Modificado: `src/postulation-demo/postulationDemo.css`
 
 **Tareas:**
 
-1. Extraer helpers puros mínimos desde `LaserPuzzleGame.jsx`: dirección, reflectores, bifurcadores, resolución de ruta y score.
-2. Escribir tests RED para una ruta resuelta y una ruta incorrecta.
-3. Implementar un nivel corto para demo interna, no los 9 mapas completos.
-4. Emitir eventos:
+1. [x] Extraer helpers puros mínimos desde `LaserPuzzleGame.jsx`: dirección, reflectores, bifurcadores, resolución de ruta y score.
+2. [x] Escribir tests RED para ruta resuelta, sanitización y layout compacto.
+3. [x] Implementar dos niveles cortos para demo interna, no los 9 mapas completos.
+4. [x] Emitir eventos:
    - `stimulus_shown`: nivel iniciado, dificultad, piezas móviles, límite de tiempo.
    - `response`: solución enviada, éxito, movimientos, tiempo, eficiencia agregada.
    - `game_end`: score agregado.
-5. Adaptar UI a stage compacto 1366×768/1280×720.
-6. Smoke browser con fixture y sin cámara.
+5. [x] Adaptar UI a stage compacto 1366×768/1280×720.
+6. [ ] Smoke browser con fixture y sin cámara cuando se active batería original completa.
 
 **Criterios de éxito:**
 
@@ -155,23 +157,31 @@ Decisión inicial: usar `GridFlowGame.jsx` como base robusta para rutas/pasajero
 - No exporta grilla completa ni secuencia cruda de clicks/puntero.
 - Reporte muestra métricas agregadas: éxito, movimientos, eficiencia, tiempo y reintentos.
 
+**Avance ejecutado:**
+
+```text
+2026-07-15: Laser Puzzle portado como componente oculto disponible para `PostulationGameStage`. Focal GREEN: helpers/component/stage/estabilidad.
+```
+
 ---
 
 ## Fase R-3 — Portar Balloon Risk
 
-**Estado:** `[ ] Por implementar`
+**Estado:** `[x] Port inicial oculto completado`
 
 **Prioridad:** Media-alta.
 
 **Objetivo:** Portar el juego de globo como tarea de riesgo/recompensa con interpretación conservadora.
 
-**Archivos previstos:**
+**Archivos implementados:**
 
-- Crear: `src/tasks/original-games/BalloonRiskPostulationTask.jsx`
-- Crear: `src/tasks/original-games/balloonRiskPostulation.test.jsx`
-- Crear: `src/tasks/original-games/balloonRiskTelemetry.js`
-- Crear: `src/tasks/original-games/balloonRiskTelemetry.test.js`
-- Modificar: `src/postulation-demo/postulationDemo.css`
+- Creado: `src/tasks/original-games/BalloonRiskPostulationTask.jsx`
+- Creado: `src/tasks/original-games/BalloonRiskPostulationTask.test.jsx`
+- Creado: `src/tasks/original-games/balloonRiskTelemetry.js`
+- Creado: `src/tasks/original-games/balloonRiskTelemetry.test.js`
+- Modificado: `src/postulation-demo/PostulationGameStage.jsx`
+- Modificado: `src/tasks/gameRerenderStability.test.jsx`
+- Modificado: `src/postulation-demo/postulationDemo.css`
 
 **Telemetry agregada permitida:**
 
@@ -194,6 +204,12 @@ Decisión inicial: usar `GridFlowGame.jsx` como base robusta para rutas/pasajero
 - Juego se entiende sin explicación externa.
 - No se interpreta como diagnóstico de personalidad/riesgo.
 - Reporte usa lenguaje: `ajuste ante feedback`, `estrategia observada`, `requiere revisión humana`.
+
+**Avance ejecutado:**
+
+```text
+2026-07-15: Balloon Risk portado como componente oculto disponible para `PostulationGameStage`. Telemetry agregada: pumps promedio, cashouts, pops, ajuste post-pop y eficiencia de riesgo. Focal GREEN.
+```
 
 ---
 

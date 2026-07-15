@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import PostulationGameStage, { getPostulationGameViewport } from './PostulationGameStage.jsx';
+import { buildOriginalGamePostulationBlocks } from './originalGameBlueprints.js';
 
 function MockGame({ active, block, onComplete }) {
   return (
@@ -60,5 +61,21 @@ describe('PostulationGameStage', () => {
     expect(onCompleteDemo).toHaveBeenCalledWith(expect.objectContaining({ completedCount: 2, totalCount: 2 }));
     expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'game_start', gameId: 'precision_targeting' }));
     expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'game_end', gameId: 'go_nogo' }));
+  });
+
+  it('can render the planned Laser original game block through the default component map', () => {
+    const laserBlock = buildOriginalGamePostulationBlocks().find((block) => block.gameId === 'laser_puzzle');
+    render(<PostulationGameStage blocks={[{ ...laserBlock, visible: true, trialCount: 1 }]} onGameEvent={vi.fn()} />);
+
+    expect(screen.getAllByRole('heading', { name: /Puzzle láser/i })).toHaveLength(2);
+    expect(screen.getByText(/Reconstruye el camino del láser/i)).toBeInTheDocument();
+  });
+
+  it('can render the planned Balloon original game block through the default component map', () => {
+    const balloonBlock = buildOriginalGamePostulationBlocks().find((block) => block.gameId === 'balloon_risk');
+    render(<PostulationGameStage blocks={[{ ...balloonBlock, visible: true, trialCount: 2 }]} onGameEvent={vi.fn()} />);
+
+    expect(screen.getAllByRole('heading', { name: /Globo de riesgo/i })).toHaveLength(2);
+    expect(screen.getByText(/Infla para acumular puntos/i)).toBeInTheDocument();
   });
 });

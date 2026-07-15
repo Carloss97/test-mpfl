@@ -1574,6 +1574,239 @@
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
 }
 
+.laser-puzzle-task {
+  width: min(100%, 720px);
+  display: grid;
+  gap: 10px;
+  color: var(--postulation-game-control-text);
+}
+
+.laser-puzzle-task__header {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+}
+
+.laser-puzzle-task__header .task-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.laser-puzzle-task__caption {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.laser-puzzle-task__workspace {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.laser-puzzle-task__board {
+  display: grid;
+  flex: 0 0 auto;
+  border: 1px solid rgba(79, 70, 229, 0.22);
+  border-radius: 22px;
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.1);
+}
+
+.laser-puzzle-task__cell {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(100, 116, 139, 0.22);
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 1.05rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.laser-puzzle-task__cell--empty {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.laser-puzzle-task__cell--wall {
+  background: #e2e8f0;
+  color: #475569;
+  cursor: not-allowed;
+}
+
+.laser-puzzle-task__cell--ship,
+.laser-puzzle-task__cell--antenna {
+  background: #dbeafe;
+  border-color: rgba(37, 99, 235, 0.34);
+}
+
+.laser-puzzle-task__cell--movable {
+  background: #fef3c7;
+  border-color: rgba(217, 119, 6, 0.42);
+  color: #92400e;
+}
+
+.laser-puzzle-task__cell--selected {
+  outline: 4px solid rgba(79, 70, 229, 0.35);
+  border-color: rgba(79, 70, 229, 0.75);
+}
+
+.laser-puzzle-task__cell--beam {
+  box-shadow: inset 0 0 0 999px rgba(250, 204, 21, 0.22);
+}
+
+.laser-puzzle-task__side-panel,
+.laser-puzzle-task__footer,
+.laser-puzzle-task--finished {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.laser-puzzle-task__side-panel {
+  min-width: 148px;
+  max-width: 178px;
+  padding: 12px;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #334155;
+}
+
+.laser-puzzle-task__side-panel strong {
+  color: #111827;
+}
+
+.laser-puzzle-task__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.laser-puzzle-task__footer p {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #334155;
+}
+
+.laser-puzzle-task--finished {
+  padding: 18px;
+  text-align: center;
+}
+
+@media (max-width: 1180px), (max-height: 820px) {
+  .laser-puzzle-task {
+    gap: 8px;
+  }
+
+  .laser-puzzle-task__workspace {
+    gap: 8px;
+  }
+
+  .laser-puzzle-task__side-panel {
+    min-width: 132px;
+    max-width: 150px;
+    padding: 10px;
+    font-size: 0.72rem;
+  }
+
+  .laser-puzzle-task__footer {
+    padding: 8px 10px;
+  }
+}
+
+.balloon-risk-task {
+  width: min(100%, 620px);
+  display: grid;
+  gap: 10px;
+  border-radius: 28px;
+  color: var(--postulation-game-control-text);
+}
+
+.balloon-risk-task__header .task-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.balloon-risk-task__caption {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.balloon-risk-task__arena {
+  min-height: 150px;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  border: 1px solid rgba(244, 114, 182, 0.24);
+  border-radius: 28px;
+  background: linear-gradient(180deg, #fff7ed 0%, #fdf2f8 100%);
+  overflow: hidden;
+}
+
+.balloon-risk-task__balloon {
+  width: 74px;
+  height: 74px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 3rem;
+  transform-origin: center;
+  transition: transform 160ms ease;
+}
+
+.balloon-risk-task__stats {
+  width: min(100%, 420px);
+  display: grid;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.balloon-risk-task__stats span {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  text-align: center;
+}
+
+.balloon-risk-task__stats strong {
+  color: #9d174d;
+  font-size: 1rem;
+}
+
+.balloon-risk-task__stats small,
+.balloon-risk-task__status {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.balloon-risk-task__controls {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.balloon-risk-task__status {
+  margin: 0;
+  text-align: center;
+}
+
+.balloon-risk-task--finished {
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  text-align: center;
+}
+
 .visual-search-task__tile--distractor {
   background: #ffffff;
 }

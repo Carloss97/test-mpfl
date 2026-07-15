@@ -7,6 +7,8 @@ import PursuitTrackingTask from './PursuitTrackingTask.jsx';
 import GoNoGoTask from './GoNoGoTask.jsx';
 import ColorInterferenceTask from './ColorInterferenceTask.jsx';
 import VisualSearchTask from './VisualSearchTask.jsx';
+import LaserPuzzlePostulationTask from './original-games/LaserPuzzlePostulationTask.jsx';
+import BalloonRiskPostulationTask from './original-games/BalloonRiskPostulationTask.jsx';
 
 function TelemetryRerenderHarness({ children }) {
   const [events, setEvents] = React.useState(0);
@@ -131,5 +133,31 @@ describe('game telemetry re-render stability', () => {
 
     expect(eventCount()).toBe(2);
     expect(screen.getByTestId('visual-search-area')).toBeInTheDocument();
+  });
+
+  it('does not restart Laser Puzzle when telemetry updates re-render the parent', () => {
+    render(
+      <TelemetryRerenderHarness>
+        {(onGameEvent) => <LaserPuzzlePostulationTask active trialCount={1} onGameEvent={onGameEvent} width={606} height={338} />}
+      </TelemetryRerenderHarness>,
+    );
+
+    expect(eventCount()).toBe(2);
+    fireEvent.click(screen.getByTestId('laser-cell-7,7'));
+    expect(screen.getByText(/Pieza seleccionada/i)).toBeInTheDocument();
+    expect(eventCount()).toBe(2);
+  });
+
+  it('does not restart Balloon Risk when telemetry updates re-render the parent', () => {
+    render(
+      <TelemetryRerenderHarness>
+        {(onGameEvent) => <BalloonRiskPostulationTask active trialCount={2} onGameEvent={onGameEvent} width={606} height={338} />}
+      </TelemetryRerenderHarness>,
+    );
+
+    expect(eventCount()).toBe(2);
+    fireEvent.click(screen.getByRole('button', { name: /Inflar/i }));
+    expect(screen.getByText(/Puntos acumulados/i)).toBeInTheDocument();
+    expect(eventCount()).toBe(2);
   });
 });

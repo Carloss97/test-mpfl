@@ -24,14 +24,14 @@ describe('original game integration blueprints', () => {
       expect(blueprint.postulation.durationLabel).toMatch(/min|s/);
       expect(blueprint.allowedAggregateFields.length).toBeGreaterThanOrEqual(5);
       expect(blueprint.reportDimension).toMatch(/revisión humana/i);
-      expect(blueprint.activation.status).toBe('planned');
+      expect(['planned', 'ported_hidden']).toContain(blueprint.activation.status);
     }
   });
 
   it('exposes a non-visible planned battery without changing the stable DG battery yet', () => {
     expect(buildOriginalGamePostulationBlocks()).toEqual([
-      expect.objectContaining({ gameId: 'laser_puzzle', visible: false, phase: 'original_games_replacement' }),
-      expect.objectContaining({ gameId: 'balloon_risk', visible: false, phase: 'original_games_replacement' }),
+      expect.objectContaining({ gameId: 'laser_puzzle', visible: false, phase: 'original_games_replacement', activationStatus: 'ported_hidden' }),
+      expect.objectContaining({ gameId: 'balloon_risk', visible: false, phase: 'original_games_replacement', activationStatus: 'ported_hidden' }),
       expect.objectContaining({ gameId: 'passenger_routes', visible: false, phase: 'original_games_replacement' }),
     ]);
   });

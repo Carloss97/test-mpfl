@@ -44,7 +44,7 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
       'ruleViolationCount',
     ]),
     reportDimension: 'Razonamiento espacial y planificación de reglas; lectura observacional para revisión humana.',
-    activation: Object.freeze({ status: 'planned', phase: 'R-2' }),
+    activation: Object.freeze({ status: 'ported_hidden', phase: 'R-2' }),
   }),
   Object.freeze({
     gameId: 'balloon_risk',
@@ -75,7 +75,7 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
       'timeMs',
     ]),
     reportDimension: 'Ajuste ante feedback y riesgo/recompensa; lectura observacional para revisión humana, no rasgo de personalidad.',
-    activation: Object.freeze({ status: 'planned', phase: 'R-3' }),
+    activation: Object.freeze({ status: 'ported_hidden', phase: 'R-3' }),
   }),
   Object.freeze({
     gameId: 'passenger_routes',
