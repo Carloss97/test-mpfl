@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KRUMM Postulación — dossier de transición a producto</title>
+  <style>
+    @page { size: A4; margin: 14mm 12mm; }
+    :root {
+      --bg: #08111f;
+      --panel: #111c2f;
+      --ink: #182033;
+      --muted: #617089;
+      --line: #dbe3ef;
+      --blue: #2458ff;
+      --cyan: #1eb6d9;
+      --green: #13a66b;
+      --amber: #b67a08;
+      --danger: #a53a3a;
+      --paper: #ffffff;
+      --soft: #f3f6fb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.48;
+      font-size: 11px;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    code { background: #eef3ff; color: #1d3b88; border-radius: 4px; padding: 0.05rem 0.28rem; font-size: 0.92em; }
+    pre { background: #0a1322; color: #d7e6ff; border-radius: 12px; padding: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .cover {
+      min-height: 270mm;
+      padding: 28mm 18mm 18mm;
+      background: radial-gradient(circle at 15% 15%, rgba(30, 182, 217, 0.34), transparent 34%), linear-gradient(145deg, #07111f 0%, #101c31 58%, #152846 100%);
+      color: white;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover:after {
+      content: "";
+      position: absolute;
+      inset: auto -40mm -30mm auto;
+      width: 170mm;
+      height: 170mm;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 50%;
+    }
+    .brand { letter-spacing: 0.18em; text-transform: uppercase; color: #8edaf0; font-size: 10px; font-weight: 800; }
+    h1 { font-size: 48px; line-height: 1.03; margin: 18mm 0 8mm; max-width: 176mm; letter-spacing: -0.025em; }
+    .subtitle { font-size: 18px; line-height: 1.42; color: #e0edff; max-width: 168mm; }
+    .meta-row { display: flex; flex-wrap: wrap; gap: 3mm; margin-top: 9mm; }
+    .meta-pill { border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.08); color: #e8f3ff; border-radius: 999px; padding: 2.2mm 4mm; font-size: 11px; font-weight: 700; }
+    .cover-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5mm; margin-top: 25mm; }
+    .cover-card { background: rgba(255,255,255,0.11); border: 1px solid rgba(255,255,255,0.22); border-radius: 18px; padding: 7mm; min-height: 35mm; }
+    .cover-card strong { display: block; font-size: 20px; margin-bottom: 2.5mm; color: #ffffff; }
+    .cover-card span { color: #dbeaff; font-size: 12px; }
+    .cover-note { position: absolute; left: 18mm; right: 18mm; bottom: 18mm; color: #d1dfef; border-top: 1px solid rgba(255,255,255,0.22); padding-top: 6mm; font-size: 11px; }
+    .toc { page-break-after: always; padding: 4mm 2mm; }
+    .toc h2 { font-size: 28px; margin: 0 0 8mm; }
+    .toc ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 4mm; }
+    .toc li { display: grid; grid-template-columns: 12mm 1fr; gap: 5mm; border: 1px solid var(--line); border-radius: 14px; padding: 5mm; background: var(--soft); }
+    .toc li span { display: grid; place-items: center; width: 11mm; height: 11mm; border-radius: 50%; background: var(--blue); color: white; font-weight: 900; }
+    .toc li strong { display: block; font-size: 15px; }
+    .toc li em { display: block; color: var(--muted); font-style: normal; margin-top: 1mm; }
+    .executive-strip { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4mm; margin-top: 9mm; }
+    .strip-card { border-left: 4px solid var(--cyan); background: #f5fbff; padding: 5mm; border-radius: 12px; }
+    .doc-section { padding: 2mm 0; }
+    .page-break { page-break-before: always; }
+    .section-kicker { color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; font-size: 9px; font-weight: 800; margin: 0 0 3mm; }
+    h2 { font-size: 24px; line-height: 1.12; color: #0d1a2e; margin: 10mm 0 4mm; page-break-after: avoid; }
+    h3 { font-size: 17px; color: #102b5d; margin: 7mm 0 3mm; page-break-after: avoid; }
+    h4 { font-size: 13px; color: #213653; margin: 5mm 0 2mm; page-break-after: avoid; }
+    p { margin: 0 0 3mm; }
+    ul, ol { margin: 0 0 4mm 5mm; padding-left: 5mm; }
+    li { margin: 0 0 1.4mm; }
+    .table-wrap { width: 100%; overflow: hidden; margin: 4mm 0 6mm; page-break-inside: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 8.6px; table-layout: auto; }
+    th { background: #102341; color: #fff; text-align: left; padding: 2.4mm; border: 1px solid #263a59; font-weight: 800; }
+    td { padding: 2.1mm; border: 1px solid var(--line); vertical-align: top; }
+    tr:nth-child(even) td { background: #f7f9fd; }
+    tr, td, th { page-break-inside: avoid; }
+    hr { border: none; border-top: 1px solid var(--line); margin: 8mm 0; }
+    .footer { position: fixed; bottom: 5mm; left: 12mm; right: 12mm; color: #8290a8; font-size: 8px; border-top: 1px solid #e2e8f2; padding-top: 2mm; }
+    @media print {
+      .page-break { break-before: page; }
+      .cover { break-after: page; }
+      .toc { break-after: page; }
+    }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <div class="brand">KRUMM Edge / Postulación</div>
+    <h1>Dossier de transición a producto real</h1>
+    <p class="subtitle">Entradas, salidas, elementos, indicadores, señales telemétricas, inferencia, estado de desarrollo y línea de tiempo para pasar de demo avanzada a producto piloto B2B validable.</p>
+    <div class="meta-row">
+      <span class="meta-pill">Fecha: 2026-07-20</span>
+      <span class="meta-pill">Versión: product dossier v1</span>
+      <span class="meta-pill">Estado: demo avanzada → producto piloto</span>
+      <span class="meta-pill">Uso: revisión humana</span>
+    </div>
+    <div class="cover-grid">
+      <div class="cover-card"><strong>Estado</strong><span>Demo técnica avanzada; no producto decisional.</span></div>
+      <div class="cover-card"><strong>Ruta</strong><span>/postulaciones-demo</span></div>
+      <div class="cover-card"><strong>Batería</strong><span>stable_dg + original_games controlada</span></div>
+      <div class="cover-card"><strong>Principio</strong><span>Aggregate-only, revisión humana, R-7 antes de comparar.</span></div>
+    </div>
+    <div class="cover-note">Generado desde documentos fuente en <strong>docs/product/</strong>. Fecha de corte: <strong>2026-07-20</strong>. Este dossier no valida psicométricamente la batería ni autoriza decisión automática.</div>
+  </section>
+  <section class="toc">
+    <h2>Contenido</h2>
+    <ol><li><span>1</span><strong>Índice del paquete documental</strong><em>docs/product/README.md</em></li>
+<li><span>2</span><strong>Contrato de datos, señales e inferencia</strong><em>docs/product/krumm-data-signal-inference-contract.md</em></li>
+<li><span>3</span><strong>Estado de desarrollo</strong><em>docs/product/krumm-development-state-report.md</em></li>
+<li><span>4</span><strong>Línea de tiempo hacia producto real</strong><em>docs/product/krumm-productization-roadmap.md</em></li></ol>
+    <div class="executive-strip">
+      <div class="strip-card"><strong>Demo</strong><br/>Flujo, juegos y reporte funcionan para presentación controlada.</div>
+      <div class="strip-card"><strong>Producto piloto</strong><br/>Requiere backend aggregate-only, privacidad formal, roles y operación.</div>
+      <div class="strip-card"><strong>Validación</strong><br/>R-7 debe cerrar contenido, confiabilidad, fairness y criterio antes de claims fuertes.</div>
+    </div>
+  </section>
+  
+      <section class="doc-section ">
+        <div class="section-kicker">Fuente: docs/product/README.md</div>
+        <h2>KRUMM Postulación — paquete documental producto</h2>
+<p><strong>Fecha:</strong> 2026-07-20</p>
+<p><strong>Ruta producto:</strong> <code>/postulaciones-demo</code></p>
+<p><strong>Estado:</strong> demo técnica avanzada con transición planificada a producto piloto.</p>
+<p><strong>Batería default/fallback:</strong> <code>stable_dg</code></p>
+<p><strong>Batería original controlada:</strong> <code>original_games</code></p>
+<p>Este paquete regenera la documentación de entradas, salidas, elementos, indicadores, señales telemétricas, inferencia, estado de desarrollo y línea de tiempo para pasar de demo a producto real.</p>
+<h3>Documentos</h3>
+<ol>
+<li><a href="./krumm-data-signal-inference-contract.md"><code>krumm-data-signal-inference-contract.md</code></a></li>
+</ol>
+<p>Contrato técnico de datos: entradas permitidas, elementos, señales telemétricas, indicadores, artefactos de salida, inferencia permitida/prohibida y límites de privacidad.</p>
+<ol>
+<li><a href="./krumm-development-state-report.md"><code>krumm-development-state-report.md</code></a></li>
+</ol>
+<p>Reporte de estado de desarrollo: qué existe, qué está implementado, qué está en estado provisional, qué falta para producto real y qué riesgos quedan abiertos.</p>
+<ol>
+<li><a href="./krumm-productization-roadmap.md"><code>krumm-productization-roadmap.md</code></a></li>
+</ol>
+<p>Línea de tiempo por fases para pasar de demo a producto piloto B2B: UX, backend, validación, seguridad, operación, piloto y decisión de salida a mercado.</p>
+<h3>Dossier presentable</h3>
+<ul>
+<li>HTML editable: <a href="./krumm-product-readiness-dossier.html"><code>krumm-product-readiness-dossier.html</code></a></li>
+<li>PDF exportado: <code>exports/krumm-product-readiness-dossier.pdf</code></li>
+<li>Script reproducible: <code>scripts/render-product-dossier-pdf.mjs</code></li>
+</ul>
+<h3>Principio rector</h3>
+<p>La plataforma actual puede demostrar flujo, juegos, captura agregada, reporte y gobernanza, pero todavía no debe presentarse como herramienta psicométrica validada ni como sistema de decisión automatizada. Todo uso debe mantenerse como revisión humana, con evidencia agregada, caveats y validación R-7 antes de comparar candidatos.</p>
+<h3>Fuentes del paquete</h3>
+<ul>
+<li>Código fuente en <code>src/postulation-demo</code>, <code>src/tasks/original-games</code>, <code>src/assessment</code>, <code>src/telemetry</code>.</li>
+<li>Estudio técnico: <code>docs/research/krumm-talent-game-behavior-mapping-technical-study.md</code>.</li>
+<li>Plan R-7: <code>docs/plans/2026-07-20-r7-validation-and-metric-justification-plan.md</code>.</li>
+<li>Plan de productización Laser/Passenger: <code>docs/plans/2026-07-20-laser-passenger-product-game-design-review.md</code>.</li>
+<li>Handoff vigente: <code>docs/plans/postulation-demo-original-games-new-agent-handoff.md</code>.</li>
+</ul>
+<h3>No negociables</h3>
+<ul>
+<li>No persistir video, frames, landmarks, keypoints, rutas, celdas visitadas, pointer samples, eventos DOM crudos, secuencias de clicks/bombeos/movimientos ni ventanas crudas reconstructivas.</li>
+<li>Cámara/biometría solo como calidad/contexto, nunca talento, personalidad, emoción, estrés, fatiga, sinceridad o decisión de contratación.</li>
+<li>Ausencia de señal = desconocido/no medido; nunca bajo desempeño.</li>
+<li>Sin percentiles, cortes, ranking o apto/no apto hasta validación normativa.</li>
+</ul>
+      </section>
+    
+
+      <section class="doc-section page-break">
+        <div class="section-kicker">Fuente: docs/product/krumm-data-signal-inference-contract.md</div>
+        <h2>KRUMM — contrato de entradas, salidas, elementos, indicadores, señales e inferencia</h2>
+<p><strong>Fecha:</strong> 2026-07-20</p>
+<p><strong>Producto/ruta:</strong> <code>/postulaciones-demo</code></p>
+<p><strong>Versión documental:</strong> <code>product_contract_v1</code></p>
+<p><strong>Estado:</strong> contrato técnico para transición de demo a producto piloto; no es validación psicométrica.</p>
+<p>---</p>
+<h3>1. Alcance</h3>
+<p>Este documento define qué entra al sistema, qué se procesa, qué indicadores se calculan, qué sale al reporte y qué inferencias están permitidas o prohibidas en KRUMM Postulación.</p>
+<p>El contrato cubre dos baterías:</p>
+<div class="table-wrap"><table><thead><tr><th>Batería</th><th>Uso actual</th><th>Estado</th></tr></thead><tbody><tr><td><code>stable_dg</code></td><td>Fallback/default estable de la demo.</td><td>Conservado para continuidad.</td></tr>
+<tr><td><code>original_games</code></td><td>Batería interna controlada con Laser, Balloon y Passenger.</td><td>Avanzada para demo interna; aún requiere R-7 antes de uso decisional.</td></tr></tbody></table></div>
+<p>Cadena obligatoria:</p>
+<pre><code>constructo hipotético
+→ demanda de tarea
+→ conducta observable
+→ telemetría agregada
+→ feature versionada
+→ regla provisional
+→ disponibilidad/confianza/caveats
+→ narrativa para revisión humana</code></pre>
+<p>---</p>
+<h3>2. Elementos del producto</h3>
+<div class="table-wrap"><table><thead><tr><th>Elemento</th><th>Descripción</th><th>Estado de desarrollo</th><th>Archivos fuente principales</th></tr></thead><tbody><tr><td>Flujo candidato <code>/postulaciones-demo</code></td><td>Experiencia de postulación con batería, progreso, juegos, generación de reporte y fixture.</td><td>Implementado para demo; falta hardening producto/piloto.</td><td><code>src/postulation-demo/PostulationDemoApp.jsx</code>, <code>PostulationGameStage.jsx</code>, <code>postulationDemoConfig.js</code></td></tr>
+<tr><td>Batería estable <code>stable_dg</code></td><td>Tareas estables/diagnósticas del runtime existente.</td><td>Default/fallback.</td><td><code>src/postulation-demo/postulationDemoConfig.js</code>, <code>src/tasks</code></td></tr>
+<tr><td>Batería original <code>original_games</code></td><td>Laser, Balloon, Passenger productizados para demo interna.</td><td>Controlado por query/batería; requiere R-7.</td><td><code>src/postulation-demo/originalGameBlueprints.js</code>, <code>src/tasks/original-games/*</code></td></tr>
+<tr><td>Reporte HR</td><td>Vista ejecutiva con métricas agregadas, No medido, caveats y revisión humana.</td><td>Implementado para demo; falta workflow real recruiter.</td><td><code>PostulationReportScreen.jsx</code>, <code>PostulationReportSummary.js</code></td></tr>
+<tr><td>Drawer técnico</td><td>Expone QA, descargas y gobernanza sin saturar la vista HR.</td><td>Implementado.</td><td><code>PostulationReportTechnicalDrawer.jsx</code></td></tr>
+<tr><td>Feature vector original</td><td>Vector fijo de juegos originales.</td><td>Implementado como R-6.</td><td><code>src/assessment/originalGameFeatureVector.js</code></td></tr>
+<tr><td>Framework talento workbook</td><td>Mapeo provisional de 8 constructos del Excel KRUMM.</td><td>Implementado con caveats.</td><td><code>src/assessment/originalGameTalentMapping.js</code></td></tr>
+<tr><td>Validadores/sanitización</td><td>Evitan raw data y campos reconstructivos en payloads.</td><td>Implementados en rutas principales; requiere auditoría de producto.</td><td><code>assessmentSession.js</code>, <code>finalAssessmentPayload.js</code>, <code>originalGameBlueprints.js</code></td></tr>
+<tr><td>Smoke browser</td><td>Verifica rutas, fixture, overflow, consola, request failures y ausencia de campos crudos visibles.</td><td>Implementado para demo.</td><td><code>scripts/smoke-postulation-feedback.mjs</code></td></tr></tbody></table></div>
+<p>---</p>
+<h3>3. Entradas permitidas</h3>
+<h4>3.1 Entradas operacionales de sesión</h4>
+<div class="table-wrap"><table><thead><tr><th>Entrada</th><th>Fuente</th><th>Uso permitido</th><th>Persistencia</th></tr></thead><tbody><tr><td>Consentimiento de cámara</td><td>UI candidato</td><td>Activar/caveatear señales de calidad.</td><td>Estado/flag, no video.</td></tr>
+<tr><td>Selección de batería</td><td>Config/query/session lock</td><td>Elegir <code>stable_dg</code> u <code>original_games</code>.</td><td>ID de batería y versión.</td></tr>
+<tr><td>Estado de juegos</td><td>Runtime de batería</td><td>Orquestar progreso y completitud.</td><td>Resumen por bloque.</td></tr>
+<tr><td>Fixture</td><td>Query <code>?fixture=1</code></td><td>QA y demo determinística.</td><td>Solo entorno demo/controlado.</td></tr>
+<tr><td>Metadata técnica</td><td>Navegador/runtime/build</td><td>Diagnóstico y reproducibilidad.</td><td>Metadata no sensible.</td></tr></tbody></table></div>
+<h4>3.2 Entradas agregadas por juego original</h4>
+<div class="table-wrap"><table><thead><tr><th>Juego</th><th>Entradas permitidas</th><th>Uso</th></tr></thead><tbody><tr><td>Laser Puzzle</td><td><code>score</code>, <code>completed</code>, <code>levelCount</code>, <code>solvedLevels</code>, <code>moveCount</code>, <code>reconfigurationCount</code>, <code>hintCount</code>, <code>timeMs</code>, <code>solutionEfficiency</code>, <code>ruleViolationCount</code>, <code>aggregateOnly</code></td><td>Resolución de niveles, eficiencia, cumplimiento de reglas y contexto temporal.</td></tr>
+<tr><td>Balloon Risk</td><td><code>score</code>, <code>completed</code>, <code>roundsCompleted</code>, <code>totalRounds</code>, <code>averagePumps</code>, <code>cashoutCount</code>, <code>popCount</code>, <code>postPopAdjustment</code>, <code>postPopAdjustmentCount</code>, <code>riskEfficiency</code>, <code>timeMs</code>, <code>aggregateOnly</code></td><td>Estrategia descriptiva riesgo/recompensa y oportunidades de feedback.</td></tr>
+<tr><td>Passenger Routes</td><td><code>score</code>, <code>completed</code>, <code>passengersDelivered</code>, <code>destinationCount</code>, <code>routeEfficiency</code>, <code>movementAttemptCount</code>, <code>replanCount</code>, <code>stationUseCount</code>, <code>constraintViolationCount</code>, <code>satisfactionScore</code>, <code>timeMs</code>, <code>aggregateOnly</code></td><td>Planificación bajo restricciones, uso de recursos, cumplimiento de reglas y eficiencia agregada.</td></tr></tbody></table></div>
+<h4>3.3 Señales técnicas permitidas como calidad/contexto</h4>
+<div class="table-wrap"><table><thead><tr><th>Señal</th><th>Uso permitido</th><th>Uso prohibido</th></tr></thead><tbody><tr><td>Calidad facial agregada</td><td>Disponibilidad, confianza, caveats de captura.</td><td>Inferir personalidad, emoción, estrés, fatiga, sinceridad o talento.</td></tr>
+<tr><td>Gaze agregado</td><td>Calidad/contexto técnico si existe en agregados.</td><td>Diagnosticar atención laboral o intención.</td></tr>
+<tr><td>Postura/MoveNet agregado</td><td>Calidad/contexto técnico; no inferencia de talento.</td><td>Inferir liderazgo, energía, motivación o salud.</td></tr>
+<tr><td>Correlación temporal agregada por trial</td><td>Contexto de alineación tarea-señal.</td><td>Reconstruir eventos, acciones o secuencias.</td></tr></tbody></table></div>
+<p>---</p>
+<h3>4. Entradas prohibidas</h3>
+<p>Nunca deben persistirse, exportarse ni enviarse al reporte final:</p>
+<div class="table-wrap"><table><thead><tr><th>Categoría</th><th>Campos/ejemplos prohibidos</th></tr></thead><tbody><tr><td>Imagen/video</td><td>video, frames, screenshots, base64 image data.</td></tr>
+<tr><td>Biometría cruda</td><td>landmarks, keypoints, face samples, blendshapes crudos, ventanas crudas.</td></tr>
+<tr><td>Puntero/DOM</td><td>PointerEvents, MouseEvents, DOM events, rawPointerPath, pointerSamples, clickTrace.</td></tr>
+<tr><td>Juego reconstructivo</td><td>fullRoute, routeTrace, visitedCells, stepByStepPath, beamCells, pumpSequence, rawGameEvents, trials detallados.</td></tr>
+<tr><td>Inferencia prohibida</td><td>hire/no-hire, apto/no apto, ranking automático, percentil sin normas, personalidad, emoción interna, estrés, fatiga, sinceridad.</td></tr></tbody></table></div>
+<p>---</p>
+<h3>5. Señales telemétricas e indicadores implementados</h3>
+<h4>5.1 Laser Puzzle</h4>
+<div class="table-wrap"><table><thead><tr><th>Señal agregada</th><th>Indicador</th><th>Fórmula/contrato</th><th>Inferencia permitida</th><th>Caveat</th></tr></thead><tbody><tr><td><code>completed</code></td><td><code>laser.completion</code></td><td><code>completed ? 1 : 0</code></td><td>Disponibilidad de evidencia de tarea.</td><td>No mide habilidad por sí solo.</td></tr>
+<tr><td><code>solvedLevels</code>, <code>levelCount</code></td><td><code>laser.solvedRate</code></td><td><code>solvedLevels / levelCount</code></td><td>Metas resueltas bajo reglas explícitas.</td><td>Sensible a cantidad/dificultad de niveles.</td></tr>
+<tr><td><code>solutionEfficiency</code>, <code>moveCount</code></td><td><code>laser.solutionEfficiency</code></td><td>agregado upstream, conceptualmente par/movimientos</td><td>Eficiencia frente a solución esperada.</td><td>Depende de authoring/par.</td></tr>
+<tr><td><code>ruleViolationCount</code>, <code>levelCount</code></td><td><code>laser.ruleCompliance</code></td><td><code>1 - min(1, violations / levels)</code></td><td>Cumplimiento observable de reglas.</td><td>Puede reflejar instrucción/UX, no capacidad.</td></tr>
+<tr><td><code>moveCount</code></td><td><code>laser.moveCount</code></td><td>conteo no negativo</td><td>Contexto de esfuerzo.</td><td>No se interpreta sin nivel.</td></tr>
+<tr><td><code>timeMs</code></td><td><code>laser.timeMs</code></td><td>duración agregada</td><td>Contexto temporal.</td><td>No es velocidad normada.</td></tr></tbody></table></div>
+<h4>5.2 Balloon Risk</h4>
+<div class="table-wrap"><table><thead><tr><th>Señal agregada</th><th>Indicador</th><th>Fórmula/contrato</th><th>Inferencia permitida</th><th>Caveat</th></tr></thead><tbody><tr><td><code>completed</code></td><td><code>balloon.completion</code></td><td><code>completed ? 1 : 0</code></td><td>Disponibilidad de secuencia riesgo/recompensa.</td><td>No es score de calidad.</td></tr>
+<tr><td><code>riskEfficiency</code>, <code>score</code></td><td><code>balloon.riskEfficiency</code></td><td>ratio <code>[0,1]</code></td><td>Estrategia descriptiva de recompensa/pérdida.</td><td>No mide personalidad ni frustración.</td></tr>
+<tr><td><code>cashoutCount</code>, <code>totalRounds</code></td><td><code>balloon.cashoutRate</code></td><td><code>cashoutCount / totalRounds</code></td><td>Frecuencia de asegurar recompensa.</td><td>Alto/bajo no tiene valencia sin criterio.</td></tr>
+<tr><td><code>popCount</code>, <code>totalRounds</code></td><td><code>balloon.popRate</code></td><td><code>popCount / totalRounds</code></td><td>Exposición a pérdidas.</td><td>Depende de thresholds/azar.</td></tr>
+<tr><td><code>averagePumps</code></td><td><code>balloon.averagePumpsNormalized</code></td><td><code>min(1, averagePumps / 12)</code></td><td>Intensidad promedio de acumulación.</td><td>Cap provisional.</td></tr>
+<tr><td><code>postPopAdjustment</code>, <code>postPopAdjustmentCount</code></td><td><code>balloon.postLossAdjustment</code></td><td>solo si <code>postPopAdjustmentCount &gt; 0</code></td><td>Ajuste agregado post-pérdida.</td><td>Ausencia de oportunidad = desconocido.</td></tr>
+<tr><td><code>postPopAdjustmentCount</code></td><td><code>balloon.postLossAdjustmentObserved</code></td><td><code>count &gt; 0 ? 1 : 0</code></td><td>Máscara de disponibilidad.</td><td>No puntúa calidad.</td></tr>
+<tr><td><code>timeMs</code></td><td><code>balloon.timeMs</code></td><td>duración agregada</td><td>Contexto temporal.</td><td>No es norma.</td></tr></tbody></table></div>
+<h4>5.3 Passenger Routes</h4>
+<div class="table-wrap"><table><thead><tr><th>Señal agregada</th><th>Indicador</th><th>Fórmula/contrato</th><th>Inferencia permitida</th><th>Caveat</th></tr></thead><tbody><tr><td><code>completed</code></td><td><code>passenger.completion</code></td><td><code>completed ? 1 : 0</code></td><td>Disponibilidad de evidencia de ruta.</td><td>No mide calidad por sí solo.</td></tr>
+<tr><td><code>passengersDelivered</code>, <code>destinationCount</code></td><td><code>passenger.deliveryRate</code></td><td><code>delivered / destinationCount</code></td><td>Cumplimiento de metas logísticas.</td><td>Pocos destinos, sensible a controles.</td></tr>
+<tr><td><code>routeEfficiency</code></td><td><code>passenger.routeEfficiency</code></td><td><code>minimumCost / actualCost</code> upstream</td><td>Eficiencia agregada bajo restricciones.</td><td>Depende de solver y authoring.</td></tr>
+<tr><td><code>constraintViolationCount</code>, <code>movementAttemptCount</code></td><td><code>passenger.constraintCompliance</code></td><td><code>1 - min(1, violations / attempts)</code></td><td>Cumplimiento de restricciones proporcional a exposición.</td><td>Violaciones pueden ser comprensión/UX.</td></tr>
+<tr><td><code>replanCount</code>, <code>movementAttemptCount</code></td><td><code>passenger.replanRate</code></td><td><code>min(1, replans / attempts)</code></td><td>Contexto de replanificación.</td><td>Replanificar puede ser adaptativo o ineficiente.</td></tr>
+<tr><td><code>stationUseCount</code></td><td><code>passenger.stationUseCount</code></td><td>conteo no negativo</td><td>Uso de recursos/paradas.</td><td>Puede ser óptimo según nivel.</td></tr>
+<tr><td><code>satisfactionScore</code></td><td><code>passenger.satisfactionNormalized</code></td><td><code>score / 100</code></td><td>Resumen de outcome del juego.</td><td>No es satisfacción real del usuario/cliente.</td></tr>
+<tr><td><code>timeMs</code></td><td><code>passenger.timeMs</code></td><td>duración agregada</td><td>Contexto temporal.</td><td>No es norma.</td></tr></tbody></table></div>
+<p>---</p>
+<h3>6. Artefactos de salida</h3>
+<div class="table-wrap"><table><thead><tr><th>Artefacto</th><th>Tipo/schema</th><th>Estado</th><th>Contenido</th><th>Consumidor</th></tr></thead><tbody><tr><td><code>assessment_feature_vector_v2</code></td><td>vector stable existente</td><td>Conservado</td><td>Features de batería estable y señales agregadas.</td><td>Pipeline existente.</td></tr>
+<tr><td><code>original_game_feature_vector_v1</code></td><td>vector original juegos</td><td>Implementado R-6</td><td><code>featureOrder</code>, <code>featureArray</code>, <code>featureMap</code>, <code>observedMask</code>, <code>featureAvailability</code>, <code>gameAvailability</code>, privacy flags.</td><td>Framework provisional, QA, investigación.</td></tr>
+<tr><td><code>krumm_workbook_talent_framework_v1</code></td><td>framework provisional</td><td>Implementado R-6</td><td>8 constructos del Excel con score/null, availability, confidence, caveats, narrative.</td><td>Reporte HR y revisión técnica.</td></tr>
+<tr><td>Game feedback cards</td><td>UI/report object</td><td>Implementado</td><td>Categoría, hint y caveat por Laser/Balloon/Passenger.</td><td>Candidato/revisor.</td></tr>
+<tr><td>Authoring/QA summaries</td><td>drawer técnico</td><td>Implementado</td><td>Laser authoring, Balloon calibration, Passenger authoring, instruction check.</td><td>Equipo KRUMM interno.</td></tr>
+<tr><td>Final payload/report bundle</td><td>JSON/MD/HTML</td><td>Implementado demo</td><td>Reporte y payload sanitizado.</td><td>Revisión humana, descarga técnica.</td></tr></tbody></table></div>
+<p>---</p>
+<h3>7. Inferencia permitida y prohibida</h3>
+<h4>7.1 Estados de inferencia permitidos</h4>
+<div class="table-wrap"><table><thead><tr><th>Estado</th><th>Significado</th><th>Uso permitido</th></tr></thead><tbody><tr><td><code>measured_complete</code></td><td>Juego/feature completado y válido.</td><td>Puede alimentar métricas provisionales.</td></tr>
+<tr><td><code>observed</code></td><td>Feature agregada disponible.</td><td>Puede mostrarse como evidencia.</td></tr>
+<tr><td><code>descriptive_only</code></td><td>Hay señal de tarea pero sin dirección normativa.</td><td>Describir estrategia/contexto; no puntuar talento.</td></tr>
+<tr><td><code>provisional_score</code></td><td>Índice técnico calculado con caveats.</td><td>Solo revisión humana e investigación R-7.</td></tr>
+<tr><td><code>insufficient</code></td><td>Evidencia incompleta.</td><td>Mostrar No medido/insuficiente.</td></tr>
+<tr><td><code>not_measured</code></td><td>Constructo no cubierto por batería.</td><td>Mostrar No medido; no imputar 0 ni 50.</td></tr>
+<tr><td><code>invalid</code> / <code>not_observed</code></td><td>Dato ausente, inconsistente o contaminado.</td><td>Bloquear o caveatear inferencia.</td></tr></tbody></table></div>
+<h4>7.2 Constructos KRUMM workbook</h4>
+<div class="table-wrap"><table><thead><tr><th>Constructo</th><th>Estado actual</th><th>Fuente principal</th><th>Uso permitido</th></tr></thead><tbody><tr><td>Toma de decisiones</td><td><code>descriptive_only</code></td><td>Balloon/Passenger como estrategia observada.</td><td>Narrativa, no score normativo.</td></tr>
+<tr><td>Resolución de problemas</td><td><code>provisional_score</code> si Laser+Passenger completos</td><td>Laser + Passenger.</td><td>Índice técnico con confianza acotada.</td></tr>
+<tr><td>Asunción de riesgo / feedback</td><td><code>descriptive_only</code></td><td>Balloon.</td><td>Estrategia riesgo/recompensa; no rasgo.</td></tr>
+<tr><td>Planificación</td><td><code>provisional_score</code> si Passenger completo</td><td>Passenger.</td><td>Planificación bajo restricciones del juego.</td></tr>
+<tr><td>Adaptabilidad/flexibilidad</td><td><code>insufficient</code></td><td>No hay cambios controlados suficientes.</td><td>No medir.</td></tr>
+<tr><td>Pensamiento analítico</td><td><code>provisional_score</code> si Laser+Passenger completos</td><td>Laser + Passenger.</td><td>Índice técnico, no rasgo validado.</td></tr>
+<tr><td>Liderazgo</td><td><code>not_measured</code></td><td>No hay tarea social/multijugador.</td><td>No medir.</td></tr>
+<tr><td>Comunicación</td><td><code>not_measured</code></td><td>No hay tarea comunicativa codificada.</td><td>No medir.</td></tr></tbody></table></div>
+<p>---</p>
+<h3>8. Módulos de QA/feedback implementados</h3>
+<div class="table-wrap"><table><thead><tr><th>Módulo</th><th>Estado</th><th>Función</th><th>Visibilidad</th></tr></thead><tbody><tr><td><code>laser.failure-explanation</code></td><td>Implementado</td><td>Feedback de solución/reglas/esfuerzo sin beam path.</td><td>Reporte visible.</td></tr>
+<tr><td><code>laser.level-authoring-review</code></td><td>Implementado</td><td>Verifica solvencia, par, multiobjetivo y layout.</td><td>Drawer técnico.</td></tr>
+<tr><td><code>balloon.feedback-comprehension</code></td><td>Implementado</td><td>Explica cashout/pérdida/feedback sin pump sequence.</td><td>Reporte visible.</td></tr>
+<tr><td><code>balloon.threshold-calibration-review</code></td><td>Implementado</td><td>Revisa distribución alto/medio/bajo de rondas.</td><td>Drawer técnico.</td></tr>
+<tr><td><code>passenger.constraint-feedback</code></td><td>Implementado</td><td>Explica restricciones, recursos y ruta agregada.</td><td>Reporte visible.</td></tr>
+<tr><td><code>passenger.route-authoring-review</code></td><td>Implementado</td><td>Verifica solver, presupuesto, paradas y dificultad.</td><td>Drawer técnico.</td></tr>
+<tr><td><code>shared.candidate-instruction-check</code></td><td>Implementado</td><td>Separa riesgo de comprensión/instrucciones de desempeño.</td><td>Drawer técnico.</td></tr>
+<tr><td><code>shared.mobile-accessibility-qa</code></td><td>Planificado</td><td>QA de viewport/touch/copy largo.</td><td>Próxima fase.</td></tr></tbody></table></div>
+<p>---</p>
+<h3>9. Reglas de privacidad y sanitización</h3>
+<ol>
+<li>Todo bloque de juego debe declarar <code>aggregateOnly: true</code>.</li>
+<li>Cualquier campo reconstructivo debe invalidar o bloquear el consumo del bloque.</li>
+<li>La validación debe ocurrir en cada frontera: bloque de juego, feature vector, assessment session, final payload y reporte.</li>
+<li>Las descargas técnicas pueden incluir JSON/Markdown/HTML sanitizados, no raw logs.</li>
+<li>Las señales de cámara no se usan para inferencia directa de talento.</li>
+<li>Los scores 0–100 no son percentiles, normas ni cortes.</li>
+<li><code>null</code> significa no medido/no disponible; nunca debe transformarse a cero o 50 neutral.</li>
+</ol>
+<p>---</p>
+<h3>10. Requisitos para evolucionar el contrato a producto real</h3>
+<p>Para que este contrato sea apto para piloto/producto debe agregarse:</p>
+<div class="table-wrap"><table><thead><tr><th>Requisito</th><th>Motivo</th><th>Prioridad</th></tr></thead><tbody><tr><td>Esquemas versionados persistentes</td><td>Evitar drift y romper reportes históricos.</td><td>Alta</td></tr>
+<tr><td>Backend de sesiones aggregate-only</td><td>Producto real necesita invitación, guardado, revisión y auditoría.</td><td>Alta</td></tr>
+<tr><td>Retención/eliminación de datos</td><td>Cumplimiento privacidad y confianza empresarial.</td><td>Alta</td></tr>
+<tr><td>Auditoría de payloads en CI</td><td>Evitar regresiones de datos crudos.</td><td>Alta</td></tr>
+<tr><td>QA multi-dispositivo real</td><td>Reducir sesgo por hardware/navegador.</td><td>Alta</td></tr>
+<tr><td>Protocolo R-7 con participantes</td><td>Sustentar cualquier comparación entre personas.</td><td>Alta</td></tr>
+<tr><td>Panel recruiter separado</td><td>Diferenciar candidato, HR, técnico y científico.</td><td>Media</td></tr>
+<tr><td>Manual de interpretación HR</td><td>Evitar sobreuso comercial del reporte.</td><td>Media</td></tr></tbody></table></div>
+<p>---</p>
+<h3>11. Referencias internas</h3>
+<ul>
+<li><code>src/assessment/originalGameFeatureVector.js</code></li>
+<li><code>src/assessment/originalGameTalentMapping.js</code></li>
+<li><code>src/tasks/original-games/originalGameImprovementModules.js</code></li>
+<li><code>src/postulation-demo/PostulationReportSummary.js</code></li>
+<li><code>src/postulation-demo/PostulationReportTechnicalDrawer.jsx</code></li>
+<li><code>docs/research/krumm-talent-game-behavior-mapping-technical-study.md</code></li>
+<li><code>docs/plans/2026-07-20-r7-validation-and-metric-justification-plan.md</code></li>
+</ul>
+      </section>
+    
+
+      <section class="doc-section page-break">
+        <div class="section-kicker">Fuente: docs/product/krumm-development-state-report.md</div>
+        <h2>KRUMM Postulación — reporte de estado de desarrollo</h2>
+<p><strong>Fecha:</strong> 2026-07-20</p>
+<p><strong>Documento:</strong> <code>development_state_report_v1</code></p>
+<p><strong>Ruta producto:</strong> <code>/postulaciones-demo</code></p>
+<p><strong>Estado ejecutivo:</strong> demo avanzada y verificable; aún no producto real ni assessment validado.</p>
+<p>---</p>
+<h3>1. Resumen ejecutivo</h3>
+<p>KRUMM Postulación tiene actualmente una demo técnica avanzada con:</p>
+<ul>
+<li>flujo candidato funcional;</li>
+<li>batería estable como fallback;</li>
+<li>batería original controlada con Laser, Balloon y Passenger;</li>
+<li>juegos originales productizados para demo interna;</li>
+<li>reporte HR con resumen ejecutivo, No medido, caveats y revisión humana;</li>
+<li>feature vector original versionado;</li>
+<li>mapeo provisional de constructos KRUMM workbook;</li>
+<li>módulos de QA/feedback para juegos;</li>
+<li>smoke browser y tests automatizados.</li>
+</ul>
+<p>Sin embargo, todavía no es un producto real listo para operación comercial/piloto externo porque faltan:</p>
+<ul>
+<li>backend persistente aggregate-only;</li>
+<li>gestión de invitaciones/candidatos/roles;</li>
+<li>retención/eliminación/auditoría de datos;</li>
+<li>QA real multi-dispositivo;</li>
+<li>validación R-7 con participantes y expertos;</li>
+<li>protocolo legal/privacidad formal;</li>
+<li>panel recruiter operativo;</li>
+<li>manual de interpretación y límites de uso.</li>
+</ul>
+<p>Conclusión: el sistema está listo para <strong>demo interna/presentación controlada</strong> y para iniciar la <strong>fase de producto piloto</strong>, no para uso decisional ni ranking de candidatos.</p>
+<p>---</p>
+<h3>2. Estado por capa</h3>
+<div class="table-wrap"><table><thead><tr><th>Capa</th><th>Estado</th><th>Evidencia actual</th><th>Falta para producto real</th></tr></thead><tbody><tr><td>UI candidato</td><td>Implementada para demo</td><td>Ruta <code>/postulaciones-demo</code>, fixtures, batería original/estable.</td><td>Onboarding final, accesibilidad, multi-idioma si aplica, soporte real a errores.</td></tr>
+<tr><td>Juegos originales</td><td>Productizados para demo</td><td>Laser 3 niveles, Passenger 3 circuitos, Balloon calibrado.</td><td>Calibración con usuarios, tutoriales, mobile/touch QA, balance con datos reales.</td></tr>
+<tr><td>Telemetría de juegos</td><td>Implementada aggregate-only</td><td>Features por juego y sanitización.</td><td>Esquemas persistentes, contract tests de payload backend, drift monitoring.</td></tr>
+<tr><td>Cámara/señales técnicas</td><td>Implementada como contexto/calidad</td><td>Quality/caveats y correlación agregada.</td><td>Política final de consentimiento, degradación sin cámara, device QA.</td></tr>
+<tr><td>Feature vectors</td><td>Implementados</td><td><code>assessment_feature_vector_v2</code>, <code>original_game_feature_vector_v1</code>.</td><td>Version registry, migraciones y compatibilidad histórica.</td></tr>
+<tr><td>Inferencia talento</td><td>Provisional</td><td><code>krumm_workbook_talent_framework_v1</code> con <code>provisional_score</code>, <code>descriptive_only</code>, <code>not_measured</code>.</td><td>R-7: validez de contenido, confiabilidad, convergencia, criterio, fairness.</td></tr>
+<tr><td>Reporte HR</td><td>Mejorado para demo</td><td>Resumen ejecutivo, feedback por juego, No medido, drawer técnico.</td><td>Separar vistas HR/técnica/científica, workflow recruiter, explicación comercial segura.</td></tr>
+<tr><td>QA automatizada</td><td>Sólida para demo</td><td>Vitest, oxlint, build, audit, smoke browser.</td><td>CI/CD real, matriz browsers/devices, e2e contra backend.</td></tr>
+<tr><td>Seguridad/privacidad</td><td>Principios implementados</td><td>aggregate-only, raw fields prohibidos.</td><td>DPIA/PIA, threat model, pentest básico, retención/eliminación.</td></tr>
+<tr><td>Operación</td><td>No producto</td><td>Demo local/static.</td><td>Staging/prod, observabilidad, backups, soporte, incident response.</td></tr></tbody></table></div>
+<p>---</p>
+<h3>3. Componentes implementados</h3>
+<h4>3.1 Juegos originales</h4>
+<div class="table-wrap"><table><thead><tr><th>Juego</th><th>Estado</th><th>Elementos implementados</th><th>Riesgo restante</th></tr></thead><tbody><tr><td>Laser Puzzle</td><td>Productizado para demo</td><td>3 niveles: calibración, obstáculos, red dual; authoring review; feedback claro.</td><td>Calibración de dificultad con usuarios; tutorial/controles en móvil.</td></tr>
+<tr><td>Balloon Risk</td><td>Productizado para demo</td><td>Feedback riesgo/recompensa; calibration review; 8 rondas con distribución alto/medio/bajo.</td><td>Asegurar que se entienda azar/estrategia; validar thresholds con muestra.</td></tr>
+<tr><td>Passenger Routes</td><td>Productizado para demo</td><td>3 circuitos; recargas/paradas; solver; authoring review; feedback de restricciones.</td><td>QA de interacción móvil y análisis de dificultad con usuarios.</td></tr></tbody></table></div>
+<h4>3.2 Módulos de mejora y QA</h4>
+<div class="table-wrap"><table><thead><tr><th>Módulo</th><th>Estado</th><th>Resultado</th></tr></thead><tbody><tr><td><code>laser.failure-explanation</code></td><td>Implementado</td><td>Feedback visible: solución clara/reglas/esfuerzo.</td></tr>
+<tr><td><code>laser.level-authoring-review</code></td><td>Implementado</td><td>Drawer técnico: <code>Authoring Laser: valid_for_internal_demo</code>.</td></tr>
+<tr><td><code>balloon.feedback-comprehension</code></td><td>Implementado</td><td>Feedback visible: estrategia riesgo/recompensa.</td></tr>
+<tr><td><code>balloon.threshold-calibration-review</code></td><td>Implementado</td><td>Drawer técnico: <code>Calibration Balloon: valid_for_internal_demo</code>.</td></tr>
+<tr><td><code>passenger.constraint-feedback</code></td><td>Implementado</td><td>Feedback visible: ruta eficiente/restricciones/recursos.</td></tr>
+<tr><td><code>passenger.route-authoring-review</code></td><td>Implementado</td><td>Drawer técnico: <code>Authoring Passenger: valid_for_internal_demo</code>.</td></tr>
+<tr><td><code>shared.candidate-instruction-check</code></td><td>Implementado</td><td>Drawer técnico: <code>Instruction check: low/review/high</code>.</td></tr>
+<tr><td><code>shared.mobile-accessibility-qa</code></td><td>Planificado</td><td>Próxima prioridad técnica.</td></tr></tbody></table></div>
+<h4>3.3 Reporte HR</h4>
+<p>Estado actual:</p>
+<ul>
+<li>resumen ejecutivo HR;</li>
+<li>cards de calidad;</li>
+<li>cards de juegos;</li>
+<li>dimensiones/talentos con <code>No medido</code> explícito;</li>
+<li>framework provisional original-games;</li>
+<li>caveats;</li>
+<li>drawer técnico con descargas y QA interno.</li>
+</ul>
+<p>Decisiones correctas ya implementadas:</p>
+<ul>
+<li>no generar fortalezas/watch areas para framework provisional;</li>
+<li>no usar 50 neutral cuando falta señal;</li>
+<li>no usar score 0 para constructos no medidos;</li>
+<li>no ranking automático;</li>
+<li>no decisión automatizada;</li>
+<li>no persistencia de datos reconstructivos.</li>
+</ul>
+<p>Falta para producto:</p>
+<ul>
+<li>separar visualmente tres vistas:</li>
+</ul>
+<ol>
+<li>HR ejecutivo;</li>
+<li>técnico/QA;</li>
+<li>científico/validación;</li>
+</ol>
+<ul>
+<li>crear manual de interpretación;</li>
+<li>crear workflow recruiter: candidato, rol, evidencia, revisión, notas, exportación;</li>
+<li>manejar sesiones reales persistentes, no solo fixture/local.</li>
+</ul>
+<p>---</p>
+<h3>4. Estado de indicadores e inferencia</h3>
+<h4>4.1 Indicadores implementados</h4>
+<div class="table-wrap"><table><thead><tr><th>Grupo</th><th>Indicadores</th><th>Estado</th></tr></thead><tbody><tr><td>Laser</td><td>completion, solvedRate, solutionEfficiency, ruleCompliance, moveCount, timeMs</td><td>Implementado</td></tr>
+<tr><td>Balloon</td><td>completion, riskEfficiency, cashoutRate, popRate, averagePumpsNormalized, postLossAdjustment, observed mask, timeMs</td><td>Implementado</td></tr>
+<tr><td>Passenger</td><td>completion, deliveryRate, routeEfficiency, constraintCompliance, replanRate, stationUseCount, satisfactionNormalized, timeMs</td><td>Implementado</td></tr>
+<tr><td>QA authoring</td><td>Laser authoring, Balloon calibration, Passenger authoring</td><td>Implementado</td></tr>
+<tr><td>QA comprensión</td><td>candidateInstructionCheck</td><td>Implementado</td></tr>
+<tr><td>QA responsive</td><td>mobileAccessibilityQA</td><td>Pendiente</td></tr></tbody></table></div>
+<h4>4.2 Inferencia KRUMM workbook</h4>
+<div class="table-wrap"><table><thead><tr><th>Constructo</th><th>Estado actual</th><th>Recomendación</th></tr></thead><tbody><tr><td>Toma de decisiones</td><td><code>descriptive_only</code></td><td>Mantener solo narrativa de estrategia.</td></tr>
+<tr><td>Resolución de problemas</td><td><code>provisional_score</code> si Laser+Passenger válidos</td><td>Usar solo internamente hasta R-7.</td></tr>
+<tr><td>Riesgo/feedback</td><td><code>descriptive_only</code></td><td>No convertir a personalidad/frustración.</td></tr>
+<tr><td>Planificación</td><td><code>provisional_score</code> si Passenger válido</td><td>Validar con tareas externas.</td></tr>
+<tr><td>Adaptabilidad</td><td><code>insufficient</code></td><td>Diseñar tarea de cambio controlado antes de puntuar.</td></tr>
+<tr><td>Pensamiento analítico</td><td><code>provisional_score</code> si Laser+Passenger válidos</td><td>Mantener confianza acotada.</td></tr>
+<tr><td>Liderazgo</td><td><code>not_measured</code></td><td>Requiere tarea social.</td></tr>
+<tr><td>Comunicación</td><td><code>not_measured</code></td><td>Requiere tarea comunicativa.</td></tr></tbody></table></div>
+<p>---</p>
+<h3>5. Verificación técnica reciente</h3>
+<p>Los gates recientes del proyecto han incluido:</p>
+<ul>
+<li>suite Vitest completa;</li>
+<li>tests focales de juegos originales, reporte y feature vector;</li>
+<li><code>oxlint</code> sobre <code>src/postulation-demo</code>, <code>src/tasks/original-games</code>, <code>src/assessment</code>, <code>src/telemetry/gameCorrelation.js</code>, <code>src/main.jsx</code>;</li>
+<li><code>npm run build</code>;</li>
+<li><code>npm audit --audit-level=high --omit=dev</code>;</li>
+<li><code>git diff --check</code>;</li>
+<li>smoke browser sobre rutas de <code>/postulaciones-demo</code> en desktop y mobile.</li>
+</ul>
+<p>Estado conocido de la última verificación funcional documentada:</p>
+<div class="table-wrap"><table><thead><tr><th>Gate</th><th>Estado</th></tr></thead><tbody><tr><td>Tests automatizados</td><td>PASS</td></tr>
+<tr><td>Build Vite</td><td>PASS con warning no bloqueante de chunks grandes</td></tr>
+<tr><td>Audit high prod</td><td>0 vulnerabilidades</td></tr>
+<tr><td>Oxlint</td><td>0 warnings / 0 errors</td></tr>
+<tr><td>Smoke browser</td><td>PASS en rutas fixture/original/default, desktop/mobile</td></tr>
+<tr><td>Vite dev smoke</td><td>Procesos detenidos tras verificación</td></tr></tbody></table></div>
+<p>Advertencias conocidas no bloqueantes:</p>
+<ul>
+<li><code>HTMLCanvasElement.getContext()</code> no implementado en jsdom para algunos tests.</li>
+<li>Warnings React <code>act(...)</code> existentes en <code>App.test.jsx</code>.</li>
+<li>Warning de chunks grandes en build.</li>
+</ul>
+<p>---</p>
+<h3>6. Riesgos abiertos</h3>
+<div class="table-wrap"><table><thead><tr><th>Riesgo</th><th>Severidad</th><th>Estado</th><th>Mitigación propuesta</th></tr></thead><tbody><tr><td>Sobreinterpretación HR/comercial</td><td>Alta</td><td>Controlado por copy, pero siempre latente.</td><td>Manual HR, disclaimers, training interno, bloqueo de ranking.</td></tr>
+<tr><td>Falta de validación R-7</td><td>Alta</td><td>Pendiente.</td><td>Ejecutar protocolo con expertos y participantes.</td></tr>
+<tr><td>Persistencia real no implementada</td><td>Alta</td><td>Pendiente.</td><td>Backend aggregate-only con auditoría y retención.</td></tr>
+<tr><td>Device/browser bias</td><td>Alta</td><td>Parcialmente cubierto por smoke.</td><td>QA multi-dispositivo y análisis de fairness.</td></tr>
+<tr><td>UX/instrucciones explican varianza</td><td>Media/Alta</td><td>Mitigado por <code>candidateInstructionCheck</code>.</td><td>Entrevistas cognitivas + microtutoriales.</td></tr>
+<tr><td>Calibración de dificultad</td><td>Media</td><td>QA interno implementado.</td><td>Piloto con métricas de dificultad y abandono.</td></tr>
+<tr><td>Seguridad/legal</td><td>Alta</td><td>No formalizado como producto.</td><td>DPIA/PIA, threat model, revisión legal, pentest básico.</td></tr>
+<tr><td>Operación/soporte</td><td>Media</td><td>No producto.</td><td>Staging/prod, monitoreo, soporte, incident response.</td></tr></tbody></table></div>
+<p>---</p>
+<h3>7. Criterio de “demo lista” vs “producto real”</h3>
+<h4>Demo lista</h4>
+<p>La demo se considera lista cuando:</p>
+<ul>
+<li>el flujo corre sin errores visibles;</li>
+<li>los juegos son comprensibles y presentables;</li>
+<li>el reporte explica resultados sin claims indebidos;</li>
+<li>smoke desktop/mobile pasa;</li>
+<li>no hay campos crudos visibles;</li>
+<li>el discurso comercial dice “soporte para revisión humana”, no “selección automática”.</li>
+</ul>
+<h4>Producto piloto</h4>
+<p>El producto piloto requiere además:</p>
+<ul>
+<li>backend persistente y seguro;</li>
+<li>cuentas/roles/invitaciones;</li>
+<li>consentimiento y privacidad formal;</li>
+<li>exportación/revisión recruiter;</li>
+<li>QA real de dispositivos;</li>
+<li>protocolo R-7 inicial;</li>
+<li>soporte y operación;</li>
+<li>logs de auditoría no reconstructivos;</li>
+<li>capacidad de eliminar datos;</li>
+<li>documentación de límites de uso.</li>
+</ul>
+<h4>Producto real</h4>
+<p>El producto real requiere además:</p>
+<ul>
+<li>evidencia psicométrica suficiente para el uso declarado;</li>
+<li>monitoreo de drift;</li>
+<li>fairness/invariancia por subgrupos/dispositivos;</li>
+<li>normas/calibraciones si se pretenden percentiles o comparaciones;</li>
+<li>seguridad y compliance maduros;</li>
+<li>acuerdos B2B, SLA y soporte.</li>
+</ul>
+<p>---</p>
+<h3>8. Próximos documentos recomendados</h3>
+<ol>
+<li><code>privacy-and-data-retention-policy.md</code> — política de datos, retención, eliminación, roles y auditoría.</li>
+<li><code>pilot-validation-protocol.md</code> — protocolo operativo de R-7 con muestra, instrumentos externos, entrevistas cognitivas y análisis.</li>
+<li><code>recruiter-report-interpretation-guide.md</code> — guía HR de lectura y límites.</li>
+<li><code>qa-device-browser-matrix.md</code> — matriz real de dispositivos, navegadores, accesibilidad y cámara.</li>
+<li><code>backend-product-architecture.md</code> — arquitectura de persistencia aggregate-only e integración B2B.</li>
+</ol>
+      </section>
+    
+
+      <section class="doc-section page-break">
+        <div class="section-kicker">Fuente: docs/product/krumm-productization-roadmap.md</div>
+        <h2>KRUMM Postulación — línea de tiempo hacia producto real</h2>
+<p><strong>Fecha:</strong> 2026-07-20</p>
+<p><strong>Documento:</strong> <code>productization_roadmap_v1</code></p>
+<p><strong>Punto de partida:</strong> demo técnica avanzada de <code>/postulaciones-demo</code></p>
+<p><strong>Objetivo:</strong> pasar a producto piloto B2B, validable y operable, sin sobreprometer validez psicométrica.</p>
+<p>---</p>
+<h3>1. Supuestos</h3>
+<ol>
+<li>El objetivo inmediato no es lanzar selección automática, sino un producto de soporte a revisión humana.</li>
+<li>La batería <code>stable_dg</code> sigue como fallback mientras <code>original_games</code> se valida.</li>
+<li><code>original_games</code> puede usarse en piloto solo con disclaimers, revisión humana y protocolo R-7.</li>
+<li>No se habilitan rankings, percentiles, cortes ni recomendaciones de contratación hasta tener evidencia normativa/criterial.</li>
+<li>El piloto debe ser aggregate-only: sin raw video, frames, landmarks, rutas, secuencias, pointer samples ni logs reconstructivos.</li>
+<li>La línea de tiempo asume un equipo pequeño y trabajo paralelo moderado. Si una sola persona implementa todo, extender duraciones 1.5×–2×.</li>
+</ol>
+<p>---</p>
+<h3>2. Vista ejecutiva de fases</h3>
+<div class="table-wrap"><table><thead><tr><th>Fase</th><th>Duración estimada</th><th>Objetivo</th><th>Salida principal</th><th>Gate de avance</th></tr></thead><tbody><tr><td>Fase A — Cierre demo presentable</td><td>1–2 semanas</td><td>Dejar demo robusta y presentable.</td><td>Demo HR + juegos + docs + guion.</td><td>Smoke real multi-dispositivo y revisión de discurso.</td></tr>
+<tr><td>Fase B — Hardening producto mínimo</td><td>3–5 semanas</td><td>Convertir demo local/static en flujo producto mínimo.</td><td>Sesiones persistentes aggregate-only, roles e invitaciones.</td><td>E2E candidato→recruiter→exportación.</td></tr>
+<tr><td>Fase C — Privacidad, seguridad y operación</td><td>2–4 semanas</td><td>Preparar entorno piloto serio.</td><td>Retención, eliminación, auditoría, staging/prod, monitoreo.</td><td>Revisión legal/seguridad y prueba de incident response.</td></tr>
+<tr><td>Fase D — R-7 validación inicial</td><td>6–10 semanas</td><td>Evaluar contenido, usabilidad, confiabilidad inicial y device effects.</td><td>Informe R-7 inicial con decisión de batería.</td><td>Comité decide mantener/iterar/pilotear.</td></tr>
+<tr><td>Fase E — Piloto B2B controlado</td><td>8–12 semanas</td><td>Usar con clientes/roles acotados bajo protocolo.</td><td>Datos agregados, feedback recruiter/candidato, análisis fairness.</td><td>Decisión go/no-go de producto comercial.</td></tr>
+<tr><td>Fase F — Producto comercial v1</td><td>8–16 semanas</td><td>Operación, compliance y escalabilidad comercial.</td><td>Plataforma B2B v1 con SLA y documentación.</td><td>Auditoría de seguridad/privacidad + evidencia de utilidad.</td></tr></tbody></table></div>
+<p>---</p>
+<h3>3. Fase A — cierre demo presentable</h3>
+<p><strong>Duración:</strong> 1–2 semanas</p>
+<p><strong>Estado actual:</strong> en gran parte avanzado.</p>
+<h4>Objetivo</h4>
+<p>Cerrar la demo como pieza de presentación controlada, con foco en claridad visual, discurso HR conservador y ausencia de errores obvios.</p>
+<h4>Entregables</h4>
+<div class="table-wrap"><table><thead><tr><th>Entregable</th><th>Estado actual</th><th>Acción restante</th></tr></thead><tbody><tr><td>Juegos Laser/Passenger productizados</td><td>Implementado</td><td>QA manual con usuarios internos.</td></tr>
+<tr><td>Balloon calibrado para demo</td><td>Implementado</td><td>Validar comprensión de azar/estrategia.</td></tr>
+<tr><td>Reporte HR ejecutivo</td><td>Implementado</td><td>Revisión visual con usuario final/recruiter.</td></tr>
+<tr><td>Tabla señal→métrica→bibliografía</td><td>Regenerada</td><td>Revisar con experto psicométrico/I-O.</td></tr>
+<tr><td>Smoke browser</td><td>Implementado</td><td>Ampliar a más resoluciones.</td></tr>
+<tr><td>Guion demo</td><td>Pendiente</td><td>Crear demo script de 5–8 min.</td></tr>
+<tr><td>Checklist presentación</td><td>Pendiente</td><td>Crear checklist pre-demo.</td></tr></tbody></table></div>
+<h4>Tareas recomendadas</h4>
+<ol>
+<li>Implementar <code>shared.mobile-accessibility-qa</code>.</li>
+<li>Crear microtutorial/instrucciones previas por juego.</li>
+<li>Revisar la UI del reporte con captura desktop/mobile.</li>
+<li>Preparar guion de presentación:</li>
+</ol>
+<ul>
+<li>problema;</li>
+<li>flujo candidato;</li>
+<li>señales aggregate-only;</li>
+<li>reporte HR;</li>
+<li>límites éticos/validación;</li>
+<li>roadmap producto.</li>
+</ul>
+<ol>
+<li>Congelar versión demo <code>demo_internal_v1</code>.</li>
+</ol>
+<h4>Gate</h4>
+<pre><code>PASS si:
+- 0 errores consola/page/request en smoke.
+- 0 overflow horizontal en 390×844 y 1280×720.
+- Reporte no contiene claims de decisión automática.
+- Usuario puede explicar cada juego en menos de 30 segundos.
+- Cada métrica visible tiene caveat o justificación.</code></pre>
+<p>---</p>
+<h3>4. Fase B — hardening producto mínimo</h3>
+<p><strong>Duración:</strong> 3–5 semanas</p>
+<p><strong>Estado actual:</strong> pendiente.</p>
+<h4>Objetivo</h4>
+<p>Transformar el flujo demo en flujo producto mínimo: candidato invitado, sesión persistida, recruiter revisa resultado y descarga evidencia agregada.</p>
+<h4>Componentes</h4>
+<div class="table-wrap"><table><thead><tr><th>Componente</th><th>Requisito</th></tr></thead><tbody><tr><td>Invitaciones</td><td>Crear sesión por candidato/rol/empresa con token temporal.</td></tr>
+<tr><td>Consentimiento</td><td>Capturar aceptación, permisos, versión de política y fecha.</td></tr>
+<tr><td>Persistencia</td><td>Guardar solo payload aggregate-only y report bundle sanitizado.</td></tr>
+<tr><td>Recruiter dashboard</td><td>Ver lista de candidatos, estado, reporte, descargas y caveats.</td></tr>
+<tr><td>Roles</td><td>Admin, recruiter, reviewer técnico, candidato.</td></tr>
+<tr><td>Exportación</td><td>PDF/HTML/JSON sanitizados.</td></tr>
+<tr><td>Auditoría</td><td>Registro de acceso/descarga/cambios sin datos crudos.</td></tr>
+<tr><td>Eliminación</td><td>Borrado por candidato/sesión según política.</td></tr></tbody></table></div>
+<h4>Arquitectura mínima sugerida</h4>
+<pre><code>Frontend candidato
+→ API sesión/invitación
+→ storage aggregate-only
+→ servicio reporte
+→ dashboard recruiter
+→ export bundle</code></pre>
+<h4>Decisiones pendientes</h4>
+<div class="table-wrap"><table><thead><tr><th>Decisión</th><th>Opciones</th></tr></thead><tbody><tr><td>Backend</td><td>Node/Express, serverless, Supabase, Firebase, Rails/Django.</td></tr>
+<tr><td>DB</td><td>Postgres recomendado para auditoría y relaciones B2B.</td></tr>
+<tr><td>Storage reportes</td><td>DB JSONB + object storage para HTML/PDF si se generan.</td></tr>
+<tr><td>Auth</td><td>Magic links para candidatos; login SSO/passwordless para recruiters.</td></tr>
+<tr><td>Hosting</td><td>Staging/prod separados.</td></tr></tbody></table></div>
+<h4>Gate</h4>
+<pre><code>PASS si:
+- candidato completa sesión desde invitación real;
+- payload final no contiene campos prohibidos;
+- recruiter ve reporte y descarga bundle;
+- candidato puede solicitar eliminación;
+- auditoría registra accesos sin raw telemetry;
+- tests e2e pasan en staging.</code></pre>
+<p>---</p>
+<h3>5. Fase C — privacidad, seguridad y operación</h3>
+<p><strong>Duración:</strong> 2–4 semanas</p>
+<p><strong>Estado actual:</strong> principios implementados, proceso formal pendiente.</p>
+<h4>Objetivo</h4>
+<p>Asegurar que el piloto tenga reglas de datos, seguridad y operación coherentes con el contexto de selección/personas.</p>
+<h4>Entregables</h4>
+<div class="table-wrap"><table><thead><tr><th>Entregable</th><th>Contenido mínimo</th></tr></thead><tbody><tr><td>Política de datos</td><td>Qué se captura, qué no, retención, eliminación, finalidad.</td></tr>
+<tr><td>DPIA/PIA</td><td>Riesgos, mitigaciones, responsables, base legal.</td></tr>
+<tr><td>Threat model</td><td>Activos, actores, vectores, controles.</td></tr>
+<tr><td>Auditoría payload</td><td>Tests automáticos contra raw fields en CI.</td></tr>
+<tr><td>Gestión de incidentes</td><td>Procedimiento de detección, respuesta, comunicación.</td></tr>
+<tr><td>Observabilidad</td><td>Logs técnicos, métricas de error, uptime, latencia.</td></tr>
+<tr><td>Backups</td><td>Política de backup/restore de datos aggregate-only.</td></tr>
+<tr><td>Accesos</td><td>RBAC, revisión de permisos, rotación de credenciales.</td></tr></tbody></table></div>
+<h4>Gate</h4>
+<pre><code>PASS si:
+- política de privacidad revisada;
+- threat model cerrado para piloto;
+- CI bloquea payloads reconstructivos;
+- staging/prod separados;
+- backups restaurables probados;
+- eliminación de sesión demostrada end-to-end.</code></pre>
+<p>---</p>
+<h3>6. Fase D — R-7 validación inicial</h3>
+<p><strong>Duración:</strong> 6–10 semanas</p>
+<p><strong>Estado actual:</strong> plan técnico escrito; ejecución pendiente.</p>
+<h4>Objetivo</h4>
+<p>Pasar de “demo con plausibilidad técnica” a “piloto con evidencia inicial”.</p>
+<h4>Subfases</h4>
+<div class="table-wrap"><table><thead><tr><th>Subfase</th><th>Actividad</th><th>Salida</th></tr></thead><tbody><tr><td>D1 — Validez de contenido</td><td>Revisión por 2+ expertos I-O/psicometría/producto.</td><td>Matriz constructo×tarea×feature: aceptar/revisar/rechazar.</td></tr>
+<tr><td>D2 — Entrevistas cognitivas</td><td>8–12 participantes pensando en voz alta/post-sesión.</td><td>Problemas de comprensión, instrucciones, UX, dispositivo.</td></tr>
+<tr><td>D3 — QA device effects</td><td>Muestra pequeña multi-dispositivo/navegador.</td><td>Diferencias de disponibilidad, completitud y errores.</td></tr>
+<tr><td>D4 — Confiabilidad inicial</td><td>Test–retest o formas paralelas si viable.</td><td>Estabilidad de features/constructos.</td></tr>
+<tr><td>D5 — Convergencia exploratoria</td><td>Comparación con instrumentos o tareas externas.</td><td>Evidencia preliminar, no normativa.</td></tr>
+<tr><td>D6 — Decisión de batería</td><td>stable/original/mixta/iterar.</td><td>Recomendación documentada.</td></tr></tbody></table></div>
+<h4>Muestra inicial sugerida</h4>
+<div class="table-wrap"><table><thead><tr><th>Objetivo</th><th>Tamaño mínimo útil</th><th>Nota</th></tr></thead><tbody><tr><td>Entrevistas cognitivas</td><td>8–12</td><td>Detectar problemas de comprensión/UX.</td></tr>
+<tr><td>QA multi-dispositivo</td><td>12–20</td><td>Cubrir desktop/mobile/navegadores.</td></tr>
+<tr><td>Confiabilidad exploratoria</td><td>30–50</td><td>Solo estimaciones iniciales.</td></tr>
+<tr><td>Convergencia/criterio preliminar</td><td>80–150+</td><td>Depende del instrumento y efecto esperado.</td></tr></tbody></table></div>
+<h4>Gate</h4>
+<pre><code>PASS si:
+- expertos no rechazan constructos puntuados;
+- instrucciones no explican la mayoría de errores;
+- métricas principales tienen estabilidad mínima aceptable;
+- no hay diferencias críticas por dispositivo/subgrupo;
+- decisión explícita: mantener, iterar, retirar o pilotear.</code></pre>
+<p>---</p>
+<h3>7. Fase E — piloto B2B controlado</h3>
+<p><strong>Duración:</strong> 8–12 semanas</p>
+<p><strong>Estado actual:</strong> no iniciado.</p>
+<h4>Objetivo</h4>
+<p>Usar KRUMM con 1–3 clientes/roles acotados, sin decisión automática, midiendo utilidad, experiencia y riesgos.</p>
+<h4>Diseño de piloto</h4>
+<div class="table-wrap"><table><thead><tr><th>Dimensión</th><th>Recomendación</th></tr></thead><tbody><tr><td>Clientes</td><td>1–3 empresas/áreas controladas.</td></tr>
+<tr><td>Roles</td><td>1–2 familias de cargo, no todos los cargos.</td></tr>
+<tr><td>Participantes</td><td>100–300 según disponibilidad y objetivo.</td></tr>
+<tr><td>Uso HR</td><td>Soporte complementario, no filtro automático.</td></tr>
+<tr><td>Criterios externos</td><td>Definir antes: entrevista estructurada, evaluación técnica, desempeño training, etc.</td></tr>
+<tr><td>Reporte</td><td>Human-review-only, sin percentiles salvo que haya normas internas suficientes.</td></tr>
+<tr><td>Monitoreo</td><td>Completion, dropout, device effects, fairness, feedback recruiter/candidato.</td></tr></tbody></table></div>
+<h4>Métricas de éxito producto</h4>
+<div class="table-wrap"><table><thead><tr><th>Métrica</th><th>Meta piloto sugerida</th></tr></thead><tbody><tr><td>Completion rate</td><td>≥ 80% sin asistencia</td></tr>
+<tr><td>Error técnico bloqueante</td><td>&lt; 5%</td></tr>
+<tr><td>Tiempo sesión</td><td>Dentro del rango prometido ±20%</td></tr>
+<tr><td>Reporte entendido por recruiter</td><td>≥ 80% en encuesta interna</td></tr>
+<tr><td>Candidato entiende instrucciones</td><td>≥ 85% sin aclaración externa</td></tr>
+<tr><td>Solicitudes de soporte</td><td>Tendencia decreciente por cohortes</td></tr>
+<tr><td>Payloads con raw fields</td><td>0</td></tr></tbody></table></div>
+<h4>Gate</h4>
+<pre><code>PASS si:
+- utilidad percibida por recruiters es positiva;
+- no se detectan sesgos/dispositivos críticos sin mitigación;
+- privacidad opera correctamente;
+- criterios externos permiten decidir si vale avanzar;
+- no se usa como ranking automático.</code></pre>
+<p>---</p>
+<h3>8. Fase F — producto comercial v1</h3>
+<p><strong>Duración:</strong> 8–16 semanas después del piloto</p>
+<p><strong>Estado actual:</strong> futuro.</p>
+<h4>Objetivo</h4>
+<p>Convertir el piloto en producto B2B operable con contratos, soporte, seguridad y roadmap de validación continua.</p>
+<h4>Requisitos</h4>
+<div class="table-wrap"><table><thead><tr><th>Área</th><th>Requisito</th></tr></thead><tbody><tr><td>Producto</td><td>Onboarding empresa, roles, campañas, candidates, reportes, exportaciones.</td></tr>
+<tr><td>Seguridad</td><td>Revisión externa, hardening auth, backups, monitoreo, incident response.</td></tr>
+<tr><td>Legal</td><td>Contratos, DPA, política privacidad, consentimiento, retención.</td></tr>
+<tr><td>Psicometría</td><td>Evidencia suficiente para claims declarados; límites visibles.</td></tr>
+<tr><td>Fairness</td><td>Monitoreo por subgrupo/dispositivo con mitigaciones.</td></tr>
+<tr><td>Operación</td><td>SLA, soporte, status page, runbooks.</td></tr>
+<tr><td>Comercial</td><td>Pricing, demo script, material ventas sin claims indebidos.</td></tr></tbody></table></div>
+<h4>Gate</h4>
+<pre><code>PASS si:
+- piloto demuestra utilidad y riesgos manejables;
+- claims comerciales coinciden con evidencia;
+- seguridad/legal aprobados;
+- operación soporta clientes reales;
+- se define roadmap de validación continua.</code></pre>
+<p>---</p>
+<h3>9. Roadmap resumido recomendado</h3>
+<pre><code>Semana 1–2
+  Cerrar demo presentable: mobile/accessibility QA, microtutoriales, guion, smoke ampliado.
+
+Semana 3–7
+  Hardening producto mínimo: invitaciones, persistencia aggregate-only, dashboard recruiter, exportación, auditoría.
+
+Semana 6–10
+  Privacidad/seguridad/operación: política, threat model, retención, eliminación, CI privacy, staging/prod.
+
+Semana 8–18
+  R-7 inicial: expertos, entrevistas cognitivas, device effects, confiabilidad exploratoria, decisión batería.
+
+Semana 18–30
+  Piloto B2B controlado: clientes acotados, métricas de utilidad, feedback y fairness.
+
+Semana 30+
+  Producto comercial v1 si el piloto justifica avanzar.</code></pre>
+<p>Las fases B, C y D pueden solaparse parcialmente, pero no debería iniciar un piloto externo sin al menos:</p>
+<ul>
+<li>backend aggregate-only;</li>
+<li>política de datos;</li>
+<li>eliminación de datos;</li>
+<li>smoke real multi-dispositivo;</li>
+<li>guía HR de interpretación;</li>
+<li>revisión experta mínima de constructos.</li>
+</ul>
+<p>---</p>
+<h3>10. Prioridad inmediata después de esta documentación</h3>
+<ol>
+<li><code>shared.mobile-accessibility-qa</code>.</li>
+<li>Microtutorial/instrucciones por juego.</li>
+<li>Demo script + checklist de presentación.</li>
+<li>Documento <code>privacy-and-data-retention-policy.md</code>.</li>
+<li>Diseño backend aggregate-only.</li>
+<li>Plan operativo R-7 con instrumentos, muestra y roles.</li>
+</ol>
+<p>---</p>
+<h3>11. Definición de “siguiente fase”</h3>
+<p>La siguiente fase no debe ser “agregar más métricas”. Debe ser:</p>
+<pre><code>De demo técnicamente verde
+→ a producto piloto controlado, seguro, auditable y validable.</code></pre>
+<p>Eso implica priorizar:</p>
+<ul>
+<li>operación y privacidad antes que nuevos scores;</li>
+<li>UX e instrucciones antes que interpretación;</li>
+<li>evidencia R-7 antes que ventas con claims fuertes;</li>
+<li>recruiter workflow antes que dashboards técnicos;</li>
+<li>trazabilidad/auditoría antes que optimización estética.</li>
+</ul>
+      </section>
+    
+  <div class="footer">KRUMM Postulación — Dossier producto · aggregate-only · human-review-only · sin decisión automatizada</div>
+</body>
+</html>

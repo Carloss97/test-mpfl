@@ -19,6 +19,12 @@ Este paquete regenera la documentación de entradas, salidas, elementos, indicad
 3. [`krumm-productization-roadmap.md`](./krumm-productization-roadmap.md)  
    Línea de tiempo por fases para pasar de demo a producto piloto B2B: UX, backend, validación, seguridad, operación, piloto y decisión de salida a mercado.
 
+## Dossier presentable
+
+- HTML editable: [`krumm-product-readiness-dossier.html`](./krumm-product-readiness-dossier.html)
+- PDF exportado: `exports/krumm-product-readiness-dossier.pdf`
+- Script reproducible: `scripts/render-product-dossier-pdf.mjs`
+
 ## Principio rector
 
 La plataforma actual puede demostrar flujo, juegos, captura agregada, reporte y gobernanza, pero todavía no debe presentarse como herramienta psicométrica validada ni como sistema de decisión automatizada. Todo uso debe mantenerse como revisión humana, con evidencia agregada, caveats y validación R-7 antes de comparar candidatos.
