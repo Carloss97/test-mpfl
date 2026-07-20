@@ -71,6 +71,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   const passengersDeliveredRef = useRef(0);
   const replanCountRef = useRef(0);
   const stationUseCountRef = useRef(0);
+  const movementAttemptCountRef = useRef(0);
   const constraintViolationCountRef = useRef(0);
 
   const metrics = useMemo(
@@ -121,6 +122,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
       destinationCount,
       actualCost,
       minimumCost,
+      movementAttemptCount: movementAttemptCountRef.current,
       replanCount: replanCountRef.current,
       stationUseCount: stationUseCountRef.current,
       constraintViolationCount: constraintViolationCountRef.current,
@@ -202,6 +204,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
     if (!level || finished) return;
     const direction = MOVE_BY_DIRECTION[directionName];
     if (!direction) return;
+    movementAttemptCountRef.current += 1;
 
     const x = player.x + direction.dx;
     const y = player.y + direction.dy;

@@ -3,6 +3,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import PostulationReportScreen from './PostulationReportScreen.jsx';
 import { getPostulationGameCards } from './PostulationReportSummary.js';
+import { POSTULATION_DEMO_BATTERY_MODES } from './postulationDemoConfig.js';
+import { buildPostulationDemoFixture } from './postulationDemoFixture.js';
 import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.js';
 
 const completedDemo = Object.freeze({
@@ -107,5 +109,18 @@ describe('PostulationReportScreen', () => {
 
     expect(cards.map((card) => card.score)).toEqual(['84%', '84', '120']);
     expect(cards.map((card) => card.score).join(' ')).not.toMatch(/8400%|12000%/);
+  });
+
+  it('renders the R-6 workbook framework with No medido semantics for original games', () => {
+    const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
+    render(<PostulationReportScreen artifacts={fixture.artifacts} completedDemo={fixture.summary} />);
+
+    expect(screen.getByRole('heading', { name: /Framework R-6 del workbook/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/Toma de decisiones/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/descriptive_only/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/No medido/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Liderazgo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Comunicación/i)).toBeInTheDocument();
+    expect(screen.getByText(/usa No medido/i)).toBeInTheDocument();
   });
 });

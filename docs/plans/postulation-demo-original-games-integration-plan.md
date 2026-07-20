@@ -372,7 +372,7 @@ Smoke Playwright: 2 viewports × 4 rutas, PASS
 
 ## Fase R-6 — Reporte, feature vector y narrativa HR
 
-**Estado:** `[ ] Por implementar`
+**Estado:** `[x] Completada`
 
 **Prioridad:** Alta.
 
@@ -386,21 +386,62 @@ Smoke Playwright: 2 viewports × 4 rutas, PASS
 | Balloon | Ajuste ante riesgo/feedback | `estrategia de acumulación`, `ajuste post-pérdida`, no `personalidad` |
 | Rutas pasajeros | Planificación bajo restricciones | `eficiencia de ruta`, `manejo de restricciones`, `replanificación` |
 
+**Implementado R-6:**
+
+- Documento técnico exhaustivo creado en `docs/research/krumm-talent-game-behavior-mapping-technical-study.md`.
+- Agregados originales extendidos con `aggregateSchemaVersion` y observabilidad mínima no reconstructiva:
+  - Balloon: `totalRounds`, `postPopAdjustmentCount`.
+  - Passenger: `movementAttemptCount`.
+- `original_game_feature_vector_v1` creado como vector separado de `assessment_feature_vector_v2`, con `featureOrder`, `featureArray` finito, `observedMask`, `featureAvailability`, `gameAvailability`, unidades, flags y privacidad.
+- `ORIGINAL_GAME_FEATURE_DEFINITIONS` documenta para cada feature: entrada agregada, fórmula, racional métrico, relevancia de constructo y limitaciones.
+- `krumm_workbook_talent_framework_v1` creado como framework provisional independiente del perfil DG:
+  - `problemSolving`, `planning` y `analyticalThinking` solo puntúan si hay evidencia completa y válida.
+  - `decisionMaking` y `riskFeedbackProfile` quedan `descriptive_only`.
+  - `adaptability` queda `insufficient`.
+  - `leadership` y `communication` quedan `not_measured` con `score: null`.
+  - Sin fortalezas/watch areas, percentiles, cortes ni score global.
+- `postulationDemoSessionBuilder` usa allowlist estricta de blueprints originales antes de sesión/payload.
+- Sesión y payload agregan opcionalmente `originalGameFeatureVector` y `talentFramework` solo en `original_games`; `stable_dg` conserva su flujo sin esos campos.
+- Reporte Markdown/HTML/JSON y pantalla de reporte muestran el framework R-6 con semántica `No medido`, `descriptive_only` e `insufficient`, y conservan biometría solo como contexto/calidad.
+
 **Criterios de éxito:**
 
-- Reporte no sobrepromete.
-- `assessment_feature_vector_v2` sigue estable o se extiende con versionado explícito si hace falta.
-- Descargas siguen bloqueadas si validation no es OK.
+- [x] Reporte no sobrepromete: constructos no soportados usan `score: null` y disponibilidad explícita.
+- [x] `assessment_feature_vector_v2` sigue estable; R-6 usa `original_game_feature_vector_v1` separado.
+- [x] Descargas siguen bloqueadas si validation no es OK.
+- [x] Batería `stable_dg` no recibe el framework original.
+- [x] JSON report contiene `gameSummary`, `gameResults`, `originalGameFeatureVector` y `talentFramework` cuando aplica.
+
+**Verificación final R-6:**
+
+```text
+R-6 assessment/report focal: 8 files / 27 tests
+Original-games regression: 10 files / 44 tests
+Oxlint focal: 0 warnings / 0 errors
+Suite completa: 82 files / 339 tests
+Build: 1382 módulos, OK en 3.10s
+Audit producción: 0 vulnerabilidades
+git diff --check: OK
+Smoke Playwright: 2 viewports × 4 rutas, PASS; sin console/page/network errors ni overflow final
+```
 
 ---
 
 ## Fase R-7 — QA interna y decisión de reemplazo
 
-**Estado:** `[ ] Por implementar`
+**Estado:** `[~] Plan técnico detallado creado; pendiente ejecución con datos/participantes`
 
 **Prioridad:** Alta.
 
 **Objetivo:** Hacer prueba interna comparando batería DG actual vs batería original.
+
+**Plan detallado:**
+
+```text
+docs/plans/2026-07-20-r7-validation-and-metric-justification-plan.md
+```
+
+R-7 debe validar no solo que la app funcione, sino que cada entrada agregada justifique su métrica y cada métrica justifique —o limite— el constructo que pretende informar.
 
 **Checklist:**
 

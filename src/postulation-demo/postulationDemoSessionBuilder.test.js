@@ -180,15 +180,15 @@ describe('postulationDemoSessionBuilder', () => {
       blocks: [
         {
           block: { gameId: 'laser_puzzle', label: 'Puzzle láser', skill: 'spatial_planning', trialCount: 2 },
-          summary: { score: 0.88, completed: true, solvedLevels: 2, levelCount: 2, solutionEfficiency: 0.9, aggregateOnly: true },
+          summary: { aggregateSchemaVersion: 'laser_puzzle_aggregate_v1', score: 0.88, completed: true, solvedLevels: 2, levelCount: 2, solutionEfficiency: 0.9, ruleViolationCount: 0, aggregateOnly: true },
         },
         {
           block: { gameId: 'balloon_risk', label: 'Globo de riesgo', skill: 'risk_feedback_adjustment', trialCount: 8 },
-          summary: { score: 0.72, completed: true, roundsCompleted: 8, riskEfficiency: 0.72, aggregateOnly: true },
+          summary: { aggregateSchemaVersion: 'balloon_risk_aggregate_v1', score: 0.72, completed: true, roundsCompleted: 8, totalRounds: 8, riskEfficiency: 0.72, cashoutCount: 6, popCount: 2, postPopAdjustment: -1.5, postPopAdjustmentCount: 1, aggregateOnly: true },
         },
         {
           block: { gameId: 'passenger_routes', label: 'Optimización de rutas de pasajeros', skill: 'constraint_planning', trialCount: 2 },
-          summary: { score: 0.84, completed: true, passengersDelivered: 3, destinationCount: 3, routeEfficiency: 0.84, aggregateOnly: true },
+          summary: { aggregateSchemaVersion: 'passenger_routes_aggregate_v1', score: 0.84, completed: true, passengersDelivered: 3, destinationCount: 3, routeEfficiency: 0.84, movementAttemptCount: 16, constraintViolationCount: 0, satisfactionScore: 88, aggregateOnly: true },
         },
       ],
     };
@@ -209,8 +209,27 @@ describe('postulationDemoSessionBuilder', () => {
     expect(artifacts.assessmentSession.edgeAI.channels.visuomotorPrecision.score).toBe(50);
     expect(artifacts.assessmentSession.edgeAI.channels.inhibitionControl.score).toBe(50);
     expect(artifacts.assessmentSession.edgeAI.channels.visualSearchEfficiency.score).toBe(50);
-    expect(Object.values(artifacts.talentProfile.dimensions).every((dimension) => dimension.score === 50)).toBe(true);
+    expect(Object.values(artifacts.talentProfile.dimensions).every((dimension) => dimension.score === null)).toBe(true);
     expect(Object.values(artifacts.talentProfile.dimensions).every((dimension) => dimension.confidence <= 0.25)).toBe(true);
+    expect(artifacts.talentProfile.globalSummary).toMatchObject({ strengths: [], watchAreas: [] });
+    expect(artifacts.assessmentSession.originalGameFeatureVector).toMatchObject({
+      type: 'original_game_feature_vector_v1',
+      gameAvailability: {
+        laser_puzzle: 'measured_complete',
+        balloon_risk: 'measured_complete',
+        passenger_routes: 'measured_complete',
+      },
+    });
+    expect(artifacts.assessmentSession.talentFramework).toMatchObject({
+      schemaVersion: 'krumm_workbook_talent_framework_v1',
+      classification: { strengths: null, watchAreas: null, availability: 'not_available_without_norms' },
+      constructs: {
+        leadership: { score: null, availability: 'not_measured' },
+        communication: { score: null, availability: 'not_measured' },
+      },
+    });
+    expect(artifacts.payload.behavioral.originalGameFeatureVector.type).toBe('original_game_feature_vector_v1');
+    expect(artifacts.payload.talentFramework.schemaVersion).toBe('krumm_workbook_talent_framework_v1');
     expect(artifacts.payload.behavioral.gameResults).toEqual([
       expect.objectContaining({ gameId: 'laser_puzzle', result: expect.objectContaining({ solutionEfficiency: 0.9 }) }),
       expect.objectContaining({ gameId: 'balloon_risk', result: expect.objectContaining({ riskEfficiency: 0.72 }) }),

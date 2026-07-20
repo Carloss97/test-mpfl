@@ -1447,6 +1447,16 @@
   display: grid;
   grid-template-columns: 58px minmax(0, 1fr);
   gap: 14px;
+  min-width: 0;
+}
+
+.postulation-demo__talent-card > *,
+.postulation-demo__talent-card h3,
+.postulation-demo__talent-card p,
+.postulation-demo__talent-card ul,
+.postulation-demo__talent-card li {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .postulation-demo__talent-score {

@@ -1,9 +1,11 @@
 const PASSENGER_ROUTE_ALLOWED_AGGREGATE_FIELDS = Object.freeze([
+  'aggregateSchemaVersion',
   'score',
   'completed',
   'passengersDelivered',
   'destinationCount',
   'routeEfficiency',
+  'movementAttemptCount',
   'replanCount',
   'stationUseCount',
   'constraintViolationCount',
@@ -285,6 +287,7 @@ export function buildPassengerRouteResponseAggregate({
   destinationCount = 1,
   actualCost = 0,
   minimumCost = 0,
+  movementAttemptCount = 0,
   replanCount = 0,
   stationUseCount = 0,
   constraintViolationCount = 0,
@@ -311,11 +314,13 @@ export function buildPassengerRouteResponseAggregate({
   ), 4);
 
   return {
+    aggregateSchemaVersion: 'passenger_routes_aggregate_v1',
     score,
     completed: Boolean(completed),
     passengersDelivered: delivered,
     destinationCount: destinations,
     routeEfficiency,
+    movementAttemptCount: Math.max(0, Math.round(Number(movementAttemptCount) || 0)),
     replanCount: replans,
     stationUseCount: Math.max(0, Math.round(Number(stationUseCount) || 0)),
     constraintViolationCount: violationCount,

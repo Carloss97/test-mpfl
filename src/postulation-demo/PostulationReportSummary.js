@@ -1,12 +1,14 @@
 function pct(value) {
+  if (value == null) return '—';
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return '—';
   return `${Math.round(numeric * 100)}%`;
 }
 
 function score(value) {
+  if (value == null) return null;
   const numeric = Number(value);
-  return Number.isFinite(numeric) ? Math.round(numeric) : 0;
+  return Number.isFinite(numeric) ? Math.round(numeric) : null;
 }
 
 function safeNumber(value, fallback = 0) {
@@ -63,7 +65,7 @@ export function getTopTalentDimensions(artifacts = null, limit = 6) {
   const dimensions = Object.values(artifacts?.talentProfile?.dimensions ?? artifacts?.payload?.talentProfile?.dimensions ?? {});
   return dimensions
     .filter(Boolean)
-    .sort((a, b) => score(b.score) - score(a.score))
+    .sort((a, b) => (score(b.score) ?? -1) - (score(a.score) ?? -1))
     .slice(0, limit)
     .map((dimension) => ({
       id: dimension.id,
@@ -82,6 +84,26 @@ export function getPostulationCaveats(artifacts = null) {
   return [...new Set([...(quality.caveats ?? []), ...(edge.caveats ?? [])])];
 }
 
+export function getWorkbookTalentFrameworkCards(artifacts = null) {
+  const framework = artifacts?.talentFramework ?? artifacts?.payload?.talentFramework ?? artifacts?.assessmentSession?.talentFramework ?? null;
+  if (!framework?.constructs) return [];
+  return (framework.constructOrder ?? Object.keys(framework.constructs)).map((id) => {
+    const construct = framework.constructs[id] ?? {};
+    return {
+      id,
+      label: construct.label ?? id,
+      score: score(construct.score),
+      scoreLabel: construct.score == null ? 'No medido' : `${score(construct.score)}`,
+      confidence: pct(construct.confidence),
+      availability: construct.availability ?? 'unknown',
+      evidence: construct.evidence ?? [],
+      caveats: construct.caveats ?? [],
+      narrative: construct.narrative ?? 'Lectura provisional para revisión humana.',
+    };
+  });
+}
+
 export function formatPostulationScore(value) {
-  return `${score(value)}`;
+  const formatted = score(value);
+  return formatted == null ? 'No medido' : `${formatted}`;
 }

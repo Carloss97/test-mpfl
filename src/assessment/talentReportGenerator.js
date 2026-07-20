@@ -13,6 +13,12 @@ function score(value) {
   return Number.isFinite(numeric) ? Math.round(numeric) : 0;
 }
 
+function scoreLabel(value) {
+  if (value == null) return 'No medido';
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? String(Math.round(numeric)) : 'No medido';
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -62,13 +68,18 @@ function buildJsonReport(payload) {
       },
       quality: payload.quality,
       dimensions: payload.talentProfile?.dimensions ?? {},
-      gameResults: payload.behavioral?.gameSummary ?? {},
+      gameSummary: payload.behavioral?.gameSummary ?? {},
+      gameResults: payload.behavioral?.gameResults ?? [],
       gameCorrelation: payload.behavioral?.gameCorrelationAggregate ?? {},
+      originalGameFeatureVector: payload.behavioral?.originalGameFeatureVector ?? null,
+      talentFramework: payload.talentFramework ?? null,
       adaptiveDifficulty: payload.behavioral?.adaptiveDifficultyTrace ?? [],
       governance: payload.governance,
       technicalAppendix: {
         featureVectorType: payload.behavioral?.featureVectorV2?.type ?? null,
         featureVectorVersion: payload.behavioral?.featureVectorV2?.version ?? null,
+        originalGameFeatureVectorType: payload.behavioral?.originalGameFeatureVector?.type ?? null,
+        talentFrameworkSchema: payload.talentFramework?.schemaVersion ?? null,
         edgeModelVersion: payload.edgeAI?.modelVersion ?? null,
       },
     },
@@ -105,9 +116,20 @@ function buildMarkdownReport(payload) {
   lines.push('| Habilidad | Score | Confianza | Evidencia | Caveats |');
   lines.push('|---|---:|---:|---|---|');
   for (const entry of dimensions(payload)) {
-    lines.push(`| ${entry.label} | ${score(entry.score)} | ${pct(entry.confidence)} | ${evidenceText(entry)} | ${caveatText(entry.caveats)} |`);
+    lines.push(`| ${entry.label} | ${scoreLabel(entry.score)} | ${pct(entry.confidence)} | ${evidenceText(entry)} | ${caveatText(entry.caveats)} |`);
   }
   lines.push('');
+  if (payload.talentFramework?.constructs) {
+    lines.push('## 4.1 Framework workbook R-6 provisional');
+    lines.push('| Constructo | Estado | Score | Confianza | Narrativa |');
+    lines.push('|---|---|---:|---:|---|');
+    for (const id of payload.talentFramework.constructOrder ?? Object.keys(payload.talentFramework.constructs)) {
+      const entry = payload.talentFramework.constructs[id];
+      lines.push(`| ${entry.label ?? id} | ${entry.availability ?? 'unknown'} | ${scoreLabel(entry.score)} | ${pct(entry.confidence)} | ${entry.narrative ?? ''} |`);
+    }
+    lines.push('Clasificación de fortalezas/áreas de atención: no disponible sin normas y criterios validados.');
+    lines.push('');
+  }
   lines.push('## 5. Resultados por juego');
   lines.push(`- Trials completados: ${perf.completedTrialCount ?? 0}/${perf.trialCount ?? 0}`);
   lines.push(`- Accuracy: ${pct(perf.accuracy ?? 0)}`);
@@ -144,6 +166,8 @@ function buildMarkdownReport(payload) {
   lines.push('');
   lines.push('## 10. Apéndice técnico');
   lines.push(`- Feature vector: ${payload.behavioral?.featureVectorV2?.type ?? 'no disponible'} ${payload.behavioral?.featureVectorV2?.version ?? ''}`.trim());
+  lines.push(`- Feature vector juegos originales: ${payload.behavioral?.originalGameFeatureVector?.type ?? 'no disponible'} ${payload.behavioral?.originalGameFeatureVector?.version ?? ''}`.trim());
+  lines.push(`- Framework R-6: ${payload.talentFramework?.schemaVersion ?? 'no disponible'} ${payload.talentFramework?.version ?? ''}`.trim());
   lines.push(`- Edge AI: ${payload.edgeAI?.modelVersion ?? 'no disponible'}`);
   lines.push(`- Composite Edge AI: ${score(payload.edgeAI?.composite?.score ?? 0)}`);
   return lines.join('\n');

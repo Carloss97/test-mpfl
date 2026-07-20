@@ -1,5 +1,6 @@
 const BALLOON_THRESHOLDS = Object.freeze([7, 10, 8, 12, 9, 11, 13, 8]);
 const BALLOON_ALLOWED_RESPONSE_FIELDS = Object.freeze([
+  'aggregateSchemaVersion',
   'score',
   'completed',
   'roundsCompleted',
@@ -8,6 +9,7 @@ const BALLOON_ALLOWED_RESPONSE_FIELDS = Object.freeze([
   'cashoutCount',
   'popCount',
   'postPopAdjustment',
+  'postPopAdjustmentCount',
   'riskEfficiency',
   'timeMs',
   'aggregateOnly',
@@ -67,6 +69,7 @@ export function buildBalloonResponseAggregate({
   const points = Math.max(0, Math.round(Number(totalScore) || 0));
   const riskEfficiency = round((points / Math.max(1, total * 100)) * (1 - Math.min(0.6, Number(popCount) * 0.12)), 4);
   return {
+    aggregateSchemaVersion: 'balloon_risk_aggregate_v1',
     score: riskEfficiency,
     completed: completedRounds >= total,
     roundsCompleted: completedRounds,
@@ -75,6 +78,7 @@ export function buildBalloonResponseAggregate({
     cashoutCount: Math.max(0, Math.round(Number(cashoutCount) || 0)),
     popCount: Math.max(0, Math.round(Number(popCount) || 0)),
     postPopAdjustment: mean(postPopAdjustments, 2),
+    postPopAdjustmentCount: Math.max(0, postPopAdjustments.length),
     riskEfficiency,
     timeMs: Math.max(0, Math.round(Number(timeMs) || 0)),
     aggregateOnly: true,

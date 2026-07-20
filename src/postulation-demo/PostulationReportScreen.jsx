@@ -5,6 +5,7 @@ import {
   getPostulationGameCards,
   getPostulationQualityCards,
   getTopTalentDimensions,
+  getWorkbookTalentFrameworkCards,
 } from './PostulationReportSummary.js';
 import PostulationReportTechnicalDrawer, {
   buildPostulationReportDownloadDescriptors,
@@ -54,6 +55,25 @@ function TalentDimensionCard({ dimension }) {
   );
 }
 
+function WorkbookTalentCard({ construct }) {
+  return (
+    <article className="postulation-demo__talent-card">
+      <div className="postulation-demo__talent-score" aria-label={`Estado ${construct.availability}`}>
+        {construct.scoreLabel}
+      </div>
+      <div>
+        <h3>{construct.label}</h3>
+        <p><strong>{construct.availability}</strong> · Confianza {construct.confidence}. {construct.narrative}</p>
+        {construct.caveats.length > 0 && (
+          <ul>
+            {construct.caveats.slice(0, 2).map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        )}
+      </div>
+    </article>
+  );
+}
+
 export default function PostulationReportScreen({
   artifacts = null,
   completedDemo = null,
@@ -68,6 +88,7 @@ export default function PostulationReportScreen({
   const qualityCards = useMemo(() => getPostulationQualityCards(artifacts), [artifacts]);
   const gameCards = useMemo(() => getPostulationGameCards(artifacts, completedDemo), [artifacts, completedDemo]);
   const talentDimensions = useMemo(() => getTopTalentDimensions(artifacts, 6), [artifacts]);
+  const workbookFramework = useMemo(() => getWorkbookTalentFrameworkCards(artifacts), [artifacts]);
   const caveats = useMemo(() => getPostulationCaveats(artifacts), [artifacts]);
   const completedCount = completedDemo?.completedCount ?? artifacts?.assessmentSession?.blocks?.filter((block) => block.status === 'completed').length ?? 0;
   const totalCount = completedDemo?.totalCount ?? artifacts?.assessmentSession?.blocks?.length ?? 0;
@@ -163,6 +184,20 @@ export default function PostulationReportScreen({
       <div className="postulation-demo__talent-grid">
         {talentDimensions.map((dimension) => <TalentDimensionCard key={dimension.id ?? dimension.label} dimension={dimension} />)}
       </div>
+
+      {workbookFramework.length > 0 && (
+        <>
+          <div className="postulation-demo__report-section-head">
+            <div>
+              <h2>Framework R-6 del workbook</h2>
+              <p>Lectura provisional en el orden del Excel: usa No medido, Solo descriptivo o Evidencia insuficiente cuando corresponde.</p>
+            </div>
+          </div>
+          <div className="postulation-demo__talent-grid">
+            {workbookFramework.map((construct) => <WorkbookTalentCard key={construct.id} construct={construct} />)}
+          </div>
+        </>
+      )}
 
       <div className="postulation-demo__report-section-head">
         <div>

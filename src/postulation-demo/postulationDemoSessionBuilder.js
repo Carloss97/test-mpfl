@@ -1,5 +1,7 @@
 import { ASSESSMENT_FORBIDDEN_KEYS, buildUnifiedAssessmentSession } from '../assessment/assessmentSession.js';
 import { buildFinalAssessmentPayload, validateFinalAssessmentPayload } from '../assessment/finalAssessmentPayload.js';
+import { buildOriginalGameFeatureVector } from '../assessment/originalGameFeatureVector.js';
+import { buildOriginalGameTalentFramework } from '../assessment/originalGameTalentMapping.js';
 import { buildTalentProfile } from '../assessment/talentProfile.js';
 import { generateTalentReport } from '../assessment/talentReportGenerator.js';
 import { buildLocalReportBundle } from '../assessment/reportSubmissionClient.js';
@@ -15,6 +17,7 @@ import {
   listVisiblePostulationBlocks,
   normalizePostulationDemoBatteryMode,
 } from './postulationDemoConfig.js';
+import { getOriginalGameBlueprint, sanitizeOriginalGameAggregate } from './originalGameBlueprints.js';
 
 export const POSTULATION_DEMO_ARTIFACTS_SCHEMA = 'krumm_postulation_demo_artifacts_v1';
 export const POSTULATION_DEMO_BATTERY_ID = POSTULATION_DEMO_BATTERY_IDS.stable_dg;
@@ -57,7 +60,10 @@ function normalizeCompletedBlocks(completedDemo = {}) {
   const sourceBlocks = Array.isArray(completedDemo.blocks) ? completedDemo.blocks : [];
   return sourceBlocks.map((entry, index) => {
     const block = entry.block ?? entry;
-    const summary = stripForbidden(entry.summary ?? entry.result ?? {});
+    const rawSummary = stripForbidden(entry.summary ?? entry.result ?? {});
+    const summary = getOriginalGameBlueprint(block.gameId)
+      ? sanitizeOriginalGameAggregate(block.gameId, rawSummary)
+      : rawSummary;
     return {
       index,
       gameId: block.gameId ?? `postulation_block_${index + 1}`,
@@ -357,6 +363,12 @@ export function buildPostulationDemoArtifacts({
     edgeAIResult,
     signalContext,
   });
+  const originalGameFeatureVector = batteryMode === POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES
+    ? buildOriginalGameFeatureVector({ blocks: fallbackBlocks, runId, batteryId })
+    : null;
+  const talentFramework = originalGameFeatureVector
+    ? buildOriginalGameTalentFramework({ originalGameFeatureVector, generatedAt, signalQuality: qualitySummary })
+    : null;
   const assessmentSession = buildUnifiedAssessmentSession({
     batterySession: buildBatterySession({ blocks: fallbackBlocks, generatedAt, runId, batteryMode, batteryId }),
     generatedAt,
@@ -370,6 +382,8 @@ export function buildPostulationDemoArtifacts({
     gameCorrelation,
     edgeAIResult,
     featureVectorV2,
+    originalGameFeatureVector,
+    talentFramework,
     qualitySummary,
   });
   const talentProfile = buildTalentProfile({ assessmentSession });

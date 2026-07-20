@@ -117,6 +117,41 @@ function sanitizeFeatureVector(featureVector = null) {
   };
 }
 
+function sanitizeOriginalGameFeatureVector(featureVector = null) {
+  if (!featureVector) return null;
+  return {
+    type: featureVector.type,
+    version: featureVector.version,
+    runId: featureVector.runId ?? null,
+    batteryId: featureVector.batteryId ?? null,
+    featureOrder: [...(featureVector.featureOrder ?? [])],
+    featureMap: pickObject(featureVector.featureMap),
+    featureArray: [...(featureVector.featureArray ?? [])],
+    observedMask: [...(featureVector.observedMask ?? [])],
+    featureAvailability: pickObject(featureVector.featureAvailability),
+    gameAvailability: pickObject(featureVector.gameAvailability),
+    encoding: pickObject(featureVector.encoding),
+    units: pickObject(featureVector.units),
+    qualityFlags: [...(featureVector.qualityFlags ?? [])],
+    privacy: pickObject(featureVector.privacy),
+  };
+}
+
+function sanitizeTalentFramework(framework = null) {
+  if (!framework) return null;
+  return {
+    schemaVersion: framework.schemaVersion,
+    version: framework.version,
+    status: framework.status,
+    generatedAt: framework.generatedAt ?? null,
+    sourceVector: clonePlain(framework.sourceVector ?? null),
+    constructOrder: [...(framework.constructOrder ?? [])],
+    constructs: clonePlain(framework.constructs ?? {}),
+    classification: clonePlain(framework.classification ?? {}),
+    governance: clonePlain(framework.governance ?? {}),
+  };
+}
+
 function sanitizeAdaptiveTrace(trace = []) {
   return (Array.isArray(trace) ? trace : [])
     .map((entry) => ({
@@ -181,6 +216,8 @@ export function buildUnifiedAssessmentSession({
   gameCorrelation = null,
   edgeAIResult = null,
   featureVectorV2 = null,
+  originalGameFeatureVector = null,
+  talentFramework = null,
   adaptiveDifficultyTrace = [],
   qualitySummary = null,
 } = {}) {
@@ -216,6 +253,11 @@ export function buildUnifiedAssessmentSession({
       privacySafe: true,
     },
   };
+
+  const safeOriginalGameFeatureVector = sanitizeOriginalGameFeatureVector(originalGameFeatureVector);
+  if (safeOriginalGameFeatureVector) session.originalGameFeatureVector = safeOriginalGameFeatureVector;
+  const safeTalentFramework = sanitizeTalentFramework(talentFramework);
+  if (safeTalentFramework) session.talentFramework = safeTalentFramework;
 
   const privacy = validateAssessmentSessionPrivacy(session);
   return {

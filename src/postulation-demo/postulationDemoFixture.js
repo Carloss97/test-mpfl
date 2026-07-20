@@ -20,6 +20,7 @@ function blockSummary(block, index) {
   if (block.gameId === 'laser_puzzle') {
     return {
       gameId: block.gameId,
+      aggregateSchemaVersion: 'laser_puzzle_aggregate_v1',
       completed: true,
       completedTrialCount: block.trialCount,
       trialCount: block.trialCount,
@@ -38,6 +39,7 @@ function blockSummary(block, index) {
   if (block.gameId === 'balloon_risk') {
     return {
       gameId: block.gameId,
+      aggregateSchemaVersion: 'balloon_risk_aggregate_v1',
       completed: true,
       completedTrialCount: block.trialCount,
       trialCount: block.trialCount,
@@ -48,6 +50,7 @@ function blockSummary(block, index) {
       cashoutCount: 6,
       popCount: 2,
       postPopAdjustment: -1.5,
+      postPopAdjustmentCount: 1,
       riskEfficiency: 0.72,
       timeMs: 68_000,
       aggregateOnly: true,
@@ -56,6 +59,7 @@ function blockSummary(block, index) {
   if (block.gameId === 'passenger_routes') {
     return {
       gameId: block.gameId,
+      aggregateSchemaVersion: 'passenger_routes_aggregate_v1',
       completed: true,
       completedTrialCount: block.trialCount,
       trialCount: block.trialCount,
@@ -63,6 +67,7 @@ function blockSummary(block, index) {
       passengersDelivered: 3,
       destinationCount: 3,
       routeEfficiency: 0.84,
+      movementAttemptCount: 16,
       replanCount: 1,
       stationUseCount: 1,
       constraintViolationCount: 0,

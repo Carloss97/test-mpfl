@@ -7,6 +7,7 @@ function clamp(value, min = 0, max = 1) {
 }
 
 function score(value) {
+  if (value == null) return null;
   return Math.round(clamp(value) * 100);
 }
 
@@ -54,7 +55,7 @@ function completionRatio(performance = {}) {
   return trialCount > 0 ? clamp(completed / trialCount) : 0;
 }
 
-function dimension({ id, rawScore, confidence, evidence, caveats }) {
+function dimension({ id, rawScore, confidence, evidence, caveats, availability = 'observed' }) {
   const definition = TALENT_DIMENSION_DEFINITIONS[id];
   return {
     id,
@@ -62,6 +63,7 @@ function dimension({ id, rawScore, confidence, evidence, caveats }) {
     description: definition.description,
     score: score(rawScore),
     confidence: Number(clamp(confidence).toFixed(3)),
+    availability,
     evidence: evidence.filter(Boolean),
     caveats: [...new Set(caveats ?? [])],
     interpretation: 'Señal observacional para revisión humana; debe leerse junto con calidad de captura y contexto de tarea.',
@@ -85,8 +87,9 @@ function buildPendingMappingDimensions(session = {}) {
   const confidence = Math.min(0.25, qualityConfidence(session.qualitySummary, session.edgeAI));
   return Object.fromEntries(Object.keys(TALENT_DIMENSION_DEFINITIONS).map((id) => [id, dimension({
     id,
-    rawScore: 0.5,
+    rawScore: null,
     confidence,
+    availability: 'not_applicable_original_games_framework_authoritative',
     evidence: ['Métricas agregadas preservadas; mapeo específico pendiente de validación.'],
     caveats,
   })]));
@@ -195,7 +198,7 @@ function buildDimensions(session) {
 }
 
 function globalSummary(dimensions, confidence) {
-  const entries = Object.values(dimensions);
+  const entries = Object.values(dimensions).filter((entry) => entry.score != null && Number.isFinite(Number(entry.score)));
   return {
     strengths: entries.filter((entry) => entry.score >= 75).map((entry) => entry.label).slice(0, 4),
     watchAreas: entries.filter((entry) => entry.score < 60).map((entry) => entry.label).slice(0, 4),

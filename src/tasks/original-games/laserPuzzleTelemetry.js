@@ -43,6 +43,7 @@ const BIFURCATE = Object.freeze({
 });
 
 const LASER_ALLOWED_RESPONSE_FIELDS = Object.freeze([
+  'aggregateSchemaVersion',
   'score',
   'completed',
   'levelCount',
@@ -249,6 +250,7 @@ export function buildLaserResponseAggregate({
   const solvedRate = Math.max(0, Math.min(1, Number(solvedLevels) / Math.max(1, Number(levelCount) || 1)));
   const penalty = Math.min(0.35, Math.max(0, Number(ruleViolationCount) || 0) * 0.05);
   return {
+    aggregateSchemaVersion: 'laser_puzzle_aggregate_v1',
     score: round(Math.max(0, (solutionEfficiency * 0.65) + (solvedRate * 0.35) - penalty), 4),
     completed: Boolean(completed),
     levelCount: Math.max(1, Math.round(Number(levelCount) || 1)),

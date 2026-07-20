@@ -447,9 +447,55 @@ Backtrack R-5 relevante para retomar:
 
 ### R-6 — Reporte, feature vector y narrativa HR
 
-Pendiente.
+**Estado:** completada técnicamente; próximo foco R-7 QA comparativa y validación.
 
-Actualizar reporte para mostrar dimensiones:
+Documento técnico fuente:
+
+```text
+docs/research/krumm-talent-game-behavior-mapping-technical-study.md
+```
+
+Archivos R-6 creados:
+
+```text
+src/assessment/originalGameFeatureVector.js
+src/assessment/originalGameFeatureVector.test.js
+src/assessment/originalGameTalentMapping.js
+src/assessment/originalGameTalentMapping.test.js
+```
+
+Archivos R-6 modificados:
+
+```text
+src/tasks/original-games/laserPuzzleTelemetry.js
+src/tasks/original-games/balloonRiskTelemetry.js
+src/tasks/original-games/passengerRouteTelemetry.js
+src/tasks/original-games/PassengerRouteOptimizationTask.jsx
+src/postulation-demo/originalGameBlueprints.js
+src/postulation-demo/postulationDemoFixture.js
+src/postulation-demo/postulationDemoSessionBuilder.js
+src/postulation-demo/postulationDemoSessionBuilder.test.js
+src/postulation-demo/PostulationReportSummary.js
+src/postulation-demo/PostulationReportScreen.jsx
+src/postulation-demo/PostulationReportScreen.test.jsx
+src/assessment/assessmentSession.js
+src/assessment/finalAssessmentPayload.js
+src/assessment/talentProfile.js
+src/assessment/talentReportGenerator.js
+```
+
+Implementado:
+
+- `original_game_feature_vector_v1` separado de `assessment_feature_vector_v2`.
+- `ORIGINAL_GAME_FEATURE_DEFINITIONS` documenta input agregado → fórmula → racional → constructo → limitaciones para cada métrica.
+- `krumm_workbook_talent_framework_v1` provisional e independiente del perfil DG.
+- Allowlist estricta de agregados originales antes de sesión/payload.
+- `stable_dg` no recibe framework original.
+- Original mode expone `originalGameFeatureVector` y `talentFramework` en sesión/payload/reporte.
+- UI/reportes muestran `No medido`, `descriptive_only`, `insufficient`, `not_measured` y no generan fortalezas/watch areas del framework sin normas.
+- Cámara/biometría se mantiene como contexto/calidad; no afecta scores/confianza de mapping.
+
+Dimensiones R-6:
 
 | Juego | Dimensión observable | Lenguaje permitido |
 |---|---|---|
@@ -457,9 +503,41 @@ Actualizar reporte para mostrar dimensiones:
 | Balloon | Ajuste ante feedback/riesgo | estrategia de acumulación, ajuste post-pérdida, no personalidad |
 | Rutas | Planificación bajo restricciones | eficiencia de ruta, replanificación, manejo de restricciones |
 
+Estados obligatorios del framework:
+
+```text
+decisionMaking       -> score null / descriptive_only
+problemSolving       -> provisional_score si Laser + Passenger completos
+riskFeedbackProfile  -> score null / descriptive_only / frustration_tolerance_not_measured
+planning             -> provisional_score si Passenger completo
+adaptability         -> score null / insufficient
+analyticalThinking   -> provisional_score si Laser + Passenger completos
+leadership           -> score null / not_measured
+communication        -> score null / not_measured
+```
+
+Verificación final R-6:
+
+```text
+R-6 assessment/report focal: 8 files / 27 tests
+Original-games regression: 10 files / 44 tests
+Oxlint focal: 0 warnings / 0 errors
+Suite completa: 82 files / 339 tests
+Build: 1382 módulos, OK en 3.10s
+Audit producción: 0 vulnerabilidades
+git diff --check: OK
+Smoke Playwright: 8/8 rutas PASS en desktop 1280×720 y móvil 390×844; console/page/network errors 0; overflow horizontal 0
+```
+
 ### R-7 — QA interna comparativa
 
-Pendiente.
+Plan técnico detallado creado en:
+
+```text
+docs/plans/2026-07-20-r7-validation-and-metric-justification-plan.md
+```
+
+Pendiente de ejecución con datos/participantes y revisión experta. R-7 debe evaluar QA técnica, validez de contenido, entrevistas cognitivas, confiabilidad, validez convergente/discriminante, validez de criterio, fairness/device effects y decisión de producto.
 
 Validar batería DG estable vs batería original o batería mixta.
 

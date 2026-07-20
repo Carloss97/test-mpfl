@@ -30,6 +30,36 @@ function sanitizeFeatureVector(vector = null) {
   };
 }
 
+function sanitizeOriginalGameFeatureVector(vector = null) {
+  if (!vector) return null;
+  return {
+    type: vector.type ?? 'original_game_feature_vector_v1',
+    version: vector.version ?? null,
+    featureOrder: [...(vector.featureOrder ?? [])],
+    featureArray: [...(vector.featureArray ?? [])],
+    observedMask: [...(vector.observedMask ?? [])],
+    featureMap: pickObject(vector.featureMap),
+    featureAvailability: pickObject(vector.featureAvailability),
+    gameAvailability: pickObject(vector.gameAvailability),
+    qualityFlags: [...(vector.qualityFlags ?? [])],
+    privacy: pickObject(vector.privacy),
+  };
+}
+
+function sanitizeTalentFramework(framework = null) {
+  if (!framework) return null;
+  return {
+    schemaVersion: framework.schemaVersion ?? 'krumm_workbook_talent_framework_v1',
+    version: framework.version ?? null,
+    status: framework.status ?? 'provisional',
+    sourceVector: clonePlain(framework.sourceVector ?? null),
+    constructOrder: [...(framework.constructOrder ?? [])],
+    constructs: clonePlain(framework.constructs ?? {}),
+    classification: clonePlain(framework.classification ?? {}),
+    governance: clonePlain(framework.governance ?? {}),
+  };
+}
+
 function sanitizeGameResults(blocks = []) {
   return (Array.isArray(blocks) ? blocks : []).map((block, index) => ({
     index: Number(block?.index ?? index),
@@ -103,6 +133,7 @@ export function buildFinalAssessmentPayload({
       featureVectorV2: sanitizeFeatureVector(assessmentSession?.featureVectorV2 ?? null),
       gameResults: sanitizeGameResults(assessmentSession?.blocks ?? []),
     },
+    talentFramework: sanitizeTalentFramework(assessmentSession?.talentFramework ?? null),
     talentProfile: sanitizeTalentProfile(talentProfile),
     edgeAI: sanitizeEdgeAI(assessmentSession?.edgeAI ?? null),
     governance: {
@@ -112,6 +143,10 @@ export function buildFinalAssessmentPayload({
       privacySafe: true,
     },
   };
+
+  const originalGameFeatureVector = sanitizeOriginalGameFeatureVector(assessmentSession?.originalGameFeatureVector ?? null);
+  if (originalGameFeatureVector) payload.behavioral.originalGameFeatureVector = originalGameFeatureVector;
+  if (!payload.talentFramework) delete payload.talentFramework;
 
   return {
     ...payload,
