@@ -45,8 +45,12 @@ try {
           && /Estrategia riesgo\/recompensa/i.test(metrics.bodyText)
           && /Ruta eficiente/i.test(metrics.bodyText)
           && /No medido/i.test(metrics.bodyText)
+          && /Resumen ejecutivo HR/i.test(metrics.bodyText)
+          && /No ranking automático/i.test(metrics.bodyText)
           && /Authoring Laser: valid_for_internal_demo/i.test(metrics.bodyText)
+          && /Calibration Balloon: valid_for_internal_demo/i.test(metrics.bodyText)
           && /Authoring Passenger: valid_for_internal_demo/i.test(metrics.bodyText)
+          && /Instruction check: low/i.test(metrics.bodyText)
         : true;
       const forbiddenVisible = isFixtureReport
         ? /rawGameEvents|pointerSamples|faceSamples|landmarks|keypoints|beamCells|pumpSequence|fullRoute|visitedCells/.test(metrics.bodyText)

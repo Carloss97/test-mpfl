@@ -594,6 +594,10 @@ src/tasks/original-games/laserPuzzleAuthoringReview.js
 src/tasks/original-games/laserPuzzleAuthoringReview.test.js
 src/tasks/original-games/balloonRiskFeedback.js
 src/tasks/original-games/balloonRiskFeedback.test.js
+src/tasks/original-games/balloonThresholdCalibrationReview.js
+src/tasks/original-games/balloonThresholdCalibrationReview.test.js
+src/tasks/original-games/candidateInstructionCheck.js
+src/tasks/original-games/candidateInstructionCheck.test.js
 src/tasks/original-games/passengerRouteFeedback.js
 src/tasks/original-games/passengerRouteFeedback.test.js
 src/tasks/original-games/passengerRouteAuthoringReview.js
@@ -601,6 +605,14 @@ src/tasks/original-games/passengerRouteAuthoringReview.test.js
 ```
 
 Los tres feedback modules se consumen desde `PostulationReportSummary.js` y se muestran en `PostulationReportScreen.jsx` con etiquetas humanas; no usan rutas, secuencias, beam cells, pump sequences ni raw events. `laserPuzzleAuthoringReview.js` y `passengerRouteAuthoringReview.js` se consumen desde `PostulationReportTechnicalDrawer.jsx` para mostrar QA de authoring en modo original.
+
+`balloonThresholdCalibrationReview.js` también se consume en el drawer técnico como `Calibration Balloon: valid_for_internal_demo`; resume 3 rondas alto / 2 medio / 3 bajo sin exportar thresholds por ronda ni secuencias de infladas.
+
+`candidateInstructionCheck.js` se consume en el drawer técnico como `Instruction check: low/review/high`; usa solo agregados por juego para separar riesgo de comprensión/instrucciones de desempeño. Si marca `high`, debe caveatearse o excluirse el mapeo provisional.
+
+La tabla teórica señal→métrica→bibliografía está actualizada en `docs/research/krumm-talent-game-behavior-mapping-technical-study.md` §4.5. Las referencias clave fueron verificadas por DOI/título/año vía Crossref; no usar referencias ambiguas del Excel como evidencia fuerte sin metadata exacta.
+
+El reporte HR ahora incluye un resumen ejecutivo con cuatro bloques: qué se observó, cómo usarlo, qué no mide y siguiente paso. El copy visible incluye `No ranking automático` y `Contrastar con entrevista`; no debe transformarse en decisión automática ni ranking de candidatos.
 
 Smoke de feedback visible:
 

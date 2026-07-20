@@ -1,5 +1,7 @@
 import React from 'react';
 import { buildFinalReportDownloadDescriptors } from '../assessment/FinalReportPanel.jsx';
+import { summarizeBalloonThresholdCalibration } from '../tasks/original-games/balloonThresholdCalibrationReview.js';
+import { summarizeCandidateInstructionCheck } from '../tasks/original-games/candidateInstructionCheck.js';
 import { summarizeLaserPuzzleAuthoring } from '../tasks/original-games/laserPuzzleAuthoringReview.js';
 import { summarizePassengerRouteAuthoring } from '../tasks/original-games/passengerRouteAuthoringReview.js';
 
@@ -39,6 +41,12 @@ export default function PostulationReportTechnicalDrawer({
     : null;
   const laserAuthoring = artifacts?.batteryMode === 'original_games'
     ? summarizeLaserPuzzleAuthoring()
+    : null;
+  const balloonCalibration = artifacts?.batteryMode === 'original_games'
+    ? summarizeBalloonThresholdCalibration()
+    : null;
+  const instructionCheck = artifacts?.batteryMode === 'original_games'
+    ? summarizeCandidateInstructionCheck(artifacts?.assessmentSession?.blocks ?? [])
     : null;
 
   const downloadFile = (descriptor) => {
@@ -85,9 +93,21 @@ export default function PostulationReportTechnicalDrawer({
                   <li>Niveles Laser multiobjetivo: {laserAuthoring.multiObjectiveLevels}</li>
                 </>
               )}
+              {balloonCalibration && (
+                <>
+                  <li>Calibration Balloon: {balloonCalibration.thresholdCalibrationStatus}</li>
+                  <li>Rondas Balloon: {balloonCalibration.highRiskRounds} alto / {balloonCalibration.mediumRiskRounds} medio / {balloonCalibration.lowRiskRounds} bajo</li>
+                </>
+              )}
               <li>Authoring Passenger: {passengerAuthoring.authoringStatus}</li>
               <li>Niveles resolubles: {passengerAuthoring.solvableLevels}/{passengerAuthoring.totalLevels}</li>
               <li>Niveles con parada obligatoria: {passengerAuthoring.minimumStationUseLevels}</li>
+              {instructionCheck && (
+                <>
+                  <li>Instruction check: {instructionCheck.instructionRiskFlag}</li>
+                  <li>Juegos revisados por comprensión: {instructionCheck.reviewedGames}</li>
+                </>
+              )}
               <li>Acción recomendada: {passengerAuthoring.recommendedLevelAction}</li>
             </ul>
           </div>

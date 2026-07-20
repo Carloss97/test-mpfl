@@ -41,10 +41,18 @@
   - módulos separados para mejorar juegos sin mezclar UI, telemetría, validación y explicación.
 - `src/tasks/original-games/laserPuzzleFeedback.js`, `balloonRiskFeedback.js`, `passengerRouteFeedback.js`
   - feedback explicativo aggregate-only para los tres juegos originales, visible en el reporte.
+- `src/tasks/original-games/balloonThresholdCalibrationReview.js`
+  - revisión modular de distribución de riesgo/thresholds Balloon sin exportar thresholds por ronda ni secuencia de infladas.
+- `src/tasks/original-games/candidateInstructionCheck.js`
+  - chequeo agregado de riesgo de comprensión/instrucciones para Laser, Balloon y Passenger antes de interpretar métricas.
+- `docs/research/krumm-talent-game-behavior-mapping-technical-study.md`
+  - tabla teórica señal → métrica → demanda de tarea → justificación bibliográfica → límite HR.
 - `src/tasks/original-games/passengerRouteAuthoringReview.js`
   - revisión modular de solvencia, presupuesto, paradas y layout compacto para Passenger sin exportar geometría autorada ni rutas de candidato.
 - `src/tasks/original-games/laserPuzzleAuthoringReview.js`
   - revisión modular de solvencia autorada, par esperado, bifurcación y layout compacto para Laser sin exportar beam cells ni grillas.
+- `src/postulation-demo/PostulationReportSummary.js` y `PostulationReportScreen.jsx`
+  - resumen ejecutivo HR conservador: qué se observó, cómo usarlo, qué no mide y siguiente paso; explícitamente sin ranking automático.
 - `docs/plans/2026-07-20-laser-passenger-product-game-design-review.md`
   - revisión producto-final por juego: progresión, narrativa, dificultad, métricas permitidas y límites.
 - `exports/krumm-r6-r7-current-flow.pdf`
@@ -56,8 +64,9 @@
 
 1. **R-7 QA/validación comparativa.** Ya existe el plan, falta ejecutarlo con participantes/datos y revisión experta.
 2. **Trazabilidad métrica.** Ya se implementó en código, pero debe revisarse con expertos y datos reales.
-3. **Modularización de mejoras de juegos.** Ya existe un catálogo inicial de módulos; `laser.failure-explanation`, `laser.level-authoring-review`, `balloon.feedback-comprehension`, `passenger.constraint-feedback` y `passenger.route-authoring-review` tienen núcleo puro implementado.
+3. **Modularización de mejoras de juegos.** Ya existe un catálogo inicial de módulos; `laser.failure-explanation`, `laser.level-authoring-review`, `balloon.feedback-comprehension`, `balloon.threshold-calibration-review`, `passenger.constraint-feedback`, `passenger.route-authoring-review` y `shared.candidate-instruction-check` tienen núcleo puro implementado.
 4. **Revisión producto-final de Laser y Passenger.** Ambos juegos tienen 3 niveles/circuitos con objetivo, reto, dificultad progresiva y tests de solvencia/layout; falta calibración con usuarios reales.
+5. **Pulido del reporte HR.** Se agregó sección ejecutiva para separar lectura de negocio, uso recomendado, no medido y validación pendiente, sin convertir el reporte en ranking/decisión automática.
 
 ---
 
@@ -66,10 +75,10 @@
 ### Técnico inmediato
 
 - Smoke browser específico del reporte original ejecutado: feedback visible para Laser, Balloon y Passenger en desktop y móvil, sin overflow ni errores.
+- Reporte HR: ejecutar una pasada visual real del nuevo resumen ejecutivo en fixture original y flujo real para validar jerarquía visual con el usuario.
 - Implementar después módulos de authoring/dificultad restantes:
-  1. `balloon.threshold-calibration-review`
-  2. `shared.candidate-instruction-check`
-  3. `shared.mobile-accessibility-qa`
+  1. `shared.mobile-accessibility-qa`
+  2. microtutorial/instrucciones previas por juego si QA visual detecta confusión.
 - Añadir smoke específico de copy/feedback cuando el módulo sea visible.
 
 ### Validación R-7
@@ -188,13 +197,13 @@ Módulos iniciales:
 | `laser.failure-explanation` | Laser | `implemented_core` | explicar fallos sin beamCells ni movimientos crudos |
 | `laser.level-authoring-review` | Laser | `implemented_core` | revisar par, dificultad, bifurcación y solvencia autorada |
 | `balloon.feedback-comprehension` | Balloon | `implemented_core` | explicar cashout/loss/post-loss sin secuencias |
-| `balloon.threshold-calibration-review` | Balloon | `planned` | revisar distribución de pérdidas y dificultad |
+| `balloon.threshold-calibration-review` | Balloon | `implemented_core` | revisar distribución de pérdidas y dificultad sin secuencias |
 | `passenger.constraint-feedback` | Passenger | `implemented_core` | explicar presupuesto, bloqueos, paradas y restricciones |
 | `passenger.route-authoring-review` | Passenger | `implemented_core` | revisar solver, presupuesto y dificultad |
-| `shared.candidate-instruction-check` | todos | `planned` | separar comprensión de instrucciones de desempeño |
+| `shared.candidate-instruction-check` | todos | `implemented_core` | separar comprensión de instrucciones de desempeño |
 | `shared.mobile-accessibility-qa` | todos | `planned` | QA responsive/accesibilidad modular |
 
-Los tres módulos de feedback base ya están conectados al reporte visible. `laser.level-authoring-review` y `passenger.route-authoring-review` aparecen en el drawer técnico del reporte original como QA de authoring, separados de la explicación al candidato.
+Los tres módulos de feedback base ya están conectados al reporte visible. `laser.level-authoring-review`, `balloon.threshold-calibration-review`, `passenger.route-authoring-review` y `shared.candidate-instruction-check` aparecen en el drawer técnico del reporte original como QA de authoring/calibración/comprensión, separados de la explicación al candidato.
 
 ### 7.1 Verificación de feedback visible
 
@@ -207,7 +216,7 @@ Console errors: 0
 Page errors: 0
 Request failures: 0
 Overflow horizontal: 0
-Feedback fixture original: Solución clara + Estrategia riesgo/recompensa + Ruta eficiente + No medido + Authoring Laser/Passenger visible
+Feedback fixture original: Solución clara + Estrategia riesgo/recompensa + Ruta eficiente + No medido + Authoring Laser/Passenger + Calibration Balloon + Instruction check visibles
 Forbidden visible en reportes fixture: 0
 Suite completa posterior: 88 files / 365 tests PASS
 Build: PASS; audit high prod: 0 vulnerabilidades; oxlint: 0 warnings / 0 errors; git diff --check: OK
@@ -217,7 +226,7 @@ Build: PASS; audit high prod: 0 vulnerabilidades; oxlint: 0 warnings / 0 errors;
 
 ## 8. Siguiente recomendación
 
-Siguiente paso: `balloon.threshold-calibration-review` y `shared.candidate-instruction-check`, para revisar dificultad/thresholds y comprensión sin mezclar authoring con desempeño del candidato. Núcleos puros actuales:
+Siguiente paso: `shared.mobile-accessibility-qa` y microtutoriales, para validar que el candidato entienda las reglas y pueda usar controles antes de interpretar métricas. Núcleos puros actuales:
 
 ```text
 src/tasks/original-games/laserPuzzleFeedback.js
@@ -226,6 +235,10 @@ src/tasks/original-games/laserPuzzleAuthoringReview.js
 src/tasks/original-games/laserPuzzleAuthoringReview.test.js
 src/tasks/original-games/balloonRiskFeedback.js
 src/tasks/original-games/balloonRiskFeedback.test.js
+src/tasks/original-games/balloonThresholdCalibrationReview.js
+src/tasks/original-games/balloonThresholdCalibrationReview.test.js
+src/tasks/original-games/candidateInstructionCheck.js
+src/tasks/original-games/candidateInstructionCheck.test.js
 src/tasks/original-games/passengerRouteFeedback.js
 src/tasks/original-games/passengerRouteFeedback.test.js
 src/tasks/original-games/passengerRouteAuthoringReview.js

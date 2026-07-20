@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import {
   formatPostulationScore,
+  getPostulationExecutiveSummary,
   getPostulationCaveats,
   getPostulationGameCards,
   getPostulationQualityCards,
@@ -81,6 +82,29 @@ function WorkbookTalentCard({ construct }) {
   );
 }
 
+function ExecutiveSummary({ summary }) {
+  return (
+    <section className="postulation-demo__executive-summary" aria-label="Resumen ejecutivo HR">
+      <div className="postulation-demo__executive-summary-head">
+        <div>
+          <span className="postulation-demo__eyebrow">Resumen ejecutivo HR</span>
+          <h2>{summary.headline}</h2>
+        </div>
+        <strong>{summary.statusLabel}</strong>
+      </div>
+      <div className="postulation-demo__executive-card-grid">
+        {summary.cards.map((card) => (
+          <article className="postulation-demo__executive-card" key={`${card.label}-${card.title}`}>
+            <span>{card.label}</span>
+            <h3>{card.title}</h3>
+            <p>{card.body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function PostulationReportScreen({
   artifacts = null,
   completedDemo = null,
@@ -96,6 +120,7 @@ export default function PostulationReportScreen({
   const gameCards = useMemo(() => getPostulationGameCards(artifacts, completedDemo), [artifacts, completedDemo]);
   const talentDimensions = useMemo(() => getTopTalentDimensions(artifacts, 6), [artifacts]);
   const workbookFramework = useMemo(() => getWorkbookTalentFrameworkCards(artifacts), [artifacts]);
+  const executiveSummary = useMemo(() => getPostulationExecutiveSummary(artifacts, completedDemo), [artifacts, completedDemo]);
   const caveats = useMemo(() => getPostulationCaveats(artifacts), [artifacts]);
   const completedCount = completedDemo?.completedCount ?? artifacts?.assessmentSession?.blocks?.filter((block) => block.status === 'completed').length ?? 0;
   const totalCount = completedDemo?.totalCount ?? artifacts?.assessmentSession?.blocks?.length ?? 0;
@@ -162,6 +187,8 @@ export default function PostulationReportScreen({
           <span>Las métricas agregadas por juego están preservadas; su mapeo específico a dimensiones de talento continúa bajo validación y revisión humana.</span>
         </div>
       )}
+
+      <ExecutiveSummary summary={executiveSummary} />
 
       <section className="postulation-demo__review-summary" aria-label="Resumen para revisión">
         <div>

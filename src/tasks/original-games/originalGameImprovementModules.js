@@ -70,8 +70,8 @@ const MODULES = Object.freeze([
   Object.freeze({
     id: 'balloon.threshold-calibration-review',
     title: 'Calibración modular de dificultad/thresholds Balloon',
-    status: 'planned',
-    priority: 'medium',
+    status: 'implemented_core',
+    priority: 'high',
     gameIds: Object.freeze(['balloon_risk']),
     purpose: 'Separar revisión de distribución de pérdidas del componente de juego para distinguir azar, dificultad y estrategia observada.',
     candidateInputs: Object.freeze(['totalRounds', 'averagePumps', 'cashoutCount', 'popCount', 'riskEfficiency']),
@@ -82,6 +82,7 @@ const MODULES = Object.freeze([
       'la salida permite comparar versiones de configuración sin raw rounds',
     ]),
     privacyNotes: Object.freeze(['Sin thresholds por candidato si permiten reconstruir decisiones; usar configuración versionada global.']),
+    implementation: 'buildBalloonThresholdCalibrationReview in balloonThresholdCalibrationReview.js',
   }),
   Object.freeze({
     id: 'passenger.constraint-feedback',
@@ -120,8 +121,8 @@ const MODULES = Object.freeze([
   Object.freeze({
     id: 'shared.candidate-instruction-check',
     title: 'Chequeo modular de comprensión de instrucciones',
-    status: 'planned',
-    priority: 'medium',
+    status: 'implemented_core',
+    priority: 'high',
     gameIds: Object.freeze(['laser_puzzle', 'balloon_risk', 'passenger_routes']),
     purpose: 'Agregar micro-chequeos no evaluativos antes de cada juego para distinguir error de comprensión de conducta de tarea.',
     candidateInputs: Object.freeze(['completed', 'timeMs', 'ruleViolationCount', 'constraintViolationCount']),
@@ -132,6 +133,7 @@ const MODULES = Object.freeze([
       'las respuestas se resumen aggregate-only',
     ]),
     privacyNotes: Object.freeze(['No guardar respuestas textuales crudas si son libres; usar categorías agregadas.']),
+    implementation: 'buildCandidateInstructionCheck in candidateInstructionCheck.js',
   }),
   Object.freeze({
     id: 'shared.mobile-accessibility-qa',

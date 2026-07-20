@@ -66,6 +66,9 @@ describe('PostulationReportScreen', () => {
     expect(screen.getByText(/Resultados por juego/i)).toBeInTheDocument();
     expect(screen.getByText(/Qué se procesó en segundo plano/i)).toBeInTheDocument();
     expect(screen.getByText(/Resumen para revisión/i)).toBeInTheDocument();
+    expect(screen.getByText(/Resumen ejecutivo HR/i)).toBeInTheDocument();
+    expect(screen.getByText(/Guía de entrevista/i)).toBeInTheDocument();
+    expect(screen.getByText(/No ranking automático/i)).toBeInTheDocument();
     expect(screen.getByText(/lectura humana/i)).toBeInTheDocument();
     expect(screen.getAllByText(/sin decisión automatizada/i).length).toBeGreaterThan(0);
   });
@@ -116,6 +119,9 @@ describe('PostulationReportScreen', () => {
     render(<PostulationReportScreen artifacts={fixture.artifacts} completedDemo={fixture.summary} />);
 
     expect(screen.getByRole('heading', { name: /Framework R-6 del workbook/i })).toBeInTheDocument();
+    expect(screen.getByText(/Batería original: lectura preliminar controlada/i)).toBeInTheDocument();
+    expect(screen.getByText(/No medido explícito/i)).toBeInTheDocument();
+    expect(screen.getByText(/Validar antes de comparar candidatos/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Toma de decisiones/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/descriptive_only/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/No medido/i).length).toBeGreaterThan(0);
@@ -129,7 +135,9 @@ describe('PostulationReportScreen', () => {
     expect(screen.getByText(/Solución clara/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Ruta eficiente/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Authoring Laser: valid_for_internal_demo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Calibration Balloon: valid_for_internal_demo/i)).toBeInTheDocument();
     expect(screen.getByText(/Authoring Passenger: valid_for_internal_demo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Instruction check: low/i)).toBeInTheDocument();
   });
 
   it('derives modular passenger-route feedback from aggregate-only game results', () => {
@@ -178,5 +186,15 @@ describe('PostulationReportScreen', () => {
       'clear_success',
     ]);
     expect(JSON.stringify(cards.map((card) => card.feedback))).not.toMatch(/beamCells|pumpSequence|fullRoute|visitedCells|rawGameEvents|pointerSamples/i);
+  });
+
+  it('does not present the executive HR summary as an automated decision or hiring ranking', () => {
+    const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
+    const { container } = render(<PostulationReportScreen artifacts={fixture.artifacts} completedDemo={fixture.summary} />);
+    const visibleText = container.textContent;
+
+    expect(visibleText).toMatch(/No ranking automático/i);
+    expect(visibleText).toMatch(/Contrastar con entrevista/i);
+    expect(visibleText).not.toMatch(/contratar|rechazar|seleccionar automáticamente|apto\/no apto/i);
   });
 });

@@ -57,6 +57,14 @@ describe('original game improvement modules', () => {
       status: 'implemented_core',
       implementation: 'buildBalloonRiskFeedback in balloonRiskFeedback.js',
     });
+    expect(getOriginalGameImprovementModule('balloon.threshold-calibration-review')).toMatchObject({
+      status: 'implemented_core',
+      implementation: 'buildBalloonThresholdCalibrationReview in balloonThresholdCalibrationReview.js',
+    });
+    expect(getOriginalGameImprovementModule('shared.candidate-instruction-check')).toMatchObject({
+      status: 'implemented_core',
+      implementation: 'buildCandidateInstructionCheck in candidateInstructionCheck.js',
+    });
     expect(getOriginalGameImprovementModule('passenger.route-authoring-review')).toMatchObject({
       status: 'implemented_core',
       implementation: 'buildPassengerRouteAuthoringReview in passengerRouteAuthoringReview.js',
@@ -78,8 +86,7 @@ describe('original game improvement modules', () => {
     expect(summary.byStatus.implemented_core).toBeGreaterThanOrEqual(4);
     expect(summary.byGame.passenger_routes).toBeGreaterThan(0);
     expect(summary.nextModules.map((module) => module.id)).toEqual(expect.arrayContaining([
-      'balloon.threshold-calibration-review',
-      'shared.candidate-instruction-check',
+      'shared.mobile-accessibility-qa',
     ]));
   });
 });

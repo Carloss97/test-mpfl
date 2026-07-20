@@ -458,6 +458,10 @@ src/tasks/original-games/laserPuzzleAuthoringReview.js
 src/tasks/original-games/laserPuzzleAuthoringReview.test.js
 src/tasks/original-games/balloonRiskFeedback.js
 src/tasks/original-games/balloonRiskFeedback.test.js
+src/tasks/original-games/balloonThresholdCalibrationReview.js
+src/tasks/original-games/balloonThresholdCalibrationReview.test.js
+src/tasks/original-games/candidateInstructionCheck.js
+src/tasks/original-games/candidateInstructionCheck.test.js
 src/tasks/original-games/passengerRouteFeedback.js
 src/tasks/original-games/passengerRouteFeedback.test.js
 src/tasks/original-games/passengerRouteAuthoringReview.js
@@ -466,6 +470,14 @@ docs/plans/2026-07-20-laser-passenger-product-game-design-review.md
 ```
 
 Estos módulos separan feedback, comprensión, authoring y QA responsive de los componentes React grandes para trabajar errores difíciles de explicar con TDD y sin raw data. Los módulos de feedback de Laser, Balloon y Passenger ya tienen núcleo puro y salida visible en el reporte. `laser.level-authoring-review` valida solución autorada, par, bifurcación y layout compacto; `passenger.route-authoring-review` valida solver, presupuesto, paradas y layout compacto sin exportar geometría ni rutas.
+
+`balloon.threshold-calibration-review` quedó implementado como revisión de calibración global de Balloon: balance de rondas alto/medio/bajo, detección de frecuencia extrema de pérdidas y caveats que separan azar/thresholds/instrucciones de estrategia observada. No exporta thresholds por ronda ni pump sequences.
+
+`shared.candidate-instruction-check` quedó implementado como control agregado de comprensión/instrucciones para Laser, Balloon y Passenger. Si marca `high`, el reporte técnico puede excluir temporalmente el mapeo provisional en vez de confundir reglas/controles con bajo desempeño.
+
+La tabla teórica señal→métrica→bibliografía fue retomada en `docs/research/krumm-talent-game-behavior-mapping-technical-study.md`, sección 4.5, con referencias verificadas por DOI/título/año y límites HR explícitos.
+
+**Pulido reporte HR (prioridad de presentación):** `PostulationReportSummary.js` y `PostulationReportScreen.jsx` agregan un resumen ejecutivo HR con cuatro bloques —qué se observó, cómo usarlo, qué no mide y siguiente paso— manteniendo `No ranking automático`, revisión humana y contraste con entrevista/CV.
 
 **Revisión producto-final Laser/Passenger (2026-07-20):**
 

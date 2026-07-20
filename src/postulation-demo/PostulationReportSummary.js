@@ -144,6 +144,52 @@ export function getWorkbookTalentFrameworkCards(artifacts = null) {
   });
 }
 
+export function getPostulationExecutiveSummary(artifacts = null, completedDemo = null) {
+  const batteryMode = artifacts?.batteryMode ?? completedDemo?.batteryMode ?? 'stable_dg';
+  const validationOk = artifacts?.payload?.validation?.ok === true && artifacts?.validation?.ok !== false;
+  const completedCount = completedDemo?.completedCount ?? artifacts?.assessmentSession?.blocks?.filter((block) => block.status === 'completed').length ?? 0;
+  const totalCount = completedDemo?.totalCount ?? artifacts?.assessmentSession?.blocks?.length ?? 0;
+  const caveats = getPostulationCaveats(artifacts);
+  const workbookCards = getWorkbookTalentFrameworkCards(artifacts);
+  const notMeasured = workbookCards.filter((card) => /not_measured|insufficient/i.test(card.availability) || card.score == null).length;
+  const descriptive = workbookCards.filter((card) => /descriptive/i.test(card.availability)).length;
+  const isOriginalBattery = batteryMode === 'original_games';
+  return {
+    headline: isOriginalBattery
+      ? 'Batería original: lectura preliminar controlada'
+      : 'Batería estable: lectura observacional',
+    statusLabel: validationOk ? 'Apto para revisión humana' : 'Validación bloqueada',
+    cards: [
+      {
+        label: 'Qué se observó',
+        title: `${completedCount}/${totalCount} juegos completados`,
+        body: isOriginalBattery
+          ? 'Laser, Balloon y Passenger aportan métricas agregadas de tarea; el mapeo a constructos sigue siendo provisional.'
+          : 'La batería estable aporta señales agregadas de desempeño en tareas cortas de atención, control e interferencia.',
+      },
+      {
+        label: 'Cómo usarlo',
+        title: 'Guía de entrevista',
+        body: 'Contrastar con entrevista, CV y evidencia laboral. No ranking automático ni decisión de selección.',
+      },
+      {
+        label: 'Qué no mide',
+        title: isOriginalBattery ? 'No medido explícito' : 'Caveats visibles',
+        body: isOriginalBattery
+          ? `${notMeasured} constructos quedan como No medido o evidencia insuficiente; ${descriptive} lectura(s) son solo descriptivas.`
+          : `${caveats.length} caveat(s) acompañan la sesión; la cámara se usa como calidad/contexto, no como inferencia diagnóstica.`,
+      },
+      {
+        label: 'Siguiente paso',
+        title: isOriginalBattery ? 'Validar antes de comparar candidatos' : 'Revisión humana documentada',
+        body: isOriginalBattery
+          ? 'Ejecutar R-7 con QA, entrevistas cognitivas y revisión experta antes de usar comparaciones entre personas.'
+          : 'Revisar consistencia con entrevista y criterios del rol antes de cualquier decisión humana.',
+      },
+    ],
+  };
+}
+
 export function formatPostulationScore(value) {
   const formatted = score(value);
   return formatted == null ? 'No medido' : `${formatted}`;
