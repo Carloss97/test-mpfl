@@ -612,6 +612,17 @@ Los tres feedback modules se consumen desde `PostulationReportSummary.js` y se m
 
 La tabla teórica señal→métrica→bibliografía está actualizada en `docs/research/krumm-talent-game-behavior-mapping-technical-study.md` §4.5. Las referencias clave fueron verificadas por DOI/título/año vía Crossref; no usar referencias ambiguas del Excel como evidencia fuerte sin metadata exacta.
 
+Paquete documental de transición a producto real regenerado en:
+
+```text
+docs/product/README.md
+docs/product/krumm-data-signal-inference-contract.md
+docs/product/krumm-development-state-report.md
+docs/product/krumm-productization-roadmap.md
+```
+
+Este paquete consolida entradas, salidas, elementos, indicadores, señales telemétricas, inferencia, estado de desarrollo y línea de tiempo para pasar de demo a producto piloto/comercial sin claims psicométricos no validados.
+
 El reporte HR ahora incluye un resumen ejecutivo con cuatro bloques: qué se observó, cómo usarlo, qué no mide y siguiente paso. El copy visible incluye `No ranking automático` y `Contrastar con entrevista`; no debe transformarse en decisión automática ni ranking de candidatos.
 
 Smoke de feedback visible:
