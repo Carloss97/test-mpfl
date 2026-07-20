@@ -8,10 +8,15 @@ import {
 const RECONSTRUCTIVE_RESULT_FIELDS = /fullRoute|routeTrace|visitedCells|stepByStepPath|path/i;
 
 describe('passenger route demo level solvability', () => {
-  it('defines two compact passenger/destination levels with operational constraints', () => {
+  it('defines a compact progressive passenger/destination sequence with operational constraints', () => {
     const levels = buildPassengerRouteDemoLevels();
 
-    expect(levels).toHaveLength(2);
+    expect(levels).toHaveLength(3);
+    expect(levels.map((level) => level.name)).toEqual([
+      'Centro: primera entrega',
+      'Conexión intermodal',
+      'Hora punta: red crítica',
+    ]);
     expect(levels.every((level) => level.passengers.length >= 1)).toBe(true);
     expect(levels.every((level) => level.passengers.every((passenger) => passenger.destination))).toBe(true);
     expect(levels.some((level) => level.stations.length >= 1)).toBe(true);
@@ -28,6 +33,7 @@ describe('passenger route demo level solvability', () => {
       expect(JSON.stringify(result)).not.toMatch(RECONSTRUCTIVE_RESULT_FIELDS);
     }
     expect(results[1].minimumStationUses).toBeGreaterThanOrEqual(1);
+    expect(results[2].minimumStationUses).toBeGreaterThanOrEqual(2);
   });
 
   it('rejects a passenger level blocked by walls instead of returning a false positive', () => {

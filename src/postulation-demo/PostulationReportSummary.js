@@ -1,3 +1,7 @@
+import { buildBalloonRiskFeedback } from '../tasks/original-games/balloonRiskFeedback.js';
+import { buildLaserPuzzleFeedback } from '../tasks/original-games/laserPuzzleFeedback.js';
+import { buildPassengerConstraintFeedback } from '../tasks/original-games/passengerRouteFeedback.js';
+
 function pct(value) {
   if (value == null) return '—';
   const numeric = Number(value);
@@ -20,6 +24,41 @@ function formatGameScore(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return '—';
   return Math.abs(numeric) <= 1 ? pct(numeric) : `${Math.round(numeric)}`;
+}
+
+function buildOriginalGameFeedback(gameId, result) {
+  if (gameId === 'laser_puzzle') return buildLaserPuzzleFeedback(result);
+  if (gameId === 'balloon_risk') return buildBalloonRiskFeedback(result);
+  if (gameId === 'passenger_routes') return buildPassengerConstraintFeedback(result);
+  return null;
+}
+
+const FEEDBACK_CATEGORY_LABELS = Object.freeze({
+  clear_solution: 'Solución clara',
+  rule_confusion_review: 'Reglas a revisar',
+  incomplete_goal: 'Objetivo incompleto',
+  high_effort_solution: 'Solución con alto esfuerzo',
+  balanced_feedback_strategy: 'Estrategia riesgo/recompensa',
+  conservative_cashout_strategy: 'Estrategia conservadora',
+  feedback_not_observed: 'Feedback no observado',
+  loss_exposure_review: 'Exposición a pérdidas',
+  mixed_risk_strategy: 'Estrategia mixta',
+  clear_success: 'Ruta eficiente',
+  constraint_blocked: 'Restricciones a revisar',
+  resource_use_review: 'Uso de recursos',
+  route_inefficient_incomplete: 'Ruta incompleta/ineficiente',
+  incomplete_delivery: 'Entrega incompleta',
+  mixed_strategy_review: 'Estrategia mixta',
+});
+
+function normalizeFeedback(feedback = null) {
+  if (feedback?.status !== 'available') return null;
+  const displayCategory = feedback.feedbackCategory ?? feedback.constraintFeedbackCategory ?? 'review';
+  return {
+    ...feedback,
+    displayCategory,
+    displayCategoryLabel: FEEDBACK_CATEGORY_LABELS[displayCategory] ?? 'Revisión contextual',
+  };
 }
 
 export function getPostulationQualityCards(artifacts = null) {
@@ -49,6 +88,7 @@ export function getPostulationGameCards(artifacts = null, completedDemo = null) 
     const accuracy = result.accuracy ?? (result.totalTrials ? result.trials?.filter?.((trial) => trial.correct)?.length / result.totalTrials : null);
     const scoreValue = result.score ?? result.meanScore ?? null;
     const meanRt = result.meanReactionTimeMs ?? result.meanRT ?? result.correctGoRT ?? null;
+    const feedback = normalizeFeedback(buildOriginalGameFeedback(block.gameId, result));
     return {
       id: block.gameId ?? `game-${index}`,
       label: block.label ?? block.gameId ?? 'Juego',
@@ -57,6 +97,7 @@ export function getPostulationGameCards(artifacts = null, completedDemo = null) 
       accuracy: Number.isFinite(Number(accuracy)) ? pct(accuracy) : '—',
       score: formatGameScore(scoreValue),
       meanRt: Number.isFinite(Number(meanRt)) && Number(meanRt) > 0 ? `${Math.round(Number(meanRt))}ms` : '—',
+      feedback,
     };
   });
 }

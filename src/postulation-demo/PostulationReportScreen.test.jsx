@@ -119,8 +119,64 @@ describe('PostulationReportScreen', () => {
     expect(screen.getAllByText(/Toma de decisiones/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/descriptive_only/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/No medido/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Liderazgo/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Liderazgo/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Comunicación/i)).toBeInTheDocument();
     expect(screen.getByText(/usa No medido/i)).toBeInTheDocument();
+    expect(screen.getByText(/Completaste una ruta eficiente/i)).toBeInTheDocument();
+    expect(screen.getByText(/no equivale a liderazgo logístico/i)).toBeInTheDocument();
+    expect(screen.getByText(/Resolviste el puzzle/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/riesgo\/recompensa/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Solución clara/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Ruta eficiente/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Authoring Laser: valid_for_internal_demo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Authoring Passenger: valid_for_internal_demo/i)).toBeInTheDocument();
+  });
+
+  it('derives modular passenger-route feedback from aggregate-only game results', () => {
+    const cards = getPostulationGameCards({
+      assessmentSession: {
+        blocks: [{
+          gameId: 'passenger_routes',
+          label: 'Rutas',
+          status: 'completed',
+          result: {
+            completed: true,
+            passengersDelivered: 1,
+            destinationCount: 3,
+            routeEfficiency: 0.42,
+            movementAttemptCount: 12,
+            replanCount: 0,
+            stationUseCount: 0,
+            constraintViolationCount: 4,
+            satisfactionScore: 44,
+            aggregateOnly: true,
+          },
+        }],
+      },
+    });
+
+    expect(cards[0].feedback).toMatchObject({
+      constraintFeedbackCategory: 'constraint_blocked',
+      privacy: { aggregateOnly: true, rawRoutesUsed: false },
+    });
+    expect(cards[0].feedback.candidateHint).toMatch(/restricciones/i);
+    expect(JSON.stringify(cards[0].feedback)).not.toMatch(/fullRoute|visitedCells|stepByStepPath|rawGameEvents/i);
+  });
+
+  it('derives modular feedback for all original games without raw traces', () => {
+    const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
+    const cards = getPostulationGameCards(fixture.artifacts, fixture.summary);
+
+    expect(cards.map((card) => card.feedback?.gameId)).toEqual([
+      'laser_puzzle',
+      'balloon_risk',
+      'passenger_routes',
+    ]);
+    expect(cards.map((card) => card.feedback?.displayCategory)).toEqual([
+      'clear_solution',
+      'balanced_feedback_strategy',
+      'clear_success',
+    ]);
+    expect(JSON.stringify(cards.map((card) => card.feedback))).not.toMatch(/beamCells|pumpSequence|fullRoute|visitedCells|rawGameEvents|pointerSamples/i);
   });
 });

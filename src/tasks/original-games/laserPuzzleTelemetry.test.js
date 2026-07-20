@@ -12,7 +12,12 @@ import {
 describe('laser puzzle postulation telemetry helpers', () => {
   it('builds compact demo levels with an unsolved start and authored solution', () => {
     const levels = buildLaserDemoLevels();
-    expect(levels).toHaveLength(2);
+    expect(levels).toHaveLength(3);
+    expect(levels.map((level) => level.name)).toEqual([
+      'Calibración orbital',
+      'Corredor de meteoritos',
+      'Red dual de comunicaciones',
+    ]);
     for (const level of levels) {
       const start = traceLaserBeam(buildLaserGrid(level), level.cols, level.rows);
       expect(start.litAntennaCount).toBeLessThan(level.antennaCount);

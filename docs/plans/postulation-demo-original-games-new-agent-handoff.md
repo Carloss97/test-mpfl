@@ -5,8 +5,8 @@
 **Repo fuente visual/original:** `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test`  
 **Ruta demo:** `/postulaciones-demo`  
 **Fixture:** `/postulaciones-demo?fixture=1`  
-**Estado producto:** listo para pruebas internas.  
-**Estado reemplazo juegos originales:** R-0 a R-5 completadas; próximo foco R-6 mappings validados de juegos originales → dimensiones de talento/reporte HR.
+**Estado producto:** listo para pruebas internas, con modo original mejorado para presentación interna.
+**Estado reemplazo juegos originales:** R-0 a R-6 completadas técnicamente; R-7 pendiente con datos/participantes. Laser y Passenger tienen progresión producto-final de 3 niveles/circuitos y authoring QA modular.
 
 ---
 
@@ -19,13 +19,13 @@ La demo KRUMM `/postulaciones-demo` está funcional y marcada como **lista para 
 3. `color_interference` — Tarjetas de color.
 4. `visual_search` — Panel de búsqueda activa.
 
-El usuario quiere reemplazar progresivamente esos juegos por juegos preparados en la página original del repo `Test/`:
+El usuario quiere reemplazar progresivamente esos juegos por juegos preparados en la página original del repo `Test/`, pero sin perder privacidad ni rigor psicométrico:
 
 1. Laser Puzzle.
 2. Balloon Risk.
 3. Optimización de rutas para pasajeros.
 
-Se portaron **Laser Puzzle**, **Balloon Risk** y **Passenger Routes** y R-5 los activó como una batería interna seleccionable. La batería DG continúa siendo el default y fallback; no hubo reemplazo irreversible. El próximo trabajo técnico es **R-6 — mappings científicamente conservadores para feature vector, talento y narrativa HR**.
+Se portaron **Laser Puzzle**, **Balloon Risk** y **Passenger Routes** y R-5 los activó como una batería interna seleccionable. R-6 agregó feature vector/framework provisional y reporte HR conservador. La batería DG continúa siendo el default/fallback; no hubo reemplazo irreversible. El foco posterior es R-7: QA comparativa, validación con participantes y calibración de dificultad.
 
 ---
 
@@ -220,7 +220,7 @@ El builder `buildOriginalGamePostulationBlocks()` devuelve bloques `visible: fal
 
 ### R-2 — Laser Puzzle
 
-**Estado:** port inicial oculto completado.
+**Estado:** port inicial completado y progresión producto-final implementada para modo original.
 
 Archivos:
 
@@ -229,6 +229,18 @@ src/tasks/original-games/LaserPuzzlePostulationTask.jsx
 src/tasks/original-games/LaserPuzzlePostulationTask.test.jsx
 src/tasks/original-games/laserPuzzleTelemetry.js
 src/tasks/original-games/laserPuzzleTelemetry.test.js
+src/tasks/original-games/laserPuzzleFeedback.js
+src/tasks/original-games/laserPuzzleFeedback.test.js
+src/tasks/original-games/laserPuzzleAuthoringReview.js
+src/tasks/original-games/laserPuzzleAuthoringReview.test.js
+```
+
+Progresión actual:
+
+```text
+1. Calibración orbital — intro · una antena.
+2. Corredor de meteoritos — planning · corredor bloqueado.
+3. Red dual de comunicaciones — advanced · bifurcación / dos antenas.
 ```
 
 Integrado oculto en:
@@ -269,6 +281,16 @@ rawPointerPath
 pointerSamples
 rawGameEvents
 clickTrace
+```
+
+Authoring QA:
+
+```text
+levelAuthoringStatus: valid_for_internal_demo
+totalLevels: 3
+solvedByAuthoredPlacements: 3
+multiObjectiveLevels: 1
+parCalibratedLevels: 3
 ```
 
 ### R-3 — Balloon Risk
@@ -317,7 +339,7 @@ pointerSamples
 
 ### R-4 — Passenger Routes / GridFlow
 
-**Estado:** port inicial oculto completado.
+**Estado:** port inicial completado y progresión producto-final implementada para modo original.
 
 Objetivo:
 
@@ -343,6 +365,10 @@ src/tasks/original-games/PassengerRouteOptimizationTask.test.jsx
 src/tasks/original-games/passengerRouteTelemetry.js
 src/tasks/original-games/passengerRouteTelemetry.test.js
 src/tasks/original-games/passengerRouteSolvability.test.js
+src/tasks/original-games/passengerRouteFeedback.js
+src/tasks/original-games/passengerRouteFeedback.test.js
+src/tasks/original-games/passengerRouteAuthoringReview.js
+src/tasks/original-games/passengerRouteAuthoringReview.test.js
 src/postulation-demo/PostulationGameStage.jsx
 src/postulation-demo/PostulationGameStage.test.jsx
 src/postulation-demo/originalGameBlueprints.js
@@ -359,6 +385,14 @@ drop zones     → destinos
 stations       → paradas / recarga / replanificación
 energy         → tiempo / combustible operativo / presupuesto de ruta
 satisfaction   → satisfacción agregada / cumplimiento de destino
+```
+
+Progresión actual:
+
+```text
+1. Centro: primera entrega — intro · una entrega.
+2. Conexión intermodal — planning · dos entregas y una parada.
+3. Hora punta: red crítica — advanced · dos entregas, dos recargas y presupuesto ajustado.
 ```
 
 Agregados permitidos propuestos:
@@ -398,6 +432,16 @@ Cobertura R-4 implementada:
 5. [x] Resolver una ruta emite `stimulus_shown`, `response`, `game_end` aggregate-only.
 6. [x] Re-render stability: parent `onGameEvent` no reinicia nivel activo.
 7. [x] `PostulationGameStage` puede resolver `passenger_routes` por bloque explícito, pero `visible: false` conserva la batería DG.
+
+Authoring QA actual:
+
+```text
+routeAuthoringStatus: valid_for_internal_demo
+totalLevels: 3
+solvableLevels: 3
+minimumStationUseLevels: 2
+boardFitLevels: 3
+```
 
 Resultado focal integrado R-4:
 
@@ -535,6 +579,44 @@ Plan técnico detallado creado en:
 
 ```text
 docs/plans/2026-07-20-r7-validation-and-metric-justification-plan.md
+```
+
+Revisión de estado, gráfico I/O, riesgos y módulos separados de mejora:
+
+```text
+docs/plans/2026-07-20-current-state-io-graph-and-risk-review.md
+docs/plans/2026-07-20-laser-passenger-product-game-design-review.md
+src/tasks/original-games/originalGameImprovementModules.js
+src/tasks/original-games/originalGameImprovementModules.test.js
+src/tasks/original-games/laserPuzzleFeedback.js
+src/tasks/original-games/laserPuzzleFeedback.test.js
+src/tasks/original-games/laserPuzzleAuthoringReview.js
+src/tasks/original-games/laserPuzzleAuthoringReview.test.js
+src/tasks/original-games/balloonRiskFeedback.js
+src/tasks/original-games/balloonRiskFeedback.test.js
+src/tasks/original-games/passengerRouteFeedback.js
+src/tasks/original-games/passengerRouteFeedback.test.js
+src/tasks/original-games/passengerRouteAuthoringReview.js
+src/tasks/original-games/passengerRouteAuthoringReview.test.js
+```
+
+Los tres feedback modules se consumen desde `PostulationReportSummary.js` y se muestran en `PostulationReportScreen.jsx` con etiquetas humanas; no usan rutas, secuencias, beam cells, pump sequences ni raw events. `laserPuzzleAuthoringReview.js` y `passengerRouteAuthoringReview.js` se consumen desde `PostulationReportTechnicalDrawer.jsx` para mostrar QA de authoring en modo original.
+
+Smoke de feedback visible:
+
+```text
+scripts/smoke-postulation-feedback.mjs
+BASE_URL=http://127.0.0.1:5177 node scripts/smoke-postulation-feedback.mjs
+Resultado: 2 viewports × 4 rutas, PASS; feedback visible, Authoring Laser/Passenger visible y sin overflow/errores.
+Suite completa posterior: 88 files / 365 tests PASS; build PASS; audit high prod 0 vulnerabilidades; oxlint 0 warnings/0 errors; git diff --check OK.
+```
+
+Gráfico PDF de presentación:
+
+```text
+exports/krumm-r6-r7-current-flow.pdf
+docs/demo/krumm-r6-r7-current-flow.html
+scripts/render-r6-r7-current-flow-pdf.mjs
 ```
 
 Pendiente de ejecución con datos/participantes y revisión experta. R-7 debe evaluar QA técnica, validez de contenido, entrevistas cognitivas, confiabilidad, validez convergente/discriminante, validez de criterio, fairness/device effects y decisión de producto.

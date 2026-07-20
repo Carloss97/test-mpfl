@@ -32,6 +32,13 @@ function GameCard({ game }) {
         <div><dt>Puntaje</dt><dd>{game.score}</dd></div>
         <div><dt>Tiempo</dt><dd>{game.meanRt}</dd></div>
       </dl>
+      {game.feedback && (
+        <div className="postulation-demo__game-feedback" aria-label="Feedback explicativo del juego">
+          <strong>{game.feedback.displayCategoryLabel}</strong>
+          <p>{game.feedback.candidateHint}</p>
+          <small>{game.feedback.reviewerCaveat}</small>
+        </div>
+      )}
     </article>
   );
 }

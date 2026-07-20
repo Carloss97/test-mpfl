@@ -75,7 +75,7 @@ describe('PostulationGameStage', () => {
     render(<PostulationGameStage blocks={[{ ...laserBlock, visible: true, trialCount: 1 }]} onGameEvent={vi.fn()} />);
 
     expect(screen.getAllByRole('heading', { name: /Puzzle láser/i })).toHaveLength(2);
-    expect(screen.getByText(/Reconstruye el camino del láser/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reconectar una antena aislada/i)).toBeInTheDocument();
   });
 
   it('can render the planned Balloon original game block through the default component map', () => {
@@ -91,7 +91,7 @@ describe('PostulationGameStage', () => {
     render(<PostulationGameStage blocks={[{ ...passengerBlock, visible: true, trialCount: 1 }]} onGameEvent={vi.fn()} />);
 
     expect(screen.getAllByRole('heading', { name: /Optimización de rutas/i })).toHaveLength(2);
-    expect(screen.getByText(/Recoge pasajeros y llévalos a su destino/i)).toBeInTheDocument();
+    expect(screen.getByText(/Recoger un pasajero y llevarlo a su destino/i)).toBeInTheDocument();
     expect(screen.getByTestId('passenger-route-board')).toBeInTheDocument();
   });
 });

@@ -1521,6 +1521,39 @@
   font-weight: 900;
 }
 
+.postulation-demo__game-feedback {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(14, 165, 233, 0.24);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(255, 255, 255, 0.86));
+}
+
+.postulation-demo__game-feedback strong {
+  display: inline-flex;
+  margin-bottom: 8px;
+  color: #0369a1;
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.postulation-demo__game-feedback p,
+.postulation-demo__game-feedback small {
+  display: block;
+  margin: 0;
+  color: var(--postulation-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.postulation-demo__game-feedback small {
+  margin-top: 8px;
+  font-weight: 800;
+}
+
 .postulation-demo__governance-card {
   padding: 22px;
   display: grid;

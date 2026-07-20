@@ -261,7 +261,7 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
         <span className="task-progress">{trace.litAntennaCount}/{antennaCount} antenas</span>
       </div>
       <p className="caption laser-puzzle-task__caption">
-        Reconstruye el camino del láser moviendo solo piezas ópticas. Se guardan métricas agregadas, no la ruta completa.
+        {level.objective ?? 'Reconstruye el camino del láser moviendo solo piezas ópticas.'} Se guardan métricas agregadas, no la ruta completa.
       </p>
       <div className="laser-puzzle-task__workspace">
         <div
@@ -282,6 +282,7 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
         <aside className="laser-puzzle-task__side-panel" aria-label="Resumen del puzzle láser">
           <strong>{level.name}</strong>
           <span>Dificultad: {level.difficulty}</span>
+          {level.coreChallenge && <span>Reto: {level.coreChallenge}</span>}
           <span>Par: {level.par} movimientos</span>
           <span>Movimientos: {movesRef.current}</span>
           <span>Antenas activas: {trace.litAntennaCount}/{antennaCount}</span>

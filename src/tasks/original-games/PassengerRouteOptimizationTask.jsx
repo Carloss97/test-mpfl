@@ -350,7 +350,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
         <span className="task-progress">Destinos {deliveredIds.length}/{level.passengers.length}</span>
       </div>
       <p className="caption passenger-route-task__caption">
-        Recoge pasajeros y llévalos a su destino administrando tiempo, combustible y presupuesto de ruta. Solo se conservan resultados agregados.
+        {level.objective ?? 'Recoge pasajeros y llévalos a su destino administrando tiempo, combustible y presupuesto de ruta.'} Solo se conservan resultados agregados.
       </p>
       <div className="passenger-route-task__workspace">
         <div
@@ -370,6 +370,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
         </div>
         <aside className="passenger-route-task__side-panel" aria-label="Estado de la ruta">
           <strong>{level.name}</strong>
+          {level.coreChallenge && <span>Reto: {level.coreChallenge}</span>}
           <span>Presupuesto operativo: {routeBudget}/{level.routeBudget}</span>
           <span>Pasajero a bordo: {onboardId ?? 'ninguno'}</span>
           <span>Paradas de apoyo: {level.stations.length}</span>

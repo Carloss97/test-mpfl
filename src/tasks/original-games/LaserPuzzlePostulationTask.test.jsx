@@ -21,7 +21,7 @@ describe('LaserPuzzlePostulationTask', () => {
     render(<LaserPuzzlePostulationTask active width={606} height={338} trialCount={1} onGameEvent={onGameEvent} />);
 
     expect(screen.getByRole('heading', { name: /Puzzle láser/i })).toBeInTheDocument();
-    expect(screen.getByText(/Reconstruye el camino del láser/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reconectar una antena aislada/i)).toBeInTheDocument();
     const board = screen.getByTestId('laser-puzzle-board');
     expect(Number(board.dataset.boardWidth)).toBeLessThanOrEqual(606);
     expect(Number(board.dataset.boardHeight)).toBeLessThanOrEqual(338);
@@ -73,21 +73,23 @@ describe('LaserPuzzlePostulationTask', () => {
     expect(Number(screen.getByTestId('event-count').textContent)).toBe(2);
   });
 
-  it('completes both authored levels used by the controlled original battery', async () => {
+  it('completes all authored levels used by the controlled original battery', async () => {
     const onComplete = vi.fn();
-    render(<LaserPuzzlePostulationTask active width={606} height={338} trialCount={2} onGameEvent={vi.fn()} onComplete={onComplete} />);
+    render(<LaserPuzzlePostulationTask active width={606} height={338} trialCount={3} onGameEvent={vi.fn()} onComplete={onComplete} />);
 
     const levels = buildLaserDemoLevels();
     completeLevel(levels[0]);
-    expect(await screen.findByText(/Nivel 2 de 2/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Nivel 2 de 3/i)).toBeInTheDocument();
     completeLevel(levels[1]);
+    expect(await screen.findByText(/Nivel 3 de 3/i)).toBeInTheDocument();
+    completeLevel(levels[2]);
 
     expect(screen.getByTestId('laser-puzzle-finished')).toBeInTheDocument();
     expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({
       gameId: 'laser_puzzle',
       completed: true,
-      solvedLevels: 2,
-      levelCount: 2,
+      solvedLevels: 3,
+      levelCount: 3,
       aggregateOnly: true,
     }));
   });

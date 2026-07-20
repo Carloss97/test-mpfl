@@ -441,6 +441,55 @@ Smoke Playwright: 2 viewports × 4 rutas, PASS; sin console/page/network errors 
 docs/plans/2026-07-20-r7-validation-and-metric-justification-plan.md
 ```
 
+**Revisión de estado, gráfico I/O y riesgos:**
+
+```text
+docs/plans/2026-07-20-current-state-io-graph-and-risk-review.md
+```
+
+**Módulos separados de mejora de juegos:**
+
+```text
+src/tasks/original-games/originalGameImprovementModules.js
+src/tasks/original-games/originalGameImprovementModules.test.js
+src/tasks/original-games/laserPuzzleFeedback.js
+src/tasks/original-games/laserPuzzleFeedback.test.js
+src/tasks/original-games/laserPuzzleAuthoringReview.js
+src/tasks/original-games/laserPuzzleAuthoringReview.test.js
+src/tasks/original-games/balloonRiskFeedback.js
+src/tasks/original-games/balloonRiskFeedback.test.js
+src/tasks/original-games/passengerRouteFeedback.js
+src/tasks/original-games/passengerRouteFeedback.test.js
+src/tasks/original-games/passengerRouteAuthoringReview.js
+src/tasks/original-games/passengerRouteAuthoringReview.test.js
+docs/plans/2026-07-20-laser-passenger-product-game-design-review.md
+```
+
+Estos módulos separan feedback, comprensión, authoring y QA responsive de los componentes React grandes para trabajar errores difíciles de explicar con TDD y sin raw data. Los módulos de feedback de Laser, Balloon y Passenger ya tienen núcleo puro y salida visible en el reporte. `laser.level-authoring-review` valida solución autorada, par, bifurcación y layout compacto; `passenger.route-authoring-review` valida solver, presupuesto, paradas y layout compacto sin exportar geometría ni rutas.
+
+**Revisión producto-final Laser/Passenger (2026-07-20):**
+
+```text
+docs/plans/2026-07-20-laser-passenger-product-game-design-review.md
+Laser: 3 niveles (intro, corredor, bifurcación multiobjetivo), duración 3 min.
+Passenger: 3 circuitos (intro, intermodal, hora punta con recargas), duración 4 min.
+```
+
+**Smoke de feedback visible:**
+
+```text
+scripts/smoke-postulation-feedback.mjs
+Resultado 2026-07-20: BASE_URL=http://127.0.0.1:5177; 2 viewports × 4 rutas, PASS; feedback original y Authoring Laser/Passenger visibles; sin overflow, console/page/network errors ni campos crudos visibles en reportes fixture.
+Suite completa posterior: 88 files / 365 tests PASS; build PASS; audit high prod 0 vulnerabilidades; oxlint 0 warnings/0 errors; git diff --check OK.
+```
+
+**Gráfico PDF de estado actual:**
+
+```text
+exports/krumm-r6-r7-current-flow.pdf
+docs/demo/krumm-r6-r7-current-flow.html
+```
+
 R-7 debe validar no solo que la app funcione, sino que cada entrada agregada justifique su métrica y cada métrica justifique —o limite— el constructo que pretende informar.
 
 **Checklist:**

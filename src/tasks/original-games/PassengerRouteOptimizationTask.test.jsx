@@ -35,8 +35,8 @@ describe('PassengerRouteOptimizationTask', () => {
     );
 
     expect(screen.getByRole('heading', { name: /Optimización de rutas/i })).toBeInTheDocument();
-    expect(screen.getByText(/recoge pasajeros y llévalos a su destino/i)).toBeInTheDocument();
-    expect(screen.getByText(/Presupuesto operativo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Recoger un pasajero y llevarlo a su destino/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Presupuesto operativo/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Paradas de apoyo/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Arriba$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Abajo$/i })).toBeInTheDocument();
@@ -92,21 +92,21 @@ describe('PassengerRouteOptimizationTask', () => {
     expect(JSON.stringify({ events, completion: onComplete.mock.calls })).not.toMatch(FORBIDDEN_ROUTE_FIELDS);
   });
 
-  it('completes both configured circuits through a physical support stop', async () => {
+  it('completes all configured circuits through physical support stops', async () => {
     const onComplete = vi.fn();
     render(
       <PassengerRouteOptimizationTask
         active
         width={606}
         height={338}
-        trialCount={2}
+        trialCount={3}
         onGameEvent={vi.fn()}
         onComplete={onComplete}
       />,
     );
 
     completeIntroRoute();
-    expect(await screen.findByText(/Circuito 2 de 2/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Circuito 2 de 3/i)).toBeInTheDocument();
 
     move('Derecha', 5);
     move('Arriba');
@@ -116,13 +116,23 @@ describe('PassengerRouteOptimizationTask', () => {
     move('Arriba', 3);
     move('Izquierda', 4);
 
+    expect(await screen.findByText(/Circuito 3 de 3/i)).toBeInTheDocument();
+    move('Derecha', 4);
+    expect(screen.getByText(/presupuesto operativo restaurado/i)).toBeInTheDocument();
+    move('Derecha', 2);
+    move('Arriba', 2);
+    move('Izquierda', 3);
+    expect(screen.getByText(/presupuesto operativo restaurado/i)).toBeInTheDocument();
+    move('Izquierda', 3);
+    move('Arriba', 2);
+
     expect(screen.getByTestId('passenger-route-finished')).toBeInTheDocument();
     expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({
       gameId: 'passenger_routes',
       completed: true,
-      passengersDelivered: 3,
-      destinationCount: 3,
-      stationUseCount: 1,
+      passengersDelivered: 5,
+      destinationCount: 5,
+      stationUseCount: 3,
       routeEfficiency: 1,
       score: 1,
       aggregateOnly: true,

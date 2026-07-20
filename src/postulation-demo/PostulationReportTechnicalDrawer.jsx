@@ -1,5 +1,7 @@
 import React from 'react';
 import { buildFinalReportDownloadDescriptors } from '../assessment/FinalReportPanel.jsx';
+import { summarizeLaserPuzzleAuthoring } from '../tasks/original-games/laserPuzzleAuthoringReview.js';
+import { summarizePassengerRouteAuthoring } from '../tasks/original-games/passengerRouteAuthoringReview.js';
 
 function descriptorByExtension(descriptors = [], extension) {
   return descriptors.find((descriptor) => descriptor.fileName.toLowerCase().endsWith(extension));
@@ -32,6 +34,12 @@ export default function PostulationReportTechnicalDrawer({
   const jsonDescriptor = descriptorByExtension(descriptors.filter((descriptor) => !descriptor.fileName.endsWith('-final-payload.json') && !descriptor.fileName.endsWith('-report-manifest.json')), '.json');
   const aggregate = artifacts?.assessmentSession?.gameCorrelation?.aggregate ?? null;
   const featureVector = artifacts?.assessmentSession?.featureVectorV2 ?? null;
+  const passengerAuthoring = artifacts?.batteryMode === 'original_games'
+    ? summarizePassengerRouteAuthoring()
+    : null;
+  const laserAuthoring = artifacts?.batteryMode === 'original_games'
+    ? summarizeLaserPuzzleAuthoring()
+    : null;
 
   const downloadFile = (descriptor) => {
     if (!validationOk || !descriptor) return;
@@ -65,6 +73,25 @@ export default function PostulationReportTechnicalDrawer({
             <li>Sin trayectorias crudas de puntero ni log crudo de juego.</li>
           </ul>
         </div>
+        {passengerAuthoring && (
+          <div>
+            <h3>QA juegos originales</h3>
+            <p>Revisión de authoring para presentar la batería original sin confundir dificultad de nivel con desempeño del candidato.</p>
+            <ul>
+              {laserAuthoring && (
+                <>
+                  <li>Authoring Laser: {laserAuthoring.authoringStatus}</li>
+                  <li>Niveles Laser resolubles: {laserAuthoring.solvedLevels}/{laserAuthoring.totalLevels}</li>
+                  <li>Niveles Laser multiobjetivo: {laserAuthoring.multiObjectiveLevels}</li>
+                </>
+              )}
+              <li>Authoring Passenger: {passengerAuthoring.authoringStatus}</li>
+              <li>Niveles resolubles: {passengerAuthoring.solvableLevels}/{passengerAuthoring.totalLevels}</li>
+              <li>Niveles con parada obligatoria: {passengerAuthoring.minimumStationUseLevels}</li>
+              <li>Acción recomendada: {passengerAuthoring.recommendedLevelAction}</li>
+            </ul>
+          </div>
+        )}
       </div>
       <div className="postulation-demo__download-actions" aria-label="Descargas técnicas del reporte">
         <button type="button" className="postulation-demo__primary" disabled={!validationOk || !markdownDescriptor} onClick={() => downloadFile(markdownDescriptor)}>Descargar Markdown técnico</button>
