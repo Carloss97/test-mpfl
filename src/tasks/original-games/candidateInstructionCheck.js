@@ -94,6 +94,15 @@ function summarizeBalloon(result = {}) {
   return baseSummary('balloon_risk', 'low', 'no_instruction_signal_detected', diagnostics);
 }
 
+function summarizeTeamCoordination(result = {}) {
+  const completionRate = ratio(result.completedScenarioCount, result.scenarioCount);
+  const diagnostics = { completionRate: round(completionRate) };
+  if ((completionRate ?? 0) < 0.75) {
+    return baseSummary('team_coordination', 'review', 'incomplete_structured_brief_instruction_review', diagnostics);
+  }
+  return baseSummary('team_coordination', 'low', 'no_instruction_signal_detected', diagnostics);
+}
+
 function normalizeBlock(block = {}) {
   const gameId = block.gameId ?? block.block?.gameId ?? block.result?.gameId ?? block.summary?.gameId ?? 'unknown';
   const result = block.result ?? block.summary ?? block;
@@ -108,6 +117,7 @@ function summarizeGame(block = {}) {
   if (gameId === 'laser_puzzle') return summarizeLaser(result);
   if (gameId === 'passenger_routes') return summarizePassenger(result);
   if (gameId === 'balloon_risk') return summarizeBalloon(result);
+  if (gameId === 'team_coordination') return summarizeTeamCoordination(result);
   return baseSummary(gameId, 'review', 'unsupported_game_for_instruction_check');
 }
 

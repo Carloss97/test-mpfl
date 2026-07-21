@@ -76,6 +76,28 @@ function blockSummary(block, index) {
       aggregateOnly: true,
     };
   }
+  if (block.gameId === 'team_coordination') {
+    return {
+      gameId: block.gameId,
+      aggregateSchemaVersion: 'team_coordination_aggregate_v1',
+      completed: true,
+      completedTrialCount: block.trialCount,
+      trialCount: block.trialCount,
+      score: 0.86,
+      scenarioCount: block.trialCount,
+      completedScenarioCount: block.trialCount,
+      leadershipScore: 0.87,
+      communicationScore: 0.88,
+      adaptabilityScore: 0.82,
+      decisionQualityScore: 0.86,
+      alignmentScore: 0.88,
+      roleClarityScore: 0.86,
+      feedbackUseScore: 0.76,
+      changeResponseScore: 0.84,
+      timeMs: 96_000,
+      aggregateOnly: true,
+    };
+  }
   const accuracy = [0.88, 0.76, 0.82, 0.9][index] ?? 0.82;
   const score = [0.84, 0.72, 0.8, 0.87][index] ?? 0.8;
   const meanReactionTimeMs = [520, 610, 680, 740][index] ?? 620;
@@ -100,6 +122,7 @@ function fixtureResponse(block, index) {
   if (block.gameId === 'laser_puzzle') return { ...base, correct: true, outcome: 'level_solved', laserPuzzle: summary };
   if (block.gameId === 'balloon_risk') return { ...base, outcome: 'cashout', balloonRisk: summary };
   if (block.gameId === 'passenger_routes') return { ...base, correct: true, outcome: 'route_completed', passengerRoutes: summary };
+  if (block.gameId === 'team_coordination') return { ...base, correct: true, outcome: 'structured_choice', choiceCategory: 'fixture_structured_choice', teamCoordination: summary };
   return {
     ...base,
     pointerSummary: { pathEfficiency: 0.78 + (index * 0.03), correctionCount: index === 1 ? 2 : 0 },

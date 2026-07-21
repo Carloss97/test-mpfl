@@ -94,4 +94,13 @@ describe('PostulationGameStage', () => {
     expect(screen.getByText(/Recoger un pasajero y llevarlo a su destino/i)).toBeInTheDocument();
     expect(screen.getByTestId('passenger-route-board')).toBeInTheDocument();
   });
+
+  it('can render the team coordination completion probe through the default component map', () => {
+    const teamBlock = buildOriginalGamePostulationBlocks().find((block) => block.gameId === 'team_coordination');
+    render(<PostulationGameStage blocks={[{ ...teamBlock, visible: true, trialCount: 1 }]} onGameEvent={vi.fn()} />);
+
+    expect(screen.getAllByRole('heading', { name: /Brief de coordinación/i })).toHaveLength(2);
+    expect(screen.getByText(/Trabajo por detrás/i)).toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  });
 });

@@ -42,6 +42,26 @@ function getSatisfactionScore({ routeEfficiency, replanCount, constraintViolatio
   ), 0, 100);
 }
 
+function hasLegalMove(level, position, budget, wallSet) {
+  if (!level || !position) return false;
+  return Object.values(MOVE_BY_DIRECTION).some((direction) => {
+    const x = position.x + direction.dx;
+    const y = position.y + direction.dy;
+    return x >= 0
+      && y >= 0
+      && x < level.cols
+      && y < level.rows
+      && !wallSet.has(cellKey(x, y))
+      && budget >= direction.cost;
+  });
+}
+
+function getPassengerStatus(passenger, deliveredIds, onboardId) {
+  if (deliveredIds.includes(passenger.id)) return 'Entregado';
+  if (onboardId === passenger.id) return 'En vehículo';
+  return 'Esperando';
+}
+
 function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
@@ -62,6 +82,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   const [deliveredIds, setDeliveredIds] = useState([]);
   const [status, setStatus] = useState('Revisa el mapa, recoge al pasajero y planifica el destino.');
   const [finished, setFinished] = useState(false);
+  const [failed, setFailed] = useState(false);
   const startTimeRef = useRef(now());
   const levelStartRef = useRef(now());
   const shownLevelsRef = useRef(new Set());
@@ -73,19 +94,22 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   const stationUseCountRef = useRef(0);
   const movementAttemptCountRef = useRef(0);
   const constraintViolationCountRef = useRef(0);
+  const failedAggregateRef = useRef(null);
 
   const metrics = useMemo(
     () => getPassengerRouteBoardMetrics(level, { width, height }),
     [height, level, width],
   );
   const wallSet = useMemo(() => new Set(level?.walls ?? []), [level]);
+  const budgetPercent = level ? Math.round((routeBudget / Math.max(1, level.routeBudget)) * 100) : 0;
+  const budgetTone = budgetPercent <= 25 ? 'danger' : budgetPercent <= 50 ? 'warn' : 'ok';
 
   useEffect(() => { emitRef.current = emit; }, [emit]);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
   useEffect(() => () => window.clearTimeout(transitionTimeoutRef.current), []);
 
   useEffect(() => {
-    if (!level || finished || shownLevelsRef.current.has(level.id)) return;
+    if (!level || finished || failed || shownLevelsRef.current.has(level.id)) return;
     shownLevelsRef.current.add(level.id);
     levelStartRef.current = now();
     emitRef.current({
@@ -111,7 +135,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
         score: passengersDeliveredRef.current,
       },
     });
-  }, [finished, level, levelIndex, levelSolutions, levels.length]);
+  }, [failed, finished, level, levelIndex, levelSolutions, levels.length]);
 
   const buildAggregate = useCallback((completed, minimumCost) => {
     const actualCost = actualCostRef.current;
@@ -195,6 +219,65 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
     }, 300);
   }, [buildAggregate, finished, level, levelIndex, levelSolutions, levels]);
 
+  const failRun = useCallback((reason = 'energy_depleted') => {
+    if (!level || finished || failed) return;
+    const responseTime = now();
+    const expectedMinimum = completedMinimumCostRef.current + (levelSolutions[levelIndex]?.minimumCost ?? 0);
+    const aggregate = buildAggregate(false, expectedMinimum);
+    failedAggregateRef.current = aggregate;
+    setFailed(true);
+    setStatus('Sin energía suficiente para continuar. La partida termina y se guardan solo métricas agregadas.');
+
+    emitRef.current({
+      eventType: 'response',
+      trialId: level.id,
+      targetId: `${level.id}-destinations`,
+      timestamp: responseTime,
+      response: sanitizePassengerRouteResponsePayload({
+        correct: false,
+        outcome: reason,
+        reactionTimeMs: responseTime - levelStartRef.current,
+        score: aggregate.score,
+        passengerRoutes: aggregate,
+      }),
+      gameState: {
+        level: levelIndex + 1,
+        difficulty: level.difficulty,
+        score: aggregate.score,
+      },
+    });
+  }, [buildAggregate, failed, finished, level, levelIndex, levelSolutions]);
+
+  const continueAfterFailure = useCallback(() => {
+    const aggregate = failedAggregateRef.current;
+    if (!aggregate) return;
+    emitRef.current({
+      eventType: 'game_end',
+      timestamp: now(),
+      gameState: {
+        level: levelIndex + 1,
+        difficulty: 'constraint_planning_failed',
+        score: aggregate.score,
+      },
+    });
+    onCompleteRef.current?.({
+      gameId: 'passenger_routes',
+      ...aggregate,
+    });
+  }, [levelIndex]);
+
+  const retryCurrentCircuit = useCallback(() => {
+    if (!level) return;
+    failedAggregateRef.current = null;
+    setFailed(false);
+    setPlayer({ ...level.start });
+    setRouteBudget(level.routeBudget);
+    setOnboardId(null);
+    setDeliveredIds([]);
+    setStatus('Circuito reiniciado. Observa pasajeros, destinos y energía antes de moverte.');
+    levelStartRef.current = now();
+  }, [level]);
+
   const registerConstraintViolation = useCallback((message) => {
     constraintViolationCountRef.current += 1;
     setStatus(message);
@@ -219,7 +302,11 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
       return;
     }
     if (routeBudget < direction.cost) {
-      registerConstraintViolation('Presupuesto insuficiente. Busca una parada de apoyo para recargar.');
+      if (!hasLegalMove(level, player, routeBudget, wallSet)) {
+        failRun('energy_depleted');
+        return;
+      }
+      registerConstraintViolation('Presupuesto insuficiente para ese tramo. Elige un movimiento posible o busca una parada de apoyo.');
       return;
     }
 
@@ -266,7 +353,8 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
 
     const levelCompleted = level.passengers.every((passenger) => nextDeliveredIds.includes(passenger.id));
     if (levelCompleted && !nextOnboardId) completeLevel();
-  }, [completeLevel, deliveredIds, finished, level, onboardId, player, registerConstraintViolation, routeBudget, wallSet]);
+    else if (!hasLegalMove(level, { x, y }, nextBudget, wallSet)) failRun('energy_depleted');
+  }, [completeLevel, deliveredIds, failRun, finished, level, onboardId, player, registerConstraintViolation, routeBudget, wallSet]);
 
   const registerReplan = useCallback(() => {
     if (finished) return;
@@ -275,6 +363,20 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   }, [finished]);
 
   if (!level) return null;
+
+  if (failed) {
+    return (
+      <div className="passenger-route-task passenger-route-task--failed" data-testid="passenger-route-failed">
+        <h3>Ruta fallida: sin energía</h3>
+        <p>El vehículo quedó sin energía para alcanzar una parada o destino. La partida termina con resultado agregado.</p>
+        <p>Pasajeros entregados: {passengersDeliveredRef.current} de {destinationCount}</p>
+        <div className="passenger-route-task__failed-actions">
+          <button type="button" className="secondary" onClick={retryCurrentCircuit}>Reintentar circuito</button>
+          <button type="button" className="primary" onClick={continueAfterFailure}>Continuar con resultado</button>
+        </div>
+      </div>
+    );
+  }
 
   if (finished) {
     return (
@@ -318,13 +420,15 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
           style={{ width: metrics.cellSize, height: metrics.cellSize }}
         >
           {destination && !isWall && (
-            <span className="passenger-route-task__destination" title={`Destino ${destination.id}`}>
+            <span className="passenger-route-task__destination" title={`Destino ${destination.id}`} style={{ borderColor: destination.color, color: destination.color }}>
               {destination.id}
             </span>
           )}
           {station && !isWall && <span aria-label="Parada de apoyo">⛽</span>}
           {passenger && !isWall && (
-            <span className="passenger-route-task__passenger" aria-label={passenger.label}>👤</span>
+            <span className="passenger-route-task__passenger" aria-label={`${passenger.label} esperando`} style={{ background: passenger.color }}>
+              {passenger.id}
+            </span>
           )}
           {isPlayer && !isWall && (
             <span
@@ -334,7 +438,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
               data-player-y={player.y}
               aria-label={onboardId ? `Vehículo con pasajero ${onboardId}` : 'Vehículo disponible'}
             >
-              🚐
+              🚐{onboardId ? <span className="passenger-route-task__onboard-badge">{onboardId}</span> : null}
             </span>
           )}
         </div>,
@@ -371,10 +475,24 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
         <aside className="passenger-route-task__side-panel" aria-label="Estado de la ruta">
           <strong>{level.name}</strong>
           {level.coreChallenge && <span>Reto: {level.coreChallenge}</span>}
-          <span>Presupuesto operativo: {routeBudget}/{level.routeBudget}</span>
+          <div className={`passenger-route-task__budget passenger-route-task__budget--${budgetTone}`} aria-label={`Energía ${routeBudget} de ${level.routeBudget}`}>
+            <div>
+              <span>Energía</span>
+              <strong>{routeBudget}/{level.routeBudget}</strong>
+            </div>
+            <div className="passenger-route-task__budget-bar"><i style={{ width: `${budgetPercent}%` }} /></div>
+          </div>
           <span>Pasajero a bordo: {onboardId ?? 'ninguno'}</span>
           <span>Paradas de apoyo: {level.stations.length}</span>
           <span>Horizontal 1 · vertical 2</span>
+          <div className="passenger-route-task__passenger-list" aria-label="Pasajeros y destinos">
+            {level.passengers.map((passenger) => (
+              <div key={passenger.id} className="passenger-route-task__passenger-row">
+                <b style={{ background: passenger.color }}>{passenger.id}</b>
+                <span>{getPassengerStatus(passenger, deliveredIds, onboardId)} · destino {passenger.id}</span>
+              </div>
+            ))}
+          </div>
           <button type="button" className="secondary" onClick={registerReplan}>Revisar plan</button>
         </aside>
       </div>

@@ -39,6 +39,77 @@ const payload = {
   governance: { humanReviewOnly: true, noAutomatedDecision: true, observationalOnly: true, privacySafe: true },
 };
 
+const originalGamesPayload = {
+  ...payload,
+  runId: 'run-original-001',
+  batteryId: 'krumm_postulation_demo_original_games_v1',
+  behavioral: {
+    ...payload.behavioral,
+    gameResults: [
+      {
+        gameId: 'laser_puzzle',
+        label: 'Puzzle láser',
+        status: 'completed',
+        trialCount: 3,
+        result: { solvedLevels: 3, levelCount: 3, solutionEfficiency: 1, score: 1, timeMs: 42000, aggregateOnly: true },
+      },
+      {
+        gameId: 'passenger_routes',
+        label: 'Optimización de rutas',
+        status: 'completed',
+        trialCount: 3,
+        result: { passengersDelivered: 5, destinationCount: 5, routeEfficiency: 1, score: 1, timeMs: 64000, aggregateOnly: true },
+      },
+      {
+        gameId: 'team_coordination',
+        label: 'Brief de equipo',
+        status: 'completed',
+        trialCount: 4,
+        result: { completedScenarioCount: 4, scenarioCount: 4, score: 0.83, adaptabilityScore: 0.78, timeMs: 29000, aggregateOnly: true },
+      },
+    ],
+    originalGameFeatureVector: {
+      type: 'original_game_feature_vector_v1',
+      version: '0.1.0',
+      featureOrder: [],
+      featureArray: [],
+      observedMask: [],
+      featureMap: {},
+      featureAvailability: {},
+      gameAvailability: {},
+      qualityFlags: [],
+      privacy: { aggregateOnly: true },
+    },
+  },
+  talentProfile: {
+    schemaVersion: 'krumm_talent_profile_v1',
+    globalSummary: { strengths: [], watchAreas: [], confidence: 0.25 },
+    dimensions: {
+      legacyOriginalUnsupported: {
+        label: 'Perfil legacy DG',
+        score: null,
+        confidence: 0.25,
+        evidence: [],
+        caveats: ['legacy_profile_not_applicable'],
+      },
+    },
+  },
+  talentFramework: {
+    schemaVersion: 'krumm_workbook_talent_framework_v1',
+    version: '0.1.0',
+    status: 'provisional',
+    sourceVector: { type: 'original_game_feature_vector_v1' },
+    constructOrder: ['leadership', 'communication', 'riskFeedbackProfile'],
+    constructs: {
+      leadership: { label: 'Liderazgo', availability: 'provisional_score', score: 86, confidence: 0.4, narrative: 'Lectura preliminar del brief de equipo.' },
+      communication: { label: 'Comunicación', availability: 'provisional_score', score: 83, confidence: 0.4, narrative: 'Claridad estructurada sin texto libre.' },
+      riskFeedbackProfile: { label: 'Perfil riesgo/feedback', availability: 'descriptive_only', score: null, confidence: 0.2, narrative: 'Solo describe estrategia riesgo/recompensa.' },
+    },
+    classification: {},
+    governance: { humanReviewOnly: true, noAutomatedDecision: true, observationalOnly: true },
+  },
+};
+
 describe('generateTalentReport', () => {
   it('generates a human-readable Markdown report with required sections and evidence', () => {
     const report = generateTalentReport({ payload, format: 'markdown' });
@@ -67,5 +138,21 @@ describe('generateTalentReport', () => {
     expect(json.mimeType).toBe('application/json');
     expect(json.content.schemaVersion).toBe('krumm_talent_report_v1');
     expect(json.content.sections.executiveSummary.strengths).toContain('Control inhibitorio');
+  });
+
+  it('uses the original-games evidence map in technical Markdown instead of the legacy 25% DG profile', () => {
+    const report = generateTalentReport({ payload: originalGamesPayload, format: 'markdown' }).content;
+
+    expect(report).toContain('Confianza global del perfil: no aplica');
+    expect(report).toContain('## 4. Mapa de evidencia KRUMM — batería original');
+    expect(report).toContain('| Liderazgo | Lectura preliminar | 86 | 40% |');
+    expect(report).toContain('| Perfil riesgo/feedback | Solo descriptivo | No medido | 20% |');
+    expect(report).toContain('Precisión 100%; eficiencia 100%');
+    expect(report).toContain('Coordinación 83%; adaptabilidad 78%');
+    expect(report).not.toContain('Confianza global del perfil: 25%');
+    expect(report).not.toContain('Perfil legacy DG');
+    expect(report).not.toContain('## 4.1 Framework workbook R-6 provisional');
+    expect(report).not.toContain('provisional_score');
+    expect(report).not.toContain('descriptive_only');
   });
 });

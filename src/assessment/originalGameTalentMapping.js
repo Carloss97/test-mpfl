@@ -139,6 +139,25 @@ function passengerComposite(vector) {
     + (0.20 * getFeature(vector, 'passenger.constraintCompliance'));
 }
 
+function teamComposite(vector) {
+  if (!hasObserved(vector, [
+    'team.leadershipScore',
+    'team.communicationScore',
+    'team.adaptabilityScore',
+    'team.decisionQualityScore',
+  ])) return null;
+  return {
+    leadership: getFeature(vector, 'team.leadershipScore'),
+    communication: getFeature(vector, 'team.communicationScore'),
+    adaptability: getFeature(vector, 'team.adaptabilityScore'),
+    decision: getFeature(vector, 'team.decisionQualityScore'),
+    alignment: getFeature(vector, 'team.alignmentScore') ?? getFeature(vector, 'team.communicationScore'),
+    roleClarity: getFeature(vector, 'team.roleClarityScore') ?? getFeature(vector, 'team.leadershipScore'),
+    feedbackUse: getFeature(vector, 'team.feedbackUseScore') ?? getFeature(vector, 'team.communicationScore'),
+    changeResponse: getFeature(vector, 'team.changeResponseScore') ?? getFeature(vector, 'team.adaptabilityScore'),
+  };
+}
+
 function buildProblemSolving(vector, L, P) {
   if (L === null || P === null) return insufficientConstruct('problemSolving', ['Requiere Laser y Passenger completos.']);
   const value = (0.65 * L) + (0.35 * P);
@@ -185,11 +204,25 @@ function buildAnalyticalThinking(vector, L, P) {
   });
 }
 
-function buildDecisionMaking(vector, P) {
+function buildDecisionMaking(vector, P, T) {
   const evidence = [];
   const risk = getFeature(vector, 'balloon.riskEfficiency');
   if (risk !== null) evidence.push({ feature: 'balloon.riskEfficiency', value: risk });
   if (P !== null) evidence.push({ feature: 'passengerComposite', value: P });
+  if (T !== null) evidence.push({ feature: 'team.decisionQualityScore', value: T.decision });
+  if (T !== null && P !== null) {
+    const value = (0.60 * T.decision) + (0.25 * P) + (0.15 * T.alignment);
+    return scoredConstruct('decisionMaking', {
+      scoreValue: value,
+      confidenceCeiling: 0.45,
+      evidence: [
+        ...evidence,
+        { formula: '0.60·teamDecision + 0.25·routePlanning + 0.15·teamAlignment', value },
+      ],
+      caveats: ['structured_scenario_requires_validation', 'no_automated_decision'],
+      narrative: 'Índice preliminar de decisión estructurada: combina trade-offs explícitos del brief de equipo con planificación de rutas; no es ranking ni criterio de selección.',
+    });
+  }
   return baseConstruct('decisionMaking', {
     availability: 'descriptive_only',
     confidenceCeiling: evidence.length ? 0.2 : 0,
@@ -216,6 +249,72 @@ function buildRiskFeedback(vector) {
   });
 }
 
+function buildAdaptability(T) {
+  if (T === null) {
+    return baseConstruct('adaptability', {
+      availability: 'insufficient',
+      caveats: ['adaptability_requires_controlled_rule_or_context_changes', 'provisional_mapping_requires_validation'],
+      narrative: 'La batería actual no incluye cambios controlados suficientes para puntuar adaptabilidad o flexibilidad cognitiva.',
+    });
+  }
+  const value = (0.70 * T.adaptability) + (0.30 * T.changeResponse);
+  return scoredConstruct('adaptability', {
+    scoreValue: value,
+    confidenceCeiling: 0.4,
+    evidence: [
+      { feature: 'team.adaptabilityScore', value: T.adaptability },
+      { feature: 'team.changeResponseScore', value: T.changeResponse },
+      { formula: '0.70·adaptability + 0.30·changeResponse', value },
+    ],
+    caveats: ['structured_scenario_requires_validation'],
+    narrative: 'Índice preliminar de adaptación ante cambios controlados dentro del brief de equipo; requiere validación antes de comparar candidatos.',
+  });
+}
+
+function buildLeadership(T) {
+  if (T === null) {
+    return baseConstruct('leadership', {
+      availability: 'not_measured',
+      narrative: 'No medido: las tareas actuales son individuales y no observan dirección social, roles o coordinación interpersonal.',
+    });
+  }
+  const value = (0.50 * T.leadership) + (0.30 * T.roleClarity) + (0.20 * T.alignment);
+  return scoredConstruct('leadership', {
+    scoreValue: value,
+    confidenceCeiling: 0.4,
+    evidence: [
+      { feature: 'team.leadershipScore', value: T.leadership },
+      { feature: 'team.roleClarityScore', value: T.roleClarity },
+      { feature: 'team.alignmentScore', value: T.alignment },
+      { formula: '0.50·leadership + 0.30·roleClarity + 0.20·alignment', value },
+    ],
+    caveats: ['structured_scenario_not_group_interaction', 'provisional_mapping_requires_validation'],
+    narrative: 'Índice preliminar de liderazgo en micro-situaciones estructuradas: clarifica objetivos, roles y trade-offs; no reemplaza evaluación grupal real.',
+  });
+}
+
+function buildCommunication(T) {
+  if (T === null) {
+    return baseConstruct('communication', {
+      availability: 'not_measured',
+      narrative: 'No medido: la batería actual no contiene producción/recepción de mensajes ni interacción social codificada.',
+    });
+  }
+  const value = (0.55 * T.communication) + (0.25 * T.feedbackUse) + (0.20 * T.alignment);
+  return scoredConstruct('communication', {
+    scoreValue: value,
+    confidenceCeiling: 0.4,
+    evidence: [
+      { feature: 'team.communicationScore', value: T.communication },
+      { feature: 'team.feedbackUseScore', value: T.feedbackUse },
+      { feature: 'team.alignmentScore', value: T.alignment },
+      { formula: '0.55·communication + 0.25·feedbackUse + 0.20·alignment', value },
+    ],
+    caveats: ['structured_choices_no_free_text_or_live_speech', 'provisional_mapping_requires_validation'],
+    narrative: 'Índice preliminar de comunicación estructurada: claridad de contexto, pasos accionables y uso de feedback sin guardar texto libre.',
+  });
+}
+
 function withCameraCaveat(construct, signalQuality) {
   if (!signalQuality || Number(signalQuality.sampleCount ?? 0) > 0) return construct;
   return {
@@ -232,25 +331,16 @@ export function buildOriginalGameTalentFramework({
   const vector = originalGameFeatureVector ?? {};
   const L = laserComposite(vector);
   const P = passengerComposite(vector);
+  const T = teamComposite(vector);
   const constructs = {
-    decisionMaking: buildDecisionMaking(vector, P),
+    decisionMaking: buildDecisionMaking(vector, P, T),
     problemSolving: buildProblemSolving(vector, L, P),
     riskFeedbackProfile: buildRiskFeedback(vector),
     planning: buildPlanning(vector, P),
-    adaptability: baseConstruct('adaptability', {
-      availability: 'insufficient',
-      caveats: ['adaptability_requires_controlled_rule_or_context_changes', 'provisional_mapping_requires_validation'],
-      narrative: 'La batería actual no incluye cambios controlados suficientes para puntuar adaptabilidad o flexibilidad cognitiva.',
-    }),
+    adaptability: buildAdaptability(T),
     analyticalThinking: buildAnalyticalThinking(vector, L, P),
-    leadership: baseConstruct('leadership', {
-      availability: 'not_measured',
-      narrative: 'No medido: las tareas actuales son individuales y no observan dirección social, roles o coordinación interpersonal.',
-    }),
-    communication: baseConstruct('communication', {
-      availability: 'not_measured',
-      narrative: 'No medido: la batería actual no contiene producción/recepción de mensajes ni interacción social codificada.',
-    }),
+    leadership: buildLeadership(T),
+    communication: buildCommunication(T),
   };
 
   const constructsWithCameraCaveats = Object.fromEntries(

@@ -37,6 +37,9 @@ describe('PassengerRouteOptimizationTask', () => {
     expect(screen.getByRole('heading', { name: /Optimización de rutas/i })).toBeInTheDocument();
     expect(screen.getByText(/Recoger un pasajero y llevarlo a su destino/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Presupuesto operativo/i).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText(/Energía 12 de 12/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Pasajero A esperando/i)).toBeInTheDocument();
+    expect(screen.getByText(/Esperando · destino A/i)).toBeInTheDocument();
     expect(screen.getByText(/Paradas de apoyo/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Arriba$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Abajo$/i })).toBeInTheDocument();
@@ -90,6 +93,48 @@ describe('PassengerRouteOptimizationTask', () => {
       }),
     });
     expect(JSON.stringify({ events, completion: onComplete.mock.calls })).not.toMatch(FORBIDDEN_ROUTE_FIELDS);
+  });
+
+  it('ends with a clear failed state when the vehicle is stranded without energy', () => {
+    const onGameEvent = vi.fn();
+    const onComplete = vi.fn();
+    render(
+      <PassengerRouteOptimizationTask
+        active
+        width={606}
+        height={338}
+        trialCount={1}
+        onGameEvent={onGameEvent}
+        onComplete={onComplete}
+      />,
+    );
+
+    move('Derecha');
+    move('Izquierda');
+    move('Derecha');
+    move('Izquierda');
+    move('Derecha');
+    move('Izquierda');
+    move('Derecha');
+    move('Izquierda');
+    move('Derecha');
+    move('Izquierda');
+    move('Derecha');
+    move('Izquierda');
+
+    expect(screen.getByTestId('passenger-route-failed')).toBeInTheDocument();
+    expect(screen.getAllByText(/sin energía/i).length).toBeGreaterThan(0);
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /Reintentar circuito/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Continuar con resultado/i }));
+    expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({
+      gameId: 'passenger_routes',
+      completed: false,
+      aggregateOnly: true,
+    }));
+    const response = onGameEvent.mock.calls.map(([event]) => event).find((event) => event.eventType === 'response' && event.response?.outcome === 'energy_depleted');
+    expect(response).toBeDefined();
+    expect(JSON.stringify({ response, completion: onComplete.mock.calls })).not.toMatch(FORBIDDEN_ROUTE_FIELDS);
   });
 
   it('completes all configured circuits through physical support stops', async () => {

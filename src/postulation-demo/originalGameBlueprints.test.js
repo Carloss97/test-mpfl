@@ -8,23 +8,24 @@ import {
 } from './originalGameBlueprints.js';
 
 describe('original game integration blueprints', () => {
-  it('declares the three original games requested for postulation replacement', () => {
+  it('declares the original games plus the structured team brief completion probe', () => {
     expect(ORIGINAL_GAME_BLUEPRINTS.map((blueprint) => blueprint.gameId)).toEqual([
       'laser_puzzle',
       'balloon_risk',
       'passenger_routes',
+      'team_coordination',
     ]);
   });
 
   it('keeps source paths, target roles, aggregate fields and human-review language explicit', () => {
     for (const blueprint of ORIGINAL_GAME_BLUEPRINTS) {
       expect(blueprint.label).toMatch(/\S/);
-      expect(blueprint.source.primary).toMatch(/\/Test\/src\//);
+      expect(blueprint.source.primary).toMatch(blueprint.gameId === 'team_coordination' ? /src\/tasks\/original-games/ : /\/Test\/src\//);
       expect(blueprint.postulation.skill).toMatch(/\S/);
       expect(blueprint.postulation.durationLabel).toMatch(/min|s/);
       expect(blueprint.allowedAggregateFields.length).toBeGreaterThanOrEqual(5);
       expect(blueprint.reportDimension).toMatch(/revisión humana/i);
-      expect(['planned', 'ported_hidden']).toContain(blueprint.activation.status);
+      expect(['planned', 'ported_hidden', 'controlled_active']).toContain(blueprint.activation.status);
     }
   });
 
@@ -33,6 +34,7 @@ describe('original game integration blueprints', () => {
       expect.objectContaining({ gameId: 'laser_puzzle', visible: false, phase: 'original_games_replacement', activationStatus: 'ported_hidden' }),
       expect.objectContaining({ gameId: 'balloon_risk', visible: false, phase: 'original_games_replacement', activationStatus: 'ported_hidden' }),
       expect.objectContaining({ gameId: 'passenger_routes', visible: false, phase: 'original_games_replacement', activationStatus: 'ported_hidden' }),
+      expect.objectContaining({ gameId: 'team_coordination', visible: false, phase: 'original_games_completion_probe', activationStatus: 'controlled_active' }),
     ]);
   });
 
@@ -50,6 +52,8 @@ describe('original game integration blueprints', () => {
       'routeTrace',
       'visitedCells',
       'stepByStepPath',
+      'freeText',
+      'typedResponse',
     ]));
   });
 

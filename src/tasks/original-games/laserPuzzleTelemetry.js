@@ -104,26 +104,34 @@ export function buildLaserDemoLevels() {
       id: 'laser-final-2-corredor-de-meteoritos',
       name: 'Corredor de meteoritos',
       difficulty: 'planning · corredor bloqueado',
-      objective: 'Redirigir el haz alrededor de obstáculos para activar una antena remota.',
-      coreChallenge: 'Planificar el orden espacial de piezas antes de moverlas.',
+      objective: 'Encadenar cuatro reflectores para iluminar relés de control antes de activar la antena remota.',
+      coreChallenge: 'Anticipar una secuencia de giros: derecha → abajo → derecha → arriba → derecha.',
       cols: 7,
       rows: 7,
-      par: 3,
+      par: 4,
       antennaCount: 1,
+      relayCount: 3,
       timeLimitMs: 90_000,
       solutionPlacements: Object.freeze([
-        Object.freeze(['5,5', '2,3']),
-        Object.freeze(['1,5', '2,0']),
+        Object.freeze(['0,0', '2,1']),
+        Object.freeze(['6,0', '2,5']),
+        Object.freeze(['0,6', '5,5']),
+        Object.freeze(['6,6', '5,2']),
       ]),
       cells: Object.freeze([
-        Object.freeze({ x: 0, y: 3, type: 'ship', dir: 'right' }),
-        Object.freeze({ x: 6, y: 0, type: 'antenna' }),
-        Object.freeze({ x: 5, y: 5, type: 'reflector_ne', movable: true }),
-        Object.freeze({ x: 1, y: 5, type: 'reflector_ne', movable: true }),
+        Object.freeze({ x: 0, y: 1, type: 'ship', dir: 'right' }),
+        Object.freeze({ x: 6, y: 2, type: 'antenna' }),
+        Object.freeze({ x: 2, y: 3, type: 'relay' }),
+        Object.freeze({ x: 4, y: 5, type: 'relay' }),
+        Object.freeze({ x: 5, y: 4, type: 'relay' }),
+        Object.freeze({ x: 0, y: 0, type: 'reflector_nw', movable: true }),
+        Object.freeze({ x: 6, y: 0, type: 'reflector_nw', movable: true }),
+        Object.freeze({ x: 0, y: 6, type: 'reflector_ne', movable: true }),
+        Object.freeze({ x: 6, y: 6, type: 'reflector_ne', movable: true }),
+        Object.freeze({ x: 1, y: 0, type: 'reflector_ne', movable: true }),
         ...wallCells([
-          { x: 1, y: 1 }, { x: 4, y: 1 }, { x: 5, y: 1 },
-          { x: 1, y: 2 }, { x: 4, y: 2 }, { x: 1, y: 4 },
-          { x: 3, y: 4 }, { x: 4, y: 4 }, { x: 6, y: 4 },
+          { x: 6, y: 1 }, { x: 3, y: 2 }, { x: 1, y: 3 }, { x: 3, y: 3 },
+          { x: 1, y: 4 }, { x: 3, y: 4 }, { x: 6, y: 4 },
         ]).map(Object.freeze),
       ]),
     }),
@@ -131,29 +139,37 @@ export function buildLaserDemoLevels() {
       id: 'laser-final-3-red-dual',
       name: 'Red dual de comunicaciones',
       difficulty: 'advanced · bifurcación',
-      objective: 'Dividir el haz para alimentar dos antenas con un solo emisor.',
-      coreChallenge: 'Coordinar una bifurcación fija y dos reflectores móviles sin sobreajustar la ruta.',
+      objective: 'Dividir el haz y cerrar dos ramas con relés de control antes de alimentar ambas antenas.',
+      coreChallenge: 'Resolver dos ramas simultáneas: cada rama necesita dos reflectores y un relé iluminado.',
       cols: 8,
       rows: 7,
-      par: 3,
+      par: 4,
       antennaCount: 2,
+      relayCount: 2,
       timeLimitMs: 110_000,
       solutionPlacements: Object.freeze([
         Object.freeze(['1,6', '3,1']),
-        Object.freeze(['5,6', '3,5']),
+        Object.freeze(['5,6', '5,1']),
+        Object.freeze(['0,5', '3,5']),
+        Object.freeze(['7,5', '5,5']),
       ]),
       cells: Object.freeze([
         Object.freeze({ x: 0, y: 3, type: 'ship', dir: 'right' }),
         Object.freeze({ x: 3, y: 3, type: 'bifurcator' }),
-        Object.freeze({ x: 6, y: 1, type: 'antenna' }),
-        Object.freeze({ x: 6, y: 5, type: 'antenna' }),
+        Object.freeze({ x: 5, y: 2, type: 'antenna' }),
+        Object.freeze({ x: 5, y: 4, type: 'antenna' }),
+        Object.freeze({ x: 4, y: 1, type: 'relay' }),
+        Object.freeze({ x: 4, y: 5, type: 'relay' }),
         Object.freeze({ x: 1, y: 6, type: 'reflector_ne', movable: true }),
         Object.freeze({ x: 5, y: 6, type: 'reflector_nw', movable: true }),
+        Object.freeze({ x: 0, y: 5, type: 'reflector_nw', movable: true }),
+        Object.freeze({ x: 7, y: 5, type: 'reflector_ne', movable: true }),
+        Object.freeze({ x: 2, y: 0, type: 'reflector_nw', movable: true }),
         ...wallCells([
           { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 7, y: 0 },
-          { x: 1, y: 2 }, { x: 5, y: 2 }, { x: 7, y: 2 },
-          { x: 1, y: 4 }, { x: 5, y: 4 }, { x: 7, y: 4 },
-          { x: 0, y: 6 }, { x: 3, y: 6 }, { x: 7, y: 6 },
+          { x: 1, y: 2 }, { x: 7, y: 2 },
+          { x: 1, y: 4 }, { x: 7, y: 4 },
+          { x: 3, y: 6 },
         ]).map(Object.freeze),
       ]),
     }),
@@ -181,12 +197,13 @@ function findLinkedPortalKey(grid, cellKey, cell) {
 
 export function traceLaserBeam(grid = {}, cols = 0, rows = 0) {
   const shipEntry = Object.entries(grid).find(([, cell]) => cell.type === 'ship');
-  if (!shipEntry) return { beamCells: new Set(), litAntennas: new Set(), litAntennaCount: 0 };
+  if (!shipEntry) return { beamCells: new Set(), litAntennas: new Set(), litRelays: new Set(), litAntennaCount: 0, litRelayCount: 0 };
 
   const [shipKey, ship] = shipEntry;
   const [shipX, shipY] = shipKey.split(',').map(Number);
   const beamCells = new Set();
   const litAntennas = new Set();
+  const litRelays = new Set();
   const visited = new Set();
   const queue = [{ x: shipX, y: shipY, dir: ship.dir }];
 
@@ -230,14 +247,22 @@ export function traceLaserBeam(grid = {}, cols = 0, rows = 0) {
     } else if (type === 'antenna') {
       beamCells.add(cellKey);
       litAntennas.add(cellKey);
+    } else if (type === 'relay') {
+      beamCells.add(cellKey);
+      litRelays.add(cellKey);
+      queue.push({ x: nx, y: ny, dir });
     }
   }
 
-  return { beamCells, litAntennas, litAntennaCount: litAntennas.size };
+  return { beamCells, litAntennas, litRelays, litAntennaCount: litAntennas.size, litRelayCount: litRelays.size };
 }
 
 export function countAntennas(level = {}) {
   return (level.cells ?? []).filter((cell) => cell.type === 'antenna').length;
+}
+
+export function countRelays(level = {}) {
+  return (level.cells ?? []).filter((cell) => cell.type === 'relay').length;
 }
 
 export function getLaserBoardMetrics(level = {}, viewport = {}) {

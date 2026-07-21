@@ -114,30 +114,62 @@ describe('PostulationReportScreen', () => {
     expect(cards.map((card) => card.score).join(' ')).not.toMatch(/8400%|12000%/);
   });
 
-  it('renders the R-6 workbook framework with No medido semantics for original games', () => {
+  it('shows only relevant game metrics for original games instead of blank precision/time fields', () => {
+    const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
+    const cards = getPostulationGameCards(fixture.artifacts, fixture.summary);
+    const laser = cards.find((card) => card.id === 'laser_puzzle');
+    const balloon = cards.find((card) => card.id === 'balloon_risk');
+    const passenger = cards.find((card) => card.id === 'passenger_routes');
+    const team = cards.find((card) => card.id === 'team_coordination');
+
+    expect(laser.metrics).toEqual(expect.arrayContaining([
+      { label: 'Precisión', value: '100%' },
+      { label: 'Tiempo total', value: expect.stringMatching(/s|ms/) },
+    ]));
+    expect(passenger.metrics).toEqual(expect.arrayContaining([
+      { label: 'Precisión', value: '100%' },
+      { label: 'Eficiencia ruta', value: expect.stringMatching(/%/) },
+    ]));
+    expect(balloon.metrics.map((metric) => metric.label)).not.toContain('Precisión');
+    expect(team.metrics).toEqual(expect.arrayContaining([
+      { label: 'Coordinación', value: expect.stringMatching(/%/) },
+      { label: 'Tiempo total', value: expect.stringMatching(/s|ms/) },
+    ]));
+    expect(JSON.stringify(cards.map((card) => card.metrics))).not.toMatch(/"value":"—"/);
+  });
+
+  it('renders the demo evidence map with complete demo coverage and readable caveats for original games', () => {
     const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
     render(<PostulationReportScreen artifacts={fixture.artifacts} completedDemo={fixture.summary} />);
 
-    expect(screen.getByRole('heading', { name: /Framework R-6 del workbook/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Mapa de evidencia KRUMM/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Framework R-6 del workbook/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Batería original: lectura preliminar controlada/i)).toBeInTheDocument();
-    expect(screen.getByText(/No medido explícito/i)).toBeInTheDocument();
+    expect(screen.getByText(/Cobertura completa de demo/i)).toBeInTheDocument();
     expect(screen.getByText(/Validar antes de comparar candidatos/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Toma de decisiones/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/descriptive_only/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/No medido/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Solo descriptivo/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/descriptive_only/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No medido/i)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/Por qué aparece así/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Cómo volverlo medible/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/brief de equipo observa decisiones estructuradas/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/sin guardar texto libre/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Liderazgo/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Comunicación/i)).toBeInTheDocument();
-    expect(screen.getByText(/usa No medido/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Comunicación/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Brief de equipo aportan señales agregadas/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Coordinación estructurada/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Completaste una ruta eficiente/i)).toBeInTheDocument();
     expect(screen.getByText(/no equivale a liderazgo logístico/i)).toBeInTheDocument();
     expect(screen.getByText(/Resolviste el puzzle/i)).toBeInTheDocument();
     expect(screen.getAllByText(/riesgo\/recompensa/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Solución clara/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Ruta eficiente/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Authoring Laser: valid_for_internal_demo/i)).toBeInTheDocument();
-    expect(screen.getByText(/Calibration Balloon: valid_for_internal_demo/i)).toBeInTheDocument();
-    expect(screen.getByText(/Authoring Passenger: valid_for_internal_demo/i)).toBeInTheDocument();
-    expect(screen.getByText(/Instruction check: low/i)).toBeInTheDocument();
+    expect(screen.getByText(/Laser: validado para demo interna/i)).toBeInTheDocument();
+    expect(screen.getByText(/Globo: validado para demo interna/i)).toBeInTheDocument();
+    expect(screen.getByText(/Rutas: validado para demo interna/i)).toBeInTheDocument();
+    expect(screen.getByText(/Claridad de instrucciones: validado para demo interna/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Authoring|Calibration|Instruction check|valid_for_internal_demo/i)).not.toBeInTheDocument();
   });
 
   it('derives modular passenger-route feedback from aggregate-only game results', () => {
@@ -179,13 +211,15 @@ describe('PostulationReportScreen', () => {
       'laser_puzzle',
       'balloon_risk',
       'passenger_routes',
+      'team_coordination',
     ]);
     expect(cards.map((card) => card.feedback?.displayCategory)).toEqual([
       'clear_solution',
       'balanced_feedback_strategy',
       'clear_success',
+      'structured_coordination_signal',
     ]);
-    expect(JSON.stringify(cards.map((card) => card.feedback))).not.toMatch(/beamCells|pumpSequence|fullRoute|visitedCells|rawGameEvents|pointerSamples/i);
+    expect(JSON.stringify(cards.map((card) => card.feedback))).not.toMatch(/beamCells|pumpSequence|fullRoute|visitedCells|rawGameEvents|pointerSamples|freeText|typedResponse|choiceSequence/i);
   });
 
   it('does not present the executive HR summary as an automated decision or hiring ranking', () => {

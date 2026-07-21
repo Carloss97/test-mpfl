@@ -28,10 +28,14 @@ function GameCard({ game }) {
       <span>{game.status === 'not_completed' ? 'Pendiente' : 'Completado'}</span>
       <h3>{game.label}</h3>
       <dl>
-        <div><dt>Ensayos</dt><dd>{game.trialCount}</dd></div>
-        <div><dt>Precisión</dt><dd>{game.accuracy}</dd></div>
-        <div><dt>Puntaje</dt><dd>{game.score}</dd></div>
-        <div><dt>Tiempo</dt><dd>{game.meanRt}</dd></div>
+        {(game.metrics ?? [
+          { label: 'Ensayos', value: game.trialCount },
+          { label: 'Precisión', value: game.accuracy },
+          { label: 'Puntaje', value: game.score },
+          { label: 'Tiempo', value: game.meanRt },
+        ]).map((metric) => (
+          <div key={`${game.id}-${metric.label}`}><dt>{metric.label}</dt><dd>{metric.value}</dd></div>
+        ))}
       </dl>
       {game.feedback && (
         <div className="postulation-demo__game-feedback" aria-label="Feedback explicativo del juego">
@@ -71,12 +75,11 @@ function WorkbookTalentCard({ construct }) {
       </div>
       <div>
         <h3>{construct.label}</h3>
-        <p><strong>{construct.availability}</strong> · Confianza {construct.confidence}. {construct.narrative}</p>
-        {construct.caveats.length > 0 && (
-          <ul>
-            {construct.caveats.slice(0, 2).map((item) => <li key={item}>{item}</li>)}
-          </ul>
-        )}
+        <p><strong>{construct.availabilityLabel}</strong> · Confianza {construct.confidence}. {construct.narrative}</p>
+        <div className="postulation-demo__measurement-explainer">
+          <p><strong>Por qué aparece así:</strong> {construct.demoExplanation.reason}</p>
+          <p><strong>Cómo volverlo medible:</strong> {construct.demoExplanation.nextStep}</p>
+        </div>
       </div>
     </article>
   );
@@ -209,22 +212,26 @@ export default function PostulationReportScreen({
         {qualityCards.map((card) => <QualityCard key={card.label} card={card} />)}
       </div>
 
-      <div className="postulation-demo__report-section-head">
-        <div>
-          <h2>Perfil de capacidades</h2>
-          <p>Dimensiones observacionales priorizadas por score; deben leerse con la calidad de señal y contexto de tarea.</p>
-        </div>
-      </div>
-      <div className="postulation-demo__talent-grid">
-        {talentDimensions.map((dimension) => <TalentDimensionCard key={dimension.id ?? dimension.label} dimension={dimension} />)}
-      </div>
+      {talentDimensions.length > 0 && (
+        <>
+          <div className="postulation-demo__report-section-head">
+            <div>
+              <h2>Perfil de capacidades</h2>
+              <p>Dimensiones observacionales priorizadas por score; deben leerse con la calidad de señal y contexto de tarea.</p>
+            </div>
+          </div>
+          <div className="postulation-demo__talent-grid">
+            {talentDimensions.map((dimension) => <TalentDimensionCard key={dimension.id ?? dimension.label} dimension={dimension} />)}
+          </div>
+        </>
+      )}
 
       {workbookFramework.length > 0 && (
         <>
           <div className="postulation-demo__report-section-head">
             <div>
-              <h2>Framework R-6 del workbook</h2>
-              <p>Lectura provisional en el orden del Excel: usa No medido, Solo descriptivo o Evidencia insuficiente cuando corresponde.</p>
+              <h2>Mapa de evidencia KRUMM</h2>
+              <p>Lectura de demo: muestra qué capacidades sí tienen señales de juego, cuáles son solo descriptivas y cuáles todavía no están medidas.</p>
             </div>
           </div>
           <div className="postulation-demo__talent-grid">

@@ -64,6 +64,28 @@ const originalBlocks = Object.freeze([
       aggregateOnly: true,
     },
   },
+  {
+    index: 3,
+    gameId: 'team_coordination',
+    status: 'completed',
+    result: {
+      aggregateSchemaVersion: 'team_coordination_aggregate_v1',
+      score: 0.86,
+      completed: true,
+      scenarioCount: 4,
+      completedScenarioCount: 4,
+      leadershipScore: 0.87,
+      communicationScore: 0.88,
+      adaptabilityScore: 0.82,
+      decisionQualityScore: 0.86,
+      alignmentScore: 0.88,
+      roleClarityScore: 0.86,
+      feedbackUseScore: 0.76,
+      changeResponseScore: 0.84,
+      timeMs: 96000,
+      aggregateOnly: true,
+    },
+  },
 ]);
 
 describe('original_game_feature_vector_v1', () => {
@@ -119,9 +141,13 @@ describe('original_game_feature_vector_v1', () => {
       laser_puzzle: 'measured_complete',
       balloon_risk: 'measured_complete',
       passenger_routes: 'measured_complete',
+      team_coordination: 'measured_complete',
     });
+    expect(vector.featureMap['team.leadershipScore']).toBe(0.87);
+    expect(vector.featureMap['team.communicationScore']).toBe(0.88);
+    expect(vector.featureMap['team.adaptabilityScore']).toBe(0.82);
     expect(validateOriginalGameFeatureVectorPrivacy(vector)).toEqual({ ok: true, violations: [] });
-    expect(JSON.stringify(vector)).not.toMatch(/trials|fullRoute|visitedCells|rawGameEvents|pointerSamples|landmarks|keypoints/i);
+    expect(JSON.stringify(vector)).not.toMatch(/trials|fullRoute|visitedCells|rawGameEvents|pointerSamples|landmarks|keypoints|freeText|typedResponse|choiceSequence/i);
   });
 
   it('distinguishes missing games from observed zero values through availability and mask', () => {

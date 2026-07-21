@@ -22,6 +22,24 @@ export function getPostulationPrimaryReportDescriptor(descriptors = []) {
   return descriptorByExtension(descriptors, '.md') ?? descriptors[0] ?? null;
 }
 
+function demoStatusLabel(status) {
+  if (status === 'valid_for_internal_demo') return 'validado para demo interna';
+  if (status === 'budget_tight_review') return 'válido con presupuesto ajustado';
+  if (status === 'layout_review') return 'requiere revisión visual';
+  if (status === 'needs_authoring_review' || status === 'needs_authoring_fix') return 'requiere ajuste de niveles';
+  if (status === 'needs_calibration_review') return 'requiere revisión de calibración';
+  return 'revisión pendiente';
+}
+
+function demoActionLabel(action) {
+  if (action === 'keep_current_levels_for_internal_demo' || action === 'keep_current_threshold_distribution_for_internal_demo') {
+    return 'mantener configuración actual para demo interna';
+  }
+  if (action === 'revise_unsolved_or_unfitted_levels_before_candidate_use') return 'ajustar niveles antes de piloto';
+  if (action === 'review_threshold_distribution_and_instruction_copy') return 'revisar balance de riesgo e instrucciones';
+  return 'revisar configuración antes de uso comparativo';
+}
+
 export default function PostulationReportTechnicalDrawer({
   artifacts = null,
   descriptors = [],
@@ -83,32 +101,32 @@ export default function PostulationReportTechnicalDrawer({
         </div>
         {passengerAuthoring && (
           <div>
-            <h3>QA juegos originales</h3>
-            <p>Revisión de authoring para presentar la batería original sin confundir dificultad de nivel con desempeño del candidato.</p>
+            <h3>QA de jugabilidad</h3>
+            <p>Revisión interna para presentar la batería original sin confundir dificultad de nivel con desempeño del candidato.</p>
             <ul>
               {laserAuthoring && (
                 <>
-                  <li>Authoring Laser: {laserAuthoring.authoringStatus}</li>
+                  <li>Laser: {demoStatusLabel(laserAuthoring.authoringStatus)}</li>
                   <li>Niveles Laser resolubles: {laserAuthoring.solvedLevels}/{laserAuthoring.totalLevels}</li>
                   <li>Niveles Laser multiobjetivo: {laserAuthoring.multiObjectiveLevels}</li>
                 </>
               )}
               {balloonCalibration && (
                 <>
-                  <li>Calibration Balloon: {balloonCalibration.thresholdCalibrationStatus}</li>
+                  <li>Globo: {demoStatusLabel(balloonCalibration.thresholdCalibrationStatus)}</li>
                   <li>Rondas Balloon: {balloonCalibration.highRiskRounds} alto / {balloonCalibration.mediumRiskRounds} medio / {balloonCalibration.lowRiskRounds} bajo</li>
                 </>
               )}
-              <li>Authoring Passenger: {passengerAuthoring.authoringStatus}</li>
+              <li>Rutas: {demoStatusLabel(passengerAuthoring.authoringStatus)}</li>
               <li>Niveles resolubles: {passengerAuthoring.solvableLevels}/{passengerAuthoring.totalLevels}</li>
               <li>Niveles con parada obligatoria: {passengerAuthoring.minimumStationUseLevels}</li>
               {instructionCheck && (
                 <>
-                  <li>Instruction check: {instructionCheck.instructionRiskFlag}</li>
+                  <li>Claridad de instrucciones: {demoStatusLabel(instructionCheck.instructionRiskFlag === 'low' ? 'valid_for_internal_demo' : 'needs_authoring_review')}</li>
                   <li>Juegos revisados por comprensión: {instructionCheck.reviewedGames}</li>
                 </>
               )}
-              <li>Acción recomendada: {passengerAuthoring.recommendedLevelAction}</li>
+              <li>Acción recomendada: {demoActionLabel(passengerAuthoring.recommendedLevelAction)}</li>
             </ul>
           </div>
         )}

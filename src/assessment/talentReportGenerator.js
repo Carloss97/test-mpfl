@@ -19,6 +19,40 @@ function scoreLabel(value) {
   return Number.isFinite(numeric) ? String(Math.round(numeric)) : 'No medido';
 }
 
+function availabilityLabel(value) {
+  if (value === 'provisional_score') return 'Lectura preliminar';
+  if (value === 'descriptive_only') return 'Solo descriptivo';
+  if (value === 'insufficient') return 'Evidencia insuficiente';
+  if (value === 'not_measured') return 'No medido';
+  return 'Sin clasificar';
+}
+
+function hasOriginalTalentFramework(payload = {}) {
+  return Boolean(payload?.talentFramework?.constructs)
+    && (
+      String(payload?.batteryId ?? '').includes('original_games')
+      || Boolean(payload?.behavioral?.originalGameFeatureVector)
+    );
+}
+
+function frameworkConstructs(payload = {}) {
+  const framework = payload?.talentFramework ?? {};
+  const constructs = framework.constructs ?? {};
+  return (framework.constructOrder ?? Object.keys(constructs))
+    .map((id) => ({ id, ...constructs[id] }))
+    .filter((entry) => entry.id);
+}
+
+function formatDurationMs(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return '—';
+  if (numeric >= 1000) {
+    const seconds = numeric / 1000;
+    return `${seconds < 10 ? seconds.toFixed(1) : Math.round(seconds)}s`;
+  }
+  return `${Math.round(numeric)}ms`;
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -91,6 +125,7 @@ function buildMarkdownReport(payload) {
   const perf = game.performance ?? {};
   const correlation = payload.behavioral?.gameCorrelationAggregate ?? {};
   const adaptiveTrace = payload.behavioral?.adaptiveDifficultyTrace ?? [];
+  const originalFramework = hasOriginalTalentFramework(payload);
   const lines = [];
   lines.push('# KRUMM — Reporte de Evaluación Gamificada');
   lines.push('');
@@ -102,8 +137,16 @@ function buildMarkdownReport(payload) {
   lines.push(`- Modelo: ${payload.edgeAI?.modelVersion ?? 'no disponible'}`);
   lines.push('');
   lines.push('## 2. Resumen ejecutivo');
-  lines.push(`Este reporte resume señales observacionales para revisión humana. Fortalezas observadas: ${strengths(payload).join(', ') || 'sin fortalezas dominantes por sobre umbral'}. Áreas a revisar: ${watchAreas(payload).join(', ') || 'sin áreas críticas bajo umbral'}.`);
-  lines.push(`Confianza global del perfil: ${pct(payload.talentProfile?.globalSummary?.confidence ?? 0)}.`);
+  if (originalFramework) {
+    const constructList = frameworkConstructs(payload);
+    const scoredCount = constructList.filter((entry) => entry.score != null).length;
+    const descriptiveCount = constructList.filter((entry) => entry.availability === 'descriptive_only').length;
+    lines.push(`Este reporte resume señales agregadas de la batería original para revisión humana. ${scoredCount} constructos tienen lectura preliminar de demo y ${descriptiveCount} lectura(s) se mantienen solo descriptivas por prudencia científica.`);
+    lines.push('Confianza global del perfil: no aplica para esta batería experimental; la confianza se informa por constructo en el mapa de evidencia para evitar mezclar el perfil DG legacy con los juegos originales.');
+  } else {
+    lines.push(`Este reporte resume señales observacionales para revisión humana. Fortalezas observadas: ${strengths(payload).join(', ') || 'sin fortalezas dominantes por sobre umbral'}. Áreas a revisar: ${watchAreas(payload).join(', ') || 'sin áreas críticas bajo umbral'}.`);
+    lines.push(`Confianza global del perfil: ${pct(payload.talentProfile?.globalSummary?.confidence ?? 0)}.`);
+  }
   lines.push('');
   lines.push('## 3. Calidad de señal');
   lines.push(`- Muestras: ${payload.quality?.sampleCount ?? 0}`);
@@ -112,30 +155,54 @@ function buildMarkdownReport(payload) {
   lines.push(`- Trials correlacionados: ${payload.quality?.correlatedTrialCount ?? 0}`);
   lines.push(`- Caveats: ${caveatText(payload.quality?.caveats ?? [])}`);
   lines.push('');
-  lines.push('## 4. Perfil de habilidades');
-  lines.push('| Habilidad | Score | Confianza | Evidencia | Caveats |');
-  lines.push('|---|---:|---:|---|---|');
-  for (const entry of dimensions(payload)) {
-    lines.push(`| ${entry.label} | ${scoreLabel(entry.score)} | ${pct(entry.confidence)} | ${evidenceText(entry)} | ${caveatText(entry.caveats)} |`);
-  }
-  lines.push('');
-  if (payload.talentFramework?.constructs) {
-    lines.push('## 4.1 Framework workbook R-6 provisional');
-    lines.push('| Constructo | Estado | Score | Confianza | Narrativa |');
+  if (originalFramework) {
+    lines.push('## 4. Mapa de evidencia KRUMM — batería original');
+    lines.push('| Constructo | Estado | Score | Confianza por constructo | Narrativa |');
     lines.push('|---|---|---:|---:|---|');
-    for (const id of payload.talentFramework.constructOrder ?? Object.keys(payload.talentFramework.constructs)) {
-      const entry = payload.talentFramework.constructs[id];
-      lines.push(`| ${entry.label ?? id} | ${entry.availability ?? 'unknown'} | ${scoreLabel(entry.score)} | ${pct(entry.confidence)} | ${entry.narrative ?? ''} |`);
+    for (const entry of frameworkConstructs(payload)) {
+      lines.push(`| ${entry.label ?? entry.id} | ${availabilityLabel(entry.availability)} | ${scoreLabel(entry.score)} | ${pct(entry.confidence)} | ${entry.narrative ?? ''} |`);
     }
-    lines.push('Clasificación de fortalezas/áreas de atención: no disponible sin normas y criterios validados.');
+    lines.push('Nota: se omite el perfil DG global en esta batería para no mostrar scores “No medido” o confianza 25% heredados de un marco que no corresponde a los juegos originales. No hay percentiles, normas, cortes ni ranking automático.');
+    lines.push('');
+  } else {
+    lines.push('## 4. Perfil de habilidades');
+    lines.push('| Habilidad | Score | Confianza | Evidencia | Caveats |');
+    lines.push('|---|---:|---:|---|---|');
+    for (const entry of dimensions(payload)) {
+      lines.push(`| ${entry.label} | ${scoreLabel(entry.score)} | ${pct(entry.confidence)} | ${evidenceText(entry)} | ${caveatText(entry.caveats)} |`);
+    }
     lines.push('');
   }
   lines.push('## 5. Resultados por juego');
-  lines.push(`- Trials completados: ${perf.completedTrialCount ?? 0}/${perf.trialCount ?? 0}`);
-  lines.push(`- Accuracy: ${pct(perf.accuracy ?? 0)}`);
-  lines.push(`- RT medio: ${Math.round(perf.meanReactionTimeMs ?? 0)}ms`);
-  lines.push(`- Score medio: ${pct(perf.meanScore ?? 0)}`);
-  lines.push(`- Search efficiency: ${pct(game.visualSearch?.searchEfficiency ?? 0)}`);
+  if (payload.behavioral?.gameResults?.length) {
+    lines.push('| Juego | Estado | Métrica principal | Precisión / eficiencia relevante | Tiempo |');
+    lines.push('|---|---|---|---|---:|');
+    for (const block of payload.behavioral.gameResults) {
+      const result = block.result ?? {};
+      let primary = `${result.completedTrialCount ?? result.trialCount ?? block.trialCount ?? 0} ensayo(s)`;
+      let precision = result.accuracy != null ? pct(result.accuracy) : 'No aplica';
+      if (block.gameId === 'laser_puzzle') {
+        primary = `${result.solvedLevels ?? 0}/${result.levelCount ?? 0} mapas resueltos`;
+        precision = Number(result.levelCount) > 0 ? `Precisión ${pct((Number(result.solvedLevels) || 0) / Number(result.levelCount))}; eficiencia ${pct(result.solutionEfficiency)}` : 'No aplica';
+      } else if (block.gameId === 'passenger_routes') {
+        primary = `${result.passengersDelivered ?? 0}/${result.destinationCount ?? 0} entregas`;
+        precision = Number(result.destinationCount) > 0 ? `Precisión ${pct((Number(result.passengersDelivered) || 0) / Number(result.destinationCount))}; eficiencia ruta ${pct(result.routeEfficiency)}` : 'No aplica';
+      } else if (block.gameId === 'balloon_risk') {
+        primary = `${result.roundsCompleted ?? 0}/${result.totalRounds ?? 0} rondas`;
+        precision = `Eficiencia riesgo ${pct(result.riskEfficiency ?? result.score)}`;
+      } else if (block.gameId === 'team_coordination') {
+        primary = `${result.completedScenarioCount ?? 0}/${result.scenarioCount ?? 0} escenarios`;
+        precision = `Coordinación ${pct(result.score)}; adaptabilidad ${pct(result.adaptabilityScore)}`;
+      }
+      lines.push(`| ${block.label ?? block.gameId ?? 'Juego'} | ${block.status ?? 'completed'} | ${primary} | ${precision} | ${formatDurationMs(result.timeMs ?? result.meanReactionTimeMs)} |`);
+    }
+  } else {
+    lines.push(`- Trials completados: ${perf.completedTrialCount ?? 0}/${perf.trialCount ?? 0}`);
+    lines.push(`- Accuracy: ${pct(perf.accuracy ?? 0)}`);
+    lines.push(`- RT medio: ${Math.round(perf.meanReactionTimeMs ?? 0)}ms`);
+    lines.push(`- Score medio: ${pct(perf.meanScore ?? 0)}`);
+    lines.push(`- Search efficiency: ${pct(game.visualSearch?.searchEfficiency ?? 0)}`);
+  }
   lines.push('');
   lines.push('## 6. Correlación cámara + tarea');
   lines.push(`- Trials correlacionados: ${correlation.completedTrialCount ?? 0}`);

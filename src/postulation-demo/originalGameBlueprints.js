@@ -13,6 +13,13 @@ export const FORBIDDEN_ORIGINAL_GAME_FIELDS = Object.freeze([
   'stepByStepPath',
   'clickTrace',
   'eventLog',
+  'freeText',
+  'typedResponse',
+  'messageText',
+  'optionText',
+  'scenarioText',
+  'choiceSequence',
+  'rawChoices',
 ]);
 
 export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
@@ -119,6 +126,43 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
     ]),
     reportDimension: 'Planificación bajo restricciones y eficiencia de rutas; lectura observacional para revisión humana.',
     activation: Object.freeze({ status: 'ported_hidden', phase: 'R-4' }),
+  }),
+  Object.freeze({
+    gameId: 'team_coordination',
+    label: 'Brief de coordinación de equipo',
+    shortLabel: 'Brief equipo',
+    source: Object.freeze({
+      primary: 'src/tasks/original-games/TeamCoordinationPostulationTask.jsx',
+      alternate: null,
+      sourceRepo: 'test-mpfl',
+    }),
+    postulation: Object.freeze({
+      replaces: null,
+      skill: 'structured_team_coordination',
+      phase: 'original_games_completion_probe',
+      durationLabel: '2 min',
+      trialCount: 4,
+      description: 'Micro-simulación estructurada de coordinación: elige intervenciones ante escenarios de equipo y muestra cómo se calculan liderazgo, comunicación y adaptabilidad.',
+    }),
+    allowedAggregateFields: Object.freeze([
+      'aggregateSchemaVersion',
+      'score',
+      'completed',
+      'scenarioCount',
+      'completedScenarioCount',
+      'leadershipScore',
+      'communicationScore',
+      'adaptabilityScore',
+      'decisionQualityScore',
+      'alignmentScore',
+      'roleClarityScore',
+      'feedbackUseScore',
+      'changeResponseScore',
+      'timeMs',
+      'aggregateOnly',
+    ]),
+    reportDimension: 'Comunicación, liderazgo, adaptabilidad y decisión en escenarios estructurados; lectura provisional para revisión humana.',
+    activation: Object.freeze({ status: 'controlled_active', phase: 'R-6-demo-completion' }),
   }),
 ]);
 

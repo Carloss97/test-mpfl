@@ -9,6 +9,63 @@ import {
   traceLaserBeam,
 } from './laserPuzzleTelemetry.js';
 
+function compactGrid(grid) {
+  return Object.fromEntries(Object.entries(grid).filter(([, cell]) => Boolean(cell)));
+}
+
+function movableKeys(grid) {
+  return Object.entries(grid).filter(([, cell]) => cell?.movable).map(([key]) => key);
+}
+
+function emptyKeys(level, grid) {
+  const keys = [];
+  for (let y = 0; y < level.rows; y += 1) {
+    for (let x = 0; x < level.cols; x += 1) {
+      const key = `${x},${y}`;
+      if (!grid[key]) keys.push(key);
+    }
+  }
+  return keys;
+}
+
+function movedGrid(grid, fromKey, toKey) {
+  const next = { ...grid };
+  const cell = next[fromKey];
+  delete next[fromKey];
+  next[toKey] = { ...cell };
+  return compactGrid(next);
+}
+
+function isSolved(level, grid) {
+  const trace = traceLaserBeam(grid, level.cols, level.rows);
+  const relayCount = (level.cells ?? []).filter((cell) => cell.type === 'relay').length;
+  return trace.litAntennaCount === level.antennaCount && trace.litRelayCount === relayCount;
+}
+
+function findMinimumLaserMoves(level, maxDepth = 4) {
+  const start = compactGrid(buildLaserGrid(level));
+  if (isSolved(level, start)) return 0;
+  let frontier = [start];
+  const seen = new Set([JSON.stringify(start)]);
+  for (let depth = 1; depth <= maxDepth; depth += 1) {
+    const nextFrontier = [];
+    for (const gridState of frontier) {
+      for (const fromKey of movableKeys(gridState)) {
+        for (const toKey of emptyKeys(level, gridState)) {
+          const grid = movedGrid(gridState, fromKey, toKey);
+          const signature = JSON.stringify(grid);
+          if (seen.has(signature)) continue;
+          if (isSolved(level, grid)) return depth;
+          seen.add(signature);
+          nextFrontier.push(grid);
+        }
+      }
+    }
+    frontier = nextFrontier;
+  }
+  return null;
+}
+
 describe('laser puzzle postulation telemetry helpers', () => {
   it('builds compact demo levels with an unsolved start and authored solution', () => {
     const levels = buildLaserDemoLevels();
@@ -30,7 +87,24 @@ describe('laser puzzle postulation telemetry helpers', () => {
       });
       const solved = traceLaserBeam(solvedGrid, level.cols, level.rows);
       expect(solved.litAntennaCount).toBe(level.antennaCount);
+      expect(solved.litRelayCount).toBe((level.cells ?? []).filter((cell) => cell.type === 'relay').length);
     }
+  });
+
+  it('does not author throwaway one- or two-move Laser levels after the intro', () => {
+    const minimumMoves = buildLaserDemoLevels().map((level) => ({
+      name: level.name,
+      moves: findMinimumLaserMoves(level, level.name === 'Calibración orbital' ? 3 : 2),
+      authoredMoves: level.solutionPlacements.length,
+    }));
+
+    expect(minimumMoves).toEqual([
+      { name: 'Calibración orbital', moves: 3, authoredMoves: 3 },
+      { name: 'Corredor de meteoritos', moves: null, authoredMoves: 4 },
+      { name: 'Red dual de comunicaciones', moves: null, authoredMoves: 4 },
+    ]);
+    expect(minimumMoves[0].moves).toBeGreaterThanOrEqual(3);
+    expect(minimumMoves.slice(1).every((level) => level.moves === null && level.authoredMoves >= 4)).toBe(true);
   });
 
   it('fits every Laser board inside compact postulation stages', () => {

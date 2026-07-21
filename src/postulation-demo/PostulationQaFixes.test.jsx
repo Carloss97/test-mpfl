@@ -86,10 +86,12 @@ describe('Postulation QA visual fixes', () => {
     const reportScreen = fs.readFileSync('src/postulation-demo/PostulationReportScreen.jsx', 'utf8');
     const reportSummary = fs.readFileSync('src/postulation-demo/PostulationReportSummary.js', 'utf8');
 
-    expect(reportScreen).toContain('<div><dt>Ensayos</dt>');
-    expect(reportScreen).toContain('<div><dt>Precisión</dt>');
-    expect(reportScreen).toContain('<div><dt>Puntaje</dt>');
-    expect(reportScreen).toContain('<div><dt>Tiempo</dt>');
+    expect(reportScreen).toContain('<dt>{metric.label}</dt>');
+    expect(reportSummary).toContain("pushMetric(metrics, 'Ensayos'");
+    expect(reportSummary).toContain("pushMetric(metrics, 'Precisión'");
+    expect(reportSummary).toContain("pushMetric(metrics, 'Puntaje'");
+    expect(reportSummary).toContain("pushMetric(metrics, 'Tiempo'");
+    expect(reportSummary).not.toMatch(/Accuracy|mean RT|Search efficiency/);
     expect(reportSummary).toContain("{ label: 'Ensayos correlacionados'");
   });
 });

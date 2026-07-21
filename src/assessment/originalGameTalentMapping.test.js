@@ -59,6 +59,26 @@ function vectorFromResults({ laserEfficiency = 0.9, passengerEfficiency = 0.84, 
           aggregateOnly: true,
         },
       },
+      {
+        gameId: 'team_coordination',
+        status: 'completed',
+        result: {
+          aggregateSchemaVersion: 'team_coordination_aggregate_v1',
+          completed: true,
+          scenarioCount: 4,
+          completedScenarioCount: 4,
+          leadershipScore: 0.87,
+          communicationScore: 0.88,
+          adaptabilityScore: 0.82,
+          decisionQualityScore: 0.86,
+          alignmentScore: 0.88,
+          roleClarityScore: 0.86,
+          feedbackUseScore: 0.76,
+          changeResponseScore: 0.84,
+          timeMs: 96000,
+          aggregateOnly: true,
+        },
+      },
     ],
     runId: 'r6-mapping-test',
     batteryId: 'krumm_postulation_demo_original_games_v1',
@@ -89,16 +109,23 @@ describe('krumm_workbook_talent_framework_v1', () => {
     expect(framework.constructs.problemSolving.score).toBeGreaterThan(80);
     expect(framework.constructs.planning.score).toBeGreaterThan(80);
     expect(framework.constructs.analyticalThinking.score).toBeGreaterThan(80);
-    expect(framework.constructs.leadership).toMatchObject({ score: null, confidence: 0, availability: 'not_measured' });
-    expect(framework.constructs.communication).toMatchObject({ score: null, confidence: 0, availability: 'not_measured' });
+    expect(framework.constructs.decisionMaking).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.45 });
+    expect(framework.constructs.adaptability).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.4 });
+    expect(framework.constructs.leadership).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.4 });
+    expect(framework.constructs.communication).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.4 });
+    expect(framework.constructs.leadership.score).toBeGreaterThan(80);
+    expect(framework.constructs.communication.score).toBeGreaterThan(80);
+    expect(framework.constructs.communication.narrative).toMatch(/sin guardar texto libre/i);
   });
 
   it('does not convert higher risk-taking into a better talent score', () => {
     const lowRisk = buildOriginalGameTalentFramework({ originalGameFeatureVector: vectorFromResults({ balloonRisk: 0.2 }) });
     const highRisk = buildOriginalGameTalentFramework({ originalGameFeatureVector: vectorFromResults({ balloonRisk: 0.95 }) });
 
-    expect(lowRisk.constructs.decisionMaking.score).toBeNull();
-    expect(highRisk.constructs.decisionMaking.score).toBeNull();
+    expect(lowRisk.constructs.decisionMaking.score).toBe(highRisk.constructs.decisionMaking.score);
+    expect(lowRisk.constructs.decisionMaking.evidence).toEqual(expect.arrayContaining([
+      expect.objectContaining({ feature: 'team.decisionQualityScore' }),
+    ]));
     expect(lowRisk.constructs.riskFeedbackProfile.score).toBeNull();
     expect(highRisk.constructs.riskFeedbackProfile.score).toBeNull();
     expect(JSON.stringify(highRisk.constructs.riskFeedbackProfile.evidence)).toContain('balloon.riskEfficiency');

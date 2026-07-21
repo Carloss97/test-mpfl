@@ -2,7 +2,7 @@
 
 > **For Hermes:** Use subagent-driven-development skill to implement this plan task-by-task.
 
-**Goal:** Reemplazar progresivamente los juegos actuales de `/postulaciones-demo` por los juegos preparados en la página original: Laser Puzzle, Balloon y optimización de rutas/pasajeros, manteniendo la demo estable para pruebas internas.
+**Goal:** Reemplazar progresivamente los juegos actuales de `/postulaciones-demo` por juegos breves tipo producto: Laser Puzzle, Balloon, optimización de rutas/pasajeros y un brief estructurado de coordinación de equipo para cubrir capacidades sociales faltantes, manteniendo la demo estable para pruebas internas.
 
 **Architecture:** La demo actual queda como baseline estable. Los juegos del repo `Test/` se portan por capas: primero blueprints/contratos privacy-safe, luego cada juego como componente aislado en `test-mpfl/src/tasks/original-games/`, finalmente se conectan al runtime de `/postulaciones-demo`, reporte y fixture. Ningún juego puede exportar rutas de puntero, DOM events crudos, snapshots, frames, landmarks, keypoints ni raw game logs.
 
@@ -32,6 +32,7 @@ Los reemplazos originales se introducirán detrás de contratos y pruebas antes 
 | Laser Puzzle | `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test/src/games/LaserPuzzleGame.jsx` | `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test/src/components/demo/LaserReflectGame.jsx` | Razonamiento espacial, planificación, seguimiento de reglas. |
 | Balloon | `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test/src/games/BalloonGame.jsx` | `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test/src/components/demo/BalloonGame.jsx` | Riesgo/recompensa, ajuste por feedback, persistencia. |
 | Rutas pasajeros | `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test/src/games/GridFlowGame.jsx` | `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test/src/components/demo/CollectPeopleGame.jsx` | Planificación bajo restricciones, optimización de rutas, eficiencia. |
+| Brief de coordinación | Implementación propia en `src/tasks/original-games/TeamCoordinationPostulationTask.jsx` | N/A | Liderazgo, comunicación, adaptabilidad y decisión en micro-situaciones estructuradas sin texto libre. |
 
 Decisión inicial: usar `GridFlowGame.jsx` como base robusta para rutas/pasajeros y retematizar a pasajeros/destinos; `CollectPeopleGame.jsx` queda como referencia visual simple.
 
@@ -99,7 +100,7 @@ Decisión inicial: usar `GridFlowGame.jsx` como base robusta para rutas/pasajero
 
 **Tareas:**
 
-- [x] Declarar blueprints para `laser_puzzle`, `balloon_risk` y `passenger_routes`.
+- [x] Declarar blueprints para `laser_puzzle`, `balloon_risk`, `passenger_routes` y `team_coordination`.
 - [x] Registrar rutas fuente del repo `Test/`.
 - [x] Definir dimensiones observacionales y reemplazo/posición propuesta.
 - [x] Definir campos agregados permitidos por juego.
@@ -109,7 +110,7 @@ Decisión inicial: usar `GridFlowGame.jsx` como base robusta para rutas/pasajero
 
 **Criterios de éxito:**
 
-- Tests verifican que existen exactamente tres juegos originales.
+- Tests verifican que existen los tres juegos originales portados más el brief estructurado de equipo.
 - Tests verifican que cada blueprint tiene fuente, target, métricas agregadas y campos prohibidos.
 - Tests verifican que el adaptador rechaza o elimina campos reconstructivos.
 
@@ -310,7 +311,7 @@ rawGameEvents
 
 ```text
 stable_dg       → fallback predeterminado, 4 juegos DG
-original_games  → modo interno controlado, 3 juegos originales
+original_games  → modo interno controlado, 4 juegos: 3 originales + brief de coordinación
 ```
 
 Seleccionar sin cambiar código:
@@ -344,7 +345,7 @@ La selección queda fijada al inicio de la sesión. Valores de query desconocido
 6. La lista global de campos prohibidos incluye rutas, keypoints, trazas, secuencias y resultados por trial; `trials` nunca entra a sesión/payload final.
 7. El payload final incluye `behavioral.gameResults` aggregate-only y el bundle HTTP contiene el payload estructurado requerido por backend.
 8. Sin señal biométrica no se fabrican estrés, fatiga o atención: esos canales quedan neutrales con caveat.
-9. Mientras R-6 no tenga mappings validados, la batería original neutraliza dimensiones no soportadas y limita confianza a `0.25`; preserva métricas por juego sin sobreinterpretarlas.
+9. Mientras R-6 no tenga mappings validados, la batería original neutraliza dimensiones no soportadas y limita confianza; preserva métricas por juego sin sobreinterpretarlas.
 10. Buffers de señales/eventos son acotados in-place para evitar copias crecientes en el hot path.
 11. Consentimiento de cámara se separó de disponibilidad/calidad de muestras.
 12. Smoke móvil detectó y corrigió overflow del reporte mediante tracks `minmax(0, 1fr)` y `min-width: 0`.
@@ -385,6 +386,7 @@ Smoke Playwright: 2 viewports × 4 rutas, PASS
 | Laser | Razonamiento espacial y planificación de reglas | `patrones de resolución`, `eficiencia de configuración`, `requiere revisión humana` |
 | Balloon | Ajuste ante riesgo/feedback | `estrategia de acumulación`, `ajuste post-pérdida`, no `personalidad` |
 | Rutas pasajeros | Planificación bajo restricciones | `eficiencia de ruta`, `manejo de restricciones`, `replanificación` |
+| Brief de coordinación | Coordinación estructurada, liderazgo, comunicación, adaptabilidad y decisión contextual | `elecciones estructuradas`, `claridad de roles`, `uso de feedback`, `sin texto libre`, `revisión humana` |
 
 **Implementado R-6:**
 
@@ -396,10 +398,13 @@ Smoke Playwright: 2 viewports × 4 rutas, PASS
 - `ORIGINAL_GAME_FEATURE_DEFINITIONS` documenta para cada feature: entrada agregada, fórmula, racional métrico, relevancia de constructo y limitaciones.
 - `krumm_workbook_talent_framework_v1` creado como framework provisional independiente del perfil DG:
   - `problemSolving`, `planning` y `analyticalThinking` solo puntúan si hay evidencia completa y válida.
-  - `decisionMaking` y `riskFeedbackProfile` quedan `descriptive_only`.
-  - `adaptability` queda `insufficient`.
-  - `leadership` y `communication` quedan `not_measured` con `score: null`.
+  - `decisionMaking` usa lectura preliminar del brief estructurado y rutas cuando hay evidencia agregada válida; Balloon sigue sin convertirse en personalidad ni frustración.
+  - `riskFeedbackProfile` queda `descriptive_only`.
+  - `adaptability`, `leadership` y `communication` ahora pueden recibir `provisional_score` desde `team_coordination`, con caveats de demo y revisión humana.
   - Sin fortalezas/watch areas, percentiles, cortes ni score global.
+- R-6b agregó `team_coordination` como micro-simulación gamificada: cuatro escenarios cerrados, panel visible de “Trabajo por detrás”, agregados allowlist-only y feedback modular. No guarda texto libre, conversación, choice sequence ni eventos crudos.
+- R-6c ajustó reporte técnico/HTML y pantalla de resultados: en `original_games` se omite el perfil DG legacy global para no mostrar confianza 25% ni habilidades “No medido” que no corresponden; el Markdown usa el mapa de evidencia original. Los resultados por juego muestran solo métricas relevantes: precisión/tiempo en Laser y Rutas, eficiencia de riesgo en Balloon y coordinación/adaptabilidad en Brief.
+- R-6c también subió levemente dificultad: Laser agrega piezas ópticas distractoras en niveles 2/3; Passenger reduce margen de energía en circuitos 2/3 manteniendo solvencia por estaciones; Brief de equipo añade misión/barra de coordinación ≥75%.
 - `postulationDemoSessionBuilder` usa allowlist estricta de blueprints originales antes de sesión/payload.
 - Sesión y payload agregan opcionalmente `originalGameFeatureVector` y `talentFramework` solo en `original_games`; `stable_dg` conserva su flujo sin esos campos.
 - Reporte Markdown/HTML/JSON y pantalla de reporte muestran el framework R-6 con semántica `No medido`, `descriptive_only` e `insufficient`, y conservan biometría solo como contexto/calidad.
@@ -412,17 +417,17 @@ Smoke Playwright: 2 viewports × 4 rutas, PASS
 - [x] Batería `stable_dg` no recibe el framework original.
 - [x] JSON report contiene `gameSummary`, `gameResults`, `originalGameFeatureVector` y `talentFramework` cuando aplica.
 
-**Verificación final R-6:**
+**Verificación final R-6/R-6b:**
 
 ```text
-R-6 assessment/report focal: 8 files / 27 tests
-Original-games regression: 10 files / 44 tests
+R-6/R-6b assessment/report focal: PostulationReportScreen + originalGameFeatureVector + originalGameTalentMapping + teamCoordinationTelemetry PASS
+Original-games regression focal: 29 files / 125 tests PASS
 Oxlint focal: 0 warnings / 0 errors
-Suite completa: 82 files / 339 tests
-Build: 1382 módulos, OK en 3.10s
+Suite completa: 92 files / 385 tests PASS
+Build: 1392 módulos, OK en 2.77s
 Audit producción: 0 vulnerabilidades
 git diff --check: OK
-Smoke Playwright: 2 viewports × 4 rutas, PASS; sin console/page/network errors ni overflow final
+Smoke Playwright original completo: desktop 1280×720 PASS y móvil 390×844 PASS; sin console/page errors ni overflow final. Vite verificado en http://127.0.0.1:5173/.
 ```
 
 ---
@@ -466,6 +471,11 @@ src/tasks/original-games/passengerRouteFeedback.js
 src/tasks/original-games/passengerRouteFeedback.test.js
 src/tasks/original-games/passengerRouteAuthoringReview.js
 src/tasks/original-games/passengerRouteAuthoringReview.test.js
+src/tasks/original-games/teamCoordinationFeedback.js
+src/tasks/original-games/teamCoordinationTelemetry.js
+src/tasks/original-games/teamCoordinationTelemetry.test.js
+src/tasks/original-games/TeamCoordinationPostulationTask.jsx
+src/tasks/original-games/TeamCoordinationPostulationTask.test.jsx
 docs/plans/2026-07-20-laser-passenger-product-game-design-review.md
 ```
 
@@ -473,11 +483,11 @@ Estos módulos separan feedback, comprensión, authoring y QA responsive de los 
 
 `balloon.threshold-calibration-review` quedó implementado como revisión de calibración global de Balloon: balance de rondas alto/medio/bajo, detección de frecuencia extrema de pérdidas y caveats que separan azar/thresholds/instrucciones de estrategia observada. No exporta thresholds por ronda ni pump sequences.
 
-`shared.candidate-instruction-check` quedó implementado como control agregado de comprensión/instrucciones para Laser, Balloon y Passenger. Si marca `high`, el reporte técnico puede excluir temporalmente el mapeo provisional en vez de confundir reglas/controles con bajo desempeño.
+`shared.candidate-instruction-check` quedó implementado como control agregado de comprensión/instrucciones para Laser, Balloon, Passenger y Team Coordination. Si marca `high`, el reporte técnico puede excluir temporalmente el mapeo provisional en vez de confundir reglas/controles con bajo desempeño.
 
 La tabla teórica señal→métrica→bibliografía fue retomada en `docs/research/krumm-talent-game-behavior-mapping-technical-study.md`, sección 4.5, con referencias verificadas por DOI/título/año y límites HR explícitos.
 
-**Pulido reporte HR (prioridad de presentación):** `PostulationReportSummary.js` y `PostulationReportScreen.jsx` agregan un resumen ejecutivo HR con cuatro bloques —qué se observó, cómo usarlo, qué no mide y siguiente paso— manteniendo `No ranking automático`, revisión humana y contraste con entrevista/CV.
+**Pulido reporte HR (prioridad de presentación):** `PostulationReportSummary.js` y `PostulationReportScreen.jsx` agregan un resumen ejecutivo HR con cuatro bloques —qué se observó, cómo usarlo, qué no mide y siguiente paso— manteniendo `No ranking automático`, revisión humana y contraste con entrevista/CV. Con `team_coordination` completado, el modo original muestra cobertura completa de demo para liderazgo, comunicación y adaptabilidad en vez de dejarlos como `No medido`.
 
 **Revisión producto-final Laser/Passenger (2026-07-20):**
 

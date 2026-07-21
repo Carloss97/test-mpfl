@@ -1093,8 +1093,104 @@
   filter: drop-shadow(0 3px 4px rgba(15, 23, 42, 0.28));
 }
 
+.passenger-route-task__passenger {
+  width: 23px;
+  height: 23px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
 .passenger-route-task__player {
   font-size: 1.1rem;
+}
+
+.passenger-route-task__onboard-badge {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 950;
+}
+
+.passenger-route-task__budget {
+  display: grid;
+  gap: 6px;
+  padding: 9px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.passenger-route-task__budget > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.passenger-route-task__budget strong {
+  color: #111827;
+  font-size: 0.92rem;
+}
+
+.passenger-route-task__budget-bar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.passenger-route-task__budget-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #10b981, #22c55e);
+}
+
+.passenger-route-task__budget--warn .passenger-route-task__budget-bar i {
+  background: linear-gradient(90deg, #f59e0b, #facc15);
+}
+
+.passenger-route-task__budget--danger .passenger-route-task__budget-bar i {
+  background: linear-gradient(90deg, #e11d48, #fb7185);
+}
+
+.passenger-route-task__passenger-list {
+  display: grid;
+  gap: 5px;
+}
+
+.passenger-route-task__passenger-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  padding: 5px 6px;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.passenger-route-task__passenger-row b {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: white;
+  font-size: 0.72rem;
 }
 
 .passenger-route-task__side-panel {
@@ -1177,7 +1273,8 @@
   outline-offset: 2px;
 }
 
-.passenger-route-task--finished {
+.passenger-route-task--finished,
+.passenger-route-task--failed {
   justify-items: center;
   padding: 28px;
   border: 1px solid rgba(15, 118, 110, 0.28);
@@ -1186,9 +1283,28 @@
   text-align: center;
 }
 
+.passenger-route-task--failed {
+  border-color: rgba(190, 18, 60, 0.28);
+  background: #ffe4e6;
+}
+
 .passenger-route-task--finished h3,
-.passenger-route-task--finished p {
+.passenger-route-task--finished p,
+.passenger-route-task--failed h3,
+.passenger-route-task--failed p {
   margin: 0;
+}
+
+.passenger-route-task--failed h3 {
+  color: #9f1239;
+}
+
+.passenger-route-task__failed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 @media (max-width: 760px), (max-height: 720px) {
@@ -1560,6 +1676,23 @@
 
 .postulation-demo__talent-card p {
   margin: 8px 0 0;
+}
+
+.postulation-demo__measurement-explainer {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(79, 70, 229, 0.16);
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.postulation-demo__measurement-explainer p {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.postulation-demo__measurement-explainer p + p {
+  margin-top: 6px;
 }
 
 .postulation-demo__talent-card ul,
@@ -1988,9 +2121,16 @@
 }
 
 .laser-puzzle-task__cell--ship,
-.laser-puzzle-task__cell--antenna {
+.laser-puzzle-task__cell--antenna,
+.laser-puzzle-task__cell--relay {
   background: #dbeafe;
   border-color: rgba(37, 99, 235, 0.34);
+}
+
+.laser-puzzle-task__cell--relay {
+  background: #ecfeff;
+  color: #0e7490;
+  border-color: rgba(6, 182, 212, 0.42);
 }
 
 .laser-puzzle-task__cell--movable {
@@ -2006,6 +2146,11 @@
 
 .laser-puzzle-task__cell--beam {
   box-shadow: inset 0 0 0 999px rgba(250, 204, 21, 0.22);
+}
+
+.laser-puzzle-task__cell--relay.laser-puzzle-task__cell--beam,
+.laser-puzzle-task__cell--antenna.laser-puzzle-task__cell--beam {
+  box-shadow: inset 0 0 0 999px rgba(34, 197, 94, 0.22), 0 0 0 3px rgba(34, 197, 94, 0.18);
 }
 
 .laser-puzzle-task__side-panel,
@@ -2050,6 +2195,252 @@
   text-align: center;
 }
 
+.team-coordination-task {
+  width: min(100%, 760px);
+  display: grid;
+  gap: 10px;
+  color: var(--postulation-game-control-text);
+}
+
+.team-coordination-task__header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.team-coordination-task__workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(190px, 0.65fr);
+  gap: 12px;
+  min-width: 0;
+}
+
+.team-coordination-task__mission {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.36fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid rgba(79, 70, 229, 0.18);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.12), transparent 14rem),
+    rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.team-coordination-task__mission strong,
+.team-coordination-task__mission p,
+.team-coordination-task__mission small {
+  margin: 0;
+}
+
+.team-coordination-task__mission strong {
+  display: block;
+  color: #111827;
+  font-size: 1rem;
+}
+
+.team-coordination-task__mission p,
+.team-coordination-task__mission small {
+  color: #475569;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.team-coordination-task__scoreboard {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.team-coordination-task__scoreboard strong {
+  color: var(--postulation-primary-strong);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.team-coordination-task__meter {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.team-coordination-task__meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--postulation-accent), var(--postulation-primary));
+}
+
+.team-coordination-task__scenario,
+.team-coordination-task__behind,
+.team-coordination-task__footer,
+.team-coordination-task--finished {
+  border: 1px solid rgba(79, 70, 229, 0.18);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.team-coordination-task__scenario {
+  min-width: 0;
+  padding: 14px;
+}
+
+.team-coordination-task__eyebrow {
+  color: var(--postulation-primary-strong);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.team-coordination-task__scenario h4 {
+  margin: 6px 0 6px;
+  color: #111827;
+  font-size: 1rem;
+}
+
+.team-coordination-task__scenario p,
+.team-coordination-task__footer p,
+.team-coordination-task__behind p,
+.team-coordination-task__behind small {
+  margin: 0;
+  color: #334155;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.team-coordination-task__options {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.team-coordination-task__option {
+  display: grid;
+  gap: 4px;
+  min-height: 54px;
+  padding: 10px 12px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #1e293b;
+  text-align: left;
+  cursor: pointer;
+}
+
+.team-coordination-task__option strong {
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+
+.team-coordination-task__option span {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.team-coordination-task__option:hover:not(:disabled),
+.team-coordination-task__option--selected {
+  border-color: rgba(79, 70, 229, 0.58);
+  background: #eef2ff;
+}
+
+.team-coordination-task__option:disabled {
+  cursor: default;
+}
+
+.team-coordination-task__behind {
+  min-width: 0;
+  padding: 12px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.team-coordination-task__behind > strong {
+  color: #111827;
+}
+
+.team-coordination-task__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.team-coordination-task__chips span {
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.team-coordination-task__behind dl,
+.team-coordination-task--finished dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.team-coordination-task__behind dl div,
+.team-coordination-task--finished dl div {
+  min-width: 0;
+  padding: 7px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.team-coordination-task__behind dt,
+.team-coordination-task--finished dt {
+  color: #64748b;
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.team-coordination-task__behind dd,
+.team-coordination-task--finished dd {
+  margin: 2px 0 0;
+  color: #111827;
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.team-coordination-task__explain {
+  padding: 8px;
+  border-radius: 12px;
+  background: #ecfeff;
+}
+
+.team-coordination-task__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.team-coordination-task--finished {
+  justify-items: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.team-coordination-task--finished h3,
+.team-coordination-task--finished p {
+  margin: 0;
+}
+
 @media (max-width: 1180px), (max-height: 820px) {
   .laser-puzzle-task {
     gap: 8px;
@@ -2068,6 +2459,40 @@
 
   .laser-puzzle-task__footer {
     padding: 8px 10px;
+  }
+
+  .team-coordination-task {
+    gap: 8px;
+  }
+
+  .team-coordination-task__workspace {
+    gap: 8px;
+  }
+
+  .team-coordination-task__mission {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 10px;
+  }
+
+  .team-coordination-task__scoreboard {
+    justify-items: stretch;
+  }
+
+  .team-coordination-task__scenario,
+  .team-coordination-task__behind {
+    padding: 10px;
+  }
+
+  .team-coordination-task__option {
+    min-height: 48px;
+    padding: 8px 10px;
+  }
+
+  .team-coordination-task__scenario p,
+  .team-coordination-task__footer p,
+  .team-coordination-task__behind p,
+  .team-coordination-task__behind small {
+    font-size: 0.76rem;
   }
 }
 
@@ -2276,6 +2701,11 @@
 }
 
 @media (max-width: 520px) {
+  .postulation-demo--gameplay {
+    overflow: auto;
+    overflow-x: hidden;
+  }
+
   .postulation-demo__landing,
   .postulation-demo__setup {
     width: min(100% - 20px, 1180px);
@@ -2307,7 +2737,42 @@
   }
 
   .postulation-demo__game-shell {
+    min-height: auto;
     padding: 10px;
+  }
+
+  .postulation-demo__game-body,
+  .postulation-demo__game-stage {
+    overflow: visible;
+  }
+
+  .postulation-demo__game-stage {
+    height: auto;
+    place-items: start center;
+  }
+
+  .laser-puzzle-task__workspace {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .laser-puzzle-task__board {
+    max-width: 100%;
+  }
+
+  .laser-puzzle-task__side-panel {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .laser-puzzle-task__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .laser-puzzle-task__footer .primary {
+    width: 100%;
   }
 
   .postulation-demo__quality-grid,

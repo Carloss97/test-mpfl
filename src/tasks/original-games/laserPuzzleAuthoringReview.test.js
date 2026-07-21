@@ -73,7 +73,7 @@ describe('laser puzzle authoring review', () => {
 
   it('marks par calibration caveats without requiring raw beam or movement history', () => {
     const overGenerousPar = buildLaserDemoLevels().map((level, index) => (index === 1
-      ? { ...level, par: 12 }
+      ? { ...level, par: 13 }
       : level));
 
     const review = buildLaserPuzzleAuthoringReview(overGenerousPar);
@@ -81,8 +81,8 @@ describe('laser puzzle authoring review', () => {
     expect(review.levelAuthoringStatus).toBe('needs_authoring_review');
     expect(review.levelSummaries[1]).toMatchObject({
       parStatus: 'too_generous',
-      authoredMoveCount: 2,
-      par: 12,
+      authoredMoveCount: 4,
+      par: 13,
     });
     expect(review.parCalibrationNote).toMatch(/revisar par/i);
     expectNoForbiddenKeys(review);

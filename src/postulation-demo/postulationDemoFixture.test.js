@@ -44,19 +44,21 @@ describe('postulationDemoFixture', () => {
     });
 
     expect(fixture.summary.batteryMode).toBe('original_games');
-    expect(fixture.summary.completedCount).toBe(3);
+    expect(fixture.summary.completedCount).toBe(4);
     expect(fixture.summary.blocks.map((entry) => entry.block.gameId)).toEqual([
       'laser_puzzle',
       'balloon_risk',
       'passenger_routes',
+      'team_coordination',
     ]);
     expect(fixture.artifacts.batteryMode).toBe('original_games');
-    expect(fixture.artifacts.assessmentSession.blocks).toHaveLength(3);
+    expect(fixture.artifacts.assessmentSession.blocks).toHaveLength(4);
     expect(fixture.artifacts.payload.behavioral.gameResults.map((result) => result.gameId)).toEqual([
       'laser_puzzle',
       'balloon_risk',
       'passenger_routes',
+      'team_coordination',
     ]);
-    expect(stringifyCoreArtifacts(fixture)).not.toMatch(/fullRoute|routeTrace|visitedCells|rawGameEvents|pointerSamples/i);
+    expect(stringifyCoreArtifacts(fixture)).not.toMatch(/fullRoute|routeTrace|visitedCells|rawGameEvents|pointerSamples|freeText|typedResponse/i);
   });
 });

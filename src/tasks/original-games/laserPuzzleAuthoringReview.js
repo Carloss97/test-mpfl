@@ -2,6 +2,7 @@ import {
   buildLaserDemoLevels,
   buildLaserGrid,
   countAntennas,
+  countRelays,
   getLaserBoardMetrics,
   traceLaserBeam,
 } from './laserPuzzleTelemetry.js';
@@ -47,10 +48,13 @@ function getParStatus(par, authoredMoveCount) {
 function reviewLaserLevel(level = {}, index = 0, viewport = DEFAULT_VIEWPORT) {
   const metrics = getLaserBoardMetrics(level, viewport);
   const antennaCount = Math.max(0, Math.round(Number(level.antennaCount) || countAntennas(level)));
+  const relayCount = Math.max(0, Math.round(Number(level.relayCount) || countRelays(level)));
   const authoredMoveCount = Array.isArray(level.solutionPlacements) ? level.solutionPlacements.length : 0;
   const solvedGrid = applyAuthoredSolution(level);
   const solvedTrace = traceLaserBeam(solvedGrid, level.cols, level.rows);
-  const solvedByAuthoredPlacements = antennaCount > 0 && solvedTrace.litAntennaCount >= antennaCount;
+  const solvedByAuthoredPlacements = antennaCount > 0
+    && solvedTrace.litAntennaCount >= antennaCount
+    && solvedTrace.litRelayCount >= relayCount;
   const boardFits = metrics.boardWidth <= viewport.width && metrics.boardHeight <= viewport.height;
   const parStatus = getParStatus(level.par, authoredMoveCount);
   return Object.freeze({
@@ -59,6 +63,7 @@ function reviewLaserLevel(level = {}, index = 0, viewport = DEFAULT_VIEWPORT) {
     difficulty: typeof level?.difficulty === 'string' ? level.difficulty : 'unknown',
     challengeType: getChallengeType(level, antennaCount),
     antennaCount,
+    relayCount,
     movablePieceCount: (level.cells ?? []).filter((cell) => cell.movable).length,
     authoredMoveCount,
     par: Math.max(0, Math.round(Number(level.par) || 0)),

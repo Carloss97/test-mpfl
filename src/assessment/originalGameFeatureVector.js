@@ -24,6 +24,16 @@ export const ORIGINAL_GAME_FEATURE_ORDER = Object.freeze([
   'passenger.stationUseCount',
   'passenger.satisfactionNormalized',
   'passenger.timeMs',
+  'team.completion',
+  'team.leadershipScore',
+  'team.communicationScore',
+  'team.adaptabilityScore',
+  'team.decisionQualityScore',
+  'team.alignmentScore',
+  'team.roleClarityScore',
+  'team.feedbackUseScore',
+  'team.changeResponseScore',
+  'team.timeMs',
 ]);
 
 const FEATURE_UNITS = Object.freeze({
@@ -49,6 +59,16 @@ const FEATURE_UNITS = Object.freeze({
   'passenger.stationUseCount': 'count',
   'passenger.satisfactionNormalized': 'ratio',
   'passenger.timeMs': 'ms',
+  'team.completion': 'ratio',
+  'team.leadershipScore': 'ratio',
+  'team.communicationScore': 'ratio',
+  'team.adaptabilityScore': 'ratio',
+  'team.decisionQualityScore': 'ratio',
+  'team.alignmentScore': 'ratio',
+  'team.roleClarityScore': 'ratio',
+  'team.feedbackUseScore': 'ratio',
+  'team.changeResponseScore': 'ratio',
+  'team.timeMs': 'ms',
 });
 
 export const ORIGINAL_GAME_FEATURE_DEFINITIONS = Object.freeze({
@@ -228,6 +248,86 @@ export const ORIGINAL_GAME_FEATURE_DEFINITIONS = Object.freeze({
     constructRelevance: 'Reviewer context and future validation covariate.',
     limitations: Object.freeze(['Not a normed speed measure.', 'May be affected by instructions, device, or interruptions.']),
   }),
+  'team.completion': Object.freeze({
+    sourceGame: 'team_coordination',
+    aggregateInputs: Object.freeze(['completed']),
+    metricFormula: 'completed ? 1 : 0',
+    metricRationale: 'Completion indicates that the structured coordination scenarios were administered, enabling interpretation of social-judgment aggregates.',
+    constructRelevance: 'Availability flag for leadership, communication and adaptability evidence in the demo.',
+    limitations: Object.freeze(['Scenario completion is not a workplace assessment by itself.', 'Structured choices simplify real communication.']),
+  }),
+  'team.leadershipScore': Object.freeze({
+    sourceGame: 'team_coordination',
+    aggregateInputs: Object.freeze(['leadershipScore', 'roleClarityScore', 'alignmentScore']),
+    metricFormula: 'mean structured option leadership score in [0,1]',
+    metricRationale: 'The score summarizes choices that make goals, responsibilities and trade-offs explicit in simulated team moments.',
+    constructRelevance: 'Primary structured input for provisional leadership evidence.',
+    limitations: Object.freeze(['Not a group interaction or peer rating.', 'Requires validation before candidate comparison.']),
+  }),
+  'team.communicationScore': Object.freeze({
+    sourceGame: 'team_coordination',
+    aggregateInputs: Object.freeze(['communicationScore', 'alignmentScore', 'feedbackUseScore']),
+    metricFormula: 'mean structured option communication score in [0,1]',
+    metricRationale: 'The score summarizes structured choices that explain context, next steps and clarification loops without storing free text.',
+    constructRelevance: 'Primary structured input for provisional communication evidence.',
+    limitations: Object.freeze(['Does not evaluate writing style or live speech.', 'Structured multiple-choice options constrain expression.']),
+  }),
+  'team.adaptabilityScore': Object.freeze({
+    sourceGame: 'team_coordination',
+    aggregateInputs: Object.freeze(['adaptabilityScore', 'changeResponseScore']),
+    metricFormula: 'mean structured option adaptability score in [0,1]',
+    metricRationale: 'The score summarizes how choices respond to changing priorities, missing resources and feedback in controlled scenarios.',
+    constructRelevance: 'Primary structured input for provisional adaptability evidence.',
+    limitations: Object.freeze(['Scenario-based adaptation is not equivalent to longitudinal workplace flexibility.', 'Requires forms and validation.']),
+  }),
+  'team.decisionQualityScore': Object.freeze({
+    sourceGame: 'team_coordination',
+    aggregateInputs: Object.freeze(['decisionQualityScore']),
+    metricFormula: 'mean structured option decision score in [0,1]',
+    metricRationale: 'The score summarizes whether choices make bounded, actionable trade-offs under constraints, without assigning normative hiring decisions.',
+    constructRelevance: 'Structured support for provisional decision-making evidence.',
+    limitations: Object.freeze(['No normative cut score.', 'Does not establish real-world decision quality.']),
+  }),
+  'team.alignmentScore': Object.freeze({
+    sourceGame: 'team_coordination',
+    aggregateInputs: Object.freeze(['alignmentScore']),
+    metricFormula: 'mean structured option alignment score in [0,1]',
+    metricRationale: 'Captures whether choices align team goal, priority and next action in the simulated brief.',
+    constructRelevance: 'Contextual support for communication and leadership.',
+    limitations: Object.freeze(['Contextual feature, not a standalone talent score.']),
+  }),
+  'team.roleClarityScore': Object.freeze({
+    sourceGame: 'team_coordination',
+    aggregateInputs: Object.freeze(['roleClarityScore']),
+    metricFormula: 'mean structured option role-clarity score in [0,1]',
+    metricRationale: 'Captures whether choices assign or clarify responsibilities in the simulated team workflow.',
+    constructRelevance: 'Contextual support for leadership.',
+    limitations: Object.freeze(['Does not observe actual delegation outcomes.']),
+  }),
+  'team.feedbackUseScore': Object.freeze({
+    sourceGame: 'team_coordination',
+    aggregateInputs: Object.freeze(['feedbackUseScore']),
+    metricFormula: 'mean structured option feedback-use score in [0,1]',
+    metricRationale: 'Captures whether choices integrate team feedback into clarification and replanning.',
+    constructRelevance: 'Contextual support for communication and adaptability.',
+    limitations: Object.freeze(['Not a measure of emotional regulation or personality.']),
+  }),
+  'team.changeResponseScore': Object.freeze({
+    sourceGame: 'team_coordination',
+    aggregateInputs: Object.freeze(['changeResponseScore']),
+    metricFormula: 'mean structured option change-response score in [0,1]',
+    metricRationale: 'Captures whether choices update priorities and responsibilities when constraints change.',
+    constructRelevance: 'Contextual support for adaptability.',
+    limitations: Object.freeze(['Single-session scenario signal; no longitudinal stability.']),
+  }),
+  'team.timeMs': Object.freeze({
+    sourceGame: 'team_coordination',
+    aggregateInputs: Object.freeze(['timeMs']),
+    metricFormula: 'elapsed milliseconds for structured team block',
+    metricRationale: 'Elapsed time contextualizes the structured choices while avoiding raw click streams or text.',
+    constructRelevance: 'Reviewer context and future validation covariate.',
+    limitations: Object.freeze(['Not a communication speed norm.', 'May reflect reading speed.']),
+  }),
 });
 
 const FORBIDDEN_KEYS = Object.freeze([
@@ -248,6 +348,13 @@ const FORBIDDEN_KEYS = Object.freeze([
   'stepByStepPath',
   'clickTrace',
   'eventLog',
+  'freeText',
+  'typedResponse',
+  'messageText',
+  'optionText',
+  'scenarioText',
+  'choiceSequence',
+  'rawChoices',
   'pumpSequence',
   'beamCells',
   'rawGameEvents',
@@ -313,6 +420,7 @@ function initializeFeatureState() {
       laser_puzzle: 'not_administered',
       balloon_risk: 'not_administered',
       passenger_routes: 'not_administered',
+      team_coordination: 'not_administered',
     },
     qualityFlags: [],
   };
@@ -443,6 +551,44 @@ function addPassengerFeatures(state, block) {
   setObserved(state, 'passenger.timeMs', Math.max(0, finite(result.timeMs) ?? 0));
 }
 
+function addTeamCoordinationFeatures(state, block) {
+  if (!block) return;
+  const result = block.result ?? {};
+  if (hasForbiddenKeys(result)) state.qualityFlags.push('team_coordination_contains_forbidden_raw_keys');
+  const scenarioCount = nonNegativeInteger(result.scenarioCount);
+  const completedScenarioCount = nonNegativeInteger(result.completedScenarioCount);
+  const leadership = finite(result.leadershipScore);
+  const communication = finite(result.communicationScore);
+  const adaptability = finite(result.adaptabilityScore);
+  const decision = finite(result.decisionQualityScore);
+  const aggregateOnly = result.aggregateOnly === true;
+  const valid = aggregateOnly
+    && scenarioCount != null
+    && scenarioCount > 0
+    && completedScenarioCount != null
+    && completedScenarioCount <= scenarioCount
+    && validRatio(leadership)
+    && validRatio(communication)
+    && validRatio(adaptability)
+    && validRatio(decision)
+    && !hasForbiddenKeys(result);
+  if (!valid) {
+    setInvalidGame(state, 'team_coordination', 'team', 'invalid_aggregate');
+    return;
+  }
+  state.gameAvailability.team_coordination = result.completed === true ? 'measured_complete' : 'measured_partial';
+  setObserved(state, 'team.completion', result.completed === true ? 1 : 0);
+  setObserved(state, 'team.leadershipScore', leadership);
+  setObserved(state, 'team.communicationScore', communication);
+  setObserved(state, 'team.adaptabilityScore', adaptability);
+  setObserved(state, 'team.decisionQualityScore', decision);
+  setObserved(state, 'team.alignmentScore', validRatio(result.alignmentScore) ? result.alignmentScore : communication);
+  setObserved(state, 'team.roleClarityScore', validRatio(result.roleClarityScore) ? result.roleClarityScore : leadership);
+  setObserved(state, 'team.feedbackUseScore', validRatio(result.feedbackUseScore) ? result.feedbackUseScore : communication);
+  setObserved(state, 'team.changeResponseScore', validRatio(result.changeResponseScore) ? result.changeResponseScore : adaptability);
+  setObserved(state, 'team.timeMs', Math.max(0, finite(result.timeMs) ?? 0));
+}
+
 export function validateOriginalGameFeatureVectorPrivacy(value = {}) {
   const violations = [];
   const visit = (node) => {
@@ -466,6 +612,7 @@ export function buildOriginalGameFeatureVector({ blocks = [], runId = null, batt
   addLaserFeatures(state, blockByGame(blocks, 'laser_puzzle'));
   addBalloonFeatures(state, blockByGame(blocks, 'balloon_risk'));
   addPassengerFeatures(state, blockByGame(blocks, 'passenger_routes'));
+  addTeamCoordinationFeatures(state, blockByGame(blocks, 'team_coordination'));
 
   const featureArray = ORIGINAL_GAME_FEATURE_ORDER.map((key) => {
     const value = state.featureMap[key];

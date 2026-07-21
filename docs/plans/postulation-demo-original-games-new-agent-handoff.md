@@ -6,7 +6,7 @@
 **Ruta demo:** `/postulaciones-demo`  
 **Fixture:** `/postulaciones-demo?fixture=1`  
 **Estado producto:** listo para pruebas internas, con modo original mejorado para presentación interna.
-**Estado reemplazo juegos originales:** R-0 a R-6 completadas técnicamente; R-7 pendiente con datos/participantes. Laser y Passenger tienen progresión producto-final de 3 niveles/circuitos y authoring QA modular.
+**Estado reemplazo juegos originales:** R-0 a R-6/R-6b completadas técnicamente; R-7 pendiente con datos/participantes. Laser y Passenger tienen progresión producto-final de 3 niveles/circuitos, Balloon calibración básica y `team_coordination` cubre liderazgo/comunicación/adaptabilidad con brief estructurado.
 
 ---
 
@@ -24,8 +24,9 @@ El usuario quiere reemplazar progresivamente esos juegos por juegos preparados e
 1. Laser Puzzle.
 2. Balloon Risk.
 3. Optimización de rutas para pasajeros.
+4. Brief de coordinación de equipo.
 
-Se portaron **Laser Puzzle**, **Balloon Risk** y **Passenger Routes** y R-5 los activó como una batería interna seleccionable. R-6 agregó feature vector/framework provisional y reporte HR conservador. La batería DG continúa siendo el default/fallback; no hubo reemplazo irreversible. El foco posterior es R-7: QA comparativa, validación con participantes y calibración de dificultad.
+Se portaron **Laser Puzzle**, **Balloon Risk** y **Passenger Routes**; además se agregó **Team Coordination / Brief de equipo** como micro-simulación propia para cubrir capacidades que no estaban medidas por tareas individuales. R-5 activó la batería interna seleccionable y R-6/R-6b agregó feature vector/framework provisional, reporte HR conservador y cobertura completa de demo para liderazgo, comunicación y adaptabilidad. La batería DG continúa siendo el default/fallback; no hubo reemplazo irreversible. El foco posterior es R-7: QA comparativa, validación con participantes y calibración de dificultad.
 
 ---
 
@@ -45,7 +46,8 @@ No persistir ni exportar:
 - rutas reconstructivas de puntero;
 - raw DOM events;
 - raw game events/logs;
-- grillas/rutas completas si permiten reconstruir interacción exacta.
+- grillas/rutas completas si permiten reconstruir interacción exacta;
+- texto libre, conversación, secuencia de choices o eventos crudos del brief.
 
 Permitido:
 
@@ -154,6 +156,7 @@ src/postulation-demo/originalGameBlueprints.js
 src/postulation-demo/PostulationGameStage.jsx
 src/tasks/original-games/LaserPuzzlePostulationTask.jsx
 src/tasks/original-games/BalloonRiskPostulationTask.jsx
+src/tasks/original-games/TeamCoordinationPostulationTask.jsx
 src/tasks/gameRerenderStability.test.jsx
 ```
 
@@ -197,6 +200,7 @@ Define:
 laser_puzzle      → ported_hidden
 balloon_risk      → ported_hidden
 passenger_routes  → ported_hidden
+team_coordination → controlled_active
 ```
 
 Campos prohibidos generales:
@@ -489,9 +493,9 @@ Backtrack R-5 relevante para retomar:
 - Buffer de señal/eventos acotado sin copia de arrays en cada muestra.
 - Reporte responsive corregido tras repro Playwright de overflow a 390×844.
 
-### R-6 — Reporte, feature vector y narrativa HR
+### R-6/R-6b — Reporte, feature vector, narrativa HR y brief de equipo
 
-**Estado:** completada técnicamente; próximo foco R-7 QA comparativa y validación.
+**Estado:** completada técnicamente con cobertura completa de demo; próximo foco R-7 QA comparativa y validación.
 
 Documento técnico fuente:
 
@@ -506,6 +510,12 @@ src/assessment/originalGameFeatureVector.js
 src/assessment/originalGameFeatureVector.test.js
 src/assessment/originalGameTalentMapping.js
 src/assessment/originalGameTalentMapping.test.js
+src/tasks/original-games/TeamCoordinationPostulationTask.jsx
+src/tasks/original-games/TeamCoordinationPostulationTask.test.jsx
+src/tasks/original-games/teamCoordinationTelemetry.js
+src/tasks/original-games/teamCoordinationTelemetry.test.js
+src/tasks/original-games/teamCoordinationFeedback.js
+scripts/smoke-original-games-playability.mjs
 ```
 
 Archivos R-6 modificados:
@@ -537,6 +547,10 @@ Implementado:
 - `stable_dg` no recibe framework original.
 - Original mode expone `originalGameFeatureVector` y `talentFramework` en sesión/payload/reporte.
 - UI/reportes muestran `No medido`, `descriptive_only`, `insufficient`, `not_measured` y no generan fortalezas/watch areas del framework sin normas.
+- En modo original, `team_coordination` permite que liderazgo, comunicación y adaptabilidad salgan con score provisional/caveats en vez de quedar como `No medido`; si falta evidencia agregada vuelven a null/caveat.
+- El brief muestra un panel visible “Trabajo por detrás” con constructos activos, pero solo persiste scores, conteos y tiempos agregados.
+- Ajuste posterior R-6c: el Markdown/HTML técnico de `original_games` no debe mostrar el perfil DG legacy global de 25% ni una tabla de “Perfil de habilidades” con score `No medido`; debe usar solo el mapa de evidencia original y métricas por juego relevantes.
+- Ajuste posterior R-6c: Laser tiene distractores ópticos en niveles 2/3, Passenger tiene menor margen de energía en circuitos 2/3 y Team Coordination tiene misión/barra visible de coordinación ≥75%.
 - Cámara/biometría se mantiene como contexto/calidad; no afecta scores/confianza de mapping.
 
 Dimensiones R-6:
@@ -546,31 +560,32 @@ Dimensiones R-6:
 | Laser | Razonamiento espacial / planificación de reglas | patrones de resolución, eficiencia de configuración, revisión humana |
 | Balloon | Ajuste ante feedback/riesgo | estrategia de acumulación, ajuste post-pérdida, no personalidad |
 | Rutas | Planificación bajo restricciones | eficiencia de ruta, replanificación, manejo de restricciones |
+| Brief de equipo | Liderazgo, comunicación, adaptabilidad y decisión contextual | elecciones estructuradas, claridad de roles, uso de feedback, sin texto libre |
 
 Estados obligatorios del framework:
 
 ```text
-decisionMaking       -> score null / descriptive_only
+decisionMaking       -> provisional_score si Team + Passenger aportan evidencia; Balloon no define personalidad/frustración
 problemSolving       -> provisional_score si Laser + Passenger completos
 riskFeedbackProfile  -> score null / descriptive_only / frustration_tolerance_not_measured
 planning             -> provisional_score si Passenger completo
-adaptability         -> score null / insufficient
+adaptability         -> provisional_score si Team completo; null/caveat si falta evidencia
 analyticalThinking   -> provisional_score si Laser + Passenger completos
-leadership           -> score null / not_measured
-communication        -> score null / not_measured
+leadership           -> provisional_score si Team completo; null/caveat si falta evidencia
+communication        -> provisional_score si Team completo; null/caveat si falta evidencia
 ```
 
-Verificación final R-6:
+Verificación final R-6/R-6b:
 
 ```text
-R-6 assessment/report focal: 8 files / 27 tests
-Original-games regression: 10 files / 44 tests
+R-6/R-6b assessment/report focal: PostulationReportScreen + originalGameFeatureVector + originalGameTalentMapping + teamCoordinationTelemetry PASS
+Original-games regression focal: 29 files / 125 tests PASS
 Oxlint focal: 0 warnings / 0 errors
-Suite completa: 82 files / 339 tests
-Build: 1382 módulos, OK en 3.10s
+Suite completa: 92 files / 385 tests PASS
+Build: 1392 módulos, OK en 2.77s
 Audit producción: 0 vulnerabilidades
 git diff --check: OK
-Smoke Playwright: 8/8 rutas PASS en desktop 1280×720 y móvil 390×844; console/page/network errors 0; overflow horizontal 0
+Smoke Playwright original completo: desktop 1280×720 PASS y móvil 390×844 PASS; console/page errors 0; overflow horizontal 0; Vite fresco en http://127.0.0.1:5173/.
 ```
 
 ### R-7 — QA interna comparativa

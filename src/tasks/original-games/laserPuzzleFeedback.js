@@ -97,7 +97,7 @@ export function buildLaserPuzzleFeedback(aggregate = {}) {
       feedbackCategory: 'rule_confusion_review',
       candidateHint: 'El puzzle registró choques con reglas o restricciones visibles; conviene revisar reglas, orientación de reflectores e instrucciones antes de interpretar la solución.',
       reviewerCaveat: 'Este patrón puede reflejar comprensión de instrucciones o controles, no necesariamente baja capacidad de razonamiento.',
-      nextDesignProbe: 'Revisar copy de reglas, affordances visuales y controles del puzzle sin guardar beamCells ni ruta del haz.',
+      nextDesignProbe: 'Revisar copy de reglas, affordances visuales y controles del puzzle sin guardar la trayectoria del haz.',
     };
   }
 
