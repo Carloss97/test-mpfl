@@ -308,7 +308,9 @@ export function getPostulationExecutiveSummary(artifacts = null, completedDemo =
         title: isOriginalBattery && notMeasured === 0 ? 'Cobertura completa de demo' : isOriginalBattery ? 'No medido explícito' : 'Caveats visibles',
         body: isOriginalBattery
           ? notMeasured === 0
-            ? `${descriptive} lectura(s) se mantienen descriptivas por prudencia científica, pero ninguna capacidad queda sin tarea de demo asociada.`
+            ? descriptive === 0
+              ? `${workbookCards.length} constructos tienen score provisional y confianza por constructo; ninguna capacidad queda sin tarea de demo asociada.`
+              : `${descriptive} lectura(s) se mantienen descriptivas por prudencia científica, pero ninguna capacidad queda sin tarea de demo asociada.`
             : `${notMeasured} capacidades quedan como No medido o evidencia insuficiente; ${descriptive} lectura(s) son solo descriptivas. Cada tarjeta explica qué habría que agregar para medirlas.`
           : `${caveats.length} caveat(s) acompañan la sesión; la cámara se usa como calidad/contexto, no como inferencia diagnóstica.`,
       },

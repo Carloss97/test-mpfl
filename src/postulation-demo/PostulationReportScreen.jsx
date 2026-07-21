@@ -123,6 +123,8 @@ export default function PostulationReportScreen({
   const gameCards = useMemo(() => getPostulationGameCards(artifacts, completedDemo), [artifacts, completedDemo]);
   const talentDimensions = useMemo(() => getTopTalentDimensions(artifacts, 6), [artifacts]);
   const workbookFramework = useMemo(() => getWorkbookTalentFrameworkCards(artifacts), [artifacts]);
+  const completeWorkbookCoverage = workbookFramework.length > 0
+    && workbookFramework.every((construct) => construct.score != null && construct.availability === 'provisional_score');
   const executiveSummary = useMemo(() => getPostulationExecutiveSummary(artifacts, completedDemo), [artifacts, completedDemo]);
   const caveats = useMemo(() => getPostulationCaveats(artifacts), [artifacts]);
   const completedCount = completedDemo?.completedCount ?? artifacts?.assessmentSession?.blocks?.filter((block) => block.status === 'completed').length ?? 0;
@@ -231,7 +233,9 @@ export default function PostulationReportScreen({
           <div className="postulation-demo__report-section-head">
             <div>
               <h2>Mapa de evidencia KRUMM</h2>
-              <p>Lectura de demo: muestra qué capacidades sí tienen señales de juego, cuáles son solo descriptivas y cuáles todavía no están medidas.</p>
+              <p>{completeWorkbookCoverage
+                ? 'Lectura de demo completa: los ocho constructos tienen score provisional y confianza por constructo.'
+                : 'Lectura de demo: muestra qué capacidades tienen señales de juego y cuáles requieren evidencia adicional.'}</p>
             </div>
           </div>
           <div className="postulation-demo__talent-grid">

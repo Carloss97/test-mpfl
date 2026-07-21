@@ -101,18 +101,21 @@ describe('krumm_workbook_talent_framework_v1', () => {
       classification: { strengths: null, watchAreas: null, availability: 'not_available_without_norms' },
     });
     expect(framework.constructOrder).toEqual(WORKBOOK_TALENT_CONSTRUCT_ORDER);
-    expect(framework.constructs.problemSolving).toMatchObject({
-      availability: 'provisional_score',
-      confidenceCeiling: 0.5,
-      caveats: expect.arrayContaining(['provisional_mapping_requires_validation']),
-    });
+    for (const id of WORKBOOK_TALENT_CONSTRUCT_ORDER) {
+      expect(framework.constructs[id].availability).toBe('provisional_score');
+      expect(framework.constructs[id].score).toEqual(expect.any(Number));
+      expect(framework.constructs[id].confidence).toBeGreaterThanOrEqual(0.55);
+      expect(framework.constructs[id].caveats).toEqual(expect.arrayContaining(['provisional_mapping_requires_validation']));
+    }
+    expect(framework.constructs.problemSolving.confidenceCeiling).toBe(0.6);
     expect(framework.constructs.problemSolving.score).toBeGreaterThan(80);
     expect(framework.constructs.planning.score).toBeGreaterThan(80);
     expect(framework.constructs.analyticalThinking.score).toBeGreaterThan(80);
-    expect(framework.constructs.decisionMaking).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.45 });
-    expect(framework.constructs.adaptability).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.4 });
-    expect(framework.constructs.leadership).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.4 });
-    expect(framework.constructs.communication).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.4 });
+    expect(framework.constructs.decisionMaking).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.6 });
+    expect(framework.constructs.riskFeedbackProfile).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.55 });
+    expect(framework.constructs.adaptability).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.55 });
+    expect(framework.constructs.leadership).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.55 });
+    expect(framework.constructs.communication).toMatchObject({ availability: 'provisional_score', confidenceCeiling: 0.55 });
     expect(framework.constructs.leadership.score).toBeGreaterThan(80);
     expect(framework.constructs.communication.score).toBeGreaterThan(80);
     expect(framework.constructs.communication.narrative).toMatch(/sin guardar texto libre/i);
@@ -126,10 +129,11 @@ describe('krumm_workbook_talent_framework_v1', () => {
     expect(lowRisk.constructs.decisionMaking.evidence).toEqual(expect.arrayContaining([
       expect.objectContaining({ feature: 'team.decisionQualityScore' }),
     ]));
-    expect(lowRisk.constructs.riskFeedbackProfile.score).toBeNull();
-    expect(highRisk.constructs.riskFeedbackProfile.score).toBeNull();
+    expect(lowRisk.constructs.riskFeedbackProfile.score).toEqual(expect.any(Number));
+    expect(highRisk.constructs.riskFeedbackProfile.score).toEqual(expect.any(Number));
     expect(JSON.stringify(highRisk.constructs.riskFeedbackProfile.evidence)).toContain('balloon.riskEfficiency');
     expect(highRisk.constructs.riskFeedbackProfile.caveats).toContain('frustration_tolerance_not_measured');
+    expect(highRisk.constructs.riskFeedbackProfile.caveats).toContain('risk_index_not_personality_trait');
   });
 
   it('requires complete Laser and Passenger evidence instead of silently reweighting missing data', () => {

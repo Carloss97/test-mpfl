@@ -4,9 +4,11 @@
 **Repo principal:** `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/test-mpfl`  
 **Repo fuente visual/original:** `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test`  
 **Ruta demo:** `/postulaciones-demo`  
+**Ruta dashboard HR:** `/postulaciones-demo/hr`
+
 **Fixture:** `/postulaciones-demo?fixture=1`  
-**Estado producto:** listo para pruebas internas, con modo original mejorado para presentación interna.
-**Estado reemplazo juegos originales:** R-0 a R-6/R-6b completadas técnicamente; R-7 pendiente con datos/participantes. Laser y Passenger tienen progresión producto-final de 3 niveles/circuitos, Balloon calibración básica y `team_coordination` cubre liderazgo/comunicación/adaptabilidad con brief estructurado.
+**Estado producto:** demo candidato R-6d congelada para retomar; dashboard HR sintético separado, listo para presentación interna.
+**Estado reemplazo juegos originales:** R-0 a R-6d completadas técnicamente; R-7 pendiente con datos/participantes. Laser y Passenger tienen progresión producto-final de 3 niveles/circuitos, Balloon calibración básica y `team_coordination` cubre liderazgo/comunicación/adaptabilidad con brief estructurado sin patrón de respuesta por posición.
 
 ---
 
@@ -26,7 +28,9 @@ El usuario quiere reemplazar progresivamente esos juegos por juegos preparados e
 3. Optimización de rutas para pasajeros.
 4. Brief de coordinación de equipo.
 
-Se portaron **Laser Puzzle**, **Balloon Risk** y **Passenger Routes**; además se agregó **Team Coordination / Brief de equipo** como micro-simulación propia para cubrir capacidades que no estaban medidas por tareas individuales. R-5 activó la batería interna seleccionable y R-6/R-6b agregó feature vector/framework provisional, reporte HR conservador y cobertura completa de demo para liderazgo, comunicación y adaptabilidad. La batería DG continúa siendo el default/fallback; no hubo reemplazo irreversible. El foco posterior es R-7: QA comparativa, validación con participantes y calibración de dificultad.
+Se portaron **Laser Puzzle**, **Balloon Risk** y **Passenger Routes**; además se agregó **Team Coordination / Brief de equipo** como micro-simulación propia para cubrir capacidades que no estaban medidas por tareas individuales. R-5 activó la batería interna seleccionable; R-6/R-6b agregó feature vector/framework provisional y R-6d corrigió el agregado Passenger `6/5`, eliminó el patrón “primera opción correcta”, elevó la cobertura a ocho constructos con scores numéricos y confianza de demo `0.55–0.60`, y dejó el reporte completo sin estados `No medido`/insuficientes/descriptivos. La batería DG continúa siendo el default/fallback; no hubo reemplazo irreversible. El foco posterior es R-7: validación con participantes, estabilidad test-retest y calibración normativa; los scores actuales siguen siendo provisionales y human-review-only.
+
+Como superficie independiente se agregó `/postulaciones-demo/hr`: dashboard moderno con cinco perfiles sintéticos, KPIs, búsqueda/filtros, cola cronológica y detalle con ocho constructos, confianza, resultados por juego, prompts de entrevista y caveats. Los datos son aggregate-only y explícitamente sintéticos; no existe ranking, recomendación de contratación ni persistencia/backend real. La landing candidato solo añade un enlace secundario “Ver dashboard HR”; el gameplay y contratos R-6d no se modificaron.
 
 ---
 

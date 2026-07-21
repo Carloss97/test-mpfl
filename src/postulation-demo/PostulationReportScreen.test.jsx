@@ -146,13 +146,14 @@ describe('PostulationReportScreen', () => {
     expect(screen.queryByText(/Framework R-6 del workbook/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Batería original: lectura preliminar controlada/i)).toBeInTheDocument();
     expect(screen.getByText(/Cobertura completa de demo/i)).toBeInTheDocument();
+    expect(screen.getByText(/ocho constructos tienen score provisional/i)).toBeInTheDocument();
+    expect(screen.getByText(/8 constructos tienen score provisional/i)).toBeInTheDocument();
     expect(screen.getByText(/Validar antes de comparar candidatos/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Toma de decisiones/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Solo descriptivo/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Solo descriptivo/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/descriptive_only/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/No medido/i)).not.toBeInTheDocument();
-    expect(screen.getAllByText(/Por qué aparece así/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Cómo volverlo medible/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Evidencia insuficiente/i)).not.toBeInTheDocument();
     expect(screen.getByText(/brief de equipo observa decisiones estructuradas/i)).toBeInTheDocument();
     expect(screen.getAllByText(/sin guardar texto libre/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Liderazgo/i).length).toBeGreaterThan(0);

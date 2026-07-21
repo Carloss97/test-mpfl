@@ -70,7 +70,7 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(isPostulationDemoPath('/demo')).toBe(false);
   });
 
-  it('renders a polished candidate-facing landing without technical dashboard language', () => {
+  it('renders a polished candidate-facing landing with a separate HR dashboard entry', () => {
     render(<PostulationDemoApp />);
 
     expect(screen.getByRole('heading', { name: /KRUMM Postulaciones/i })).toBeInTheDocument();
@@ -78,8 +78,8 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(screen.getByText(/Demo MVP/i)).toBeInTheDocument();
     expect(screen.getByText(/6-8 min/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Comenzar demo de postulación/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Ver dashboard HR/i })).toHaveAttribute('href', '/postulaciones-demo/hr');
     expect(screen.queryByText(/KRUMM Edge Fusion PoC/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Dashboard/i)).not.toBeInTheDocument();
   });
 
   it('moves from landing into the productized signal setup screen', () => {

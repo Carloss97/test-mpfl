@@ -262,18 +262,18 @@ function buildRouteEdgeAIResult({ gameSummary, gameCorrelation, signalContext, q
 
 function applyBatteryModeChannelGuard(edgeAIResult, batteryMode) {
   if (batteryMode !== POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES) return edgeAIResult;
-  const pendingMapping = channel(0.5, ['original_games_mapping_pending_r6']);
+  const originalMappingContext = channel(0.5, ['original_games_framework_mapped_in_talentFramework']);
   return {
     ...edgeAIResult,
     channels: {
       ...edgeAIResult?.channels,
-      visuomotorPrecision: pendingMapping,
-      inhibitionControl: pendingMapping,
-      visualSearchEfficiency: pendingMapping,
+      visuomotorPrecision: originalMappingContext,
+      inhibitionControl: originalMappingContext,
+      visualSearchEfficiency: originalMappingContext,
     },
     caveats: [...new Set([
       ...(edgeAIResult?.caveats ?? []),
-      'original_games_metrics_pending_r6_mapping',
+      'original_games_r6d_mapping_available_in_talent_framework',
     ])],
   };
 }
@@ -322,7 +322,7 @@ export function buildPostulationDemoArtifacts({
   const batteryId = getPostulationDemoBatteryId(batteryMode);
   const selectedBattery = listVisiblePostulationBlocks(getPostulationDemoBattery(batteryMode));
   const modeCaveats = batteryMode === POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES
-    ? ['original_games_metrics_pending_r6_mapping']
+    ? ['original_games_r6d_provisional_mapping']
     : [];
   const blocks = normalizeCompletedBlocks(completedDemo);
   const fallbackBlocks = blocks.length ? blocks : selectedBattery

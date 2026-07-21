@@ -21,6 +21,9 @@ export default function PostulationLanding({ onStart, batteryMode }) {
             <a className="postulation-demo__secondary" href="#postulation-demo-background">
               {postulationDemoCopy.secondaryCta}
             </a>
+            <a className="postulation-demo__secondary" href="/postulaciones-demo/hr">
+              Ver dashboard HR
+            </a>
           </div>
         </div>
 

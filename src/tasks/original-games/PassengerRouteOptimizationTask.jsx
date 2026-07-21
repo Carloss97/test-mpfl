@@ -90,6 +90,8 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   const actualCostRef = useRef(0);
   const completedMinimumCostRef = useRef(0);
   const passengersDeliveredRef = useRef(0);
+  const deliveredPassengerKeysRef = useRef(new Set());
+  const completedLevelIdsRef = useRef(new Set());
   const replanCountRef = useRef(0);
   const stationUseCountRef = useRef(0);
   const movementAttemptCountRef = useRef(0);
@@ -161,6 +163,8 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
 
   const completeLevel = useCallback(() => {
     if (!level || finished) return;
+    if (completedLevelIdsRef.current.has(level.id)) return;
+    completedLevelIdsRef.current.add(level.id);
     const responseTime = now();
     const completedMinimumCost = completedMinimumCostRef.current
       + (levelSolutions[levelIndex]?.minimumCost ?? 0);
@@ -268,6 +272,10 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
 
   const retryCurrentCircuit = useCallback(() => {
     if (!level) return;
+    const deliveredKeysForLevel = [...deliveredPassengerKeysRef.current].filter((key) => key.startsWith(`${level.id}:`));
+    deliveredKeysForLevel.forEach((key) => deliveredPassengerKeysRef.current.delete(key));
+    passengersDeliveredRef.current = Math.max(0, passengersDeliveredRef.current - deliveredKeysForLevel.length);
+    completedLevelIdsRef.current.delete(level.id);
     failedAggregateRef.current = null;
     setFailed(false);
     setPlayer({ ...level.start });
@@ -327,7 +335,11 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
       const passenger = level.passengers.find((item) => item.id === nextOnboardId);
       if (passenger?.destination.x === x && passenger?.destination.y === y) {
         nextDeliveredIds = [...deliveredIds, passenger.id];
-        passengersDeliveredRef.current += 1;
+        const deliveredKey = `${level.id}:${passenger.id}`;
+        if (!deliveredPassengerKeysRef.current.has(deliveredKey)) {
+          deliveredPassengerKeysRef.current.add(deliveredKey);
+          passengersDeliveredRef.current += 1;
+        }
         nextOnboardId = null;
         nextStatus = `${passenger.label} llegó a destino.`;
       }

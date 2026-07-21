@@ -190,6 +190,25 @@ describe('postulationDemoSessionBuilder', () => {
           block: { gameId: 'passenger_routes', label: 'Optimización de rutas de pasajeros', skill: 'constraint_planning', trialCount: 2 },
           summary: { aggregateSchemaVersion: 'passenger_routes_aggregate_v1', score: 0.84, completed: true, passengersDelivered: 3, destinationCount: 3, routeEfficiency: 0.84, movementAttemptCount: 16, constraintViolationCount: 0, satisfactionScore: 88, aggregateOnly: true },
         },
+        {
+          block: { gameId: 'team_coordination', label: 'Brief de coordinación', skill: 'structured_social_judgment', trialCount: 4 },
+          summary: {
+            aggregateSchemaVersion: 'team_coordination_aggregate_v1',
+            score: 0.86,
+            completed: true,
+            scenarioCount: 4,
+            completedScenarioCount: 4,
+            leadershipScore: 0.87,
+            communicationScore: 0.88,
+            adaptabilityScore: 0.82,
+            decisionQualityScore: 0.86,
+            alignmentScore: 0.88,
+            roleClarityScore: 0.86,
+            feedbackUseScore: 0.76,
+            changeResponseScore: 0.84,
+            aggregateOnly: true,
+          },
+        },
       ],
     };
     const artifacts = buildPostulationDemoArtifacts({
@@ -205,7 +224,7 @@ describe('postulationDemoSessionBuilder', () => {
     expect(artifacts.batteryMode).toBe('original_games');
     expect(artifacts.batteryId).toMatch(/original/);
     expect(artifacts.assessmentSession.mode).toBe('postulation_demo_original_games');
-    expect(artifacts.assessmentSession.qualitySummary.caveats).toContain('original_games_metrics_pending_r6_mapping');
+    expect(artifacts.assessmentSession.qualitySummary.caveats).toContain('original_games_r6d_provisional_mapping');
     expect(artifacts.assessmentSession.edgeAI.channels.visuomotorPrecision.score).toBe(50);
     expect(artifacts.assessmentSession.edgeAI.channels.inhibitionControl.score).toBe(50);
     expect(artifacts.assessmentSession.edgeAI.channels.visualSearchEfficiency.score).toBe(50);
@@ -218,22 +237,25 @@ describe('postulationDemoSessionBuilder', () => {
         laser_puzzle: 'measured_complete',
         balloon_risk: 'measured_complete',
         passenger_routes: 'measured_complete',
+        team_coordination: 'measured_complete',
       },
     });
     expect(artifacts.assessmentSession.talentFramework).toMatchObject({
       schemaVersion: 'krumm_workbook_talent_framework_v1',
       classification: { strengths: null, watchAreas: null, availability: 'not_available_without_norms' },
       constructs: {
-        leadership: { score: null, availability: 'not_measured' },
-        communication: { score: null, availability: 'not_measured' },
+        leadership: { score: expect.any(Number), availability: 'provisional_score', confidence: 0.55 },
+        communication: { score: expect.any(Number), availability: 'provisional_score', confidence: 0.55 },
       },
     });
+    expect(Object.values(artifacts.assessmentSession.talentFramework.constructs).every((construct) => construct.score != null)).toBe(true);
     expect(artifacts.payload.behavioral.originalGameFeatureVector.type).toBe('original_game_feature_vector_v1');
     expect(artifacts.payload.talentFramework.schemaVersion).toBe('krumm_workbook_talent_framework_v1');
     expect(artifacts.payload.behavioral.gameResults).toEqual([
       expect.objectContaining({ gameId: 'laser_puzzle', result: expect.objectContaining({ solutionEfficiency: 0.9 }) }),
       expect.objectContaining({ gameId: 'balloon_risk', result: expect.objectContaining({ riskEfficiency: 0.72 }) }),
       expect.objectContaining({ gameId: 'passenger_routes', result: expect.objectContaining({ routeEfficiency: 0.84 }) }),
+      expect.objectContaining({ gameId: 'team_coordination', result: expect.objectContaining({ score: 0.86 }) }),
     ]);
     expect(artifacts.validation.ok).toBe(true);
   });

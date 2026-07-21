@@ -101,9 +101,9 @@ const originalGamesPayload = {
     sourceVector: { type: 'original_game_feature_vector_v1' },
     constructOrder: ['leadership', 'communication', 'riskFeedbackProfile'],
     constructs: {
-      leadership: { label: 'Liderazgo', availability: 'provisional_score', score: 86, confidence: 0.4, narrative: 'Lectura preliminar del brief de equipo.' },
-      communication: { label: 'Comunicación', availability: 'provisional_score', score: 83, confidence: 0.4, narrative: 'Claridad estructurada sin texto libre.' },
-      riskFeedbackProfile: { label: 'Perfil riesgo/feedback', availability: 'descriptive_only', score: null, confidence: 0.2, narrative: 'Solo describe estrategia riesgo/recompensa.' },
+      leadership: { label: 'Liderazgo', availability: 'provisional_score', score: 86, confidence: 0.55, narrative: 'Lectura preliminar del brief de equipo.' },
+      communication: { label: 'Comunicación', availability: 'provisional_score', score: 83, confidence: 0.55, narrative: 'Claridad estructurada sin texto libre.' },
+      riskFeedbackProfile: { label: 'Perfil riesgo/feedback', availability: 'provisional_score', score: 61, confidence: 0.55, narrative: 'Estrategia de juego riesgo/feedback; no personalidad ni frustración.' },
     },
     classification: {},
     governance: { humanReviewOnly: true, noAutomatedDecision: true, observationalOnly: true },
@@ -145,14 +145,18 @@ describe('generateTalentReport', () => {
 
     expect(report).toContain('Confianza global del perfil: no aplica');
     expect(report).toContain('## 4. Mapa de evidencia KRUMM — batería original');
-    expect(report).toContain('| Liderazgo | Lectura preliminar | 86 | 40% |');
-    expect(report).toContain('| Perfil riesgo/feedback | Solo descriptivo | No medido | 20% |');
+    expect(report).toContain('| Liderazgo | Lectura preliminar | 86 | 55% |');
+    expect(report).toContain('| Perfil riesgo/feedback | Lectura preliminar | 61 | 55% |');
     expect(report).toContain('Precisión 100%; eficiencia 100%');
     expect(report).toContain('Coordinación 83%; adaptabilidad 78%');
     expect(report).not.toContain('Confianza global del perfil: 25%');
+    expect(report).not.toContain('25%');
     expect(report).not.toContain('Perfil legacy DG');
     expect(report).not.toContain('## 4.1 Framework workbook R-6 provisional');
     expect(report).not.toContain('provisional_score');
     expect(report).not.toContain('descriptive_only');
+    expect(report).not.toContain('Solo descriptivo');
+    expect(report).not.toContain('Evidencia insuficiente');
+    expect(report).not.toContain('No medido');
   });
 });

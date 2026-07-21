@@ -214,4 +214,32 @@ describe('original_game_feature_vector_v1', () => {
     expect(vector.featureAvailability['laser.solvedRate']).toBe('invalid');
     expect(vector.observedMask[vector.featureOrder.indexOf('laser.solvedRate')]).toBe(0);
   });
+
+  it('clamps over-delivered passenger aggregates instead of invalidating the whole planning signal', () => {
+    const vector = buildOriginalGameFeatureVector({
+      blocks: [{
+        gameId: 'passenger_routes',
+        status: 'completed',
+        result: {
+          aggregateSchemaVersion: 'passenger_routes_aggregate_v1',
+          completed: true,
+          passengersDelivered: 6,
+          destinationCount: 5,
+          routeEfficiency: 0.65,
+          movementAttemptCount: 65,
+          replanCount: 0,
+          stationUseCount: 6,
+          constraintViolationCount: 8,
+          satisfactionScore: 25,
+          timeMs: 27998,
+          aggregateOnly: true,
+        },
+      }],
+    });
+
+    expect(vector.gameAvailability.passenger_routes).toBe('measured_complete');
+    expect(vector.featureMap['passenger.deliveryRate']).toBe(1);
+    expect(vector.featureAvailability['passenger.routeEfficiency']).toBe('observed');
+    expect(vector.qualityFlags).toContain('passenger_routes_delivery_count_clamped');
+  });
 });

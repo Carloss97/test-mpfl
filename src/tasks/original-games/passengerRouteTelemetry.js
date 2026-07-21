@@ -330,8 +330,8 @@ export function buildPassengerRouteResponseAggregate({
   satisfactionScore = 0,
   timeMs = 0,
 } = {}) {
-  const delivered = Math.max(0, Math.round(Number(passengersDelivered) || 0));
   const destinations = Math.max(1, Math.round(Number(destinationCount) || 1));
+  const delivered = Math.min(destinations, Math.max(0, Math.round(Number(passengersDelivered) || 0)));
   const actual = Math.max(0, Number(actualCost) || 0);
   const minimum = Math.max(0, Number(minimumCost) || 0);
   const routeEfficiency = actual > 0 ? round(clamp(minimum / actual, 0, 1), 4) : 0;

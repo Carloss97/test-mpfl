@@ -92,6 +92,7 @@ export function buildLaserDemoLevels() {
         Object.freeze({ x: 7, y: 7, type: 'reflector_ne', movable: true }),
         Object.freeze({ x: 3, y: 7, type: 'reflector_nw', movable: true }),
         Object.freeze({ x: 0, y: 7, type: 'reflector_ne', movable: true }),
+
         ...wallCells([
           { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 3, y: 1 }, { x: 6, y: 1 },
           { x: 1, y: 2 }, { x: 5, y: 2 }, { x: 1, y: 3 }, { x: 1, y: 4 },
@@ -129,6 +130,7 @@ export function buildLaserDemoLevels() {
         Object.freeze({ x: 0, y: 6, type: 'reflector_ne', movable: true }),
         Object.freeze({ x: 6, y: 6, type: 'reflector_ne', movable: true }),
         Object.freeze({ x: 1, y: 0, type: 'reflector_ne', movable: true }),
+        Object.freeze({ x: 5, y: 0, type: 'reflector_nw', movable: true }),
         ...wallCells([
           { x: 6, y: 1 }, { x: 3, y: 2 }, { x: 1, y: 3 }, { x: 3, y: 3 },
           { x: 1, y: 4 }, { x: 3, y: 4 }, { x: 6, y: 4 },
@@ -165,6 +167,7 @@ export function buildLaserDemoLevels() {
         Object.freeze({ x: 0, y: 5, type: 'reflector_nw', movable: true }),
         Object.freeze({ x: 7, y: 5, type: 'reflector_ne', movable: true }),
         Object.freeze({ x: 2, y: 0, type: 'reflector_nw', movable: true }),
+        Object.freeze({ x: 6, y: 0, type: 'reflector_ne', movable: true }),
         ...wallCells([
           { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 7, y: 0 },
           { x: 1, y: 2 }, { x: 7, y: 2 },

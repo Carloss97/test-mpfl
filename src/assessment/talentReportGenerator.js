@@ -141,7 +141,9 @@ function buildMarkdownReport(payload) {
     const constructList = frameworkConstructs(payload);
     const scoredCount = constructList.filter((entry) => entry.score != null).length;
     const descriptiveCount = constructList.filter((entry) => entry.availability === 'descriptive_only').length;
-    lines.push(`Este reporte resume señales agregadas de la batería original para revisión humana. ${scoredCount} constructos tienen lectura preliminar de demo y ${descriptiveCount} lectura(s) se mantienen solo descriptivas por prudencia científica.`);
+    lines.push(descriptiveCount === 0
+      ? `Este reporte resume señales agregadas de la batería original para revisión humana. Los ${scoredCount} constructos tienen lectura preliminar de demo con confianza informada por constructo.`
+      : `Este reporte resume señales agregadas de la batería original para revisión humana. ${scoredCount} constructos tienen lectura preliminar de demo y ${descriptiveCount} lectura(s) requieren interpretación descriptiva prudente.`);
     lines.push('Confianza global del perfil: no aplica para esta batería experimental; la confianza se informa por constructo en el mapa de evidencia para evitar mezclar el perfil DG legacy con los juegos originales.');
   } else {
     lines.push(`Este reporte resume señales observacionales para revisión humana. Fortalezas observadas: ${strengths(payload).join(', ') || 'sin fortalezas dominantes por sobre umbral'}. Áreas a revisar: ${watchAreas(payload).join(', ') || 'sin áreas críticas bajo umbral'}.`);
@@ -162,7 +164,7 @@ function buildMarkdownReport(payload) {
     for (const entry of frameworkConstructs(payload)) {
       lines.push(`| ${entry.label ?? entry.id} | ${availabilityLabel(entry.availability)} | ${scoreLabel(entry.score)} | ${pct(entry.confidence)} | ${entry.narrative ?? ''} |`);
     }
-    lines.push('Nota: se omite el perfil DG global en esta batería para no mostrar scores “No medido” o confianza 25% heredados de un marco que no corresponde a los juegos originales. No hay percentiles, normas, cortes ni ranking automático.');
+    lines.push('Nota: se omite el perfil DG global porque no corresponde a los juegos originales. No hay percentiles, normas, cortes ni ranking automático.');
     lines.push('');
   } else {
     lines.push('## 4. Perfil de habilidades');

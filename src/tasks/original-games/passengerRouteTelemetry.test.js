@@ -39,6 +39,26 @@ describe('passenger route privacy-safe telemetry helpers', () => {
     expect(JSON.stringify(aggregate)).not.toMatch(FORBIDDEN_ROUTE_FIELDS);
   });
 
+  it('clamps delivered passengers to destination count so downstream feature vectors stay valid', () => {
+    const aggregate = buildPassengerRouteResponseAggregate({
+      completed: true,
+      passengersDelivered: 6,
+      destinationCount: 5,
+      actualCost: 48,
+      minimumCost: 40,
+      movementAttemptCount: 22,
+      constraintViolationCount: 0,
+      satisfactionScore: 82,
+      timeMs: 58_000,
+    });
+
+    expect(aggregate.passengersDelivered).toBe(5);
+    expect(aggregate.destinationCount).toBe(5);
+    expect(aggregate.completed).toBe(true);
+    expect(aggregate.routeEfficiency).toBe(0.8333);
+    expect(JSON.stringify(aggregate)).not.toMatch(FORBIDDEN_ROUTE_FIELDS);
+  });
+
   it('sanitizes passenger route aggregates with an explicit scalar allowlist', () => {
     const unsafe = {
       score: 84,

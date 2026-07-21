@@ -23,6 +23,17 @@ La batería estable actual queda congelada como fallback funcional:
 
 Los reemplazos originales se introducirán detrás de contratos y pruebas antes de activar el nuevo orden visible.
 
+### Estado R-6d — cobertura completa de demo
+
+**Estado:** `[x] Completado y verificado el 2026-07-21`
+
+- Corregido Passenger para impedir agregados inválidos `passengersDelivered > destinationCount`; los históricos se acotan con quality flag sin perder toda la evidencia de planificación.
+- Brief de coordinación sin patrón “primera respuesta correcta”: posiciones óptimas 2/3/2/3.
+- Ocho constructos del mapa original con score provisional numérico y confianza de demo `0.55–0.60` cuando los cuatro juegos están completos.
+- Reporte completo sin `No medido`, `Evidencia insuficiente` ni `Solo descriptivo`; se mantienen caveats no normativos y revisión humana.
+- Dificultad: distractores Laser avanzados sin atajos de 1–2 movimientos; budgets ajustados en Passenger 2/3, con intro pedagógico y authoring válido.
+- Gates: `92` archivos / `389` tests, lint `0/0`, build OK, audit `0`, smoke desktop/móvil sin fallos.
+
 ---
 
 ## Fuentes revisadas en repo original `Test/`

@@ -74,6 +74,13 @@ export function buildTeamCoordinationScenarios() {
       measuredConstructs: Object.freeze(['liderazgo', 'comunicación', 'decisión']),
       options: Object.freeze([
         Object.freeze({
+          id: 'ask_more_context',
+          label: 'Pedir más contexto antes de decidir y posponer la asignación.',
+          category: 'information_gathering',
+          why: 'Puede ser prudente, pero retrasa coordinación cuando ya hay señales suficientes.',
+          scores: scoreBundle({ leadership: 0.56, communication: 0.66, adaptability: 0.55, decision: 0.58, alignment: 0.58, roleClarity: 0.42, feedbackUse: 0.46, changeResponse: 0.48 }),
+        }),
+        Object.freeze({
           id: 'align_roles_checkpoint',
           label: 'Alinear objetivo, asignar roles y fijar checkpoint de 10 minutos.',
           category: 'alignment_and_roles',
@@ -87,13 +94,6 @@ export function buildTeamCoordinationScenarios() {
           why: 'Reduce ambigüedad, pero limita coordinación y autonomía del equipo.',
           scores: scoreBundle({ leadership: 0.38, communication: 0.34, adaptability: 0.36, decision: 0.52, alignment: 0.4, roleClarity: 0.28, feedbackUse: 0.3, changeResponse: 0.3 }),
         }),
-        Object.freeze({
-          id: 'ask_more_context',
-          label: 'Pedir más contexto antes de decidir y posponer la asignación.',
-          category: 'information_gathering',
-          why: 'Puede ser prudente, pero retrasa coordinación cuando ya hay señales suficientes.',
-          scores: scoreBundle({ leadership: 0.56, communication: 0.66, adaptability: 0.55, decision: 0.58, alignment: 0.58, roleClarity: 0.42, feedbackUse: 0.46, changeResponse: 0.48 }),
-        }),
       ]),
     }),
     Object.freeze({
@@ -102,13 +102,6 @@ export function buildTeamCoordinationScenarios() {
       prompt: 'Aparece una prioridad nueva y hay que comunicarla sin perder confianza. ¿Qué mensaje eliges?',
       measuredConstructs: Object.freeze(['comunicación', 'adaptabilidad', 'decisión']),
       options: Object.freeze([
-        Object.freeze({
-          id: 'explain_change_next_steps',
-          label: 'Explicar el motivo del cambio, qué se pausa y cuál es el siguiente paso concreto.',
-          category: 'transparent_change_message',
-          why: 'Reduce incertidumbre y convierte el cambio en instrucciones accionables.',
-          scores: scoreBundle({ leadership: 0.76, communication: 0.92, adaptability: 0.84, decision: 0.82, alignment: 0.86, roleClarity: 0.78, feedbackUse: 0.62, changeResponse: 0.88 }),
-        }),
         Object.freeze({
           id: 'announce_only',
           label: 'Anunciar que cambió la prioridad y pedir que todos avancen rápido.',
@@ -123,6 +116,13 @@ export function buildTeamCoordinationScenarios() {
           why: 'Protege estabilidad, pero no responde a una restricción nueva relevante.',
           scores: scoreBundle({ leadership: 0.42, communication: 0.56, adaptability: 0.24, decision: 0.38, alignment: 0.52, roleClarity: 0.58, feedbackUse: 0.3, changeResponse: 0.18 }),
         }),
+        Object.freeze({
+          id: 'explain_change_next_steps',
+          label: 'Explicar el motivo del cambio, qué se pausa y cuál es el siguiente paso concreto.',
+          category: 'transparent_change_message',
+          why: 'Reduce incertidumbre y convierte el cambio en instrucciones accionables.',
+          scores: scoreBundle({ leadership: 0.76, communication: 0.92, adaptability: 0.84, decision: 0.82, alignment: 0.86, roleClarity: 0.78, feedbackUse: 0.62, changeResponse: 0.88 }),
+        }),
       ]),
     }),
     Object.freeze({
@@ -131,6 +131,13 @@ export function buildTeamCoordinationScenarios() {
       prompt: 'Dos personas indican que las instrucciones no se entendieron igual. Elige la reacción más útil.',
       measuredConstructs: Object.freeze(['comunicación', 'liderazgo', 'feedback']),
       options: Object.freeze([
+        Object.freeze({
+          id: 'delegate_clarification',
+          label: 'Pedir a otra persona que explique al resto para ahorrar tiempo.',
+          category: 'delegated_clarification',
+          why: 'Puede ayudar, pero evita que quien coordina cierre la brecha de comunicación.',
+          scores: scoreBundle({ leadership: 0.58, communication: 0.6, adaptability: 0.52, decision: 0.55, alignment: 0.54, roleClarity: 0.52, feedbackUse: 0.5, changeResponse: 0.5 }),
+        }),
         Object.freeze({
           id: 'acknowledge_reframe_check',
           label: 'Reconocer la ambigüedad, reformular en dos pasos y pedir confirmación breve.',
@@ -145,13 +152,6 @@ export function buildTeamCoordinationScenarios() {
           why: 'Puede sonar claro para quien lidera, pero no resuelve la fuente de ambigüedad.',
           scores: scoreBundle({ leadership: 0.44, communication: 0.4, adaptability: 0.34, decision: 0.44, alignment: 0.42, roleClarity: 0.38, feedbackUse: 0.2, changeResponse: 0.32 }),
         }),
-        Object.freeze({
-          id: 'delegate_clarification',
-          label: 'Pedir a otra persona que explique al resto para ahorrar tiempo.',
-          category: 'delegated_clarification',
-          why: 'Puede ayudar, pero evita que quien coordina cierre la brecha de comunicación.',
-          scores: scoreBundle({ leadership: 0.58, communication: 0.6, adaptability: 0.52, decision: 0.55, alignment: 0.54, roleClarity: 0.52, feedbackUse: 0.5, changeResponse: 0.5 }),
-        }),
       ]),
     }),
     Object.freeze({
@@ -160,13 +160,6 @@ export function buildTeamCoordinationScenarios() {
       prompt: 'A mitad del trabajo falta un recurso. Hay que adaptar el plan sin perder el objetivo.',
       measuredConstructs: Object.freeze(['adaptabilidad', 'liderazgo', 'decisión']),
       options: Object.freeze([
-        Object.freeze({
-          id: 'reprioritize_and_reassign',
-          label: 'Repriorizar el objetivo mínimo, reasignar roles y dejar explícito qué se descarta.',
-          category: 'adaptive_reprioritization',
-          why: 'Hace visible el trade-off, conserva foco y actualiza responsabilidades.',
-          scores: scoreBundle({ leadership: 0.9, communication: 0.82, adaptability: 0.94, decision: 0.88, alignment: 0.88, roleClarity: 0.86, feedbackUse: 0.7, changeResponse: 0.95 }),
-        }),
         Object.freeze({
           id: 'wait_for_resource',
           label: 'Esperar el recurso para no cambiar el estándar de entrega.',
@@ -180,6 +173,13 @@ export function buildTeamCoordinationScenarios() {
           category: 'unstructured_adaptation',
           why: 'Genera movimiento, pero deja alto riesgo de esfuerzos divergentes.',
           scores: scoreBundle({ leadership: 0.5, communication: 0.44, adaptability: 0.58, decision: 0.48, alignment: 0.36, roleClarity: 0.28, feedbackUse: 0.4, changeResponse: 0.56 }),
+        }),
+        Object.freeze({
+          id: 'reprioritize_and_reassign',
+          label: 'Repriorizar el objetivo mínimo, reasignar roles y dejar explícito qué se descarta.',
+          category: 'adaptive_reprioritization',
+          why: 'Hace visible el trade-off, conserva foco y actualiza responsabilidades.',
+          scores: scoreBundle({ leadership: 0.9, communication: 0.82, adaptability: 0.94, decision: 0.88, alignment: 0.88, roleClarity: 0.86, feedbackUse: 0.7, changeResponse: 0.95 }),
         }),
       ]),
     }),

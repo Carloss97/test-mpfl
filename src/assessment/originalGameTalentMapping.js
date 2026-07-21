@@ -163,7 +163,7 @@ function buildProblemSolving(vector, L, P) {
   const value = (0.65 * L) + (0.35 * P);
   return scoredConstruct('problemSolving', {
     scoreValue: value,
-    confidenceCeiling: 0.5,
+    confidenceCeiling: 0.6,
     evidence: [
       { feature: 'laser.solutionEfficiency', value: getFeature(vector, 'laser.solutionEfficiency') },
       { feature: 'laser.solvedRate', value: getFeature(vector, 'laser.solvedRate') },
@@ -178,7 +178,7 @@ function buildPlanning(vector, P) {
   if (P === null) return insufficientConstruct('planning', ['Requiere Passenger Routes completo y válido.']);
   return scoredConstruct('planning', {
     scoreValue: P,
-    confidenceCeiling: 0.5,
+    confidenceCeiling: 0.6,
     evidence: [
       { feature: 'passenger.routeEfficiency', value: getFeature(vector, 'passenger.routeEfficiency') },
       { feature: 'passenger.deliveryRate', value: getFeature(vector, 'passenger.deliveryRate') },
@@ -194,7 +194,7 @@ function buildAnalyticalThinking(vector, L, P) {
   const value = (0.50 * L) + (0.50 * P);
   return scoredConstruct('analyticalThinking', {
     scoreValue: value,
-    confidenceCeiling: 0.45,
+    confidenceCeiling: 0.6,
     evidence: [
       { feature: 'laser.solutionEfficiency', value: getFeature(vector, 'laser.solutionEfficiency') },
       { feature: 'passenger.routeEfficiency', value: getFeature(vector, 'passenger.routeEfficiency') },
@@ -214,7 +214,7 @@ function buildDecisionMaking(vector, P, T) {
     const value = (0.60 * T.decision) + (0.25 * P) + (0.15 * T.alignment);
     return scoredConstruct('decisionMaking', {
       scoreValue: value,
-      confidenceCeiling: 0.45,
+      confidenceCeiling: 0.6,
       evidence: [
         ...evidence,
         { formula: '0.60·teamDecision + 0.25·routePlanning + 0.15·teamAlignment', value },
@@ -239,13 +239,29 @@ function buildRiskFeedback(vector) {
     const value = getFeature(vector, key);
     if (value !== null) evidence.push({ feature: key, value });
   }
-  return baseConstruct('riskFeedbackProfile', {
-    availability: 'descriptive_only',
-    confidenceCeiling: evidence.length ? 0.2 : 0,
-    confidence: evidence.length ? 0.2 : 0,
-    evidence,
-    caveats: ['frustration_tolerance_not_measured', 'risk_index_not_personality_trait', 'provisional_mapping_requires_validation'],
-    narrative: 'Describe estrategia riesgo/recompensa y ajuste ante pérdida dentro de Balloon; no mide tolerancia a la frustración ni personalidad.',
+  const riskEfficiency = getFeature(vector, 'balloon.riskEfficiency');
+  const cashoutRate = getFeature(vector, 'balloon.cashoutRate');
+  const popRate = getFeature(vector, 'balloon.popRate');
+  const averagePumps = getFeature(vector, 'balloon.averagePumpsNormalized');
+  if (riskEfficiency === null || cashoutRate === null || popRate === null || averagePumps === null) {
+    return insufficientConstruct('riskFeedbackProfile', ['Requiere Balloon completo y válido.']);
+  }
+  const lossManagement = 1 - popRate;
+  const balancedExploration = 1 - Math.min(1, Math.abs(averagePumps - 0.5) / 0.5);
+  const value = (0.35 * riskEfficiency)
+    + (0.25 * cashoutRate)
+    + (0.25 * lossManagement)
+    + (0.15 * balancedExploration);
+  return scoredConstruct('riskFeedbackProfile', {
+    scoreValue: value,
+    confidenceCeiling: 0.55,
+    evidence: [
+      ...evidence,
+      { feature: 'balloon.averagePumpsNormalized', value: averagePumps },
+      { formula: '0.35·riskEfficiency + 0.25·cashoutRate + 0.25·lossManagement + 0.15·balancedExploration', value },
+    ],
+    caveats: ['frustration_tolerance_not_measured', 'risk_index_not_personality_trait', 'game_strategy_score_not_normative_trait'],
+    narrative: 'Índice provisional de estrategia riesgo/feedback dentro de Balloon: resume eficiencia, aseguramiento, exposición a pérdidas y exploración balanceada; no mide personalidad ni tolerancia a la frustración.',
   });
 }
 
@@ -260,7 +276,7 @@ function buildAdaptability(T) {
   const value = (0.70 * T.adaptability) + (0.30 * T.changeResponse);
   return scoredConstruct('adaptability', {
     scoreValue: value,
-    confidenceCeiling: 0.4,
+    confidenceCeiling: 0.55,
     evidence: [
       { feature: 'team.adaptabilityScore', value: T.adaptability },
       { feature: 'team.changeResponseScore', value: T.changeResponse },
@@ -281,7 +297,7 @@ function buildLeadership(T) {
   const value = (0.50 * T.leadership) + (0.30 * T.roleClarity) + (0.20 * T.alignment);
   return scoredConstruct('leadership', {
     scoreValue: value,
-    confidenceCeiling: 0.4,
+    confidenceCeiling: 0.55,
     evidence: [
       { feature: 'team.leadershipScore', value: T.leadership },
       { feature: 'team.roleClarityScore', value: T.roleClarity },
@@ -303,7 +319,7 @@ function buildCommunication(T) {
   const value = (0.55 * T.communication) + (0.25 * T.feedbackUse) + (0.20 * T.alignment);
   return scoredConstruct('communication', {
     scoreValue: value,
-    confidenceCeiling: 0.4,
+    confidenceCeiling: 0.55,
     evidence: [
       { feature: 'team.communicationScore', value: T.communication },
       { feature: 'team.feedbackUseScore', value: T.feedbackUse },

@@ -517,8 +517,9 @@ function addPassengerFeatures(state, block) {
   if (!block) return;
   const result = block.result ?? {};
   if (hasForbiddenKeys(result)) state.qualityFlags.push('passenger_routes_contains_forbidden_raw_keys');
-  const delivered = nonNegativeInteger(result.passengersDelivered);
+  const rawDelivered = nonNegativeInteger(result.passengersDelivered);
   const destinations = nonNegativeInteger(result.destinationCount);
+  const delivered = rawDelivered != null && destinations != null ? Math.min(rawDelivered, destinations) : rawDelivered;
   const routeEfficiency = finite(result.routeEfficiency);
   const violations = nonNegativeInteger(result.constraintViolationCount ?? 0);
   const replans = nonNegativeInteger(result.replanCount ?? 0);
@@ -529,7 +530,6 @@ function addPassengerFeatures(state, block) {
     && destinations != null
     && destinations > 0
     && delivered != null
-    && delivered <= destinations
     && validRatio(routeEfficiency)
     && violations != null
     && replans != null
@@ -540,6 +540,7 @@ function addPassengerFeatures(state, block) {
     setInvalidGame(state, 'passenger_routes', 'passenger', 'invalid_aggregate');
     return;
   }
+  if (rawDelivered != null && rawDelivered > destinations) state.qualityFlags.push('passenger_routes_delivery_count_clamped');
   state.gameAvailability.passenger_routes = result.completed === true ? 'measured_complete' : 'measured_partial';
   setObserved(state, 'passenger.completion', result.completed === true ? 1 : 0);
   setObserved(state, 'passenger.deliveryRate', delivered / destinations);

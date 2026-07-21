@@ -22,11 +22,25 @@ describe('team_coordination_aggregate_v1', () => {
       expect(scenario.measuredConstructs.length).toBeGreaterThanOrEqual(2);
       expect(JSON.stringify(scenario.options)).not.toMatch(/freeText|typedResponse|messageText/i);
     }
+    const bestOptionIndexes = scenarios.map((scenario) => {
+      const scores = scenario.options.map((option) => (
+        option.scores.leadership
+        + option.scores.communication
+        + option.scores.adaptability
+        + option.scores.decision
+      ));
+      return scores.indexOf(Math.max(...scores));
+    });
+    expect(bestOptionIndexes).toEqual([1, 2, 1, 2]);
   });
 
   it('builds an aggregate-only score vector from structured choices', () => {
     const scenarios = buildTeamCoordinationScenarios();
-    const responses = scenarios.map((scenario) => scenario.options[0]);
+    const responses = scenarios.map((scenario) => scenario.options.reduce((best, option) => {
+      const bestScore = best.scores.leadership + best.scores.communication + best.scores.adaptability + best.scores.decision;
+      const optionScore = option.scores.leadership + option.scores.communication + option.scores.adaptability + option.scores.decision;
+      return optionScore > bestScore ? option : best;
+    }, scenario.options[0]));
     const aggregate = buildTeamCoordinationResponseAggregate({
       completed: true,
       scenarioCount: scenarios.length,
