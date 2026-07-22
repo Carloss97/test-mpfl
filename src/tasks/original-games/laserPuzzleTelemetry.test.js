@@ -71,10 +71,12 @@ describe('laser puzzle postulation telemetry helpers', () => {
     const levels = buildLaserDemoLevels();
     expect(levels).toHaveLength(3);
     expect(levels.map((level) => level.name)).toEqual([
-      'Calibración orbital',
-      'Corredor de meteoritos',
-      'Red dual de comunicaciones',
+      'Órbita quebrada',
+      'Salto cuántico',
+      'Nexo gemelo',
     ]);
+    expect(levels.map((level) => level.solutionPlacements.length)).toEqual([4, 5, 6]);
+    expect(levels.filter((level) => level.cells.some((cell) => String(cell.type).startsWith('portal_')))).toHaveLength(2);
     for (const level of levels) {
       const start = traceLaserBeam(buildLaserGrid(level), level.cols, level.rows);
       expect(start.litAntennaCount).toBeLessThan(level.antennaCount);
@@ -88,23 +90,33 @@ describe('laser puzzle postulation telemetry helpers', () => {
       const solved = traceLaserBeam(solvedGrid, level.cols, level.rows);
       expect(solved.litAntennaCount).toBe(level.antennaCount);
       expect(solved.litRelayCount).toBe((level.cells ?? []).filter((cell) => cell.type === 'relay').length);
+
+      level.solutionPlacements.forEach((_, omittedIndex) => {
+        const partialGrid = buildLaserGrid(level);
+        level.solutionPlacements.forEach(([fromKey, toKey], placementIndex) => {
+          if (placementIndex === omittedIndex) return;
+          const cell = partialGrid[fromKey];
+          delete partialGrid[fromKey];
+          partialGrid[toKey] = { ...cell };
+        });
+        expect(isSolved(level, partialGrid)).toBe(false);
+      });
     }
   });
 
   it('does not author throwaway one- or two-move Laser levels after the intro', () => {
     const minimumMoves = buildLaserDemoLevels().map((level) => ({
       name: level.name,
-      moves: findMinimumLaserMoves(level, level.name === 'Calibración orbital' ? 3 : 2),
+      moves: findMinimumLaserMoves(level, 2),
       authoredMoves: level.solutionPlacements.length,
     }));
 
     expect(minimumMoves).toEqual([
-      { name: 'Calibración orbital', moves: 3, authoredMoves: 3 },
-      { name: 'Corredor de meteoritos', moves: null, authoredMoves: 4 },
-      { name: 'Red dual de comunicaciones', moves: null, authoredMoves: 4 },
+      { name: 'Órbita quebrada', moves: null, authoredMoves: 4 },
+      { name: 'Salto cuántico', moves: null, authoredMoves: 5 },
+      { name: 'Nexo gemelo', moves: null, authoredMoves: 6 },
     ]);
-    expect(minimumMoves[0].moves).toBeGreaterThanOrEqual(3);
-    expect(minimumMoves.slice(1).every((level) => level.moves === null && level.authoredMoves >= 4)).toBe(true);
+    expect(minimumMoves.every((level) => level.moves === null && level.authoredMoves >= 4)).toBe(true);
   });
 
   it('fits every Laser board inside compact postulation stages', () => {

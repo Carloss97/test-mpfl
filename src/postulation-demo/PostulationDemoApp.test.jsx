@@ -191,6 +191,6 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(screen.getByRole('heading', { name: /Puzzle láser/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Globo de riesgo/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Optimización de rutas de pasajeros/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Brief de coordinación de equipo/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Operación Faro: coordinación de equipo/i })).toBeInTheDocument();
   });
 });

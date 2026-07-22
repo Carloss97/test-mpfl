@@ -8,8 +8,8 @@
 **Ruta dashboard HR:** `/postulaciones-demo/hr`
 
 **Fixture:** `/postulaciones-demo?fixture=1`  
-**Estado producto:** release candidate R-6d para grabación final; dashboard HR sintético separado y recorrido operativo documentado.
-**Estado reemplazo juegos originales:** R-0 a R-6d completadas técnicamente; R-7 pendiente con datos/participantes. Laser y Passenger tienen progresión producto-final de 3 niveles/circuitos, Balloon calibración básica y `team_coordination` cubre liderazgo/comunicación/adaptabilidad con brief estructurado sin patrón de respuesta por posición.
+**Estado producto:** release candidate R-6d con Original Games V2 para grabación final; dashboard HR sintético separado y recorrido operativo documentado.
+**Estado reemplazo juegos originales:** R-0 a R-6d completadas técnicamente; R-7 pendiente con datos/participantes. Laser V2 usa progresión authoring `4/5/6` y portales; Passenger V2 usa circuitos justos con reservas `4/5/4` y recargas mínimas `0/0/1`; `team_coordination` es ahora Operación Faro, un RPG de texto estructurado con consecuencias locales y sin opción/categoría persistida.
 
 ---
 
@@ -27,13 +27,15 @@ El usuario quiere reemplazar progresivamente esos juegos por juegos preparados e
 1. Laser Puzzle.
 2. Balloon Risk.
 3. Optimización de rutas para pasajeros.
-4. Brief de coordinación de equipo.
+4. Operación Faro: coordinación de equipo.
 
 Se portaron **Laser Puzzle**, **Balloon Risk** y **Passenger Routes**; además se agregó **Team Coordination / Brief de equipo** como micro-simulación propia para cubrir capacidades que no estaban medidas por tareas individuales. R-5 activó la batería interna seleccionable; R-6/R-6b agregó feature vector/framework provisional y R-6d corrigió el agregado Passenger `6/5`, eliminó el patrón “primera opción correcta”, elevó la cobertura a ocho constructos con scores numéricos y confianza de demo `0.55–0.60`, y dejó el reporte completo sin estados `No medido`/insuficientes/descriptivos. La batería DG continúa siendo el default/fallback; no hubo reemplazo irreversible. El foco posterior es R-7: validación con participantes, estabilidad test-retest y calibración normativa; los scores actuales siguen siendo provisionales y human-review-only.
 
 Como superficie independiente se agregó `/postulaciones-demo/hr`: dashboard moderno con cinco perfiles sintéticos, KPIs, búsqueda/filtros, cola cronológica y detalle con ocho constructos, confianza, resultados por juego, prompts de entrevista y caveats. Los datos son aggregate-only y explícitamente sintéticos; no existe ranking, recomendación de contratación ni persistencia/backend real. La landing candidato conserva un acceso separado “Abrir vista HR” dentro del resumen lateral; el gameplay y contratos R-6d no se modificaron.
 
 La pasada final de readiness de 2026-07-21 simplificó la landing/setup, corrigió el tiempo original a `10–12 min`, separó el acceso HR del CTA candidato, agregó retry de cámara, humanizó el hero del reporte, reemplazó “cobertura completa” por `8 constructos con señal de demo`, preservó `null ≠ 0` en reportes técnicos y eliminó `choiceCategory` de eventos/fixtures Team y del contrato final. El checklist vigente es `docs/demo/postulation-demo-final-recording-qa.md`; el guion operativo es `docs/demo/postulation-demo-final-recording-runbook.md`. El checklist Fase J/I anterior quedó marcado como histórico.
+
+La pasada Original Games V2 del mismo día reemplazó los tres mapas Laser por retos de 4, 5 y 6 movimientos con portales visibles; rehízo Passenger como Central de movilidad con origen/destino inequívocos, costos energéticos visibles y una única recarga obligatoria en el circuito avanzado; y convirtió Team Coordination en Operación Faro con escuadrón, diálogo, comandos A/B/C, consecuencias de turno y métricas desconocidas (`—`) antes de la primera decisión. El plan ejecutado es `docs/plans/2026-07-21-original-games-v2-laser-passenger-team-rpg-plan.md`.
 
 Gates finales de grabación: `96` archivos / `405` tests Vitest, Oxlint `0/0`, build de `1395` módulos, audit `0` vulnerabilidades, diff-check limpio y smokes original/feedback/HR desktop+móvil sin fallos. El reporte de fixture separa integridad técnica de validez psicométrica, oculta métricas simuladas bajo un desplegable y marca cada score como `Demo provisional` con advertencia visible de ausencia de baremos/comparación.
 

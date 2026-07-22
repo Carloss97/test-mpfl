@@ -75,7 +75,7 @@ describe('PostulationGameStage', () => {
     render(<PostulationGameStage blocks={[{ ...laserBlock, visible: true, trialCount: 1 }]} onGameEvent={vi.fn()} />);
 
     expect(screen.getAllByRole('heading', { name: /Puzzle láser/i })).toHaveLength(2);
-    expect(screen.getByText(/Reconectar una antena aislada/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reconstruye una órbita de cuatro reflectores/i)).toBeInTheDocument();
   });
 
   it('can render the planned Balloon original game block through the default component map', () => {
@@ -90,8 +90,9 @@ describe('PostulationGameStage', () => {
     const passengerBlock = buildOriginalGamePostulationBlocks().find((block) => block.gameId === 'passenger_routes');
     render(<PostulationGameStage blocks={[{ ...passengerBlock, visible: true, trialCount: 1 }]} onGameEvent={vi.fn()} />);
 
-    expect(screen.getAllByRole('heading', { name: /Optimización de rutas/i })).toHaveLength(2);
-    expect(screen.getByText(/Recoger un pasajero y llevarlo a su destino/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Optimización de rutas/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Central de movilidad/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/Barrio Luz/i).length).toBeGreaterThan(0);
     expect(screen.getByTestId('passenger-route-board')).toBeInTheDocument();
   });
 
@@ -99,7 +100,7 @@ describe('PostulationGameStage', () => {
     const teamBlock = buildOriginalGamePostulationBlocks().find((block) => block.gameId === 'team_coordination');
     render(<PostulationGameStage blocks={[{ ...teamBlock, visible: true, trialCount: 1 }]} onGameEvent={vi.fn()} />);
 
-    expect(screen.getAllByRole('heading', { name: /Brief de coordinación/i })).toHaveLength(2);
+    expect(screen.getAllByRole('heading', { name: /Operación Faro/i })).toHaveLength(2);
     expect(screen.getByText(/Trabajo por detrás/i)).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });

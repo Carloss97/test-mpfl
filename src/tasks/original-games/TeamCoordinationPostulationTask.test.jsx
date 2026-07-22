@@ -5,7 +5,7 @@ import TeamCoordinationPostulationTask from './TeamCoordinationPostulationTask.j
 
 function chooseBestAndAdvance() {
   fireEvent.click(screen.getAllByRole('button', { name: /Alinear objetivo|Explicar el motivo|Reconocer la ambigüedad|Repriorizar el objetivo/i })[0]);
-  const nextButton = screen.getByRole('button', { name: /Siguiente escenario|Finalizar brief/i });
+  const nextButton = screen.getByRole('button', { name: /Continuar aventura|Cerrar misión/i });
   fireEvent.click(nextButton);
 }
 
@@ -14,14 +14,27 @@ describe('TeamCoordinationPostulationTask', () => {
     const onGameEvent = vi.fn();
     render(<TeamCoordinationPostulationTask active onGameEvent={onGameEvent} />);
 
-    expect(screen.getByRole('heading', { name: /Brief de coordinación/i })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: /Misión del brief de equipo/i })).toBeInTheDocument();
-    expect(screen.getByText(/Coordinar el sprint sin perder claridad/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Operación Faro/i })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /Comando de crisis RPG/i })).toBeInTheDocument();
+    expect(screen.getByText(/RPG táctico/i)).toBeInTheDocument();
+    expect(screen.getByText(/Turno 1 de 4/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sala de mando/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Mara/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Escuadrón/i)).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /Misión Operación Faro/i })).toBeInTheDocument();
+    expect(screen.getByText(/Mantener Operación Faro coordinada/i)).toBeInTheDocument();
+    expect(screen.getByText(/Misión en curso/i)).toBeInTheDocument();
+    expect(screen.getByText(/Coordinación —/i)).toBeInTheDocument();
     expect(screen.getByText(/Meta 75%/i)).toBeInTheDocument();
     expect(screen.getByText(/Trabajo por detrás/i)).toBeInTheDocument();
     expect(screen.getByText(/no guarda texto libre/i)).toBeInTheDocument();
     expect(screen.getAllByText(/liderazgo/i).length).toBeGreaterThan(0);
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Selecciona un comando/i })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /Alinear objetivo/i }));
+    expect(screen.getByText(/Consecuencia de turno/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Mara, Operaciones, Rumbo alineado/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Continuar aventura/i })).toBeEnabled();
     expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'game_start', gameId: 'team_coordination' }));
     expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'stimulus_shown', gameId: 'team_coordination' }));
   });
@@ -33,7 +46,7 @@ describe('TeamCoordinationPostulationTask', () => {
 
     chooseBestAndAdvance();
     expect(screen.getAllByText(/coordinación/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Escenario 2 de 4/i)).toBeInTheDocument();
+    expect(screen.getByText(/Turno 2 de 4/i)).toBeInTheDocument();
     chooseBestAndAdvance();
     chooseBestAndAdvance();
     chooseBestAndAdvance();

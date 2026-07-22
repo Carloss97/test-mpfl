@@ -54,10 +54,13 @@ describe('passenger route authoring review', () => {
       totalLevels: 3,
       solvableLevels: 3,
       unsolvableLevelIds: [],
-      minimumStationUseLevels: 2,
+      minimumStationUseLevels: 1,
+      fairEnergyMarginLevels: 3,
       boardFitLevels: 3,
     });
     expect(review.levelSummaries.every((level) => level.solvable && level.boardFits)).toBe(true);
+    expect(review.levelSummaries.map((level) => level.remainingBudget)).toEqual([4, 5, 4]);
+    expect(review.levelSummaries.every((level) => level.energyMarginSafe)).toBe(true);
     expectNoForbiddenAuthoringKeys(review);
   });
 
@@ -110,6 +113,7 @@ describe('passenger route authoring review', () => {
       solvableLevels: 3,
       authoringStatus: 'valid_for_internal_demo',
     });
-    expect(summary.minimumStationUseLevels).toBe(2);
+    expect(summary.minimumStationUseLevels).toBe(1);
+    expect(summary.fairEnergyMarginLevels).toBe(3);
   });
 });

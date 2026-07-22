@@ -44,16 +44,18 @@ describe('laser puzzle authoring review', () => {
       solvedByAuthoredPlacements: 3,
       boardFitLevels: 3,
       multiObjectiveLevels: 1,
+      portalRoutingLevels: 2,
       parCalibratedLevels: 3,
       unresolvedLevelIds: [],
     });
     expect(review.levelSummaries.map((level) => level.name)).toEqual([
-      'Calibración orbital',
-      'Corredor de meteoritos',
-      'Red dual de comunicaciones',
+      'Órbita quebrada',
+      'Salto cuántico',
+      'Nexo gemelo',
     ]);
-    expect(review.levelSummaries[0]).toMatchObject({ challengeType: 'single_target_reflection', authoredMoveCount: 3 });
-    expect(review.levelSummaries[2]).toMatchObject({ challengeType: 'multi_target_splitter', antennaCount: 2 });
+    expect(review.levelSummaries[0]).toMatchObject({ challengeType: 'single_target_reflection', authoredMoveCount: 4, usesPortal: false });
+    expect(review.levelSummaries[1]).toMatchObject({ challengeType: 'portal_routing', authoredMoveCount: 5, usesPortal: true });
+    expect(review.levelSummaries[2]).toMatchObject({ challengeType: 'multi_target_splitter', antennaCount: 2, authoredMoveCount: 6, usesPortal: true });
     expectNoForbiddenKeys(review);
   });
 
@@ -66,14 +68,14 @@ describe('laser puzzle authoring review', () => {
 
     expect(review.levelAuthoringStatus).toBe('needs_authoring_review');
     expect(review.recommendedLevelAction).toBe('revise_unsolved_or_unfitted_levels_before_candidate_use');
-    expect(review.solverConsistency.unresolvedLevelIds).toEqual(['laser-final-1-calibracion-orbital']);
+    expect(review.solverConsistency.unresolvedLevelIds).toEqual(['laser-v2-1-orbita-quebrada']);
     expect(review.levelSummaries[0]).toMatchObject({ solvedByAuthoredPlacements: false });
     expectNoForbiddenKeys(review);
   });
 
   it('marks par calibration caveats without requiring raw beam or movement history', () => {
     const overGenerousPar = buildLaserDemoLevels().map((level, index) => (index === 1
-      ? { ...level, par: 13 }
+      ? { ...level, par: 16 }
       : level));
 
     const review = buildLaserPuzzleAuthoringReview(overGenerousPar);
@@ -81,8 +83,8 @@ describe('laser puzzle authoring review', () => {
     expect(review.levelAuthoringStatus).toBe('needs_authoring_review');
     expect(review.levelSummaries[1]).toMatchObject({
       parStatus: 'too_generous',
-      authoredMoveCount: 4,
-      par: 13,
+      authoredMoveCount: 5,
+      par: 16,
     });
     expect(review.parCalibrationNote).toMatch(/revisar par/i);
     expectNoForbiddenKeys(review);
@@ -96,6 +98,7 @@ describe('laser puzzle authoring review', () => {
       solvedLevels: 3,
       authoringStatus: 'valid_for_internal_demo',
       multiObjectiveLevels: 1,
+      portalRoutingLevels: 2,
       recommendedLevelAction: 'keep_current_levels_for_internal_demo',
     });
   });

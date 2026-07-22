@@ -314,7 +314,7 @@ export function getPostulationExecutiveSummary(artifacts = null, completedDemo =
         label: 'Qué se observó',
         title: `${completedCount}/${totalCount} juegos completados`,
         body: isOriginalBattery
-          ? 'Laser, Balloon, Passenger y Brief de equipo aportan señales agregadas: reglas, riesgo/recompensa, rutas y coordinación estructurada.'
+          ? 'Laser, Balloon, Passenger y Operación Faro aportan señales agregadas: reglas, riesgo/recompensa, rutas y coordinación estructurada.'
           : 'La batería estable aporta señales agregadas de desempeño en tareas cortas de atención, control e interferencia.',
       },
       {

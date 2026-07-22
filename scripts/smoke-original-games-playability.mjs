@@ -36,23 +36,20 @@ async function completePassengerRoutes() {
   await movePassenger('Derecha', 3);
   await page.getByText(/Circuito 2 de 3/i).waitFor({ timeout: 5000 });
   await movePassenger('Derecha', 5);
-  await movePassenger('Arriba');
-  await movePassenger('Izquierda', 2);
-  await movePassenger('Derecha');
   await movePassenger('Arriba', 3);
   await movePassenger('Izquierda', 4);
+  await movePassenger('Arriba');
   await page.getByText(/Circuito 3 de 3/i).waitFor({ timeout: 5000 });
-  await movePassenger('Derecha', 4);
-  await movePassenger('Derecha', 2);
+  await movePassenger('Derecha', 6);
+  await movePassenger('Arriba');
   await movePassenger('Arriba', 2);
-  await movePassenger('Izquierda', 3);
-  await movePassenger('Izquierda', 3);
-  await movePassenger('Arriba', 2);
+  await movePassenger('Izquierda', 6);
+  await movePassenger('Arriba');
 }
 
 async function chooseTeamOption(label) {
   await clickButton(label);
-  await clickButton(/Siguiente escenario|Finalizar brief/i);
+  await clickButton(/Continuar aventura|Cerrar misión/i);
 }
 
 try {
@@ -82,32 +79,41 @@ try {
   await clickButton(/Continuar a juegos/i);
   await page.getByText(/Nivel 1 de 3/i).waitFor({ timeout: 5000 });
 
-  await solveLaserLevel([['7,7', '2,0'], ['3,7', '0,5'], ['0,7', '2,5']]);
+  await solveLaserLevel([['7,0', '0,2'], ['7,2', '3,2'], ['7,4', '3,5'], ['7,6', '1,5']]);
   await page.getByText(/Nivel 2 de 3/i).waitFor({ timeout: 5000 });
 
-  const relayRequirementVisible = await page.getByText(/0\/3 relés/i).isVisible().catch(() => false);
+  const relayRequirementVisible = await page.getByText(/\d+\/5 relés/i).first().isVisible().catch(() => false);
   if (!relayRequirementVisible) failures.push('Laser level 2 relay requirement is not visible.');
+  const portalRequirementVisible = await page.getByText(/2 portales/i).isVisible().catch(() => false);
+  if (!portalRequirementVisible) failures.push('Laser level 2 portal mechanic is not visible.');
 
-  await solveLaserLevel([['0,0', '2,1'], ['6,0', '2,5'], ['0,6', '5,5'], ['6,6', '5,2']]);
+  await solveLaserLevel([['0,0', '2,3'], ['1,6', '6,3'], ['3,6', '3,3'], ['5,6', '3,1'], ['7,6', '7,1']]);
   await page.getByText(/Nivel 3 de 3/i).waitFor({ timeout: 5000 });
-  await solveLaserLevel([['1,6', '3,1'], ['5,6', '5,1'], ['0,5', '3,5'], ['7,5', '5,5']]);
+  await solveLaserLevel([['0,0', '7,5'], ['1,0', '5,5'], ['2,0', '5,1'], ['4,7', '3,6'], ['5,7', '6,6'], ['6,7', '6,4']]);
   await page.getByRole('heading', { name: /Globo de riesgo/i }).first().waitFor({ timeout: 5000 });
 
   for (let index = 0; index < 8; index += 1) {
     await clickButton(/Inflar/i);
     await clickButton(/Asegurar puntos/i);
   }
-  await page.getByRole('heading', { name: /Optimización de rutas/i }).first().waitFor({ timeout: 5000 });
-  const passengerUiVisible = await page.evaluate(() => {
+  await page.getByRole('heading', { name: /Central de movilidad/i }).first().waitFor({ timeout: 5000 });
+  const passengerUi = await page.evaluate(() => {
     const text = document.body.innerText;
-    return /Energía\s+\d+\/\d+/.test(text)
-      && /Esperando · destino A/.test(text)
-      && Boolean(document.querySelector('.passenger-route-task__budget-bar'));
+    return {
+      hasEnergy: /Energía/.test(text),
+      hasPassenger: /Esperando · entregar en ⚑ A/i.test(text),
+      hasReserve: /Reserva al finalizar/i.test(text),
+      hasBudgetBar: Boolean(document.querySelector('.passenger-route-task__budget-bar')),
+    };
   });
-  if (!passengerUiVisible) failures.push('Passenger UI does not expose visible energy and passenger A/B/C legend.');
+  if (!passengerUi.hasEnergy || !passengerUi.hasPassenger || !passengerUi.hasReserve || !passengerUi.hasBudgetBar) {
+    failures.push(`Passenger UI readiness failed: ${JSON.stringify(passengerUi)}`);
+  }
 
   await completePassengerRoutes();
-  await page.getByRole('heading', { name: /Brief de coordinación/i }).first().waitFor({ timeout: 5000 });
+  await page.getByRole('heading', { name: /Operación Faro/i }).first().waitFor({ timeout: 5000 });
+  const rpgVisible = await page.getByText(/RPG táctico/i).first().isVisible().catch(() => false);
+  if (!rpgVisible) failures.push('Team coordination RPG scene is not visible.');
   const behindWorkVisible = await page.getByText(/Trabajo por detrás/i).isVisible().catch(() => false);
   if (!behindWorkVisible) failures.push('Team coordination game does not show behind-the-scenes metrics panel.');
   await chooseTeamOption(/Alinear objetivo, asignar roles/i);
@@ -119,7 +125,7 @@ try {
   if (/Framework R-6|workbook|descriptive_only|provisional_score|not_measured|No medido|Authoring|Calibration|Instruction check|valid_for_internal_demo/i.test(reportText)) {
     failures.push(`Report still exposes framework/internal status labels. REPORT:\n${reportText.slice(0, 1400)}`);
   }
-  if (!/8 constructos con señal de demo/.test(reportText) || !/Brief de equipo/.test(reportText)) {
+  if (!/8 constructos con señal de demo/.test(reportText) || !/Operación Faro/.test(reportText)) {
     failures.push(`Report does not show complete demo coverage from team coordination game. REPORT:\n${reportText.slice(0, 1400)}`);
   }
   if (!/Liderazgo/i.test(reportText) || !/Comunicación/i.test(reportText) || !/Adaptabilidad/i.test(reportText)) {

@@ -20,6 +20,14 @@ describe('team_coordination_aggregate_v1', () => {
     for (const scenario of scenarios) {
       expect(scenario.options).toHaveLength(3);
       expect(scenario.measuredConstructs.length).toBeGreaterThanOrEqual(2);
+      expect(scenario.scene).toEqual(expect.objectContaining({
+        act: expect.stringMatching(/Acto/i),
+        location: expect.any(String),
+        speaker: expect.any(String),
+        role: expect.any(String),
+        portrait: expect.any(String),
+        narration: expect.any(String),
+      }));
       expect(JSON.stringify(scenario.options)).not.toMatch(/freeText|typedResponse|messageText/i);
     }
     const bestOptionIndexes = scenarios.map((scenario) => {

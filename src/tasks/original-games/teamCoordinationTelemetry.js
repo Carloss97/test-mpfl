@@ -72,6 +72,14 @@ export function buildTeamCoordinationScenarios() {
       id: 'team-brief-1-alignment',
       title: 'Inicio de turno: tres frentes abiertos',
       prompt: 'El equipo tiene presión de tiempo, una persona nueva y dos tareas críticas. Elige cómo abrirías el brief.',
+      scene: Object.freeze({
+        act: 'Acto I · Alarma inicial',
+        location: 'Sala de mando',
+        speaker: 'Mara',
+        role: 'Jefa de operaciones',
+        portrait: '🧭',
+        narration: 'Tres señales rojas parpadean sobre el mapa y el equipo espera una primera orden.',
+      }),
       measuredConstructs: Object.freeze(['liderazgo', 'comunicación', 'decisión']),
       options: Object.freeze([
         Object.freeze({
@@ -101,6 +109,14 @@ export function buildTeamCoordinationScenarios() {
       id: 'team-brief-2-communication',
       title: 'Mensaje al equipo: cambio de prioridad',
       prompt: 'Aparece una prioridad nueva y hay que comunicarla sin perder confianza. ¿Qué mensaje eliges?',
+      scene: Object.freeze({
+        act: 'Acto II · Cambio de rumbo',
+        location: 'Canal de emergencia',
+        speaker: 'Leo',
+        role: 'Enlace de comunicaciones',
+        portrait: '📡',
+        narration: 'Una transmisión urgente cambia la misión cuando el equipo ya está en movimiento.',
+      }),
       measuredConstructs: Object.freeze(['comunicación', 'adaptabilidad', 'decisión']),
       options: Object.freeze([
         Object.freeze({
@@ -130,6 +146,14 @@ export function buildTeamCoordinationScenarios() {
       id: 'team-brief-3-feedback',
       title: 'Feedback del equipo: la tarea quedó poco clara',
       prompt: 'Dos personas indican que las instrucciones no se entendieron igual. Elige la reacción más útil.',
+      scene: Object.freeze({
+        act: 'Acto III · La señal se divide',
+        location: 'Sala táctica',
+        speaker: 'Nia',
+        role: 'Especialista de campo',
+        portrait: '🛠️',
+        narration: 'Dos integrantes interpretaron órdenes distintas y la operación comienza a fragmentarse.',
+      }),
       measuredConstructs: Object.freeze(['comunicación', 'liderazgo', 'feedback']),
       options: Object.freeze([
         Object.freeze({
@@ -159,6 +183,14 @@ export function buildTeamCoordinationScenarios() {
       id: 'team-brief-4-adaptation',
       title: 'Imprevisto final: falta un recurso clave',
       prompt: 'A mitad del trabajo falta un recurso. Hay que adaptar el plan sin perder el objetivo.',
+      scene: Object.freeze({
+        act: 'Acto IV · Recurso perdido',
+        location: 'Terminal Norte',
+        speaker: 'Mara',
+        role: 'Jefa de operaciones',
+        portrait: '🧭',
+        narration: 'La última fase queda sin un recurso crítico y solo hay tiempo para una decisión coordinada.',
+      }),
       measuredConstructs: Object.freeze(['adaptabilidad', 'liderazgo', 'decisión']),
       options: Object.freeze([
         Object.freeze({

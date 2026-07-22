@@ -49,6 +49,7 @@ function reviewLaserLevel(level = {}, index = 0, viewport = DEFAULT_VIEWPORT) {
   const metrics = getLaserBoardMetrics(level, viewport);
   const antennaCount = Math.max(0, Math.round(Number(level.antennaCount) || countAntennas(level)));
   const relayCount = Math.max(0, Math.round(Number(level.relayCount) || countRelays(level)));
+  const usesPortal = (level.cells ?? []).some((cell) => String(cell.type ?? '').startsWith('portal_'));
   const authoredMoveCount = Array.isArray(level.solutionPlacements) ? level.solutionPlacements.length : 0;
   const solvedGrid = applyAuthoredSolution(level);
   const solvedTrace = traceLaserBeam(solvedGrid, level.cols, level.rows);
@@ -62,6 +63,7 @@ function reviewLaserLevel(level = {}, index = 0, viewport = DEFAULT_VIEWPORT) {
     name: typeof level?.name === 'string' ? level.name : `Nivel ${index + 1}`,
     difficulty: typeof level?.difficulty === 'string' ? level.difficulty : 'unknown',
     challengeType: getChallengeType(level, antennaCount),
+    usesPortal,
     antennaCount,
     relayCount,
     movablePieceCount: (level.cells ?? []).filter((cell) => cell.movable).length,
@@ -100,6 +102,7 @@ export function buildLaserPuzzleAuthoringReview(levels = buildLaserDemoLevels(),
       solvedByAuthoredPlacements: levelSummaries.filter((level) => level.solvedByAuthoredPlacements).length,
       boardFitLevels: levelSummaries.filter((level) => level.boardFits).length,
       multiObjectiveLevels: levelSummaries.filter((level) => level.challengeType === 'multi_target_splitter').length,
+      portalRoutingLevels: levelSummaries.filter((level) => level.usesPortal).length,
       parCalibratedLevels: levelSummaries.filter((level) => level.parStatus === 'calibrated').length,
       unresolvedLevelIds,
       parIssueLevelIds,
@@ -127,6 +130,7 @@ export function summarizeLaserPuzzleAuthoring(levels = buildLaserDemoLevels()) {
     solvedLevels: review.solverConsistency.solvedByAuthoredPlacements,
     boardFitLevels: review.solverConsistency.boardFitLevels,
     multiObjectiveLevels: review.solverConsistency.multiObjectiveLevels,
+    portalRoutingLevels: review.solverConsistency.portalRoutingLevels,
     parCalibratedLevels: review.solverConsistency.parCalibratedLevels,
     authoringStatus: review.levelAuthoringStatus,
     recommendedLevelAction: review.recommendedLevelAction,

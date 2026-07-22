@@ -65,6 +65,8 @@ function summarizeLevel(level, index, viewport) {
     && metrics.boardHeight <= viewport.height
     && metrics.cellSize >= 24;
   const minimumCost = solution.minimumCost;
+  const remainingBudget = solution.solvable ? nonNegativeInteger(solution.remainingBudget) : null;
+  const energyMarginSafe = solution.solvable && remainingBudget != null && remainingBudget >= 3;
   const budgetUseRatio = solution.solvable && routeBudget > 0
     ? round(minimumCost / routeBudget)
     : null;
@@ -82,6 +84,8 @@ function summarizeLevel(level, index, viewport) {
     minimumCost: solution.solvable ? solution.minimumCost : null,
     minimumMoves: solution.solvable ? solution.minimumMoves : null,
     minimumStationUses: solution.solvable ? solution.minimumStationUses : null,
+    remainingBudget,
+    energyMarginSafe,
     budgetUseRatio,
     tightBudget,
     boardFits,
@@ -112,6 +116,7 @@ function candidateOutcomeReviewFor({ aggregate, routeAuthoringStatus }) {
 function statusFromLevelSummaries(levelSummaries) {
   if (levelSummaries.some((level) => !level.solvable)) return 'needs_authoring_fix';
   if (levelSummaries.some((level) => !level.boardFits)) return 'layout_review';
+  if (levelSummaries.some((level) => !level.energyMarginSafe)) return 'budget_tight_review';
   if (levelSummaries.some((level) => level.tightBudget)) return 'budget_tight_review';
   return 'valid_for_internal_demo';
 }
@@ -157,6 +162,7 @@ export function buildPassengerRouteAuthoringReview({
     solvableLevels: levelSummaries.filter((level) => level.solvable).length,
     unsolvableLevelIds: levelSummaries.filter((level) => !level.solvable).map((level) => level.id),
     minimumStationUseLevels: levelSummaries.filter((level) => Number(level.minimumStationUses ?? 0) > 0).length,
+    fairEnergyMarginLevels: levelSummaries.filter((level) => level.energyMarginSafe).length,
     boardFitLevels: levelSummaries.filter((level) => level.boardFits).length,
   };
 
@@ -180,6 +186,7 @@ export function summarizePassengerRouteAuthoring(levels = buildPassengerRouteDem
     totalLevels: review.solverConsistency.totalLevels,
     solvableLevels: review.solverConsistency.solvableLevels,
     minimumStationUseLevels: review.solverConsistency.minimumStationUseLevels,
+    fairEnergyMarginLevels: review.solverConsistency.fairEnergyMarginLevels,
     boardFitLevels: review.solverConsistency.boardFitLevels,
     authoringStatus: review.routeAuthoringStatus,
     recommendedLevelAction: review.recommendedLevelAction,

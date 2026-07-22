@@ -101,7 +101,7 @@ export const HR_DASHBOARD_CANDIDATES = Object.freeze([
       { id: 'laser', label: 'Puzzle láser', metric: '3/3 mapas', value: 93 },
       { id: 'balloon', label: 'Riesgo y feedback', metric: '8/8 rondas', value: 72 },
       { id: 'routes', label: 'Rutas', metric: '5/5 entregas', value: 95 },
-      { id: 'team', label: 'Brief de equipo', metric: '4/4 escenarios', value: 83 },
+      { id: 'team', label: 'Operación Faro', metric: '4/4 escenarios', value: 83 },
     ],
   }),
   candidate({
@@ -123,7 +123,7 @@ export const HR_DASHBOARD_CANDIDATES = Object.freeze([
       { id: 'laser', label: 'Puzzle láser', metric: '3/3 mapas', value: 82 },
       { id: 'balloon', label: 'Riesgo y feedback', metric: '8/8 rondas', value: 78 },
       { id: 'routes', label: 'Rutas', metric: '5/5 entregas', value: 86 },
-      { id: 'team', label: 'Brief de equipo', metric: '4/4 escenarios', value: 91 },
+      { id: 'team', label: 'Operación Faro', metric: '4/4 escenarios', value: 91 },
     ],
   }),
   candidate({
@@ -145,7 +145,7 @@ export const HR_DASHBOARD_CANDIDATES = Object.freeze([
       { id: 'laser', label: 'Puzzle láser', metric: '3/3 mapas', value: 88 },
       { id: 'balloon', label: 'Riesgo y feedback', metric: '8/8 rondas', value: 66 },
       { id: 'routes', label: 'Rutas', metric: '5/5 entregas', value: 90 },
-      { id: 'team', label: 'Brief de equipo', metric: '4/4 escenarios', value: 73 },
+      { id: 'team', label: 'Operación Faro', metric: '4/4 escenarios', value: 73 },
     ],
   }),
   candidate({
@@ -167,7 +167,7 @@ export const HR_DASHBOARD_CANDIDATES = Object.freeze([
       { id: 'laser', label: 'Puzzle láser', metric: '3/3 mapas', value: 91 },
       { id: 'balloon', label: 'Riesgo y feedback', metric: '8/8 rondas', value: 81 },
       { id: 'routes', label: 'Rutas', metric: '5/5 entregas', value: 88 },
-      { id: 'team', label: 'Brief de equipo', metric: '4/4 escenarios', value: 89 },
+      { id: 'team', label: 'Operación Faro', metric: '4/4 escenarios', value: 89 },
     ],
   }),
   candidate({
@@ -186,7 +186,7 @@ export const HR_DASHBOARD_CANDIDATES = Object.freeze([
       { id: 'laser', label: 'Puzzle láser', metric: '3/3 mapas', value: 84 },
       { id: 'balloon', label: 'Riesgo y feedback', metric: '8/8 rondas', value: 71 },
       { id: 'routes', label: 'Rutas', metric: 'Pendiente', value: null },
-      { id: 'team', label: 'Brief de equipo', metric: 'Pendiente', value: null },
+      { id: 'team', label: 'Operación Faro', metric: 'Pendiente', value: null },
     ],
   }),
 ]);

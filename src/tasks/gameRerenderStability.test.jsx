@@ -144,7 +144,7 @@ describe('game telemetry re-render stability', () => {
     );
 
     expect(eventCount()).toBe(2);
-    fireEvent.click(screen.getByTestId('laser-cell-7,7'));
+    fireEvent.click(screen.getByTestId('laser-cell-7,0'));
     expect(screen.getByText(/Pieza seleccionada/i)).toBeInTheDocument();
     expect(eventCount()).toBe(2);
   });

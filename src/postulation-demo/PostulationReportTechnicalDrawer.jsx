@@ -110,6 +110,7 @@ export default function PostulationReportTechnicalDrawer({
                   <li>Laser: {demoStatusLabel(laserAuthoring.authoringStatus)}</li>
                   <li>Niveles Laser resolubles: {laserAuthoring.solvedLevels}/{laserAuthoring.totalLevels}</li>
                   <li>Niveles Laser multiobjetivo: {laserAuthoring.multiObjectiveLevels}</li>
+                  <li>Niveles Laser con portales: {laserAuthoring.portalRoutingLevels}</li>
                 </>
               )}
               {balloonCalibration && (
@@ -121,6 +122,7 @@ export default function PostulationReportTechnicalDrawer({
               <li>Rutas: {demoStatusLabel(passengerAuthoring.authoringStatus)}</li>
               <li>Niveles resolubles: {passengerAuthoring.solvableLevels}/{passengerAuthoring.totalLevels}</li>
               <li>Niveles con parada obligatoria: {passengerAuthoring.minimumStationUseLevels}</li>
+              <li>Circuitos con margen energético seguro: {passengerAuthoring.fairEnergyMarginLevels}/{passengerAuthoring.totalLevels}</li>
               {instructionCheck && (
                 <>
                   <li>Claridad de instrucciones: {demoStatusLabel(instructionCheck.instructionRiskFlag === 'low' ? 'valid_for_internal_demo' : 'needs_authoring_review')}</li>

@@ -34,13 +34,19 @@ describe('PassengerRouteOptimizationTask', () => {
       />,
     );
 
-    expect(screen.getByRole('heading', { name: /Optimización de rutas/i })).toBeInTheDocument();
-    expect(screen.getByText(/Recoger un pasajero y llevarlo a su destino/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Presupuesto operativo/i).length).toBeGreaterThan(0);
-    expect(screen.getByLabelText(/Energía 12 de 12/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Central de movilidad/i })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /Misión de movilidad/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/Barrio Luz/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Reserva al finalizar/i)).toBeInTheDocument();
+    expect(screen.getByText(/4 de energía/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/No obligatoria/i).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText(/Energía 14 de 14/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Pasajero A esperando/i)).toBeInTheDocument();
-    expect(screen.getByText(/Esperando · destino A/i)).toBeInTheDocument();
-    expect(screen.getByText(/Paradas de apoyo/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Destino A/i)).toBeInTheDocument();
+    expect(screen.getByText(/Esperando · entregar en ⚑ A/i)).toBeInTheDocument();
+    expect(screen.getByText(/Costo por paso/i)).toBeInTheDocument();
+    expect(screen.getByText(/Conduce la unidad/i)).toBeInTheDocument();
+    expect(screen.getByText(/Estaciones disponibles/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Arriba$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Abajo$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Izquierda$/i })).toBeInTheDocument();
@@ -121,6 +127,8 @@ describe('PassengerRouteOptimizationTask', () => {
     move('Izquierda');
     move('Derecha');
     move('Izquierda');
+    move('Derecha');
+    move('Izquierda');
 
     expect(screen.getByTestId('passenger-route-failed')).toBeInTheDocument();
     expect(screen.getAllByText(/sin energía/i).length).toBeGreaterThan(0);
@@ -154,22 +162,17 @@ describe('PassengerRouteOptimizationTask', () => {
     expect(await screen.findByText(/Circuito 2 de 3/i)).toBeInTheDocument();
 
     move('Derecha', 5);
-    move('Arriba');
-    move('Izquierda', 2);
-    expect(screen.getByText(/presupuesto operativo restaurado/i)).toBeInTheDocument();
-    move('Derecha');
     move('Arriba', 3);
     move('Izquierda', 4);
+    move('Arriba');
 
     expect(await screen.findByText(/Circuito 3 de 3/i)).toBeInTheDocument();
-    move('Derecha', 4);
+    move('Derecha', 6);
+    move('Arriba');
     expect(screen.getByText(/presupuesto operativo restaurado/i)).toBeInTheDocument();
-    move('Derecha', 2);
     move('Arriba', 2);
-    move('Izquierda', 3);
-    expect(screen.getByText(/presupuesto operativo restaurado/i)).toBeInTheDocument();
-    move('Izquierda', 3);
-    move('Arriba', 2);
+    move('Izquierda', 6);
+    move('Arriba');
 
     expect(screen.getByTestId('passenger-route-finished')).toBeInTheDocument();
     expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({
@@ -177,7 +180,7 @@ describe('PassengerRouteOptimizationTask', () => {
       completed: true,
       passengersDelivered: 5,
       destinationCount: 5,
-      stationUseCount: 3,
+      stationUseCount: 1,
       routeEfficiency: 1,
       score: 1,
       aggregateOnly: true,

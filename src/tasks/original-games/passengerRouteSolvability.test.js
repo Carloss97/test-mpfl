@@ -13,9 +13,9 @@ describe('passenger route demo level solvability', () => {
 
     expect(levels).toHaveLength(3);
     expect(levels.map((level) => level.name)).toEqual([
-      'Centro: primera entrega',
-      'Conexión intermodal',
-      'Hora punta: red crítica',
+      'Barrio Luz: entrega guiada',
+      'Mercado de los Puentes',
+      'Operación Terminal Norte',
     ]);
     expect(levels.every((level) => level.passengers.length >= 1)).toBe(true);
     expect(levels.every((level) => level.passengers.every((passenger) => passenger.destination))).toBe(true);
@@ -32,8 +32,11 @@ describe('passenger route demo level solvability', () => {
       expect(result.minimumMoves).toBeGreaterThan(0);
       expect(JSON.stringify(result)).not.toMatch(RECONSTRUCTIVE_RESULT_FIELDS);
     }
-    expect(results[1].minimumStationUses).toBeGreaterThanOrEqual(1);
-    expect(results[2].minimumStationUses).toBeGreaterThanOrEqual(2);
+    expect(results.map((result) => result.minimumMoves)).toEqual([7, 13, 16]);
+    expect(results.map((result) => result.minimumStationUses)).toEqual([0, 0, 1]);
+    expect(results.map((result) => result.remainingBudget)).toEqual([4, 5, 4]);
+    expect(results[1].remainingBudget).toBeGreaterThanOrEqual(4);
+    expect(results[2].minimumStationUses).toBe(1);
   });
 
   it('rejects a passenger level blocked by walls instead of returning a false positive', () => {

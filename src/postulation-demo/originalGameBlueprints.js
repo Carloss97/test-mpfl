@@ -36,9 +36,9 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
       replaces: 'visual_search',
       skill: 'spatial_planning',
       phase: 'original_games_replacement',
-      durationLabel: '3 min',
+      durationLabel: '4 min',
       trialCount: 3,
-      description: 'Reconstruye una red láser progresiva con reflectores, obstáculos y bifurcación, preservando solo métricas agregadas.',
+      description: 'Reconstruye rutas ópticas de 4–6 movimientos con relés, portales y bifurcación, preservando solo métricas agregadas.',
     }),
     allowedAggregateFields: Object.freeze([
       'aggregateSchemaVersion',
@@ -107,7 +107,7 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
       phase: 'original_games_replacement',
       durationLabel: '4 min',
       trialCount: 3,
-      description: 'Planifica rutas progresivas para recoger pasajeros y llegar a destino bajo costos, recargas y presupuesto operativo.',
+      description: 'Opera una central de movilidad con rutas progresivas, reserva energética segura y como máximo una recarga estratégica.',
     }),
     allowedAggregateFields: Object.freeze([
       'aggregateSchemaVersion',
@@ -129,8 +129,8 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
   }),
   Object.freeze({
     gameId: 'team_coordination',
-    label: 'Brief de coordinación de equipo',
-    shortLabel: 'Brief equipo',
+    label: 'Operación Faro: coordinación de equipo',
+    shortLabel: 'Operación Faro',
     source: Object.freeze({
       primary: 'src/tasks/original-games/TeamCoordinationPostulationTask.jsx',
       alternate: null,
@@ -142,7 +142,7 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
       phase: 'original_games_completion_probe',
       durationLabel: '2 min',
       trialCount: 4,
-      description: 'Micro-simulación estructurada de coordinación: elige intervenciones ante escenarios de equipo y muestra cómo se calculan liderazgo, comunicación y adaptabilidad.',
+      description: 'RPG táctico por texto: lidera un escuadrón ante cuatro crisis y observa métricas agregadas de comunicación, liderazgo y adaptabilidad.',
     }),
     allowedAggregateFields: Object.freeze([
       'aggregateSchemaVersion',

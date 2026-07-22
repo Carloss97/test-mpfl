@@ -173,7 +173,7 @@ describe('PostulationReportScreen', () => {
     expect(screen.getAllByText(/sin guardar texto libre/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Liderazgo/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Comunicación/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Brief de equipo aportan señales agregadas/i)).toBeInTheDocument();
+    expect(screen.getByText(/Operación Faro aportan señales agregadas/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Coordinación estructurada/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Completaste una ruta eficiente/i)).toBeInTheDocument();
     expect(screen.getByText(/no equivale a liderazgo logístico/i)).toBeInTheDocument();
@@ -182,8 +182,10 @@ describe('PostulationReportScreen', () => {
     expect(screen.getByText(/Solución clara/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Ruta eficiente/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Laser: validado para demo interna/i)).toBeInTheDocument();
+    expect(screen.getByText(/Niveles Laser con portales: 2/i)).toBeInTheDocument();
     expect(screen.getByText(/Globo: validado para demo interna/i)).toBeInTheDocument();
     expect(screen.getByText(/Rutas: validado para demo interna/i)).toBeInTheDocument();
+    expect(screen.getByText(/Circuitos con margen energético seguro: 3\/3/i)).toBeInTheDocument();
     expect(screen.getByText(/Claridad de instrucciones: validado para demo interna/i)).toBeInTheDocument();
     expect(screen.queryByText(/Authoring|Calibration|Instruction check|valid_for_internal_demo/i)).not.toBeInTheDocument();
     expect(document.querySelector('.postulation-demo__caveat-list')?.textContent).not.toMatch(/synthetic_demo_fixture|original_games_r6d|low_model_confidence/i);

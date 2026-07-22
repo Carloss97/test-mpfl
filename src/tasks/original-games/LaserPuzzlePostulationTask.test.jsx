@@ -21,7 +21,12 @@ describe('LaserPuzzlePostulationTask', () => {
     render(<LaserPuzzlePostulationTask active width={606} height={338} trialCount={1} onGameEvent={onGameEvent} />);
 
     expect(screen.getByRole('heading', { name: /Puzzle láser/i })).toBeInTheDocument();
-    expect(screen.getByText(/Reconectar una antena aislada/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reconstruye una órbita de cuatro reflectores/i)).toBeInTheDocument();
+    expect(screen.getByText(/Mueve las 4 piezas ópticas/i)).toBeInTheDocument();
+    expect(screen.getByText(/Emisor/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Pieza móvil/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /Reiniciar nivel/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Comprobar ruta/i })).toBeDisabled();
     const board = screen.getByTestId('laser-puzzle-board');
     expect(Number(board.dataset.boardWidth)).toBeLessThanOrEqual(606);
     expect(Number(board.dataset.boardHeight)).toBeLessThanOrEqual(338);
@@ -50,7 +55,7 @@ describe('LaserPuzzlePostulationTask', () => {
     expect(response.response).toMatchObject({
       correct: true,
       outcome: 'level_solved',
-      laserPuzzle: expect.objectContaining({ solvedLevels: 1, moveCount: 3 }),
+      laserPuzzle: expect.objectContaining({ solvedLevels: 1, moveCount: 4 }),
     });
     expect(JSON.stringify(response)).not.toMatch(/rawPointerPath|pointerSamples|beamCells|fullRoute|rawGameEvents/i);
   });
@@ -68,8 +73,9 @@ describe('LaserPuzzlePostulationTask', () => {
 
     render(<Harness />);
     expect(Number(screen.getByTestId('event-count').textContent)).toBe(2);
-    fireEvent.click(screen.getByTestId('laser-cell-7,7'));
+    fireEvent.click(screen.getByTestId('laser-cell-7,0'));
     expect(screen.getByText(/Pieza seleccionada/i)).toBeInTheDocument();
+    expect(screen.getByTestId('laser-cell-1,0')).toHaveClass('laser-puzzle-task__cell--valid-target');
     expect(Number(screen.getByTestId('event-count').textContent)).toBe(2);
   });
 

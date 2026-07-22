@@ -103,6 +103,10 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
     [height, level, width],
   );
   const wallSet = useMemo(() => new Set(level?.walls ?? []), [level]);
+  const authoredSolution = levelSolutions[levelIndex] ?? {};
+  const rechargePlan = Number(authoredSolution.minimumStationUses ?? 0) === 0
+    ? 'No obligatoria'
+    : `${authoredSolution.minimumStationUses} estratégica`;
   const budgetPercent = level ? Math.round((routeBudget / Math.max(1, level.routeBudget)) * 100) : 0;
   const budgetTone = budgetPercent <= 25 ? 'danger' : budgetPercent <= 50 ? 'warn' : 'ok';
 
@@ -432,14 +436,14 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
           style={{ width: metrics.cellSize, height: metrics.cellSize }}
         >
           {destination && !isWall && (
-            <span className="passenger-route-task__destination" title={`Destino ${destination.id}`} style={{ borderColor: destination.color, color: destination.color }}>
-              {destination.id}
+            <span className="passenger-route-task__destination" aria-label={`Destino ${destination.id}`} title={`Entregar pasajero ${destination.id}`} style={{ borderColor: destination.color, color: destination.color }}>
+              ⚑ {destination.id}
             </span>
           )}
           {station && !isWall && <span aria-label="Parada de apoyo">⛽</span>}
           {passenger && !isWall && (
             <span className="passenger-route-task__passenger" aria-label={`${passenger.label} esperando`} style={{ background: passenger.color }}>
-              {passenger.id}
+              ● {passenger.id}
             </span>
           )}
           {isPlayer && !isWall && (
@@ -461,12 +465,24 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   return (
     <div className="passenger-route-task">
       <div className="task-header passenger-route-task__header">
-        <h3 className="task-title">🚌 Optimización de rutas</h3>
+        <h3 className="task-title">🚐 Central de movilidad</h3>
         <span className="task-progress">Circuito {levelIndex + 1} de {levels.length}</span>
         <span className="task-progress">Destinos {deliveredIds.length}/{level.passengers.length}</span>
       </div>
+      <section className="passenger-route-task__mission" aria-label="Misión de movilidad">
+        <div>
+          <span className="passenger-route-task__mission-kicker">Misión activa</span>
+          <strong>{level.name}</strong>
+          <p>{level.objective}</p>
+        </div>
+        <dl>
+          <div><dt>Reserva al finalizar</dt><dd>{authoredSolution.remainingBudget ?? '—'} de energía</dd></div>
+          <div><dt>Recarga</dt><dd>{rechargePlan}</dd></div>
+          <div><dt>Entregas</dt><dd>{level.passengers.length}</dd></div>
+        </dl>
+      </section>
       <p className="caption passenger-route-task__caption">
-        {level.objective ?? 'Recoge pasajeros y llévalos a su destino administrando tiempo, combustible y presupuesto de ruta.'} Solo se conservan resultados agregados.
+        {level.coreChallenge ?? 'Recoge pasajeros y llévalos a su destino administrando la energía de ruta.'} Solo se conservan resultados agregados.
       </p>
       <div className="passenger-route-task__workspace">
         <div
@@ -484,9 +500,9 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
         >
           {cells}
         </div>
-        <aside className="passenger-route-task__side-panel" aria-label="Estado de la ruta">
-          <strong>{level.name}</strong>
-          {level.coreChallenge && <span>Reto: {level.coreChallenge}</span>}
+        <aside className="passenger-route-task__side-panel" aria-label="Centro de despacho">
+          <strong>Panel de despacho</strong>
+          <span>Ruta activa: {level.name}</span>
           <div className={`passenger-route-task__budget passenger-route-task__budget--${budgetTone}`} aria-label={`Energía ${routeBudget} de ${level.routeBudget}`}>
             <div>
               <span>Energía</span>
@@ -495,21 +511,28 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
             <div className="passenger-route-task__budget-bar"><i style={{ width: `${budgetPercent}%` }} /></div>
           </div>
           <span>Pasajero a bordo: {onboardId ?? 'ninguno'}</span>
-          <span>Paradas de apoyo: {level.stations.length}</span>
-          <span>Horizontal 1 · vertical 2</span>
+          <span>Estaciones disponibles: {level.stations.length}</span>
+          <span>Recarga planificada: {rechargePlan}</span>
+          <span>Costo por paso: ←/→ 1 · ↑/↓ 2 de energía</span>
+          <div className="passenger-route-task__map-legend" aria-label="Leyenda del mapa">
+            <span>● A Recoger</span>
+            <span>⚑ A Entregar</span>
+            {level.stations.length > 0 && <span>⛽ Recargar</span>}
+          </div>
           <div className="passenger-route-task__passenger-list" aria-label="Pasajeros y destinos">
             {level.passengers.map((passenger) => (
               <div key={passenger.id} className="passenger-route-task__passenger-row">
-                <b style={{ background: passenger.color }}>{passenger.id}</b>
-                <span>{getPassengerStatus(passenger, deliveredIds, onboardId)} · destino {passenger.id}</span>
+                <b style={{ background: passenger.color }}>● {passenger.id}</b>
+                <span>{getPassengerStatus(passenger, deliveredIds, onboardId)} · entregar en ⚑ {passenger.id}</span>
               </div>
             ))}
           </div>
-          <button type="button" className="secondary" onClick={registerReplan}>Revisar plan</button>
+          <button type="button" className="secondary" onClick={registerReplan}>Registrar replanteo</button>
         </aside>
       </div>
       <div className="passenger-route-task__footer">
         <div className="passenger-route-task__controls" aria-label="Controles de ruta">
+          <strong>Conduce la unidad</strong>
           <button type="button" aria-label="Arriba" onClick={() => move('up')} style={{ width: metrics.controlSize, height: metrics.controlSize }}>↑</button>
           <div>
             <button type="button" aria-label="Izquierda" onClick={() => move('left')} style={{ width: metrics.controlSize, height: metrics.controlSize }}>←</button>
