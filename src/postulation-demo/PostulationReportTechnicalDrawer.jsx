@@ -85,6 +85,7 @@ export default function PostulationReportTechnicalDrawer({
           <h3>Inferencia local</h3>
           <p>KRUMM procesó señales agregadas en el navegador: desempeño en juegos, calidad facial, gaze, postura, MoveNet y correlación temporal por trial.</p>
           <ul>
+            <li>ID de sesión: {artifacts?.runId ?? 'no disponible'}</li>
             <li>Modelo local: {artifacts?.assessmentSession?.edgeAI?.modelVersion ?? 'no disponible'}</li>
             <li>Correlación agregada: {aggregate?.completedTrialCount ?? 0} trials correlacionados</li>
             <li>Feature vector: {featureVector?.type ?? 'no disponible'}</li>

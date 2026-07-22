@@ -157,6 +157,7 @@ describe('assessmentSession', () => {
         normalizedKeypoints: [{ x: 0.5, y: 0.5 }],
         clickTrace: [{ t: 1 }],
         eventLog: [{ type: 'move' }],
+        choiceCategory: 'adaptive_reprioritization',
         trials: [{ x: 1, y: 2 }],
       },
     };
@@ -174,6 +175,7 @@ describe('assessmentSession', () => {
       'normalizedKeypoints',
       'clickTrace',
       'eventLog',
+      'choiceCategory',
       'trials',
     ]));
     expect(ASSESSMENT_FORBIDDEN_KEYS).toContain('landmarks');

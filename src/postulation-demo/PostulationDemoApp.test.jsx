@@ -1,7 +1,8 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import PostulationDemoApp from './PostulationDemoApp.jsx';
+import PostulationConsentSetup from './PostulationConsentSetup.jsx';
 import { isPostulationDemoPath } from './postulationDemoRoute.js';
 
 function MockGame({ block, onComplete, onGameEvent }) {
@@ -62,6 +63,26 @@ afterEach(() => {
 });
 
 describe('PostulationDemoApp shell and flow', () => {
+  it('keeps camera retry available after an optional capture error', () => {
+    const onEnableCamera = vi.fn();
+    render(
+      <PostulationConsentSetup
+        backgroundActive
+        signalSnapshot={{ camera: 'error' }}
+        onEnableCamera={onEnableCamera}
+        onContinue={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    );
+
+    const retry = screen.getByRole('button', { name: /Reintentar cámara/i });
+    expect(retry).toBeEnabled();
+    expect(retry).toHaveClass('postulation-demo__secondary-button');
+    expect(screen.getByRole('button', { name: /Continuar a juegos/i })).toHaveClass('postulation-demo__primary');
+    fireEvent.click(retry);
+    expect(onEnableCamera).toHaveBeenCalledTimes(1);
+  });
+
   it('detects the isolated postulation demo route without matching the technical app root', () => {
     expect(isPostulationDemoPath('/postulaciones-demo')).toBe(true);
     expect(isPostulationDemoPath('/postulaciones-demo?fixture=1')).toBe(true);
@@ -74,11 +95,14 @@ describe('PostulationDemoApp shell and flow', () => {
     render(<PostulationDemoApp />);
 
     expect(screen.getByRole('heading', { name: /KRUMM Postulaciones/i })).toBeInTheDocument();
-    expect(screen.getByText(/Juegos breves, señales locales y reporte para revisión humana/i)).toBeInTheDocument();
+    expect(screen.getByText(/Juegos breves, procesamiento local y reporte para revisión humana/i)).toBeInTheDocument();
     expect(screen.getByText(/Demo MVP/i)).toBeInTheDocument();
     expect(screen.getByText(/6-8 min/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Comenzar demo de postulación/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Ver dashboard HR/i })).toHaveAttribute('href', '/postulaciones-demo/hr');
+    expect(screen.getByRole('link', { name: /Abrir vista HR/i })).toHaveAttribute('href', '/postulaciones-demo/hr');
+    expect(screen.getByText(/métricas de desempeño/i)).toBeInTheDocument();
+    expect(screen.getByText(/calidad de captura y el contexto de la sesión/i)).toBeInTheDocument();
+    expect(screen.queryByText(/FaceMesh|AUs\/FACS|MoveNet|payload privacy-safe/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/KRUMM Edge Fusion PoC/i)).not.toBeInTheDocument();
   });
 
@@ -87,8 +111,10 @@ describe('PostulationDemoApp shell and flow', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Comenzar demo de postulación/i }));
 
-    expect(screen.getByRole('heading', { name: /Preparación de señales/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Preparación de la sesión/i })).toBeInTheDocument();
     expect(screen.getByText(/Cámara local opcional/i)).toBeInTheDocument();
+    expect(screen.getByText(/no se usan por sí solas para inferir talento/i)).toBeInTheDocument();
+    expect(screen.queryByText(/FaceMesh|AUs\/FACS|MoveNet/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Activar cámara local/i })).toBeInTheDocument();
     expect(screen.getByRole('complementary', { name: /Procesamiento en segundo plano/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Volver al inicio/i })).toBeInTheDocument();
@@ -117,8 +143,8 @@ describe('PostulationDemoApp shell and flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /Completar color_interference/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar visual_search/i }));
 
-    expect(screen.getByRole('heading', { name: /Reporte listo para revisión humana/i })).toBeInTheDocument();
-    expect(screen.getByText(/OK privacy-safe/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Reporte de sesión listo para revisión humana/i })).toBeInTheDocument();
+    expect(screen.getByText(/Integridad de archivos verificada · no implica validez psicométrica/i)).toBeInTheDocument();
     expect(screen.getByText(/Perfil de capacidades/i)).toBeInTheDocument();
     expect(screen.getByText(/Resultados por juego/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Descargar reporte local/i })).toBeInTheDocument();
@@ -130,9 +156,9 @@ describe('PostulationDemoApp shell and flow', () => {
 
     render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
 
-    expect(screen.getByRole('heading', { name: /Reporte listo para revisión humana/i })).toBeInTheDocument();
-    expect(screen.getByText(/Datos sintéticos de demostración/i)).toBeInTheDocument();
-    expect(screen.getByText(/Fixture local privacy-safe/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Reporte de demostración listo para revisión humana/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/Datos sintéticos de demostración/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Datos sintéticos locales para reuniones/i)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /KRUMM Postulaciones/i })).not.toBeInTheDocument();
   });
 
@@ -140,7 +166,7 @@ describe('PostulationDemoApp shell and flow', () => {
     window.history.pushState({}, '', '/postulaciones-demo?battery=original');
     render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
 
-    expect(screen.getByText(/Validación interna · juegos originales/i)).toBeInTheDocument();
+    expect(screen.getByText(/Batería original · Demo controlada/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Comenzar demo de postulación/i }));
     fireEvent.click(screen.getByRole('button', { name: /Continuar a juegos/i }));
 
@@ -151,7 +177,7 @@ describe('PostulationDemoApp shell and flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /Completar passenger_routes/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar team_coordination/i }));
 
-    expect(screen.getByRole('heading', { name: /Reporte listo para revisión humana/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Reporte de sesión listo para revisión humana/i })).toBeInTheDocument();
     expect(screen.getByText(/Completaste\s+4\s+de\s+4\s+juegos/i)).toBeInTheDocument();
     expect(document.querySelector('[data-battery-mode="original_games"]')).toBeInTheDocument();
   });
@@ -160,7 +186,7 @@ describe('PostulationDemoApp shell and flow', () => {
     window.history.pushState({}, '', '/postulaciones-demo?fixture=1&battery=original');
     render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
 
-    expect(screen.getByRole('heading', { name: /Reporte listo para revisión humana/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Reporte de demostración listo para revisión humana/i })).toBeInTheDocument();
     expect(screen.getByText(/Completaste\s+4\s+de\s+4\s+juegos/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Puzzle láser/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Globo de riesgo/i })).toBeInTheDocument();

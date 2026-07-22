@@ -9,6 +9,14 @@ import VisualSearchTask from '../tasks/VisualSearchTask.jsx';
 import PrecisionTargetingTask from '../tasks/PrecisionTargetingTask.jsx';
 
 describe('Postulation QA visual fixes', () => {
+  it('uses product-facing browser metadata instead of PoC terminology', () => {
+    const html = fs.readFileSync('index.html', 'utf8');
+
+    expect(html).toContain('<title>KRUMM · Evaluación Gamificada</title>');
+    expect(html).toContain('evaluación gamificada con procesamiento local');
+    expect(html).not.toContain('Edge Fusion PoC');
+  });
+
   it('uses human-readable HUD progress and a simplified local-processing drawer', () => {
     render(<BehindTheScenesMiniHud snapshot={{ camera: 'ok', face: 'ok', signal: 'ok', events: 44, report: 'pending' }} />);
 
@@ -32,6 +40,8 @@ describe('Postulation QA visual fixes', () => {
     expect(css).toContain('@media (max-width: 1180px), (max-height: 820px)');
     expect(css).toContain('position: static;');
     expect(css).toContain('max-height: 42dvh;');
+    expect(css).toContain('.postulation-demo__primary:focus-visible');
+    expect(css).toContain('outline: 3px solid var(--postulation-game-focus-ring);');
   });
 
   it('renders color interference choices with explicit active option styling hooks', () => {

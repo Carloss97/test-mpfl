@@ -67,6 +67,7 @@ export default function PostulationDemoApp({ gameComponents, batteryMode: reques
   const [reportError, setReportError] = useState(null);
 
   const handleSnapshot = useCallback((nextSnapshot) => {
+    if (nextSnapshot?.camera === 'error') setBackgroundActive(false);
     setSignalSnapshot((previous) => (sameSnapshot(previous, nextSnapshot) ? previous : nextSnapshot));
   }, []);
 

@@ -25,6 +25,7 @@ const FORBIDDEN_TEAM_COORDINATION_KEYS = Object.freeze([
   'selectedOptionId',
   'selectedOptionLabel',
   'choiceSequence',
+  'choiceCategory',
   'rawChoices',
   'rawGameEvents',
   'pointerSamples',
@@ -256,7 +257,6 @@ export function sanitizeTeamCoordinationResponsePayload(response = {}) {
     reactionTimeMs: Math.max(0, Math.round(Number(response.reactionTimeMs) || 0)),
     score: round(response.score),
   };
-  if (typeof response.choiceCategory === 'string') sanitized.choiceCategory = response.choiceCategory;
   const teamCoordination = sanitizeTeamCoordinationAggregateFields(response.teamCoordination ?? {});
   if (Object.keys(teamCoordination).length) sanitized.teamCoordination = teamCoordination;
   return sanitized;

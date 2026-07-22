@@ -3,20 +3,22 @@ import { validateFinalAssessmentPayload } from './finalAssessmentPayload.js';
 const REPORT_SCHEMA = 'krumm_talent_report_v1';
 
 function pct(value) {
+  if (value == null) return 'No disponible';
   const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return '0%';
+  if (!Number.isFinite(numeric)) return 'No disponible';
   return `${Math.round(numeric * 100)}%`;
-}
-
-function score(value) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? Math.round(numeric) : 0;
 }
 
 function scoreLabel(value) {
   if (value == null) return 'No medido';
   const numeric = Number(value);
   return Number.isFinite(numeric) ? String(Math.round(numeric)) : 'No medido';
+}
+
+function finiteLabel(value, digits = 3) {
+  if (value == null) return 'No disponible';
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric.toFixed(digits) : 'No disponible';
 }
 
 function availabilityLabel(value) {
@@ -97,7 +99,7 @@ function buildJsonReport(payload) {
       executiveSummary: {
         strengths: strengths(payload),
         watchAreas: watchAreas(payload),
-        confidence: payload.talentProfile?.globalSummary?.confidence ?? 0,
+        confidence: payload.talentProfile?.globalSummary?.confidence ?? null,
         humanReviewOnly: true,
       },
       quality: payload.quality,
@@ -147,13 +149,13 @@ function buildMarkdownReport(payload) {
     lines.push('Confianza global del perfil: no aplica para esta batería experimental; la confianza se informa por constructo en el mapa de evidencia para evitar mezclar el perfil DG legacy con los juegos originales.');
   } else {
     lines.push(`Este reporte resume señales observacionales para revisión humana. Fortalezas observadas: ${strengths(payload).join(', ') || 'sin fortalezas dominantes por sobre umbral'}. Áreas a revisar: ${watchAreas(payload).join(', ') || 'sin áreas críticas bajo umbral'}.`);
-    lines.push(`Confianza global del perfil: ${pct(payload.talentProfile?.globalSummary?.confidence ?? 0)}.`);
+    lines.push(`Confianza global del perfil: ${pct(payload.talentProfile?.globalSummary?.confidence)}.`);
   }
   lines.push('');
   lines.push('## 3. Calidad de señal');
   lines.push(`- Muestras: ${payload.quality?.sampleCount ?? 0}`);
-  lines.push(`- Rostro presente: ${pct(payload.quality?.facePresenceRatio ?? 0)}`);
-  lines.push(`- Confianza facial media: ${pct(payload.quality?.meanConfidence ?? 0)}`);
+  lines.push(`- Rostro presente: ${pct(payload.quality?.facePresenceRatio)}`);
+  lines.push(`- Confianza facial media: ${pct(payload.quality?.meanConfidence)}`);
   lines.push(`- Trials correlacionados: ${payload.quality?.correlatedTrialCount ?? 0}`);
   lines.push(`- Caveats: ${caveatText(payload.quality?.caveats ?? [])}`);
   lines.push('');
@@ -200,16 +202,16 @@ function buildMarkdownReport(payload) {
     }
   } else {
     lines.push(`- Trials completados: ${perf.completedTrialCount ?? 0}/${perf.trialCount ?? 0}`);
-    lines.push(`- Accuracy: ${pct(perf.accuracy ?? 0)}`);
+    lines.push(`- Accuracy: ${pct(perf.accuracy)}`);
     lines.push(`- RT medio: ${Math.round(perf.meanReactionTimeMs ?? 0)}ms`);
-    lines.push(`- Score medio: ${pct(perf.meanScore ?? 0)}`);
-    lines.push(`- Search efficiency: ${pct(game.visualSearch?.searchEfficiency ?? 0)}`);
+    lines.push(`- Score medio: ${pct(perf.meanScore)}`);
+    lines.push(`- Search efficiency: ${pct(game.visualSearch?.searchEfficiency)}`);
   }
   lines.push('');
   lines.push('## 6. Correlación cámara + tarea');
   lines.push(`- Trials correlacionados: ${correlation.completedTrialCount ?? 0}`);
-  lines.push(`- Delta postura durante reacción: ${Number(correlation.meanReactionPostureDelta ?? 0).toFixed(3)}`);
-  lines.push(`- Delta presencia facial durante reacción: ${Number(correlation.meanReactionFacePresenceDelta ?? 0).toFixed(3)}`);
+  lines.push(`- Delta postura durante reacción: ${finiteLabel(correlation.meanReactionPostureDelta)}`);
+  lines.push(`- Delta presencia facial durante reacción: ${finiteLabel(correlation.meanReactionFacePresenceDelta)}`);
   lines.push('Estas correlaciones son agregadas; no contienen ventanas crudas, landmarks ni trayectoria de puntero.');
   lines.push('');
   lines.push('## 7. Dificultad adaptativa');
@@ -238,7 +240,7 @@ function buildMarkdownReport(payload) {
   lines.push(`- Feature vector juegos originales: ${payload.behavioral?.originalGameFeatureVector?.type ?? 'no disponible'} ${payload.behavioral?.originalGameFeatureVector?.version ?? ''}`.trim());
   lines.push(`- Framework R-6: ${payload.talentFramework?.schemaVersion ?? 'no disponible'} ${payload.talentFramework?.version ?? ''}`.trim());
   lines.push(`- Edge AI: ${payload.edgeAI?.modelVersion ?? 'no disponible'}`);
-  lines.push(`- Composite Edge AI: ${score(payload.edgeAI?.composite?.score ?? 0)}`);
+  lines.push(`- Composite Edge AI: ${scoreLabel(payload.edgeAI?.composite?.score)}`);
   return lines.join('\n');
 }
 

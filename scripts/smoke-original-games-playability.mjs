@@ -57,7 +57,28 @@ async function chooseTeamOption(label) {
 
 try {
   await page.goto(`${baseUrl}/postulaciones-demo?battery=original`, { waitUntil: 'networkidle' });
+  const landingText = await page.evaluate(() => document.body.innerText);
+  if (!/10–12 min/.test(landingText)) failures.push('Original battery landing does not show the 10–12 minute estimate.');
+  if (/FaceMesh|AUs\/FACS|MoveNet|payload privacy-safe/.test(landingText)) {
+    failures.push('Candidate landing exposes laboratory or schema terminology.');
+  }
   await clickButton(/Comenzar demo de postulación/i);
+  const setupText = await page.evaluate(() => document.body.innerText);
+  if (!/Preparación de la sesión/.test(setupText) || !/no se usan por sí solas para inferir talento/i.test(setupText)) {
+    failures.push('Camera setup does not explain its optional, context-only role.');
+  }
+  if (/FaceMesh|AUs\/FACS|MoveNet/.test(setupText)) failures.push('Candidate setup exposes model names.');
+  if (viewport.width < 600) {
+    const undersizedTargets = await page.locator('button, a[href]').evaluateAll((nodes) => nodes
+      .filter((node) => {
+        const rect = node.getBoundingClientRect();
+        const style = getComputedStyle(node);
+        return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+      })
+      .map((node) => ({ label: node.textContent?.trim() || node.getAttribute('aria-label') || node.tagName, height: node.getBoundingClientRect().height }))
+      .filter((target) => target.height < 44));
+    if (undersizedTargets.length) failures.push(`Mobile touch targets below 44px: ${JSON.stringify(undersizedTargets)}`);
+  }
   await clickButton(/Continuar a juegos/i);
   await page.getByText(/Nivel 1 de 3/i).waitFor({ timeout: 5000 });
 
@@ -98,7 +119,7 @@ try {
   if (/Framework R-6|workbook|descriptive_only|provisional_score|not_measured|No medido|Authoring|Calibration|Instruction check|valid_for_internal_demo/i.test(reportText)) {
     failures.push(`Report still exposes framework/internal status labels. REPORT:\n${reportText.slice(0, 1400)}`);
   }
-  if (!/Cobertura completa de demo/.test(reportText) || !/Brief de equipo/.test(reportText)) {
+  if (!/8 constructos con señal de demo/.test(reportText) || !/Brief de equipo/.test(reportText)) {
     failures.push(`Report does not show complete demo coverage from team coordination game. REPORT:\n${reportText.slice(0, 1400)}`);
   }
   if (!/Liderazgo/i.test(reportText) || !/Comunicación/i.test(reportText) || !/Adaptabilidad/i.test(reportText)) {

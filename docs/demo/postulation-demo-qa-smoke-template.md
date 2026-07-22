@@ -1,5 +1,7 @@
 # KRUMM Postulation Demo — QA editable Fase J/I
 
+> **ARCHIVO HISTÓRICO.** Conserva evidencias de las fases DG/R-5 y no debe usarse como checklist de la grabación final. El checklist vigente está en `docs/demo/postulation-demo-final-recording-qa.md` y el recorrido de presentación en `docs/demo/postulation-demo-final-recording-runbook.md`.
+
 **Documento editable para smoke manual, QA visual responsive e issues.**  
 **Repo:** `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/test-mpfl`  
 **Ruta real:** `http://127.0.0.1:5173/postulaciones-demo`  

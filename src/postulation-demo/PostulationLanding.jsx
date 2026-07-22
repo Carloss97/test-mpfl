@@ -9,7 +9,7 @@ export default function PostulationLanding({ onStart, batteryMode }) {
       <section className="postulation-demo__hero">
         <div className="postulation-demo__hero-copy">
           <span className="postulation-demo__eyebrow">
-            {isOriginalMode ? 'Validación interna · juegos originales' : postulationDemoCopy.eyebrow}
+            {isOriginalMode ? 'Batería original · Demo controlada' : postulationDemoCopy.eyebrow}
           </span>
           <h1 id="postulation-demo-title">{postulationDemoCopy.title}</h1>
           <p className="postulation-demo__subtitle">{postulationDemoCopy.subtitle}</p>
@@ -21,25 +21,27 @@ export default function PostulationLanding({ onStart, batteryMode }) {
             <a className="postulation-demo__secondary" href="#postulation-demo-background">
               {postulationDemoCopy.secondaryCta}
             </a>
-            <a className="postulation-demo__secondary" href="/postulaciones-demo/hr">
-              Ver dashboard HR
-            </a>
+
           </div>
         </div>
 
         <aside className="postulation-demo__brief" aria-label="Resumen de demo">
           <div>
             <span>Duración estimada</span>
-            <strong>{postulationDemoCopy.timeEstimate}</strong>
+            <strong>{isOriginalMode ? postulationDemoCopy.originalTimeEstimate : postulationDemoCopy.timeEstimate}</strong>
           </div>
           <div>
             <span>Modo</span>
-            <strong>{isOriginalMode ? 'Browser-local · original' : 'Browser-local'}</strong>
+            <strong>{isOriginalMode ? 'Sesión local · batería original' : 'Sesión local'}</strong>
           </div>
           <div>
             <span>Resultado</span>
             <strong>Reporte humano</strong>
           </div>
+          <a className="postulation-demo__brief-link" href="/postulaciones-demo/hr">
+            <span>Vista separada</span>
+            <strong>Abrir vista HR →</strong>
+          </a>
         </aside>
       </section>
 

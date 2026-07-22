@@ -1,15 +1,16 @@
 export const postulationDemoCopy = Object.freeze({
   eyebrow: 'Demo MVP',
   title: 'KRUMM Postulaciones',
-  subtitle: 'Juegos breves, señales locales y reporte para revisión humana.',
-  description: 'Una experiencia de postulación gamificada donde la persona juega, mientras KRUMM prepara en segundo plano telemetría agregada y calidad de señal para un reporte humano.',
+  subtitle: 'Juegos breves, procesamiento local y reporte para revisión humana.',
+  description: 'Una experiencia gamificada donde cada actividad aporta métricas de desempeño y KRUMM prepara un reporte claro para revisión humana.',
   timeEstimate: '6-8 min',
+  originalTimeEstimate: '10–12 min',
   cta: 'Comenzar demo de postulación',
   secondaryCta: 'Ver qué procesa KRUMM',
   principles: [
     'Los juegos son la experiencia principal.',
-    'Cámara y señales corren en segundo plano cuando se habilitan.',
-    'No se guarda video, frames, landmarks crudos ni trayectorias de puntero.',
+    'La cámara es opcional. Puedes continuar sin activarla: no reduce el desempeño de los juegos y su ausencia solo queda como observación de calidad.',
+    'No se guarda video, imágenes ni datos que permitan reconstruir la interacción.',
     'El reporte final es para revisión humana; no toma decisiones automáticas.',
   ],
   cards: [
@@ -18,12 +19,12 @@ export const postulationDemoCopy = Object.freeze({
       body: 'La demo prioriza tareas breves, instrucciones claras y progreso visible para la persona postulante.',
     },
     {
-      title: 'Señales de fondo',
-      body: 'FaceMesh, AUs/FACS, gaze, postura, MoveNet y eventos de juego se integran localmente sin convertir la pantalla en un laboratorio.',
+      title: 'Procesamiento responsable',
+      body: 'La cámara opcional ayuda a revisar la calidad de captura y el contexto de la sesión. Puedes omitirla; todo se procesa localmente y no se utiliza para inferir talento por sí sola.',
     },
     {
-      title: 'Reporte al final',
-      body: 'El cierre muestra evidencia agregada, caveats y un payload privacy-safe preparado para entrega controlada y revisión humana.',
+      title: 'Reporte claro al final',
+      body: 'El cierre presenta resultados agregados, alcance y limitaciones para apoyar una entrevista estructurada y la revisión humana.',
     },
   ],
   setupPreview: {

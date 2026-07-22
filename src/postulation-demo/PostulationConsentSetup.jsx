@@ -10,29 +10,30 @@ export default function PostulationConsentSetup({
   onBack,
   children,
 }) {
+  const cameraFailed = signalSnapshot?.camera === 'error';
   return (
     <main className="postulation-demo__setup" aria-labelledby="postulation-setup-title">
       <section className="postulation-demo__setup-panel">
         <span className="postulation-demo__eyebrow">Cámara local opcional</span>
-        <h1 id="postulation-setup-title">Preparación de señales</h1>
+        <h1 id="postulation-setup-title">Preparación de la sesión</h1>
         <p>
-          Activa la cámara si quieres que KRUMM procese FaceMesh, AUs/FACS, gaze, postura y MoveNet en segundo plano. Puedes continuar con caveats si una señal no está disponible.
+          La cámara es opcional. Si la activas, KRUMM revisa localmente la calidad de captura y el contexto postural; estas señales no se usan por sí solas para inferir talento. Puedes continuar sin cámara y el reporte marcará esa ausencia.
         </p>
         <div className="postulation-demo__setup-actions">
-          <button type="button" className="postulation-demo__primary" onClick={onEnableCamera} disabled={backgroundActive}>
-            {backgroundActive ? 'Cámara solicitada' : 'Activar cámara local'}
-          </button>
-          <button type="button" className="postulation-demo__secondary-button" onClick={onContinue}>
+          <button type="button" className="postulation-demo__primary" onClick={onContinue}>
             Continuar a juegos
+          </button>
+          <button type="button" className="postulation-demo__secondary-button" onClick={onEnableCamera} disabled={backgroundActive && !cameraFailed}>
+            {cameraFailed ? 'Reintentar cámara' : backgroundActive ? 'Cámara solicitada' : 'Activar cámara local (opcional)'}
           </button>
           <button type="button" className="postulation-demo__secondary-button" onClick={onBack}>
             {postulationDemoCopy.setupPreview.back}
           </button>
         </div>
         <ul className="postulation-demo__setup-list">
-          <li>No se guarda video ni frames.</li>
-          <li>No se persisten landmarks crudos ni trayectorias de puntero.</li>
-          <li>Las señales son observacionales y el reporte es para revisión humana.</li>
+          <li>No se guarda video, imágenes ni datos reconstructivos.</li>
+          <li>La cámara aporta calidad y contexto, nunca una decisión de talento.</li>
+          <li>Una señal ausente queda como desconocida, no como bajo desempeño.</li>
         </ul>
       </section>
 

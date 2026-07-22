@@ -70,16 +70,20 @@ function TalentDimensionCard({ dimension }) {
 function WorkbookTalentCard({ construct }) {
   return (
     <article className="postulation-demo__talent-card">
-      <div className="postulation-demo__talent-score" aria-label={`Estado ${construct.availability}`}>
-        {construct.scoreLabel}
+      <div className="postulation-demo__talent-score postulation-demo__talent-score--provisional" aria-label={`Score de demo ${construct.scoreLabel} de 100, provisional`}>
+        <strong>{construct.scoreLabel}</strong>
       </div>
       <div>
+        <span className="postulation-demo__provisional-tag">Demo provisional</span>
         <h3>{construct.label}</h3>
         <p><strong>{construct.availabilityLabel}</strong> · Confianza {construct.confidence}. {construct.narrative}</p>
-        <div className="postulation-demo__measurement-explainer">
-          <p><strong>Por qué aparece así:</strong> {construct.demoExplanation.reason}</p>
-          <p><strong>Cómo volverlo medible:</strong> {construct.demoExplanation.nextStep}</p>
-        </div>
+        <details className="postulation-demo__measurement-explainer">
+          <summary>Ver alcance y validación</summary>
+          <div>
+            <p><strong>Por qué aparece así:</strong> {construct.demoExplanation.reason}</p>
+            <p><strong>Cómo volverlo medible:</strong> {construct.demoExplanation.nextStep}</p>
+          </div>
+        </details>
       </div>
     </article>
   );
@@ -129,6 +133,10 @@ export default function PostulationReportScreen({
   const caveats = useMemo(() => getPostulationCaveats(artifacts), [artifacts]);
   const completedCount = completedDemo?.completedCount ?? artifacts?.assessmentSession?.blocks?.filter((block) => block.status === 'completed').length ?? 0;
   const totalCount = completedDemo?.totalCount ?? artifacts?.assessmentSession?.blocks?.length ?? 0;
+  const isFixture = artifacts?.fixture?.synthetic === true;
+  const reportFormats = (artifacts.bundle?.manifest?.reportFormats ?? [])
+    .map((format) => ({ markdown: 'Markdown', html: 'HTML', json: 'JSON' })[String(format).toLowerCase()] ?? String(format))
+    .join(' · ');
 
   const downloadPrimaryReport = () => {
     if (!validationOk || !primaryReport) return;
@@ -166,23 +174,23 @@ export default function PostulationReportScreen({
     <section className="postulation-demo__report-screen" aria-labelledby="postulation-report-title">
       <div className="postulation-demo__report-hero">
         <div>
-          <span className="postulation-demo__eyebrow">Reporte final</span>
-          <h1 id="postulation-report-title">Reporte listo para revisión humana</h1>
+          <span className="postulation-demo__eyebrow">{isFixture ? 'Reporte de demostración' : 'Reporte de sesión'}</span>
+          <h1 id="postulation-report-title">{isFixture ? 'Reporte de demostración listo para revisión humana' : 'Reporte de sesión listo para revisión humana'}</h1>
           <p>
-            Completaste {completedCount} de {totalCount} juegos. KRUMM generó un perfil observacional de talentos y capacidades con artefactos locales validados, sin decisión automatizada.
+            Completaste {completedCount} de {totalCount} juegos. KRUMM generó una lectura observacional con indicadores de demo, límites explícitos y artefactos locales verificados, sin decisión automatizada.
           </p>
         </div>
         <div className="postulation-demo__report-status-card">
-          <span>{validationOk ? 'OK privacy-safe' : 'Validación bloqueada'}</span>
-          <strong>{artifacts.runId}</strong>
-          <p>Formatos: {(artifacts.bundle?.manifest?.reportFormats ?? []).join(' · ') || 'no disponibles'}</p>
+          <span>{validationOk ? 'Integridad de archivos verificada · no implica validez psicométrica' : 'Integridad técnica bloqueada'}</span>
+          <strong>{validationOk ? 'Reporte local listo' : 'Descargas no disponibles'}</strong>
+          <p>{reportFormats || 'Formatos no disponibles'}</p>
         </div>
       </div>
 
       {artifacts.fixture?.synthetic && (
         <div className="postulation-demo__fixture-banner" role="note">
           <strong>{artifacts.fixture.label}</strong>
-          <span>Fixture local privacy-safe · {artifacts.fixture.description}</span>
+          <span>Datos locales de demostración · {artifacts.fixture.description}</span>
         </div>
       )}
 
@@ -205,14 +213,24 @@ export default function PostulationReportScreen({
         </div>
         <ul>
           <li>{completedCount} de {totalCount} juegos completados.</li>
-          <li>{validationOk ? 'Artefactos locales validados como privacy-safe.' : 'Validación pendiente: descargas bloqueadas.'}</li>
-          <li>{caveats.length ? `${caveats.length} caveat(s) a revisar antes de interpretar.` : 'Sin caveats críticos visibles.'}</li>
+          <li>{validationOk ? 'Artefactos locales verificados sin datos reconstructivos.' : 'Validación pendiente: descargas bloqueadas.'}</li>
+          <li>{caveats.length ? `${caveats.length} observaciones de alcance antes de interpretar.` : 'Sin observaciones críticas visibles.'}</li>
         </ul>
       </section>
 
-      <div className="postulation-demo__quality-grid" aria-label="Calidad de sesión y validación">
-        {qualityCards.map((card) => <QualityCard key={card.label} card={card} />)}
-      </div>
+      {isFixture ? (
+        <details className="postulation-demo__demo-environment">
+          <summary>Estado del entorno de demostración</summary>
+          <p>No son métricas de una persona real; describen un escenario sintético para QA visual.</p>
+          <div className="postulation-demo__quality-grid" aria-label="Calidad simulada e integridad técnica">
+            {qualityCards.map((card) => <QualityCard key={card.label} card={card} />)}
+          </div>
+        </details>
+      ) : (
+        <div className="postulation-demo__quality-grid" aria-label="Calidad de sesión e integridad técnica">
+          {qualityCards.map((card) => <QualityCard key={card.label} card={card} />)}
+        </div>
+      )}
 
       {talentDimensions.length > 0 && (
         <>
@@ -234,9 +252,12 @@ export default function PostulationReportScreen({
             <div>
               <h2>Mapa de evidencia KRUMM</h2>
               <p>{completeWorkbookCoverage
-                ? 'Lectura de demo completa: los ocho constructos tienen score provisional y confianza por constructo.'
+                ? 'Cobertura de tareas en demo: los ocho constructos tienen score provisional y confianza por constructo.'
                 : 'Lectura de demo: muestra qué capacidades tienen señales de juego y cuáles requieren evidencia adicional.'}</p>
             </div>
+          </div>
+          <div className="postulation-demo__evidence-warning" role="note">
+            Scores de demo no validados, sin baremos y no aptos para comparar personas.
           </div>
           <div className="postulation-demo__talent-grid">
             {workbookFramework.map((construct) => <WorkbookTalentCard key={construct.id} construct={construct} />)}
@@ -256,11 +277,11 @@ export default function PostulationReportScreen({
 
       <div className="postulation-demo__governance-card">
         <div>
-          <h2>Gobernanza y caveats</h2>
+          <h2>Gobernanza y observaciones</h2>
           <p>Uso exclusivo como soporte para revisión humana. Sin decisión automatizada, sin diagnóstico y sin inferir rasgos internos.</p>
         </div>
         <div className="postulation-demo__caveat-list">
-          {caveats.length ? caveats.slice(0, 8).map((caveat) => <span key={caveat}>{caveat}</span>) : <span>Sin caveats críticos en esta sesión</span>}
+          {caveats.length ? caveats.slice(0, 8).map((caveat) => <span key={caveat}>{caveat}</span>) : <span>Sin observaciones críticas en esta sesión</span>}
         </div>
       </div>
 

@@ -59,8 +59,8 @@ describe('TeamCoordinationPostulationTask', () => {
     expect(JSON.stringify(responseEvents)).not.toMatch(/selectedOptionLabel|optionText|prompt|typedResponse/i);
     expect(responseEvents[0].response).toMatchObject({
       outcome: 'structured_choice',
-      choiceCategory: 'alignment_and_roles',
       teamCoordination: expect.objectContaining({ aggregateOnly: true }),
     });
+    expect(JSON.stringify(responseEvents)).not.toMatch(/choiceCategory/i);
   });
 });

@@ -159,4 +159,34 @@ describe('generateTalentReport', () => {
     expect(report).not.toContain('Evidencia insuficiente');
     expect(report).not.toContain('No medido');
   });
+
+  it('renders absent confidence and signal quality as unavailable instead of measured zero', () => {
+    const incomplete = JSON.parse(JSON.stringify(payload));
+    incomplete.quality = {
+      sampleCount: 0,
+      facePresenceRatio: null,
+      meanConfidence: null,
+      correlatedTrialCount: 0,
+      caveats: ['camera_not_available'],
+    };
+    incomplete.talentProfile.globalSummary.confidence = null;
+    incomplete.talentProfile.dimensions.processingSpeed.confidence = null;
+    incomplete.behavioral.gameCorrelationAggregate = {
+      completedTrialCount: 0,
+      meanReactionPostureDelta: null,
+      meanReactionFacePresenceDelta: null,
+    };
+    incomplete.edgeAI.composite.score = null;
+
+    const markdown = generateTalentReport({ payload: incomplete, format: 'markdown' }).content;
+    const json = generateTalentReport({ payload: incomplete, format: 'json' }).content;
+
+    expect(markdown).toContain('Confianza global del perfil: No disponible');
+    expect(markdown).toContain('Rostro presente: No disponible');
+    expect(markdown).toContain('Confianza facial media: No disponible');
+    expect(markdown).toContain('| Velocidad de procesamiento | 78 | No disponible |');
+    expect(markdown).toContain('Delta postura durante reacción: No disponible');
+    expect(markdown).toContain('Composite Edge AI: No medido');
+    expect(json.sections.executiveSummary.confidence).toBeNull();
+  });
 });

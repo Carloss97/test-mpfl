@@ -122,7 +122,7 @@ function fixtureResponse(block, index) {
   if (block.gameId === 'laser_puzzle') return { ...base, correct: true, outcome: 'level_solved', laserPuzzle: summary };
   if (block.gameId === 'balloon_risk') return { ...base, outcome: 'cashout', balloonRisk: summary };
   if (block.gameId === 'passenger_routes') return { ...base, correct: true, outcome: 'route_completed', passengerRoutes: summary };
-  if (block.gameId === 'team_coordination') return { ...base, correct: true, outcome: 'structured_choice', choiceCategory: 'fixture_structured_choice', teamCoordination: summary };
+  if (block.gameId === 'team_coordination') return { ...base, correct: true, outcome: 'structured_choice', teamCoordination: summary };
   return {
     ...base,
     pointerSummary: { pathEfficiency: 0.78 + (index * 0.03), correctionCount: index === 1 ? 2 : 0 },
@@ -235,7 +235,7 @@ export function buildPostulationDemoFixture({
         synthetic: true,
         batteryMode,
         label: POSTULATION_DEMO_FIXTURE_LABEL,
-        description: 'Fixture local privacy-safe para reuniones, QA visual y fallback sin cámara.',
+        description: 'Datos sintéticos locales para reuniones, QA visual y respaldo sin cámara.',
       },
     },
   };

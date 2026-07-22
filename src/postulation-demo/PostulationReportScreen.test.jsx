@@ -60,8 +60,11 @@ describe('PostulationReportScreen', () => {
     const artifacts = buildArtifacts();
     render(<PostulationReportScreen artifacts={artifacts} completedDemo={completedDemo} onRestart={() => {}} />);
 
-    expect(screen.getByRole('heading', { name: /Reporte listo para revisión humana/i })).toBeInTheDocument();
-    expect(screen.getByText(/OK privacy-safe/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Reporte de sesión listo para revisión humana/i })).toBeInTheDocument();
+    expect(screen.getByText(/Integridad de archivos verificada · no implica validez psicométrica/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reporte local listo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Markdown · HTML · JSON/i)).toBeInTheDocument();
+    expect(document.querySelector('.postulation-demo__report-status-card')).not.toHaveTextContent('postulation-report-screen-test');
     expect(screen.getByText(/Perfil de capacidades/i)).toBeInTheDocument();
     expect(screen.getByText(/Resultados por juego/i)).toBeInTheDocument();
     expect(screen.getByText(/Qué se procesó en segundo plano/i)).toBeInTheDocument();
@@ -142,10 +145,22 @@ describe('PostulationReportScreen', () => {
     const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
     render(<PostulationReportScreen artifacts={fixture.artifacts} completedDemo={fixture.summary} />);
 
+    expect(screen.getByRole('heading', { name: /Reporte de demostración listo para revisión humana/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Mapa de evidencia KRUMM/i })).toBeInTheDocument();
+    expect(screen.getByText(/^Integridad técnica$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Verificada$/i)).toBeInTheDocument();
+    expect(screen.getByText(/Cámara del fixture/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Simulada$/i)).toBeInTheDocument();
+    expect(screen.getByText(/Muestras simuladas/i)).toBeInTheDocument();
+    expect(screen.getByText(/Estado del entorno de demostración/i)).toBeInTheDocument();
+    expect(screen.getByText(/No son métricas de una persona real/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Demo provisional/i)).toHaveLength(8);
+    expect(screen.getAllByText(/Ver alcance y validación/i)).toHaveLength(8);
     expect(screen.queryByText(/Framework R-6 del workbook/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Batería original: lectura preliminar controlada/i)).toBeInTheDocument();
-    expect(screen.getByText(/Cobertura completa de demo/i)).toBeInTheDocument();
+    expect(screen.getByText(/8 constructos con señal de demo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Cobertura y límites/i)).toBeInTheDocument();
+    expect(screen.getByText(/Scores de demo no validados, sin baremos y no aptos para comparar personas/i)).toBeInTheDocument();
     expect(screen.getByText(/ocho constructos tienen score provisional/i)).toBeInTheDocument();
     expect(screen.getByText(/8 constructos tienen score provisional/i)).toBeInTheDocument();
     expect(screen.getByText(/Validar antes de comparar candidatos/i)).toBeInTheDocument();
@@ -171,6 +186,8 @@ describe('PostulationReportScreen', () => {
     expect(screen.getByText(/Rutas: validado para demo interna/i)).toBeInTheDocument();
     expect(screen.getByText(/Claridad de instrucciones: validado para demo interna/i)).toBeInTheDocument();
     expect(screen.queryByText(/Authoring|Calibration|Instruction check|valid_for_internal_demo/i)).not.toBeInTheDocument();
+    expect(document.querySelector('.postulation-demo__caveat-list')?.textContent).not.toMatch(/synthetic_demo_fixture|original_games_r6d|low_model_confidence/i);
+    expect(document.querySelector('.postulation-demo__report-screen')?.textContent).not.toMatch(/R-7/i);
   });
 
   it('derives modular passenger-route feedback from aggregate-only game results', () => {

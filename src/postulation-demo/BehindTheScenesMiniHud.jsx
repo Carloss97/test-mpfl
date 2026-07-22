@@ -31,6 +31,10 @@ export function buildBehindTheScenesStatus(snapshot = {}) {
   const eventCount = Math.max(0, Number(safeSnapshot.events ?? 0) || 0);
   const eventStatus = eventCount > 0 ? 'ok' : normalizeStatus(safeSnapshot.eventStatus ?? 'pending');
   const statuses = [camera, face, signal, eventStatus, report];
+  const idleBeforeStart = camera === 'idle' && face === 'idle' && signal === 'idle' && eventCount === 0;
+  const cameraUnavailable = camera === 'error';
+  const readyCount = Number.isFinite(Number(safeSnapshot.readyCount)) ? Number(safeSnapshot.readyCount) : countReady(statuses);
+  const totalCount = Number.isFinite(Number(safeSnapshot.totalCount)) ? Number(safeSnapshot.totalCount) : 5;
   return {
     camera,
     face,
@@ -39,9 +43,11 @@ export function buildBehindTheScenesStatus(snapshot = {}) {
     eventStatus,
     report,
     reportText: reportValue(report),
-    readyCount: Number.isFinite(Number(safeSnapshot.readyCount)) ? Number(safeSnapshot.readyCount) : countReady(statuses),
-    totalCount: Number.isFinite(Number(safeSnapshot.totalCount)) ? Number(safeSnapshot.totalCount) : 5,
+    readyCount,
+    totalCount,
     caveats: Array.isArray(safeSnapshot.caveats) ? safeSnapshot.caveats : [],
+    activityLabel: cameraUnavailable ? 'Cámara opcional no disponible' : idleBeforeStart ? 'Listo para comenzar' : 'Procesando en segundo plano',
+    progressLabel: idleBeforeStart ? 'Puedes continuar sin cámara' : `Procesos listos ${readyCount} de ${totalCount}`,
   };
 }
 
@@ -64,8 +70,8 @@ export default function BehindTheScenesMiniHud({ snapshot }) {
   return (
     <aside className="postulation-demo__hud" aria-label="Procesamiento en segundo plano">
       <div className="postulation-demo__hud-topline">
-        <span className="postulation-demo__hud-badge">Procesando en segundo plano</span>
-        <strong>Procesos listos {status.readyCount} de {status.totalCount}</strong>
+        <span className="postulation-demo__hud-badge">{status.activityLabel}</span>
+        <strong>{status.progressLabel}</strong>
       </div>
       <div className="postulation-demo__hud-grid">
         <StatusRow label="Cámara" status={status.camera} />

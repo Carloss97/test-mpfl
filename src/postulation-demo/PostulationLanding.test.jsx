@@ -9,6 +9,11 @@ describe('PostulationLanding HR dashboard access', () => {
     render(<PostulationLanding onStart={vi.fn()} batteryMode={POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES} />);
 
     expect(screen.getByRole('button', { name: /Comenzar demo de postulación/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Ver dashboard HR/i })).toHaveAttribute('href', '/postulaciones-demo/hr');
+    const hrLink = screen.getByRole('link', { name: /Abrir vista HR/i });
+    expect(hrLink).toHaveAttribute('href', '/postulaciones-demo/hr');
+    expect(hrLink.closest('.postulation-demo__brief')).not.toBeNull();
+    expect(screen.getByText(/10–12 min/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sesión local · batería original/i)).toBeInTheDocument();
+    expect(screen.getByText(/no reduce el desempeño de los juegos/i)).toBeInTheDocument();
   });
 });

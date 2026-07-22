@@ -90,9 +90,8 @@ describe('team_coordination_aggregate_v1', () => {
       outcome: 'structured_choice',
       reactionTimeMs: 1551,
       score: 0.88,
-      choiceCategory: 'alignment_and_roles',
       teamCoordination: aggregate,
     });
-    expect(JSON.stringify(payload)).not.toMatch(/selectedOptionLabel|rawChoices|optionText/i);
+    expect(JSON.stringify(payload)).not.toMatch(/choiceCategory|selectedOptionLabel|rawChoices|optionText/i);
   });
 });

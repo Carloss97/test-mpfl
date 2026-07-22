@@ -21,6 +21,7 @@ export const ASSESSMENT_FORBIDDEN_KEYS = Object.freeze([
   'pumpSequence',
   'beamCells',
   'rawGameEvents',
+  'choiceCategory',
   'trials',
   'trialResults',
   'stimuli',

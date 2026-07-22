@@ -163,7 +163,6 @@ function TeamCoordinationInner({ emit, trialCount, onComplete }) {
       response: sanitizeTeamCoordinationResponsePayload({
         correct: optionScore(option) >= 0.7,
         outcome: 'structured_choice',
-        choiceCategory: option.category,
         reactionTimeMs: responseTime - scenarioStartRef.current,
         score: optionScore(option),
         teamCoordination: interimAggregate,

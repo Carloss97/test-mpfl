@@ -182,7 +182,7 @@ function getConstructDemoExplanation(id, availability) {
     reason: availability === 'not_measured'
       ? 'La demo actual no genera una señal suficiente para este indicador.'
       : 'La señal existe, pero su interpretación todavía es preliminar.',
-    nextStep: 'Definir una tarea específica, evidencia esperada y validación R-7 antes de usarlo para comparar personas.',
+    nextStep: 'Definir una tarea específica, evidencia esperada y validación empírica adicional antes de usarlo para comparar personas.',
   };
 }
 
@@ -190,8 +190,19 @@ export function getPostulationQualityCards(artifacts = null) {
   const quality = artifacts?.assessmentSession?.qualitySummary ?? artifacts?.payload?.quality ?? {};
   const consent = artifacts?.assessmentSession?.consent ?? {};
   const validationOk = artifacts?.payload?.validation?.ok === true && artifacts?.validation?.ok !== false;
+  const synthetic = artifacts?.fixture?.synthetic === true;
+  if (synthetic) {
+    return [
+      { label: 'Integridad técnica', value: validationOk ? 'Verificada' : 'Bloqueada', tone: validationOk ? 'ok' : 'danger' },
+      { label: 'Cámara del fixture', value: 'Simulada', tone: 'ok' },
+      { label: 'Muestras simuladas', value: String(quality.sampleCount ?? 0), tone: safeNumber(quality.sampleCount) >= 20 ? 'ok' : 'warn' },
+      { label: 'Presencia facial simulada', value: pct(quality.facePresenceRatio), tone: safeNumber(quality.facePresenceRatio) >= 0.7 ? 'ok' : 'warn' },
+      { label: 'Confianza simulada', value: pct(quality.meanConfidence), tone: safeNumber(quality.meanConfidence) >= 0.55 ? 'ok' : 'warn' },
+      { label: 'Ensayos del fixture', value: String(quality.correlatedTrialCount ?? 0), tone: safeNumber(quality.correlatedTrialCount) > 0 ? 'ok' : 'warn' },
+    ];
+  }
   return [
-    { label: 'Validación', value: validationOk ? 'Aprobada' : 'Bloqueada', tone: validationOk ? 'ok' : 'danger' },
+    { label: 'Integridad técnica', value: validationOk ? 'Verificada' : 'Bloqueada', tone: validationOk ? 'ok' : 'danger' },
     { label: 'Cámara local', value: consent.camera ? 'Activada' : 'Con caveats', tone: consent.camera ? 'ok' : 'warn' },
     { label: 'Muestras', value: String(quality.sampleCount ?? 0), tone: safeNumber(quality.sampleCount) >= 20 ? 'ok' : 'warn' },
     { label: 'Rostro presente', value: pct(quality.facePresenceRatio), tone: safeNumber(quality.facePresenceRatio) >= 0.7 ? 'ok' : 'warn' },
@@ -251,7 +262,14 @@ export function getTopTalentDimensions(artifacts = null, limit = 6) {
 export function getPostulationCaveats(artifacts = null) {
   const quality = artifacts?.assessmentSession?.qualitySummary ?? artifacts?.payload?.quality ?? {};
   const edge = artifacts?.assessmentSession?.edgeAI ?? artifacts?.payload?.edgeAI ?? {};
-  return [...new Set([...(quality.caveats ?? []), ...(edge.caveats ?? [])])];
+  const labels = {
+    synthetic_demo_fixture: 'Datos sintéticos de demostración; no corresponden a una persona real.',
+    original_games_r6d_provisional_mapping: 'Mapeo de constructos provisional; requiere validación psicométrica adicional.',
+    low_model_confidence: 'Confianza limitada en la señal local; interpretar con cautela.',
+    original_games_r6d_mapping_available_in_talent_framework: 'Scores de demo disponibles con límites explicados por constructo.',
+    'Modelo bayesiano basado en AUs del FACS.': 'El modelo local aporta contexto técnico, no inferencia directa de talento.',
+  };
+  return [...new Set([...(quality.caveats ?? []), ...(edge.caveats ?? [])].map((caveat) => labels[caveat] ?? caveat))];
 }
 
 export function getWorkbookTalentFrameworkCards(artifacts = null) {
@@ -285,6 +303,7 @@ export function getPostulationExecutiveSummary(artifacts = null, completedDemo =
   const notMeasured = workbookCards.filter((card) => /not_measured|insufficient/i.test(card.availability)).length;
   const descriptive = workbookCards.filter((card) => /descriptive/i.test(card.availability)).length;
   const isOriginalBattery = batteryMode === 'original_games';
+  const observationLabel = `${caveats.length} ${caveats.length === 1 ? 'observación' : 'observaciones'} de alcance`;
   return {
     headline: isOriginalBattery
       ? 'Batería original: lectura preliminar controlada'
@@ -304,21 +323,21 @@ export function getPostulationExecutiveSummary(artifacts = null, completedDemo =
         body: 'Contrastar con entrevista, CV y evidencia laboral. No ranking automático ni decisión de selección.',
       },
       {
-        label: 'Qué no mide',
-        title: isOriginalBattery && notMeasured === 0 ? 'Cobertura completa de demo' : isOriginalBattery ? 'No medido explícito' : 'Caveats visibles',
+        label: isOriginalBattery ? 'Cobertura y límites' : 'Qué no mide',
+        title: isOriginalBattery && notMeasured === 0 ? '8 constructos con señal de demo' : isOriginalBattery ? 'No medido explícito' : 'Caveats visibles',
         body: isOriginalBattery
           ? notMeasured === 0
             ? descriptive === 0
               ? `${workbookCards.length} constructos tienen score provisional y confianza por constructo; ninguna capacidad queda sin tarea de demo asociada.`
               : `${descriptive} lectura(s) se mantienen descriptivas por prudencia científica, pero ninguna capacidad queda sin tarea de demo asociada.`
             : `${notMeasured} capacidades quedan como No medido o evidencia insuficiente; ${descriptive} lectura(s) son solo descriptivas. Cada tarjeta explica qué habría que agregar para medirlas.`
-          : `${caveats.length} caveat(s) acompañan la sesión; la cámara se usa como calidad/contexto, no como inferencia diagnóstica.`,
+          : `${observationLabel} acompañan la sesión; la cámara se usa como calidad/contexto, no como inferencia diagnóstica.`,
       },
       {
         label: 'Siguiente paso',
         title: isOriginalBattery ? 'Validar antes de comparar candidatos' : 'Revisión humana documentada',
         body: isOriginalBattery
-          ? 'Ejecutar R-7 con QA, entrevistas cognitivas y revisión experta antes de usar comparaciones entre personas.'
+          ? 'Ejecutar validación con QA, entrevistas cognitivas y revisión experta antes de usar comparaciones entre personas.'
           : 'Revisar consistencia con entrevista y criterios del rol antes de cualquier decisión humana.',
       },
     ],
