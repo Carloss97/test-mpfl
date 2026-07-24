@@ -1,45 +1,64 @@
 import React from 'react';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
-const PIPELINE_STEPS = Object.freeze([
-  {
-    id: 'sync',
-    kicker: 'Sincronización',
-    title: 'Reloj único de la sesión',
-    body: 'KRUMM alinea juegos y señales locales con el mismo tiempo interno para que el reporte sea consistente.',
-    technical: 'performance.now()',
-  },
-  {
-    id: 'local-inference',
-    kicker: 'Procesamiento local',
-    title: 'Procesamiento local en navegador',
-    body: 'La cámara, calidad de señal y eventos del juego se resumen en tu navegador antes de generar evidencia agregada.',
-    technical: 'LOCAL INFERENCE · Browser / Edge AI',
-  },
-  {
-    id: 'correlation',
-    kicker: 'Evidencia agregada',
-    title: 'Cruce de juego y señales',
-    body: 'El sistema resume qué ocurrió alrededor de cada respuesta sin guardar rutas de puntero ni datos reconstructivos.',
-    technical: 'gameCorrelation.aggregate',
-  },
-  {
-    id: 'feature-vector',
-    kicker: 'Resumen estable',
-    title: 'Vector de evaluación',
-    body: 'Las métricas quedan compactadas en variables versionadas para el reporte y futura revisión de RR.HH.',
-    technical: 'assessment_feature_vector_v2',
-  },
-  {
-    id: 'report',
-    kicker: 'Cierre humano',
-    title: 'Reporte para revisión humana',
-    body: 'Al terminar, KRUMM prepara un reporte observacional con caveats. No toma decisiones automáticas.',
-    technical: 'human-review-only report bundle',
-  },
-]);
+function buildPipelineSteps(t) {
+  return [
+    {
+      id: 'sync',
+      kicker: t('Sincronización', 'Synchronization'),
+      title: t('Reloj único de la sesión', 'Single session clock'),
+      body: t(
+        'KRUMM alinea juegos y señales locales con el mismo tiempo interno para que el reporte sea consistente.',
+        'KRUMM aligns games and local signals with the same internal clock so the report is consistent.',
+      ),
+      technical: 'performance.now()',
+    },
+    {
+      id: 'local-inference',
+      kicker: t('Procesamiento local', 'Local processing'),
+      title: t('Procesamiento local en navegador', 'In-browser local processing'),
+      body: t(
+        'La cámara, calidad de señal y eventos del juego se resumen en tu navegador antes de generar evidencia agregada.',
+        'Camera, signal quality, and game events are summarized in your browser before producing aggregated evidence.',
+      ),
+      technical: 'LOCAL INFERENCE · Browser / Edge AI',
+    },
+    {
+      id: 'correlation',
+      kicker: t('Evidencia agregada', 'Aggregated evidence'),
+      title: t('Cruce de juego y señales', 'Game and signal correlation'),
+      body: t(
+        'El sistema resume qué ocurrió alrededor de cada respuesta sin guardar rutas de puntero ni datos reconstructivos.',
+        'The system summarizes what happened around each response without storing pointer paths or reconstructive data.',
+      ),
+      technical: 'gameCorrelation.aggregate',
+    },
+    {
+      id: 'feature-vector',
+      kicker: t('Resumen estable', 'Stable summary'),
+      title: t('Vector de evaluación', 'Assessment vector'),
+      body: t(
+        'Las métricas quedan compactadas en variables versionadas para el reporte y futura revisión de RR.HH.',
+        'Metrics are compacted into versioned variables for the report and future HR review.',
+      ),
+      technical: 'assessment_feature_vector_v2',
+    },
+    {
+      id: 'report',
+      kicker: t('Cierre humano', 'Human closing'),
+      title: t('Reporte para revisión humana', 'Report for human review'),
+      body: t(
+        'Al terminar, KRUMM prepara un reporte observacional con caveats. No toma decisiones automáticas.',
+        'At the end, KRUMM prepares an observational report with caveats. It makes no automated decisions.',
+      ),
+      technical: 'human-review-only report bundle',
+    },
+  ];
+}
 
 export function buildBehindTheScenesPipeline(status = {}) {
-  return PIPELINE_STEPS.map((step) => {
+  const steps = buildPipelineSteps((es) => es);
+  return steps.map((step) => {
     if (step.id === 'sync') return { ...step, status: status.eventStatus === 'ok' ? 'ok' : 'pending' };
     if (step.id === 'local-inference') return { ...step, status: status.signal === 'ok' ? 'ok' : status.signal === 'warning' ? 'warning' : 'pending' };
     if (step.id === 'report') return { ...step, status: status.report === 'ok' ? 'ok' : 'pending' };
@@ -47,13 +66,14 @@ export function buildBehindTheScenesPipeline(status = {}) {
   });
 }
 
-export default function BehindTheScenesDrawer({ status }) {
-  const steps = buildBehindTheScenesPipeline(status);
+export default function BehindTheScenesDrawer({ snapshot }) {
+  const { t } = useLanguage();
+  const steps = buildPipelineSteps(t);
   return (
-    <div className="postulation-demo__hud-drawer" aria-label="Detalle del procesamiento local">
+    <div className="postulation-demo__hud-drawer" aria-label={t('Detalle del procesamiento local', 'Local processing detail')}>
       <div className="postulation-demo__hud-drawer-head">
-        <strong>Qué pasa detrás</strong>
-        <span>Sin video, frames ni rutas reconstructivas. Solo señales locales agregadas.</span>
+        <strong>{t('Qué pasa detrás', 'What happens behind')}</strong>
+        <span>{t('Sin video, frames ni rutas reconstructivas. Solo señales locales agregadas.', 'No video, frames, or reconstructive paths. Only aggregated local signals.')}</span>
       </div>
       <ol className="postulation-demo__hud-pipeline">
         {steps.map((step) => (
@@ -65,11 +85,11 @@ export default function BehindTheScenesDrawer({ status }) {
         ))}
       </ol>
       <details className="postulation-demo__hud-technical-details">
-        <summary>Detalle técnico</summary>
+        <summary>{t('Detalle técnico', 'Technical detail')}</summary>
         <ul>
           {steps.map((step) => <li key={`${step.id}-technical`}>{step.technical}</li>)}
         </ul>
-        <p>No contiene datos reconstructivos.</p>
+        <p>{t('No contiene datos reconstructivos.', 'Contains no reconstructive data.')}</p>
       </details>
     </div>
   );

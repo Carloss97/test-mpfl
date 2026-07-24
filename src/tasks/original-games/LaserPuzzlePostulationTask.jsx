@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import GameRuntime from '../GameRuntime.jsx';
+import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import {
   buildLaserDemoLevels,
   buildLaserGrid,
@@ -67,13 +68,14 @@ function compactGrid(grid) {
 }
 
 function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
+  const { t } = useLanguage();
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
   const levels = useMemo(() => buildLaserDemoLevels().slice(0, Math.max(1, Number(trialCount) || 1)), [trialCount]);
   const [levelIndex, setLevelIndex] = useState(0);
   const [grid, setGrid] = useState(() => buildLaserGrid(levels[0]));
   const [selectedKey, setSelectedKey] = useState(null);
-  const [status, setStatus] = useState('Selecciona una pieza móvil y luego una celda vacía.');
+  const [status, setStatus] = useState(t('Selecciona una pieza móvil y luego una celda vacía.', 'Select a movable piece, then an empty cell.'));
   const [finished, setFinished] = useState(false);
   const [levelMoveCount, setLevelMoveCount] = useState(0);
   const movesRef = useRef(0);
@@ -127,31 +129,31 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
     if (!selectedKey) {
       if (cell?.movable) {
         setSelectedKey(key);
-        setStatus('Pieza seleccionada. Elige una celda vacía para reubicarla.');
+        setStatus(t('Pieza seleccionada. Elige una celda vacía para reubicarla.', 'Piece selected. Choose an empty cell to relocate it.'));
       } else {
         violationsRef.current += 1;
-        setStatus('Esa celda es fija. Solo se pueden mover piezas ópticas marcadas.');
+        setStatus(t('Esa celda es fija. Solo se pueden mover piezas ópticas marcadas.', 'That cell is fixed. Only marked optical pieces can move.'));
       }
       return;
     }
 
     if (key === selectedKey) {
       setSelectedKey(null);
-      setStatus('Selección cancelada.');
+      setStatus(t('Selección cancelada.', 'Selection cancelled.'));
       return;
     }
 
     const result = movePiece(grid, selectedKey, key);
     if (!result.moved) {
       violationsRef.current += 1;
-      setStatus('Movimiento no válido: el destino debe estar vacío.');
+      setStatus(t('Movimiento no válido: el destino debe estar vacío.', 'Invalid move: the destination must be empty.'));
       return;
     }
     movesRef.current += 1;
     setLevelMoveCount((count) => count + 1);
     setGrid(compactGrid(result.grid));
     setSelectedKey(null);
-    setStatus('Pieza reubicada. Comprueba la ruta o ajusta otra pieza.');
+    setStatus(t('Pieza reubicada. Comprueba la ruta o ajusta otra pieza.', 'Piece relocated. Check the route or adjust another piece.'));
   }, [finished, grid, level, selectedKey]);
 
   const resetLevel = useCallback(() => {
@@ -159,7 +161,7 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
     setGrid(buildLaserGrid(level));
     setSelectedKey(null);
     setLevelMoveCount(0);
-    setStatus('Nivel reiniciado. Selecciona una pieza móvil para comenzar.');
+    setStatus(t('Nivel reiniciado. Selecciona una pieza móvil para comenzar.', 'Level reset. Select a movable piece to start.'));
   }, [finished, level]);
 
   const finishGame = useCallback((lastSolved) => {
@@ -221,11 +223,11 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
     });
 
     if (!solved) {
-      setStatus('La ruta aún no ilumina todos los relés y antenas. Ajusta las piezas móviles.');
+      setStatus(t('La ruta aún no ilumina todos los relés y antenas. Ajusta las piezas móviles.', 'The route still does not light every relay and antenna. Adjust the movable pieces.'));
       return;
     }
 
-    setStatus('Nivel resuelto. Ruta óptica reconstruida.');
+    setStatus(t('Nivel resuelto. Ruta óptica reconstruida.', 'Level solved. Optimal route rebuilt.'));
     const nextIndex = levelIndex + 1;
     if (nextIndex >= levels.length) {
       finishGame(true);
@@ -238,7 +240,7 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
       setGrid(buildLaserGrid(nextLevel));
       setSelectedKey(null);
       setLevelMoveCount(0);
-      setStatus('Nuevo mapa: reconstruye el camino del láser.');
+      setStatus(t('Nuevo mapa: reconstruye el camino del láser.', 'New map: rebuild the laser path.'));
     }, 350);
   }, [antennaCount, finishGame, finished, level, levelIndex, levels, relayCount, trace.litAntennaCount, trace.litRelayCount]);
 
@@ -247,10 +249,10 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
   if (finished) {
     return (
       <div className="laser-puzzle-task laser-puzzle-task--finished" data-testid="laser-puzzle-finished">
-        <h3>Puzzle láser completado</h3>
-        <p>Nivel resuelto. Ruta óptica reconstruida.</p>
-        <p>Mapas resueltos: {levels.length} de {levels.length}</p>
-        <p>Movimientos agregados: {movesRef.current}</p>
+        <h3>{t('Puzzle láser completado', 'Laser puzzle completed')}</h3>
+        <p>{t('Nivel resuelto. Ruta óptica reconstruida.', 'Level solved. Optimal route rebuilt.')}</p>
+        <p>{t('Mapas resueltos', 'Maps solved')}: {levels.length} {t('de', 'of')} {levels.length}</p>
+        <p>{t('Movimientos agregados', 'Aggregated moves')}: {movesRef.current}</p>
       </div>
     );
   }
@@ -281,14 +283,14 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
   return (
     <div className="laser-puzzle-task">
       <div className="task-header laser-puzzle-task__header">
-        <h3 className="task-title">🛰️ Puzzle láser</h3>
-        <span className="task-progress">Nivel {levelIndex + 1} de {levels.length}</span>
-        <span className="task-progress">{trace.litAntennaCount}/{antennaCount} antenas</span>
-        {relayCount > 0 && <span className="task-progress">{trace.litRelayCount}/{relayCount} relés</span>}
-        {portalCount > 0 && <span className="task-progress">{portalCount} portales</span>}
+        <h3 className="task-title">🛰️ {t('Puzzle láser', 'Laser puzzle')}</h3>
+        <span className="task-progress">{t('Nivel', 'Level')} {levelIndex + 1} {t('de', 'of')} {levels.length}</span>
+        <span className="task-progress">{trace.litAntennaCount}/{antennaCount} {t('antenas', 'antennas')}</span>
+        {relayCount > 0 && <span className="task-progress">{trace.litRelayCount}/{relayCount} {t('relés', 'relays')}</span>}
+        {portalCount > 0 && <span className="task-progress">{portalCount} {t('portales', 'portals')}</span>}
       </div>
       <p className="caption laser-puzzle-task__caption">
-        <strong>Mueve las {level.solutionPlacements?.length ?? level.par} piezas ópticas</strong> para activar {relayCount} relés y {antennaCount} antena{antennaCount === 1 ? '' : 's'} en {level.par} movimientos. {level.objective ?? 'Reconstruye el camino del láser moviendo solo piezas ópticas.'}
+        <strong>{t('Mueve las', 'Move the')} {level.solutionPlacements?.length ?? level.par} {t('piezas ópticas', 'optical pieces')}</strong> {t('para activar', 'to activate')} {relayCount} {t('relés', 'relays')} {t('y', 'and')} {antennaCount} {t('antena', 'antenna')}{antennaCount === 1 ? '' : 's'} {t('en', 'in')} {level.par} {t('movimientos', 'moves')}. {t(level.objective ?? 'Reconstruye el camino del láser moviendo solo piezas ópticas.', level.objectiveEn ?? 'Rebuild the laser path moving only optical pieces.')}
       </p>
       <div className="laser-puzzle-task__workspace">
         <div
@@ -306,30 +308,30 @@ function LaserPuzzleInner({ emit, trialCount, width, height, onComplete }) {
         >
           {cells}
         </div>
-        <aside className="laser-puzzle-task__side-panel" aria-label="Resumen del puzzle láser">
-          <strong>{level.name}</strong>
-          <span>Dificultad: {level.difficulty}</span>
-          {level.coreChallenge && <span>Reto: {level.coreChallenge}</span>}
-          <span>Par: {level.par} movimientos</span>
-          <span>Movimientos del nivel: {levelMoveCount}</span>
-          <span>Antenas activas: {trace.litAntennaCount}/{antennaCount}</span>
-          {relayCount > 0 && <span>Relés activos: {trace.litRelayCount}/{relayCount}</span>}
-          {portalCount > 0 && <span>Portales: conservan la dirección del haz al saltar.</span>}
-          {relayCount > 0 && <span>Condición: relés y antenas deben quedar iluminados.</span>}
-          <div className="laser-puzzle-task__legend" aria-label="Leyenda del tablero">
-            <span>🚀 Emisor</span>
-            <span>◇ Relé</span>
-            <span>📡 Antena</span>
-            <span>◩ Pieza móvil</span>
-            {portalCount > 0 && <span>◎ Portal</span>}
+        <aside className="laser-puzzle-task__side-panel" aria-label={t('Resumen del puzzle láser', 'Laser puzzle summary')}>
+          <strong>{t(level.name, level.nameEn ?? level.name)}</strong>
+          <span>{t('Dificultad', 'Difficulty')}: {level.difficulty}</span>
+          {level.coreChallenge && <span>{t('Reto', 'Challenge')}: {t(level.coreChallenge, level.coreChallengeEn ?? level.coreChallenge)}</span>}
+          <span>{t('Par', 'Par')}: {level.par} {t('movimientos', 'moves')}</span>
+          <span>{t('Movimientos del nivel', 'Level moves')}: {levelMoveCount}</span>
+          <span>{t('Antenas activas', 'Active antennas')}: {trace.litAntennaCount}/{antennaCount}</span>
+          {relayCount > 0 && <span>{t('Relés activos', 'Active relays')}: {trace.litRelayCount}/{relayCount}</span>}
+          {portalCount > 0 && <span>{t('Portales conservan la dirección del haz al saltar.', 'Portals keep beam direction when crossing.')}</span>}
+          {relayCount > 0 && <span>{t('Condición', 'Condition')}: {t('relés y antenas deben quedar iluminados.', 'relays and antennas must stay lit.')}</span>}
+          <div className="laser-puzzle-task__legend" aria-label={t('Leyenda del tablero', 'Board legend')}>
+            <span>🚀 {t('Emisor', 'Emitter')}</span>
+            <span>◇ {t('Relé', 'Relay')}</span>
+            <span>📡 {t('Antena', 'Antenna')}</span>
+            <span>◩ {t('Pieza móvil', 'Movable piece')}</span>
+            {portalCount > 0 && <span>◎ {t('Portal', 'Portal')}</span>}
           </div>
         </aside>
       </div>
       <div className="laser-puzzle-task__footer">
         <p role="status">{status}</p>
         <div className="laser-puzzle-task__actions">
-          <button type="button" className="secondary" onClick={resetLevel}>Reiniciar nivel</button>
-          <button type="button" className="primary" disabled={levelMoveCount === 0} onClick={checkRoute}>Comprobar ruta</button>
+          <button type="button" className="secondary" onClick={resetLevel}>{t('Reiniciar nivel', 'Reset level')}</button>
+          <button type="button" className="primary" disabled={levelMoveCount === 0} onClick={checkRoute}>{t('Comprobar ruta', 'Check route')}</button>
         </div>
       </div>
     </div>

@@ -31,19 +31,19 @@ function toPercent(v, k = 8.0) {
 function levelForScore(s) { return s >= 70 ? 'high' : s >= 40 ? 'moderate' : 'low'; }
 
 const CHANNEL_LABELS = {
-  cognitiveLoad: 'Carga Cognitiva',
-  emotionalValence: 'Valencia Emocional',
-  motorControl: 'Control Motor',
-  engagement: 'Engagement',
-  stressResponse: 'Estrés',
-  fatigueIndex: 'Fatiga',
-  visualAttention: 'Atención Visual',
-  postureQuality: 'Calidad Postural',
-  taskPerformance: 'Rendimiento',
-  inhibitionControl: 'Control Inhibitorio',
-  visuomotorPrecision: 'Precisión Visomotora',
-  visualSearchEfficiency: 'Eficiencia Búsqueda Visual',
-  adaptiveResilience: 'Resiliencia Adaptativa',
+  cognitiveLoad: { es: 'Carga Cognitiva', en: 'Cognitive load' },
+  emotionalValence: { es: 'Valencia Emocional', en: 'Emotional valence' },
+  motorControl: { es: 'Control Motor', en: 'Motor control' },
+  engagement: { es: 'Engagement', en: 'Engagement' },
+  stressResponse: { es: 'Estrés', en: 'Stress' },
+  fatigueIndex: { es: 'Fatiga', en: 'Fatigue' },
+  visualAttention: { es: 'Atención Visual', en: 'Visual attention' },
+  postureQuality: { es: 'Calidad Postural', en: 'Postural quality' },
+  taskPerformance: { es: 'Rendimiento', en: 'Performance' },
+  inhibitionControl: { es: 'Control Inhibitorio', en: 'Inhibitory control' },
+  visuomotorPrecision: { es: 'Precisión Visomotora', en: 'Visuomotor precision' },
+  visualSearchEfficiency: { es: 'Eficiencia Búsqueda Visual', en: 'Visual search efficiency' },
+  adaptiveResilience: { es: 'Resiliencia Adaptativa', en: 'Adaptive resilience' },
 };
 
 // ─── Likelihood ratios por canal ───
@@ -335,7 +335,8 @@ export function runEdgeAIInference({
   const calibratedChannels = normalizeAllChannels(channels);
   const labeledChannels = {};
   for (const [n, c] of Object.entries(calibratedChannels)) {
-    labeledChannels[n] = { ...c, label: CHANNEL_LABELS[n] ?? n };
+    const entry = CHANNEL_LABELS[n] ?? { es: n, en: n };
+    labeledChannels[n] = { ...c, label: entry.es, labelEn: entry.en };
   }
 
   return {
@@ -365,6 +366,11 @@ export function runEdgeAIInference({
       'Modelo bayesiano basado en AUs del FACS.',
       'Uso exclusivo para revisión humana.',
       'Señales observacionales; no constituyen diagnóstico clínico.',
+    ],
+    caveatsEn: [
+      'Bayesian model based on FACS AUs.',
+      'Exclusive use for human review.',
+      'Observational signals; not a clinical diagnosis.',
     ],
     emotions,
   };

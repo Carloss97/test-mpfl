@@ -44,7 +44,9 @@ function unavailable(reason) {
     feedbackCategory: reason,
     postLossOpportunityLabel: 'unknown',
     candidateHint: 'No hay datos agregados suficientes para explicar el juego de globo.',
+    candidateHintEn: 'There is not enough aggregate data to explain the balloon game.',
     reviewerCaveat: 'No interpretar ausencia o inconsistencia como baja tolerancia al riesgo o frustración.',
+    reviewerCaveatEn: 'Do not interpret absence or inconsistency as low risk tolerance or frustration.',
     nextDesignProbe: 'Revisar agregados de rondas, pérdidas y cashouts antes de interpretar.',
     diagnostics: {},
     privacy: { aggregateOnly: false, rawRoundsUsed: false },
@@ -103,7 +105,9 @@ export function buildBalloonRiskFeedback(aggregate = {}) {
       ...common,
       feedbackCategory: 'loss_exposure_review',
       candidateHint: 'El juego acumuló varias pérdidas del globo; esto describe exposición a pérdidas dentro de una tarea de riesgo/recompensa.',
+      candidateHintEn: 'The game accumulated several balloon losses; this describes loss exposure within a risk/reward task.',
       reviewerCaveat: 'Las pérdidas dependen del azar y de la estructura del juego; no son fracaso personal, impulsividad clínica ni tolerancia a la frustración.',
+      reviewerCaveatEn: 'Losses depend on chance and game structure; they are not personal failure, clinical impulsivity, or frustration tolerance.',
       nextDesignProbe: 'Revisar distribución de thresholds, claridad de feedback y estabilidad test-retest antes de puntuar.',
     };
   }
@@ -113,7 +117,9 @@ export function buildBalloonRiskFeedback(aggregate = {}) {
       ...common,
       feedbackCategory: cashoutRate >= 0.75 ? 'conservative_cashout_strategy' : 'feedback_not_observed',
       candidateHint: 'No hubo suficientes pérdidas observadas para estimar ajuste post-pérdida; la señal queda desconocida, no baja.',
+      candidateHintEn: 'There were not enough observed losses to estimate post-loss adjustment; the signal remains unknown, not low.',
       reviewerCaveat: 'Sin oportunidad post-pérdida, el ajuste ante feedback queda desconocido; no inferir tolerancia a frustración.',
+      reviewerCaveatEn: 'Without a post-loss opportunity, feedback adjustment remains unknown; do not infer frustration tolerance.',
       nextDesignProbe: 'Asegurar oportunidades post-pérdida suficientes o mantener la salida como descriptiva.',
     };
   }
@@ -123,7 +129,9 @@ export function buildBalloonRiskFeedback(aggregate = {}) {
       ...common,
       feedbackCategory: 'balanced_feedback_strategy',
       candidateHint: 'Mostraste una estrategia agregada de riesgo/recompensa con cashouts y ajuste ante feedback observado.',
+      candidateHintEn: 'You showed an aggregated risk/reward strategy with cashouts and observed feedback adjustment.',
       reviewerCaveat: 'Este patrón no demuestra personalidad, frustración ni mejor toma de decisiones fuera del juego.',
+      reviewerCaveatEn: 'This pattern does not demonstrate personality, frustration, or better decision making outside the game.',
       nextDesignProbe: 'Validar estabilidad contra formas paralelas o instrumentos de riesgo si se decide estudiar convergencia.',
     };
   }
@@ -132,7 +140,9 @@ export function buildBalloonRiskFeedback(aggregate = {}) {
     ...common,
     feedbackCategory: 'mixed_risk_strategy',
     candidateHint: 'La estrategia de globo fue mixta: combina acumulación, cashouts y pérdidas que deben revisarse como descripción de tarea.',
+    candidateHintEn: 'The balloon strategy was mixed: it combines accumulation, cashouts, and losses that should be reviewed as task description.',
     reviewerCaveat: 'No asignar dirección normativa sin criterio externo, calibración de thresholds y muestra suficiente.',
+    reviewerCaveatEn: 'Do not assign normative direction without external criteria, threshold calibration, and sufficient sample.',
     nextDesignProbe: 'Analizar configuración del juego y entrevistas cognitivas antes de interpretar.',
   };
 }

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 import SimpleRTTask from '../tasks/SimpleRTTask.jsx';
 import PrecisionTargetingTask from '../tasks/PrecisionTargetingTask.jsx';
 import PursuitTrackingTask from '../tasks/PursuitTrackingTask.jsx';
@@ -66,6 +67,7 @@ export default function UnifiedGameBattery({
   onBlockComplete,
   signalReadiness = {},
 } = {}) {
+  const { t } = useLanguage();
   const availableConfigs = useMemo(() => {
     const defaults = listBatteryConfigs();
     return defaults.some((item) => item.id === config.id) ? defaults : [config, ...defaults];
@@ -110,7 +112,7 @@ export default function UnifiedGameBattery({
 
   const startBaseline = useCallback(() => {
     if (!cameraActive) {
-      setNotice('Se requiere cámara activa para iniciar la batería evaluativa.');
+      setNotice(t('Se requiere cámara activa para iniciar la batería evaluativa.', 'An active camera is required to start the assessment battery.'));
       onRequestCamera?.();
       return;
     }
@@ -131,25 +133,25 @@ export default function UnifiedGameBattery({
   const modeLocked = session.state !== BATTERY_STATES.IDLE;
 
   return (
-    <section className="panel unified-battery-panel" aria-label="Evaluación gamificada unificada">
+    <section className="panel unified-battery-panel" aria-label={t('Evaluación gamificada unificada', 'Unified gamified assessment')}>
       <div className="panel-heading">
         <div>
-          <h2>🧭 Evaluación gamificada unificada</h2>
-          <p className="caption">Secuencia R-Z · modo {selectedConfig.mode} · {getBatteryModeLabel(selectedConfig)} · progreso {totalLabel}</p>
+          <h2>🧭 {t('Evaluación gamificada unificada', 'Unified gamified assessment')}</h2>
+          <p className="caption">{t('Secuencia R-Z · modo', 'Sequence R-Z · mode')} {selectedConfig.mode} · {getBatteryModeLabel(selectedConfig)} · {t('progreso', 'progress')} {totalLabel}</p>
         </div>
-        <span className="dash-section-badge">Estado: {stateLabel(session.state)}</span>
+        <span className="dash-section-badge">{t('Estado', 'Status')}: {stateLabel(session.state)}</span>
       </div>
 
       <div className="dash-section-body" style={{ display: 'flex', gap: '0.75rem', alignItems: 'end', flexWrap: 'wrap' }}>
         <label className="caption" htmlFor="battery-mode-select" style={{ display: 'grid', gap: '0.25rem' }}>
-          Modo de batería
-          <select id="battery-mode-select" value={selectedMode} onChange={changeBatteryMode} disabled={modeLocked} aria-label="Modo de batería">
+          {t('Modo de batería', 'Battery mode')}
+          <select id="battery-mode-select" value={selectedMode} onChange={changeBatteryMode} disabled={modeLocked} aria-label={t('Modo de batería', 'Battery mode')}>
             {BATTERY_MODE_OPTIONS.map((option) => (
               <option key={option.id} value={option.id}>{option.label}</option>
             ))}
           </select>
         </label>
-        <p className="caption">{modeLocked ? 'Modo bloqueado durante una evaluación activa.' : 'Elige demo rápida para reuniones o evaluación estándar para comparabilidad.'}</p>
+        <p className="caption">{modeLocked ? t('Modo bloqueado durante una evaluación activa.', 'Mode locked during an active assessment.') : t('Elige demo rápida para reuniones o evaluación estándar para comparabilidad.', 'Choose quick demo for meetings or standard assessment for comparability.')}</p>
       </div>
 
       <BatteryProgress completedBlocks={progress.completedBlocks} totalBlocks={progress.totalBlocks} currentBlock={currentBlock} state={session.state} />
@@ -157,7 +159,7 @@ export default function UnifiedGameBattery({
       {notice && <p className="caption" role="status">{notice}</p>}
 
       {session.state === BATTERY_STATES.IDLE && (
-        <button type="button" className="primary" onClick={startConsent}>Preparar evaluación</button>
+        <button type="button" className="primary" onClick={startConsent}>{t('Preparar evaluación', 'Prepare assessment')}</button>
       )}
 
       {session.state === BATTERY_STATES.CONSENT && (
@@ -200,9 +202,9 @@ export default function UnifiedGameBattery({
 
       {session.state === BATTERY_STATES.REST && (
         <div className="dash-section-body">
-          <p className="caption">Descanso breve antes del siguiente bloque.</p>
-          <button type="button" className="primary" onClick={() => dispatch({ type: 'REST_COMPLETE' })}>Continuar</button>
-          <button type="button" className="secondary" onClick={cancelBattery}>Cancelar evaluación</button>
+          <p className="caption">{t('Descanso breve antes del siguiente bloque.', 'Short break before the next block.')}</p>
+          <button type="button" className="primary" onClick={() => dispatch({ type: 'REST_COMPLETE' })}>{t('Continuar', 'Continue')}</button>
+          <button type="button" className="secondary" onClick={cancelBattery}>{t('Cancelar evaluación', 'Cancel assessment')}</button>
         </div>
       )}
 
@@ -219,7 +221,7 @@ export default function UnifiedGameBattery({
       )}
 
       {session.state === BATTERY_STATES.CANCELLED && (
-        <p className="caption">Evaluación cancelada por el participante.</p>
+        <p className="caption">{t('Evaluación cancelada por el participante.', 'Assessment cancelled by the participant.')}</p>
       )}
     </section>
   );

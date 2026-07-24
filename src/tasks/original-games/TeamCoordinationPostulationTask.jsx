@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import GameRuntime from '../GameRuntime.jsx';
+import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import {
   buildTeamCoordinationResponseAggregate,
   buildTeamCoordinationScenarios,
@@ -51,69 +52,69 @@ function buildResponseEntry(option) {
   };
 }
 
-function BehindPanel({ scenario, selectedOption, aggregate }) {
+function BehindPanel({ scenario, selectedOption, aggregate, t }) {
   const hasDecisions = Number(aggregate.completedScenarioCount) > 0;
   const displayMetric = (value) => (hasDecisions ? pct(value) : '—');
   return (
-    <aside className="team-coordination-task__behind" aria-label="Trabajo por detrás">
-      <strong>Bitácora táctica</strong>
-      <span className="team-coordination-task__behind-label">Trabajo por detrás</span>
-      <p>KRUMM observa elecciones estructuradas; no guarda texto libre ni conversación real.</p>
-      <div className="team-coordination-task__chips" aria-label="Métricas activas">
+    <aside className="team-coordination-task__behind" aria-label={t('Trabajo por detrás', 'Behind-the-scenes work')}>
+      <strong>{t('Bitácora táctica', 'Tactical logbook')}</strong>
+      <span className="team-coordination-task__behind-label">{t('Trabajo por detrás', 'Behind-the-scenes work')}</span>
+      <p>{t('KRUMM observa elecciones estructuradas; no guarda texto libre ni conversación real.', 'KRUMM observes structured choices; it stores no free text or real conversation.')}</p>
+      <div className="team-coordination-task__chips" aria-label={t('Métricas activas', 'Active metrics')}>
         {(scenario?.measuredConstructs ?? []).map((construct) => <span key={construct}>{construct}</span>)}
       </div>
       <dl>
-        <div><dt>Liderazgo</dt><dd>{displayMetric(aggregate.leadershipScore)}</dd></div>
-        <div><dt>Comunicación</dt><dd>{displayMetric(aggregate.communicationScore)}</dd></div>
-        <div><dt>Adaptabilidad</dt><dd>{displayMetric(aggregate.adaptabilityScore)}</dd></div>
-        <div><dt>Decisión</dt><dd>{displayMetric(aggregate.decisionQualityScore)}</dd></div>
+        <div><dt>{t('Liderazgo', 'Leadership')}</dt><dd>{displayMetric(aggregate.leadershipScore)}</dd></div>
+        <div><dt>{t('Comunicación', 'Communication')}</dt><dd>{displayMetric(aggregate.communicationScore)}</dd></div>
+        <div><dt>{t('Adaptabilidad', 'Adaptability')}</dt><dd>{displayMetric(aggregate.adaptabilityScore)}</dd></div>
+        <div><dt>{t('Decisión', 'Decision')}</dt><dd>{displayMetric(aggregate.decisionQualityScore)}</dd></div>
       </dl>
       {selectedOption && (
-        <p className="team-coordination-task__explain"><strong>Señal registrada:</strong> {selectedOption.why}</p>
+        <p className="team-coordination-task__explain"><strong>{t('Señal registrada:', 'Signal recorded:')}</strong> {selectedOption.why}</p>
       )}
-      <small>Se persisten solo scores agregados y conteos; no se guarda la opción ni su categoría.</small>
+      <small>{t('Se persisten solo scores agregados y conteos; no se guarda la opción ni su categoría.', 'Only aggregated scores and counts persist; the option and its category are not stored.')}</small>
     </aside>
   );
 }
 
-function RpgScene({ scenario, currentIndex, scenarioCount, selectedOption, onSelect }) {
+function RpgScene({ scenario, currentIndex, scenarioCount, selectedOption, onSelect, t }) {
   const scene = scenario?.scene ?? {};
   const memberEffects = {
-    Mara: selectedOption ? (selectedOption.scores.leadership >= 0.7 ? 'Rumbo alineado' : 'Rumbo en revisión') : 'En puesto',
-    Leo: selectedOption ? (selectedOption.scores.communication >= 0.7 ? 'Canal claro' : 'Canal en revisión') : 'En puesto',
-    Nia: selectedOption ? (selectedOption.scores.adaptability >= 0.7 ? 'Plan adaptable' : 'Plan en revisión') : 'En puesto',
+    Mara: selectedOption ? (selectedOption.scores.leadership >= 0.7 ? t('Rumbo alineado', 'Aligned course') : t('Rumbo en revisión', 'Course under review')) : t('En puesto', 'On post'),
+    Leo: selectedOption ? (selectedOption.scores.communication >= 0.7 ? t('Canal claro', 'Clear channel') : t('Canal en revisión', 'Channel under review')) : t('En puesto', 'On post'),
+    Nia: selectedOption ? (selectedOption.scores.adaptability >= 0.7 ? t('Plan adaptable', 'Adaptable plan') : t('Plan en revisión', 'Plan under review')) : t('En puesto', 'On post'),
   };
   return (
-    <section className="team-coordination-task__rpg" aria-label="Comando de crisis RPG">
+    <section className="team-coordination-task__rpg" aria-label={t('Comando de crisis RPG', 'Crisis command RPG')}>
       <div className="team-coordination-task__rpg-stage">
         <div className="team-coordination-task__rpg-topline">
-          <span>RPG táctico</span>
-          <strong>{scene.location}</strong>
-          <small>Turno {currentIndex + 1} de {scenarioCount}</small>
+          <span>{t('RPG táctico', 'Tactical RPG')}</span>
+          <strong>{scene.locationEn ?? scene.location}</strong>
+          <small>{t('Turno', 'Turn')} {currentIndex + 1} {t('de', 'of')} {scenarioCount}</small>
         </div>
-        <div className="team-coordination-task__party" aria-label="Escuadrón">
-          <strong>Escuadrón</strong>
+        <div className="team-coordination-task__party" aria-label={t('Escuadrón', 'Squad')}>
+          <strong>{t('Escuadrón', 'Squad')}</strong>
           {TEAM_PARTY.map((member) => (
-            <div key={member.name} className={member.name === scene.speaker ? 'active' : ''} aria-label={`${member.name}, ${member.role}, ${memberEffects[member.name]}`}>
+            <div key={member.name} className={member.name === scene.speaker ? 'active' : ''} aria-label={`${member.name}, ${member.roleEn ?? member.role}, ${memberEffects[member.name]}`}>
               <span aria-hidden="true">{member.portrait}</span>
-              <small><b>{member.name}</b><br />{member.role}<em>{memberEffects[member.name]}</em></small>
+              <small><b>{member.name}</b><br />{member.roleEn ?? member.role}<em>{memberEffects[member.name]}</em></small>
             </div>
           ))}
         </div>
         <div className="team-coordination-task__dialogue">
           <span className="team-coordination-task__portrait" aria-hidden="true">{scene.portrait}</span>
           <div>
-            <span>{scene.act}</span>
-            <strong>{scene.speaker} · {scene.role}</strong>
-            <p>{scene.narration}</p>
+            <span>{scene.actEn ?? scene.act}</span>
+            <strong>{scene.speaker} · {scene.roleEn ?? scene.role}</strong>
+            <p>{scene.narrationEn ?? scene.narration}</p>
           </div>
         </div>
       </div>
       <div className="team-coordination-task__scenario">
-        <span className="team-coordination-task__eyebrow">Decisión de comando</span>
-        <h4>{scenario.title}</h4>
-        <p>{scenario.prompt}</p>
-        <div className="team-coordination-task__options" role="group" aria-label="Opciones de intervención">
+        <span className="team-coordination-task__eyebrow">{t('Decisión de comando', 'Command decision')}</span>
+        <h4>{scenario.titleEn ?? scenario.title}</h4>
+        <p>{scenario.promptEn ?? scenario.prompt}</p>
+        <div className="team-coordination-task__options" role="group" aria-label={t('Opciones de intervención', 'Intervention options')}>
           {scenario.options.map((option, optionIndex) => (
             <button
               key={option.id}
@@ -123,15 +124,15 @@ function RpgScene({ scenario, currentIndex, scenarioCount, selectedOption, onSel
               aria-pressed={selectedOption?.id === option.id}
               onClick={() => onSelect(option)}
             >
-              <span>Comando {String.fromCharCode(65 + optionIndex)} · {selectedOption?.id === option.id ? 'Seleccionado' : 'Elegir'}</span>
-              <strong>{option.label}</strong>
+              <span>{t('Comando', 'Command')} {String.fromCharCode(65 + optionIndex)} · {selectedOption?.id === option.id ? t('Seleccionado', 'Selected') : t('Elegir', 'Choose')}</span>
+              <strong>{option.labelEn ?? option.label}</strong>
             </button>
           ))}
         </div>
         {selectedOption && (
           <div className="team-coordination-task__turn-effect" role="status">
-            <strong>Consecuencia de turno</strong>
-            <p>{selectedOption.why}</p>
+            <strong>{t('Consecuencia de turno', 'Turn consequence')}</strong>
+            <p>{selectedOption.whyEn ?? selectedOption.why}</p>
           </div>
         )}
       </div>
@@ -139,22 +140,22 @@ function RpgScene({ scenario, currentIndex, scenarioCount, selectedOption, onSel
   );
 }
 
-function MissionPanel({ aggregate }) {
+function MissionPanel({ aggregate, t }) {
   const score = Number(aggregate.score) || 0;
   const hasDecisions = Number(aggregate.completedScenarioCount) > 0;
   const targetReached = score >= TEAM_TARGET_SCORE;
   return (
-    <section className="team-coordination-task__mission" aria-label="Misión Operación Faro">
+    <section className="team-coordination-task__mission" aria-label={t('Misión Operación Faro', 'Faro Operation mission')}>
       <div>
-        <span className="team-coordination-task__eyebrow">Misión del equipo</span>
-        <strong>Mantener Operación Faro coordinada</strong>
-        <p>Elige intervenciones para mantener la coordinación sobre {pct(TEAM_TARGET_SCORE)}. KRUMM muestra el cálculo agregado mientras juegas.</p>
+        <span className="team-coordination-task__eyebrow">{t('Misión del equipo', 'Team mission')}</span>
+        <strong>{t('Mantener Operación Faro coordinada', 'Keep Faro Operation coordinated')}</strong>
+        <p>{t('Elige intervenciones para mantener la coordinación sobre', 'Choose interventions to keep coordination above')} {pct(TEAM_TARGET_SCORE)}. {t('KRUMM muestra el cálculo agregado mientras juegas.', 'KRUMM shows the aggregated calculation while you play.')}</p>
       </div>
       <div className="team-coordination-task__scoreboard">
-        <span>Coordinación agregada</span>
+        <span>{t('Coordinación agregada', 'Aggregated coordination')}</span>
         <strong>{hasDecisions ? pct(score) : '—'}</strong>
-        <small>{hasDecisions && targetReached ? 'Meta alcanzada' : `Meta ${pct(TEAM_TARGET_SCORE)}`}</small>
-        <div className="team-coordination-task__meter" aria-label={hasDecisions ? `Coordinación ${pct(score)}` : 'Coordinación sin decisiones'}>
+        <small>{hasDecisions && targetReached ? t('Meta alcanzada', 'Target reached') : `${t('Meta', 'Target')} ${pct(TEAM_TARGET_SCORE)}`}</small>
+        <div className="team-coordination-task__meter" aria-label={hasDecisions ? `${t('Coordinación', 'Coordination')} ${pct(score)}` : t('Coordinación sin decisiones', 'Coordination without decisions')}>
           <i style={{ width: `${Math.min(100, Math.round(score * 100))}%` }} />
         </div>
       </div>
@@ -163,6 +164,7 @@ function MissionPanel({ aggregate }) {
 }
 
 function TeamCoordinationInner({ emit, trialCount, onComplete }) {
+  const { t } = useLanguage();
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
   const scenarios = useMemo(
@@ -174,7 +176,7 @@ function TeamCoordinationInner({ emit, trialCount, onComplete }) {
   const responsesRef = useRef([]);
   const [selectedOption, setSelectedOption] = useState(null);
   const [finished, setFinished] = useState(false);
-  const [status, setStatus] = useState('Lee el escenario y elige la intervención más útil para el equipo.');
+  const [status, setStatus] = useState(t('Lee el escenario y elige la intervención más útil para el equipo.', 'Read the scenario and choose the most useful intervention for the team.'));
   const startTimeRef = useRef(now());
   const scenarioStartRef = useRef(now());
   const shownScenariosRef = useRef(new Set());
@@ -225,7 +227,7 @@ function TeamCoordinationInner({ emit, trialCount, onComplete }) {
     responsesRef.current = nextResponses;
     setResponses(nextResponses);
     setSelectedOption(option);
-    setStatus(`Señal registrada: coordinación ${pct(interimAggregate.score)}. Revisa el panel lateral para ver qué se calculó por detrás.`);
+    setStatus(t('Señal registrada: coordinación ${pct(interimAggregate.score)}. Revisa el panel lateral para ver qué se calculó por detrás.', 'Signal recorded: coordination ${pct(interimAggregate.score)}. Check the side panel to see what was computed behind.'));
     emitRef.current({
       eventType: 'response',
       trialId: scenario.id,
@@ -248,7 +250,7 @@ function TeamCoordinationInner({ emit, trialCount, onComplete }) {
     if (!isLast) {
       setCurrentIndex((index) => Math.min(index + 1, scenarios.length - 1));
       setSelectedOption(null);
-      setStatus('Nuevo escenario: ajusta el brief según la situación del equipo.');
+      setStatus(t('Nuevo escenario: ajusta el brief según la situación del equipo.', 'New scenario: adjust the brief to the team\'s situation.'));
       return;
     }
     const finalAggregate = buildTeamCoordinationResponseAggregate({
@@ -258,7 +260,7 @@ function TeamCoordinationInner({ emit, trialCount, onComplete }) {
       timeMs: now() - startTimeRef.current,
     });
     setFinished(true);
-    setStatus('Operación Faro completada con métricas agregadas.');
+    setStatus(t('Operación Faro completada con métricas agregadas.', 'Faro Operation completed with aggregated metrics.'));
     emitRef.current({
       eventType: 'game_end',
       timestamp: now(),
@@ -299,7 +301,7 @@ function TeamCoordinationInner({ emit, trialCount, onComplete }) {
         <span className="task-progress">Misión en curso</span>
         <span className="task-progress">Coordinación {responses.length ? pct(aggregate.score) : '—'}</span>
       </div>
-      <MissionPanel aggregate={aggregate} />
+      <MissionPanel aggregate={aggregate} t={t} />
       <div className="team-coordination-task__workspace">
         <RpgScene
           scenario={scenario}
@@ -307,8 +309,9 @@ function TeamCoordinationInner({ emit, trialCount, onComplete }) {
           scenarioCount={scenarios.length}
           selectedOption={selectedOption}
           onSelect={handleOptionSelect}
+          t={t}
         />
-        <BehindPanel scenario={scenario} selectedOption={selectedOption} aggregate={aggregate} />
+        <BehindPanel scenario={scenario} selectedOption={selectedOption} aggregate={aggregate} t={t} />
       </div>
       <div className="team-coordination-task__footer">
         <p role="status">{status}</p>

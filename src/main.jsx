@@ -4,6 +4,8 @@ import App from './App.jsx';
 import PostulationDemoApp from './postulation-demo/PostulationDemoApp.jsx';
 import PostulationHrDashboard from './postulation-demo/hr-dashboard/PostulationHrDashboard.jsx';
 import { isPostulationDemoPath, isPostulationHrDashboardPath } from './postulation-demo/postulationDemoRoute.js';
+import { LanguageProvider } from './i18n/LanguageContext.jsx';
+import LanguageToggle from './i18n/LanguageToggle.jsx';
 
 const RootApp = isPostulationHrDashboardPath(window.location.pathname)
   ? PostulationHrDashboard
@@ -13,6 +15,9 @@ const RootApp = isPostulationHrDashboardPath(window.location.pathname)
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RootApp />
+    <LanguageProvider>
+      <RootApp />
+      <LanguageToggle />
+    </LanguageProvider>
   </React.StrictMode>,
 );

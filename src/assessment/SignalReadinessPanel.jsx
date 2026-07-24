@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const STATUS_LABELS = Object.freeze({
   ok: 'OK',
@@ -136,21 +137,22 @@ export function buildSignalReadinessItems({
 }
 
 export default function SignalReadinessPanel(props) {
+  const { t } = useLanguage();
   const items = buildSignalReadinessItems(props);
   const okCount = items.filter((entry) => entry.status === 'ok').length;
   const blockingErrors = items.filter((entry) => entry.status === 'error').length;
 
   return (
-    <section className="dash-section" aria-label="Signal readiness">
+    <section className="dash-section" aria-label={t('Listo de señal', 'Signal readiness')}>
       <div className="dash-section-hdr" style={{ cursor: 'default', userSelect: 'none' }}>
         <span className="dash-section-arrow">◆</span>
-        <h3 className="dash-section-title">Signal readiness</h3>
+        <h3 className="dash-section-title">{t('Listo de señal', 'Signal readiness')}</h3>
         <span className="dash-section-badge">{okCount}/{items.length} OK</span>
       </div>
       <div className="dash-section-body">
-        <h4>Checklist antes del baseline</h4>
-        <p className="caption">Confirma que las señales críticas estén visibles y explica cualquier caveat operativo.</p>
-        {blockingErrors > 0 && <p className="error" role="alert">Hay {blockingErrors} señal(es) en error. Puedes continuar solo si explicas el caveat.</p>}
+        <h4>{t('Checklist antes del baseline', 'Checklist before baseline')}</h4>
+        <p className="caption">{t('Confirma que las señales críticas estén visibles y explica cualquier caveat operativo.', 'Confirm the critical signals are visible and explain any operational caveat.')}</p>
+        {blockingErrors > 0 && <p className="error" role="alert">{t('Hay', 'There are')} {blockingErrors} {t('señal(es) en error. Puedes continuar solo si explicas el caveat.', 'signal(s) in error. You may continue only if you explain the caveat.')}</p>}
         <div className="summary-grid summary-grid-compact">
           {items.map((entry) => (
             <div key={entry.label} data-testid={`readiness-${entry.label}`}>
@@ -162,9 +164,9 @@ export default function SignalReadinessPanel(props) {
           ))}
         </div>
         <ul className="caption">
-          <li>Si MoveNet no detecta hombros, aléjate hasta que ambos hombros entren en cuadro.</li>
-          <li>La demo puede continuar con caveats; no se inventan hombros ni datos faltantes.</li>
-          <li>No se guarda video, frames, landmarks crudos ni trayectorias de puntero.</li>
+          <li>{t('Si MoveNet no detecta hombros, aléjate hasta que ambos hombros entren en cuadro.', 'If MoveNet does not detect shoulders, step back until both shoulders are in frame.')}</li>
+          <li>{t('La demo puede continuar con caveats; no se inventan hombros ni datos faltantes.', 'The demo may continue with caveats; no shoulders or missing data are invented.')}</li>
+          <li>{t('No se guarda video, frames, landmarks crudos ni trayectorias de puntero.', 'No video, frames, raw landmarks, or pointer trajectories are stored.')}</li>
         </ul>
       </div>
     </section>

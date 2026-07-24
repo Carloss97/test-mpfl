@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 function pct(value) {
   const numeric = Number(value);
@@ -81,6 +82,7 @@ export default function FinalReportPanel({
   onDownloadAll,
   onSaveAgain,
 } = {}) {
+  const { t } = useLanguage();
   const [activeFormat, setActiveFormat] = useState('markdown');
   const safePayload = payload ?? storageRecord?.payload ?? null;
   const safeBundle = bundle ?? storageRecord?.bundle ?? null;
@@ -109,38 +111,38 @@ export default function FinalReportPanel({
   const manifestDescriptor = descriptors.find((descriptor) => descriptor.fileName.endsWith('-report-manifest.json'));
 
   return (
-    <section className="panel final-report-panel" aria-label="Reporte final de evaluación">
+    <section className="panel final-report-panel" aria-label={t('Reporte final de evaluación', 'Final assessment report')}>
       <div className="panel-heading">
         <div>
-          <h2>📄 Reporte final listo</h2>
-          <p className="caption">Reporte observacional para revisión humana; sin decisión automatizada.</p>
+          <h2>📄 {t('Reporte final listo', 'Final report ready')}</h2>
+          <p className="caption">{t('Reporte observacional para revisión humana; sin decisión automatizada.', 'Observational report for human review; no automated decision.')}</p>
         </div>
-        <span className="dash-section-badge">{validationOk ? 'Validación OK' : 'Validación bloqueada'}</span>
+        <span className="dash-section-badge">{validationOk ? t('Validación OK', 'Validation OK') : t('Validación bloqueada', 'Validation blocked')}</span>
       </div>
 
       {!safePayload ? (
-        <p className="caption">Completa la batería para generar el payload y reporte final.</p>
+        <p className="caption">{t('Completa la batería para generar el payload y reporte final.', 'Complete the battery to generate the payload and final report.')}</p>
       ) : (
         <>
-          <div className="guide-summary-grid" aria-label="Resumen del reporte final">
+          <div className="guide-summary-grid" aria-label={t('Resumen del reporte final', 'Final report summary')}>
             <div><span>Run</span><strong>{safePayload.runId ?? '—'}</strong></div>
-            <div><span>Batería</span><strong>{safePayload.batteryId ?? '—'}</strong></div>
-            <div><span>Muestras</span><strong>Muestras: {safePayload.quality?.sampleCount ?? 0}</strong></div>
-            <div><span>Rostro</span><strong>Rostro: {pct(safePayload.quality?.facePresenceRatio)}</strong></div>
-            <div><span>Confianza</span><strong>Confianza facial: {pct(safePayload.quality?.meanConfidence)}</strong></div>
-            <div><span>Trials correlacionados</span><strong>{safePayload.quality?.correlatedTrialCount ?? 0}</strong></div>
+            <div><span>{t('Batería', 'Battery')}</span><strong>{safePayload.batteryId ?? '—'}</strong></div>
+            <div><span>{t('Muestras', 'Samples')}</span><strong>{t('Muestras', 'Samples')}: {safePayload.quality?.sampleCount ?? 0}</strong></div>
+            <div><span>{t('Rostro', 'Face')}</span><strong>{t('Rostro', 'Face')}: {pct(safePayload.quality?.facePresenceRatio)}</strong></div>
+            <div><span>{t('Confianza', 'Confidence')}</span><strong>{t('Confianza facial', 'Facial confidence')}: {pct(safePayload.quality?.meanConfidence)}</strong></div>
+            <div><span>{t('Trials correlacionados', 'Correlated trials')}</span><strong>{safePayload.quality?.correlatedTrialCount ?? 0}</strong></div>
           </div>
 
-          <p className="caption">Gobernanza: revisión humana · sin decisión automatizada · observacional · privacy-safe.</p>
+          <p className="caption">{t('Gobernanza: revisión humana · sin decisión automatizada · observacional · privacy-safe.', 'Governance: human review · no automated decision · observational · privacy-safe.')}</p>
           {violations.length > 0 && (
-            <p className="error" role="alert">Violaciones detectadas: {violations.join(', ')}</p>
+            <p className="error" role="alert">{t('Violaciones detectadas', 'Violations detected')}: {violations.join(', ')}</p>
           )}
 
-          <div className="modal-tabs" aria-label="Formato de preview final">
+          <div className="modal-tabs" aria-label={t('Formato de preview final', 'Final preview format')}>
             {[
-              ['markdown', 'Markdown'],
-              ['html', 'HTML'],
-              ['json', 'JSON'],
+              ['markdown', t('Markdown', 'Markdown')],
+              ['html', t('HTML', 'HTML')],
+              ['json', t('JSON', 'JSON')],
             ].map(([format, label]) => (
               <button
                 key={format}
@@ -156,13 +158,13 @@ export default function FinalReportPanel({
           <pre className="report-preview" data-testid="final-report-preview"><code>{preview}</code></pre>
 
           <div className="modal-actions" style={{ flexWrap: 'wrap' }}>
-            <button type="button" className="primary" disabled={!validationOk || !markdownDescriptor} onClick={() => downloadDescriptor(markdownDescriptor)}>Descargar Markdown</button>
-            <button type="button" className="secondary" disabled={!validationOk || !htmlDescriptor} onClick={() => downloadDescriptor(htmlDescriptor)}>Descargar HTML</button>
-            <button type="button" className="secondary" disabled={!validationOk || !jsonDescriptor} onClick={() => downloadDescriptor(jsonDescriptor)}>Descargar JSON</button>
-            <button type="button" className="secondary" disabled={!validationOk || !payloadDescriptor} onClick={() => downloadDescriptor(payloadDescriptor)}>Descargar payload</button>
-            <button type="button" className="secondary" disabled={!validationOk || !manifestDescriptor} onClick={() => downloadDescriptor(manifestDescriptor)}>Descargar manifiesto</button>
-            <button type="button" className="primary" disabled={!validationOk} onClick={downloadAll}>Descargar todo</button>
-            {onSaveAgain && <button type="button" className="secondary" disabled={!validationOk} onClick={onSaveAgain}>Guardar de nuevo</button>}
+            <button type="button" className="primary" disabled={!validationOk || !markdownDescriptor} onClick={() => downloadDescriptor(markdownDescriptor)}>{t('Descargar Markdown', 'Download Markdown')}</button>
+            <button type="button" className="secondary" disabled={!validationOk || !htmlDescriptor} onClick={() => downloadDescriptor(htmlDescriptor)}>{t('Descargar HTML', 'Download HTML')}</button>
+            <button type="button" className="secondary" disabled={!validationOk || !jsonDescriptor} onClick={() => downloadDescriptor(jsonDescriptor)}>{t('Descargar JSON', 'Download JSON')}</button>
+            <button type="button" className="secondary" disabled={!validationOk || !payloadDescriptor} onClick={() => downloadDescriptor(payloadDescriptor)}>{t('Descargar payload', 'Download payload')}</button>
+            <button type="button" className="secondary" disabled={!validationOk || !manifestDescriptor} onClick={() => downloadDescriptor(manifestDescriptor)}>{t('Descargar manifiesto', 'Download manifest')}</button>
+            <button type="button" className="primary" disabled={!validationOk} onClick={downloadAll}>{t('Descargar todo', 'Download all')}</button>
+            {onSaveAgain && <button type="button" className="secondary" disabled={!validationOk} onClick={onSaveAgain}>{t('Guardar de nuevo', 'Save again')}</button>}
           </div>
         </>
       )}

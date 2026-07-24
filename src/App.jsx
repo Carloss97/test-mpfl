@@ -17,7 +17,6 @@ import { createEmotionTemporalSmoother } from './telemetry/emotionTemporalSmooth
 import Dashboard from './components/Dashboard.jsx';
 import StickyHeader from './components/StickyHeader.jsx';
 import GameSessionPanel from './components/GameSessionPanel.jsx';
-import UnifiedGameBattery from './assessment/UnifiedGameBattery.jsx';
 import FinalReportPanel from './assessment/FinalReportPanel.jsx';
 import FinalAssessmentHistoryPanel, { downloadStoredSessionDescriptors } from './assessment/FinalAssessmentHistoryPanel.jsx';
 import { buildUnifiedAssessmentSession } from './assessment/assessmentSession.js';
@@ -53,6 +52,7 @@ import './dashboard-stats.css';
 import './sticky.css';
 import './dashboard-toggles.css';
 import './reference-guide.css';
+import { useLanguage } from './i18n/LanguageContext.jsx';
 
 const DEVICE_CONFIG = getRecommendedConfig();
 const MIN_SAMPLES_FOR_REPORT = 20;
@@ -72,6 +72,15 @@ function hasEnoughSamples(t) { return (t?.sampleCount ?? 0) >= MIN_SAMPLES_FOR_R
 function appendBounded(list, item, max = 900) { return [...list, item].slice(-max); }
 
 export default function App() {
+  const { t } = useLanguage();
+  const GAME_EN = {
+    simple_rt: { label: 'Simple RT', description: 'Basic reaction time' },
+    precision_targeting: { label: 'Visuomotor precision', description: 'Fitts Law, precision and trajectory' },
+    pursuit_tracking: { label: 'Continuous tracking', description: 'Visuomotor tracking and tracking loss' },
+    go_nogo: { label: 'Go/No-Go', description: 'Motor inhibition and commission/omission errors' },
+    color_interference: { label: 'Color-word interference', description: 'Stroop-type cognitive conflict' },
+    visual_search: { label: 'Visual search', description: 'Selective attention and search efficiency' },
+  };
   // Error boundary for debugging
   useEffect(() => {
     const handler = (e) => { console.error('[App Runtime Error]', e.error?.message || e.message); };
@@ -445,7 +454,7 @@ export default function App() {
   const handleClearFinalAssessmentSessions = useCallback(async () => {
     await clearFinalAssessmentSessions().catch(() => {});
     setFinalAssessmentSessions([]);
-    setFinalAssessmentStatus('Historial final limpiado localmente.');
+    setFinalAssessmentStatus(t('Historial final limpiado localmente.','Final history cleared locally.'));
   }, []);
 
   const handleDownloadFinalAssessmentSession = useCallback((_, descriptors) => {
@@ -464,7 +473,7 @@ export default function App() {
     const runId = batterySession?.runId;
     if (!runId || completedBatteryRunIdsRef.current.has(runId)) return;
     completedBatteryRunIdsRef.current.add(runId);
-    setFinalAssessmentStatus('Generando y guardando evaluación final local...');
+    setFinalAssessmentStatus(t('Generando y guardando evaluación final local...','Generating and saving local final assessment...'));
     try {
       const assessmentSession = buildUnifiedAssessmentSession({
         batterySession,
@@ -490,26 +499,26 @@ export default function App() {
       const records = await loadFinalAssessmentSessions();
       setLatestFinalAssessment({ payload, reports, bundle, record });
       setFinalAssessmentSessions(records);
-      setFinalAssessmentStatus(`Evaluación final ${record.runId} guardada localmente (${record.bundle?.manifest?.fileCount ?? 0} archivos).`);
+      setFinalAssessmentStatus(`${t('Evaluación final','Final assessment')} ${record.runId} ${t('guardada localmente','saved locally')} (${record.bundle?.manifest?.fileCount ?? 0} ${t('archivos','files')}).`);
     } catch (error) {
       completedBatteryRunIdsRef.current.delete(runId);
-      setFinalAssessmentStatus(`No se pudo guardar la evaluación final: ${error?.message ?? String(error)}`);
+      setFinalAssessmentStatus(`${t('No se pudo guardar la evaluación final','Could not save the final assessment')}: ${error?.message ?? String(error)}`);
     }
   }, [assessmentFeatureVectorV2, edgeAIResult, gameCorrelation, gameSummary, isCameraActive, telemetry]);
 
   // ─── Derived values ───
   const insightItems = [
-    { id: 'tension', label: 'Tensión', value: telemetry.insights?.tension ?? 0 },
-    { id: 'attention', label: 'Atención', value: telemetry.insights?.attention ?? 0 },
-    { id: 'surprise', label: 'Sorpresa', value: telemetry.insights?.surprise ?? 0 },
-    { id: 'fatigue', label: 'Fatiga', value: telemetry.insights?.fatigue ?? 0 },
-    { id: 'stress', label: 'Estrés', value: telemetry.insights?.stress ?? 0 },
-    { id: 'calmness', label: 'Calma', value: telemetry.insights?.calmness ?? 0 },
-    { id: 'engagement', label: 'Engagement', value: telemetry.insights?.engagement ?? 0 },
-    { id: 'boredom', label: 'Aburrimiento', value: telemetry.insights?.boredom ?? 0 },
-    { id: 'confusion', label: 'Confusión', value: telemetry.insights?.confusion ?? 0 },
-    { id: 'cognitive', label: 'Carga cognitiva', value: telemetry.insights?.cognitiveLoad ?? 0 },
-    { id: 'valence', label: 'Valencia', value: telemetry.insights?.valence ?? 0 },
+    { id: 'tension', label: t('Tensión','Tension'), value: telemetry.insights?.tension ?? 0 },
+    { id: 'attention', label: t('Atención','Attention'), value: telemetry.insights?.attention ?? 0 },
+    { id: 'surprise', label: t('Sorpresa','Surprise'), value: telemetry.insights?.surprise ?? 0 },
+    { id: 'fatigue', label: t('Fatiga','Fatigue'), value: telemetry.insights?.fatigue ?? 0 },
+    { id: 'stress', label: t('Estrés','Stress'), value: telemetry.insights?.stress ?? 0 },
+    { id: 'calmness', label: t('Calma','Calm'), value: telemetry.insights?.calmness ?? 0 },
+    { id: 'engagement', label: t('Engagement','Engagement'), value: telemetry.insights?.engagement ?? 0 },
+    { id: 'boredom', label: t('Aburrimiento','Boredom'), value: telemetry.insights?.boredom ?? 0 },
+    { id: 'confusion', label: t('Confusión','Confusion'), value: telemetry.insights?.confusion ?? 0 },
+    { id: 'cognitive', label: t('Carga cognitiva','Cognitive load'), value: telemetry.insights?.cognitiveLoad ?? 0 },
+    { id: 'valence', label: t('Valencia','Valence'), value: telemetry.insights?.valence ?? 0 },
   ];
   const auEntries = Object.entries(telemetry.insights?.auScores ?? {}).sort((a, b) => (b[1]?.intensity ?? 0) - (a[1]?.intensity ?? 0));
   const activeAUCount = auEntries.filter(([, au]) => au.intensity > 0.03).length;
@@ -522,9 +531,9 @@ export default function App() {
     moveNetPose,
     activeAUCount,
   }), [telemetry, faceWorker, latestGaze, latestPose, moveNet, moveNetPose, activeAUCount]);
-  const calStatusLabel = isCalibrating ? 'Calibrando...'
-    : !calibrationProfile ? 'Sin calibrar'
-    : calibrationProfile.eligible ? 'Baseline válido' : 'Baseline no elegible';
+  const calStatusLabel = isCalibrating ? t('Calibrando...','Calibrating...')
+    : !calibrationProfile ? t('Sin calibrar','Not calibrated')
+    : calibrationProfile.eligible ? t('Baseline válido','Valid baseline') : t('Baseline no elegible','Baseline not eligible');
   const statusClassName = isCalibrating ? 'calibrating'
     : calibrationProfile?.eligible ? 'ready'
     : calibrationProfile && !calibrationProfile.eligible ? 'error' : '';
@@ -537,8 +546,8 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <h1>KRUMM Edge Fusion PoC</h1>
-        <p className="subtitle">Telemetría facial · AUs (FACS) · Edge AI · Tareas cognitivas</p>
+        <h1>{t('KRUMM Edge Fusion PoC','KRUMM Edge Fusion PoC')}</h1>
+        <p className="subtitle">{t('Telemetría facial · AUs (FACS) · Edge AI · Tareas cognitivas','Facial telemetry · AUs (FACS) · Edge AI · Cognitive tasks')}</p>
       </header>
 
       {(isCameraActive) && (
@@ -560,56 +569,47 @@ export default function App() {
         <div className="hero-controls">
           <div className="camera-controls">
             {!isCameraActive ? (
-              <button type="button" className="primary" onClick={startCamera}>Iniciar cámara</button>
+              <button type="button" className="primary" onClick={startCamera}>{t('Iniciar cámara','Start camera')}</button>
             ) : (
-              <button type="button" className="secondary" onClick={stopCamera}>Detener cámara</button>
+              <button type="button" className="secondary" onClick={stopCamera}>{t('Detener cámara','Stop camera')}</button>
             )}
-            <select value={selectedDeviceId} onChange={(e) => switchCamera(e.target.value)} aria-label="Seleccionar cámara">
-              <option value="">Cámara por defecto</option>
+            <select value={selectedDeviceId} onChange={(e) => switchCamera(e.target.value)} aria-label={t('Seleccionar cámara','Select camera')}>
+              <option value="">{t('Cámara por defecto','Default camera')}</option>
               {cameraDevices.map((d) => (
                 <option key={d.deviceId} value={d.deviceId}>{d.label}</option>
               ))}
             </select>
             <button type="button" onClick={startCalibration} disabled={!isCameraActive || isCalibrating} className={isCalibrating ? 'secondary' : 'primary'}>
-              {isCalibrating ? 'Calibrando...' : 'Calibrar baseline'}
+              {isCalibrating ? t('Calibrando...','Calibrating...') : t('Calibrar baseline','Calibrate baseline')}
             </button>
-            <button type="button" onClick={cancelCalibration} disabled={!isCalibrating} className="secondary">Cancelar</button>
+            <button type="button" onClick={cancelCalibration} disabled={!isCalibrating} className="secondary">{t('Cancelar','Cancel')}</button>
           </div>
           <div className="task-controls">
             <div style={{display:'grid',gap:'6px',minWidth:'260px'}}>
-              <strong>Actividades gamificadas</strong>
-              <label className="caption" htmlFor="game-activity-select">Actividad gamificada</label>
-              <select id="game-activity-select" value={selectedGameId} onChange={(e) => setSelectedGameId(e.target.value)} disabled={taskActive} aria-label="Actividad gamificada">
-                {GAME_ACTIVITY_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+              <strong>{t('Actividades gamificadas','Gamified activities')}</strong>
+              <label className="caption" htmlFor="game-activity-select">{t('Actividad gamificada','Gamified activity')}</label>
+              <select id="game-activity-select" value={selectedGameId} onChange={(e) => setSelectedGameId(e.target.value)} disabled={taskActive} aria-label={t('Actividad gamificada','Gamified activity')}>
+                {GAME_ACTIVITY_OPTIONS.map((option) => <option key={option.id} value={option.id}>{t(option.label, GAME_EN[option.id].label)}</option>)}
               </select>
-              <span className="caption">Fases A-M integradas · actividades A-I · {selectedGame.description}</span>
+              <span className="caption">{t('Fases A-M integradas · actividades A-I · ','A-M phases integrated · activities A-I · ')}{t(selectedGame.description, GAME_EN[selectedGame.id].description)}</span>
             </div>
             {!taskActive ? (
               <button type="button" onClick={startTask} className="primary">
-                ▶ Iniciar actividad
+                {t('▶ Iniciar actividad','▶ Start activity')}
               </button>
             ) : (
               <button type="button" onClick={() => setTaskActive(false)} className="secondary">
-                Detener actividad
+                {t('Detener actividad','Stop activity')}
               </button>
             )}
             <button type="button" onClick={() => handleGenerateReport('markdown')} disabled={!hasEnoughSamples(telemetry)} className="secondary">
-              📝 Reporte MD
+              {t('📝 Reporte MD','📝 MD Report')}
             </button>
           </div>
         </div>
         {cameraError && <p className="error">{cameraError}</p>}
-        {faceWorker.error && <p className="error">Error de MediaPipe: {faceWorker.error}</p>}
+        {faceWorker.error && <p className="error">{t('Error de MediaPipe: ','MediaPipe error: ')}{faceWorker.error}</p>}
       </section>
-
-      <UnifiedGameBattery
-        cameraActive={isCameraActive}
-        onRequestCamera={startCamera}
-        onGameEvent={handleGameEvent}
-        onBlockComplete={({ summary }) => handleTaskComplete(summary)}
-        onBatteryComplete={handleBatteryComplete}
-        signalReadiness={signalReadiness}
-      />
 
       {latestFinalAssessment && (
         <FinalReportPanel
@@ -640,12 +640,12 @@ export default function App() {
       ) : (
         <section className="grid-two">
           <article className="panel">
-            <div className="panel-heading"><h2>1. Cámara y señal</h2></div>
-            <div className="camera-container"><video ref={videoRef} className="camera" muted playsInline aria-label="Vista previa local de cámara" /></div>
-            <p className="caption">Inicia la cámara para comenzar la telemetría.</p>
+            <div className="panel-heading"><h2>{t('1. Cámara y señal','1. Camera and signal')}</h2></div>
+            <div className="camera-container"><video ref={videoRef} className="camera" muted playsInline aria-label={t('Vista previa local de cámara','Local camera preview')} /></div>
+            <p className="caption">{t('Inicia la cámara para comenzar la telemetría.','Start the camera to begin telemetry.')}</p>
           </article>
           <article className="panel">
-            <p className="caption">Inicia la cámara para ver indicadores de microgestos.</p>
+            <p className="caption">{t('Inicia la cámara para ver indicadores de microgestos.','Start the camera to see microgesture indicators.')}</p>
           </article>
         </section>
       )}
@@ -654,8 +654,8 @@ export default function App() {
         <section className="panel task-panel" style={{ scrollMarginTop: '80px' }}>
           <div className="panel-heading">
             <div>
-              <h2>🎮 {selectedGame.label}</h2>
-              <p className="caption">Eventos de juego: {gameEventCount} · Eventos legacy: {taskEventCount}</p>
+              <h2>{t('🎮 ','🎮 ')}{selectedGame.label}</h2>
+              <p className="caption">{t('Eventos de juego: ','Game events: ')}{gameEventCount}{t(' · Eventos legacy: ',' · Legacy events: ')}{taskEventCount}</p>
             </div>
           </div>
           {selectedGameId === 'simple_rt' && (
@@ -684,7 +684,7 @@ export default function App() {
             <VisualSearchTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete} width={600} height={400}/>
           )}
           {lastGameSummary && (
-            <p className="caption">Último resultado: {Math.round((lastGameSummary.accuracy ?? lastGameSummary.meanScore ?? lastGameSummary.score ?? 0) * 100)}%</p>
+            <p className="caption">{t('Último resultado: ','Last result: ')}{Math.round((lastGameSummary.accuracy ?? lastGameSummary.meanScore ?? lastGameSummary.score ?? 0) * 100)}%</p>
           )}
           <GameSessionPanel
             selectedGame={selectedGame}
@@ -700,8 +700,8 @@ export default function App() {
       {sessions.length > 0 && (
         <section className="panel sessions-panel">
           <div className="panel-heading">
-            <div><h2>4. Sesiones guardadas</h2><p className="caption">Historial de mediciones almacenadas localmente.</p></div>
-            <button type="button" className="secondary" onClick={() => { clearSessionsSafe(); setSessions([]); }} style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}>Limpiar historial</button>
+            <div><h2>{t('4. Sesiones guardadas','4. Saved sessions')}</h2><p className="caption">{t('Historial de mediciones almacenadas localmente.','History of locally stored measurements.')}</p></div>
+            <button type="button" className="secondary" onClick={() => { clearSessionsSafe(); setSessions([]); }} style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}>{t('Limpiar historial','Clear history')}</button>
           </div>
           <div className="sessions-list">
             {sessions.map((session) => (
@@ -709,7 +709,7 @@ export default function App() {
                 <div className="session-meta">
                   <span className="session-date">{new Date(session.savedAt).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })}</span>
                   <span className="session-duration">{session.durationMs ? `${(session.durationMs / 1000).toFixed(1)}s` : '—'}</span>
-                  <span className="session-face-presence">Rostro: {formatPercent(session.facePresenceRatio)}</span>
+                  <span className="session-face-presence">{t('Rostro','Face')}: {formatPercent(session.facePresenceRatio)}</span>
                 </div>
               </div>
             ))}
@@ -729,7 +729,7 @@ export default function App() {
         <div className="modal-overlay" onClick={() => setShowReportModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Reporte generado</h2>
+              <h2>{t('Reporte generado','Generated report')}</h2>
               <button type="button" className="secondary" onClick={() => setShowReportModal(false)}>✕</button>
             </div>
             <div className="modal-tabs">
@@ -739,7 +739,7 @@ export default function App() {
             </div>
             <pre className="report-preview"><code>{reportContent}</code></pre>
             <div className="modal-actions">
-              <button type="button" className="primary" onClick={handleExportReport}>Descargar</button>
+              <button type="button" className="primary" onClick={handleExportReport}>{t('Descargar','Download')}</button>
             </div>
           </div>
         </div>

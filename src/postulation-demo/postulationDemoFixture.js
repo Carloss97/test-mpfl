@@ -236,6 +236,7 @@ export function buildPostulationDemoFixture({
         batteryMode,
         label: POSTULATION_DEMO_FIXTURE_LABEL,
         description: 'Datos sintéticos locales para reuniones, QA visual y respaldo sin cámara.',
+        descriptionEn: 'Local synthetic data for meetings, visual QA, and camera-less backup.',
       },
     },
   };

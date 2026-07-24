@@ -12,46 +12,62 @@ export const WORKBOOK_TALENT_CONSTRUCT_ORDER = Object.freeze([
   'communication',
 ]);
 
-const CONSTRUCT_DEFINITIONS = Object.freeze({
+export const CONSTRUCT_DEFINITIONS = Object.freeze({
   decisionMaking: Object.freeze({
     label: 'Toma de decisiones',
+    labelEn: 'Decision making',
     workbookRow: 3,
     description: 'Estrategias observadas ante alternativas y restricciones de tarea.',
+    descriptionEn: 'Observed strategies facing task alternatives and constraints.',
   }),
   problemSolving: Object.freeze({
     label: 'Resolución de problemas',
+    labelEn: 'Problem solving',
     workbookRow: 4,
     description: 'Transformación de estados iniciales a metas bajo reglas explícitas.',
+    descriptionEn: 'Transformation of initial states into goals under explicit rules.',
   }),
   riskFeedbackProfile: Object.freeze({
     label: 'Asunción de riesgo y feedback',
+    labelEn: 'Risk taking and feedback',
     workbookRow: 5,
     description: 'Estrategia descriptiva de acumulación, pérdida y ajuste posterior dentro de Balloon.',
+    descriptionEn: 'Descriptive strategy of accumulation, loss, and post-adjustment within Balloon.',
   }),
   planning: Object.freeze({
     label: 'Planificación',
+    labelEn: 'Planning',
     workbookRow: 6,
     description: 'Organización de acciones y recursos bajo restricciones de ruta.',
+    descriptionEn: 'Organization of actions and resources under route constraints.',
   }),
   adaptability: Object.freeze({
     label: 'Adaptabilidad / flexibilidad cognitiva',
+    labelEn: 'Adaptability / cognitive flexibility',
     workbookRow: 7,
     description: 'Cambio flexible ante reglas o demandas situacionales nuevas.',
+    descriptionEn: 'Flexible change facing new rules or situational demands.',
   }),
   analyticalThinking: Object.freeze({
     label: 'Pensamiento analítico',
+    labelEn: 'Analytical thinking',
     workbookRow: 8,
     description: 'Descomposición lógica de reglas, recursos y caminos de solución.',
+    descriptionEn: 'Logical decomposition of rules, resources, and solution paths.',
   }),
   leadership: Object.freeze({
     label: 'Liderazgo',
+    labelEn: 'Leadership',
     workbookRow: 9,
     description: 'Dirección social, toma de responsabilidad y coordinación interpersonal.',
+    descriptionEn: 'Social direction, taking responsibility, and interpersonal coordination.',
   }),
   communication: Object.freeze({
     label: 'Comunicación',
+    labelEn: 'Communication',
     workbookRow: 10,
     description: 'Formulación, entrega y recepción de información/feedback.',
+    descriptionEn: 'Formulation, delivery, and reception of information/feedback.',
   }),
 });
 
@@ -79,13 +95,19 @@ function isComplete(vector, gameId) {
   return vector?.gameAvailability?.[gameId] === 'measured_complete';
 }
 
+export function getConstructDefinition(id) {
+  return CONSTRUCT_DEFINITIONS[id] ?? null;
+}
+
 function baseConstruct(id, overrides = {}) {
   const definition = CONSTRUCT_DEFINITIONS[id];
   return {
     id,
     label: definition.label,
+    labelEn: definition.labelEn,
     workbookRow: definition.workbookRow,
     description: definition.description,
+    descriptionEn: definition.descriptionEn,
     score: Object.hasOwn(overrides, 'score') ? overrides.score : null,
     confidence: Object.hasOwn(overrides, 'confidence') ? overrides.confidence : 0,
     confidenceCeiling: overrides.confidenceCeiling ?? 0,
@@ -93,6 +115,7 @@ function baseConstruct(id, overrides = {}) {
     evidence: overrides.evidence ?? [],
     caveats: [...new Set(overrides.caveats ?? [])],
     narrative: overrides.narrative ?? 'No hay evidencia suficiente para puntuar este constructo con la batería actual.',
+    narrativeEn: overrides.narrativeEn ?? 'There is not enough evidence to score this construct with the current battery.',
   };
 }
 
@@ -114,6 +137,7 @@ function insufficientConstruct(id, evidence = []) {
     evidence,
     caveats: ['insufficient_evidence_for_construct', 'provisional_mapping_requires_validation'],
     narrative: 'La batería actual no entrega evidencia completa para puntuar este constructo sin reponderar datos faltantes.',
+    narrativeEn: 'The current battery does not provide complete evidence to score this construct without reweighting missing data.',
   });
 }
 
@@ -171,6 +195,7 @@ function buildProblemSolving(vector, L, P) {
       { formula: '0.65·L + 0.35·P', value },
     ],
     narrative: 'Índice provisional de desempeño en resolución de problemas dentro de tareas con reglas explícitas y planificación de restricciones.',
+    narrativeEn: 'Provisional index of problem-solving performance within tasks with explicit rules and constraint planning.',
   });
 }
 
@@ -186,6 +211,7 @@ function buildPlanning(vector, P) {
       { formula: 'P = 0.50·routeEfficiency + 0.30·deliveryRate + 0.20·constraintCompliance', value: P },
     ],
     narrative: 'Índice provisional de planificación bajo restricciones dentro de Passenger Routes.',
+    narrativeEn: 'Provisional planning index under constraints within Passenger Routes.',
   });
 }
 
@@ -201,6 +227,7 @@ function buildAnalyticalThinking(vector, L, P) {
       { formula: '0.50·L + 0.50·P', value },
     ],
     narrative: 'Índice provisional de análisis de reglas, rutas y restricciones; no equivale a capacidad analítica laboral validada.',
+    narrativeEn: 'Provisional index of analysis of rules, routes, and constraints; it is not equivalent to validated workplace analytical ability.',
   });
 }
 
@@ -221,7 +248,8 @@ function buildDecisionMaking(vector, P, T) {
       ],
       caveats: ['structured_scenario_requires_validation', 'no_automated_decision'],
       narrative: 'Índice preliminar de decisión estructurada: combina trade-offs explícitos del brief de equipo con planificación de rutas; no es ranking ni criterio de selección.',
-    });
+      narrativeEn: 'Preliminary index of structured decision making: it combines explicit trade-offs from the team brief with route planning; it is not a ranking or selection criterion.',
+      });
   }
   return baseConstruct('decisionMaking', {
     availability: 'descriptive_only',
@@ -230,6 +258,7 @@ function buildDecisionMaking(vector, P, T) {
     evidence,
     caveats: ['no_normative_direction_for_decision_quality', 'provisional_mapping_requires_validation'],
     narrative: 'Se reportan estrategias observadas, pero no se transforma una mayor exposición al riesgo o una ruta específica en “mejor” toma de decisiones.',
+    narrativeEn: 'Observed strategies are reported, but greater risk exposure or a specific route is not turned into “better” decision making.',
   });
 }
 
@@ -262,6 +291,7 @@ function buildRiskFeedback(vector) {
     ],
     caveats: ['frustration_tolerance_not_measured', 'risk_index_not_personality_trait', 'game_strategy_score_not_normative_trait'],
     narrative: 'Índice provisional de estrategia riesgo/feedback dentro de Balloon: resume eficiencia, aseguramiento, exposición a pérdidas y exploración balanceada; no mide personalidad ni tolerancia a la frustración.',
+    narrativeEn: 'Provisional risk/feedback strategy index within Balloon: it summarizes efficiency, cashing out, loss exposure, and balanced exploration; it does not measure personality or frustration tolerance.',
   });
 }
 
@@ -271,6 +301,7 @@ function buildAdaptability(T) {
       availability: 'insufficient',
       caveats: ['adaptability_requires_controlled_rule_or_context_changes', 'provisional_mapping_requires_validation'],
       narrative: 'La batería actual no incluye cambios controlados suficientes para puntuar adaptabilidad o flexibilidad cognitiva.',
+      narrativeEn: 'The current battery does not include enough controlled changes to score adaptability or cognitive flexibility.',
     });
   }
   const value = (0.70 * T.adaptability) + (0.30 * T.changeResponse);
@@ -284,6 +315,7 @@ function buildAdaptability(T) {
     ],
     caveats: ['structured_scenario_requires_validation'],
     narrative: 'Índice preliminar de adaptación ante cambios controlados dentro del brief de equipo; requiere validación antes de comparar candidatos.',
+    narrativeEn: 'Preliminary index of adaptation to controlled changes within the team brief; it requires validation before comparing candidates.',
   });
 }
 
@@ -292,6 +324,7 @@ function buildLeadership(T) {
     return baseConstruct('leadership', {
       availability: 'not_measured',
       narrative: 'No medido: las tareas actuales son individuales y no observan dirección social, roles o coordinación interpersonal.',
+      narrativeEn: 'Not measured: the current tasks are individual and do not observe social direction, roles, or interpersonal coordination.',
     });
   }
   const value = (0.50 * T.leadership) + (0.30 * T.roleClarity) + (0.20 * T.alignment);
@@ -306,6 +339,7 @@ function buildLeadership(T) {
     ],
     caveats: ['structured_scenario_not_group_interaction', 'provisional_mapping_requires_validation'],
     narrative: 'Índice preliminar de liderazgo en micro-situaciones estructuradas: clarifica objetivos, roles y trade-offs; no reemplaza evaluación grupal real.',
+    narrativeEn: 'Preliminary leadership index in structured micro-situations: it clarifies goals, roles, and trade-offs; it does not replace real group assessment.',
   });
 }
 
@@ -314,6 +348,7 @@ function buildCommunication(T) {
     return baseConstruct('communication', {
       availability: 'not_measured',
       narrative: 'No medido: la batería actual no contiene producción/recepción de mensajes ni interacción social codificada.',
+      narrativeEn: 'Not measured: the current battery does not contain message production/reception nor coded social interaction.',
     });
   }
   const value = (0.55 * T.communication) + (0.25 * T.feedbackUse) + (0.20 * T.alignment);
@@ -328,6 +363,7 @@ function buildCommunication(T) {
     ],
     caveats: ['structured_choices_no_free_text_or_live_speech', 'provisional_mapping_requires_validation'],
     narrative: 'Índice preliminar de comunicación estructurada: claridad de contexto, pasos accionables y uso de feedback sin guardar texto libre.',
+    narrativeEn: 'Preliminary structured communication index: context clarity, actionable steps, and feedback use without storing free text.',
   });
 }
 

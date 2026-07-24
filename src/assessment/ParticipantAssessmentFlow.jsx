@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 export default function ParticipantAssessmentFlow({ title = 'Evaluación gamificada unificada', status = 'idle', children }) {
   return (

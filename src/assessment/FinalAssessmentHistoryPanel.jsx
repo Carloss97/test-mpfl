@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { createStoredSessionDownloadDescriptors } from './finalAssessmentStorage.js';
 
 export function downloadStoredSessionDescriptors(descriptors = [], { documentRef = globalThis.document, urlRef = globalThis.URL } = {}) {
@@ -37,6 +38,7 @@ export default function FinalAssessmentHistoryPanel({
   onClear,
   onDownloadSession,
 } = {}) {
+  const { t } = useLanguage();
   const downloadSession = (session) => {
     const descriptors = createStoredSessionDownloadDescriptors(session);
     if (onDownloadSession) {
@@ -47,22 +49,22 @@ export default function FinalAssessmentHistoryPanel({
   };
 
   return (
-    <section className="panel final-assessment-history-panel" aria-label="Historial local de evaluaciones finales">
+    <section className="panel final-assessment-history-panel" aria-label={t('Historial local de evaluaciones finales', 'Local history of final assessments')}>
       <div className="panel-heading">
         <div>
-          <h2>5. Evaluaciones finales guardadas</h2>
-          <p className="caption">Payload final + manifiesto + reportes almacenados localmente, sin video ni datos crudos.</p>
+          <h2>{t('5. Evaluaciones finales guardadas', '5. Saved final assessments')}</h2>
+          <p className="caption">{t('Payload final + manifiesto + reportes almacenados localmente, sin video ni datos crudos.', 'Final payload + manifest + reports stored locally, no video or raw data.')}</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {onRefresh && <button type="button" className="secondary" onClick={onRefresh}>Actualizar</button>}
-          {onClear && <button type="button" className="secondary" onClick={onClear}>Limpiar finales</button>}
+          {onRefresh && <button type="button" className="secondary" onClick={onRefresh}>{t('Actualizar', 'Refresh')}</button>}
+          {onClear && <button type="button" className="secondary" onClick={onClear}>{t('Limpiar finales', 'Clear finals')}</button>}
         </div>
       </div>
 
       {status && <p className="caption" role="status">{status}</p>}
 
       {sessions.length === 0 ? (
-        <p className="caption">Sin evaluaciones finales guardadas todavía. Completa la batería y genera el reporte para guardar la primera sesión final.</p>
+        <p className="caption">{t('Sin evaluaciones finales guardadas todavía. Completa la batería y genera el reporte para guardar la primera sesión final.', 'No final assessments saved yet. Complete the battery and generate the report to save the first final session.')}</p>
       ) : (
         <div className="sessions-list">
           {sessions.map((session) => (
@@ -70,12 +72,12 @@ export default function FinalAssessmentHistoryPanel({
               <div className="session-meta">
                 <span className="session-date">{fmtDate(session.savedAt)}</span>
                 <span className="session-duration">Run: {session.runId ?? '—'}</span>
-                <span className="session-face-presence">Rostro: {fmtPct(session.quality?.facePresenceRatio)}</span>
+                <span className="session-face-presence">{t('Rostro', 'Face')}: {fmtPct(session.quality?.facePresenceRatio)}</span>
                 <span className="session-face-presence">Accuracy: {fmtPct(session.summary?.accuracy)}</span>
-                <span className="session-face-presence">Archivos: {session.bundle?.manifest?.fileCount ?? session.bundle?.files?.length ?? 0}</span>
+                <span className="session-face-presence">{t('Archivos', 'Files')}: {session.bundle?.manifest?.fileCount ?? session.bundle?.files?.length ?? 0}</span>
               </div>
               <button type="button" className="primary" onClick={() => downloadSession(session)}>
-                Descargar artefactos
+                {t('Descargar artefactos', 'Download artifacts')}
               </button>
             </div>
           ))}

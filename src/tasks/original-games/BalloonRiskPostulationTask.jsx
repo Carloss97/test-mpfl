@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import GameRuntime from '../GameRuntime.jsx';
+import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import {
   buildBalloonResponseAggregate,
   buildBalloonRiskRounds,
@@ -14,6 +15,7 @@ function now() {
 }
 
 function BalloonRiskInner({ emit, trialCount, width, height, onComplete }) {
+  const { t } = useLanguage();
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
   const rounds = useMemo(() => buildBalloonRiskRounds({ count: trialCount }), [trialCount]);
@@ -22,7 +24,7 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete }) {
   const [pumpCount, setPumpCount] = useState(0);
   const [roundPoints, setRoundPoints] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
-  const [status, setStatus] = useState('Infla el globo y asegura puntos antes de que explote.');
+  const [status, setStatus] = useState(t('Infla el globo y asegura puntos antes de que explote.', 'Inflate the balloon and secure points before it pops.'));
   const [finished, setFinished] = useState(false);
   const startTimeRef = useRef(now());
   const roundStartRef = useRef(now());
@@ -126,7 +128,7 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete }) {
     setRoundIndex(nextIndex);
     setPumpCount(0);
     setRoundPoints(0);
-    setStatus('Nueva ronda: decide cuánto riesgo tomar.');
+    setStatus(t('Nueva ronda: decide cuánto riesgo tomar.', 'New round: decide how much risk to take.'));
   }, [completeGame, round, roundIndex, rounds.length, totalScore]);
 
   const pump = useCallback(() => {
@@ -135,18 +137,18 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete }) {
     if (nextPump >= round.threshold) {
       setPumpCount(nextPump);
       setRoundPoints(0);
-      setStatus('El globo explotó. Observa si ajustas la siguiente ronda.');
+      setStatus(t('El globo explotó. Observa si ajustas la siguiente ronda.', 'The balloon popped. Watch whether you adjust the next round.'));
       finishRound('pop', nextPump, 0);
       return;
     }
     setPumpCount(nextPump);
     setRoundPoints((points) => points + round.pointValue);
-    setStatus('Puntos acumulados. Puedes seguir o asegurar.');
+    setStatus(t('Puntos acumulados. Puedes seguir o asegurar.', 'Points accumulated. You can keep going or secure them.'));
   }, [finishRound, finished, pumpCount, round]);
 
   const cashout = useCallback(() => {
     if (!round || finished) return;
-    setStatus('Puntos asegurados.');
+    setStatus(t('Puntos asegurados.', 'Points secured.'));
     finishRound('cashout', pumpCount, roundPoints);
   }, [finishRound, finished, pumpCount, round, roundPoints]);
 
@@ -155,9 +157,9 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete }) {
   if (finished) {
     return (
       <div className="balloon-risk-task balloon-risk-task--finished" data-testid="balloon-risk-finished">
-        <h3>Globo de riesgo completado</h3>
-        <p>Rondas completadas: {rounds.length}</p>
-        <p>Puntaje agregado: {totalScore}</p>
+        <h3>{t('Globo de riesgo completado', 'Risk balloon completed')}</h3>
+        <p>{t('Rondas completadas', 'Rounds completed')}: {rounds.length}</p>
+        <p>{t('Puntaje agregado', 'Aggregated score')}: {totalScore}</p>
       </div>
     );
   }
@@ -167,31 +169,31 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete }) {
   return (
     <div className="balloon-risk-task" style={{ minHeight: metrics.containerMinHeight, padding: metrics.bodyPadding }}>
       <div className="task-header balloon-risk-task__header">
-        <h3 className="task-title">🎈 Globo de riesgo</h3>
-        <span className="task-progress">Ronda {roundIndex + 1} de {rounds.length}</span>
-        <span className="task-progress">Puntos {totalScore + roundPoints}</span>
+        <h3 className="task-title">🎈 {t('Globo de riesgo', 'Risk balloon')}</h3>
+        <span className="task-progress">{t('Ronda', 'Round')} {roundIndex + 1} {t('de', 'of')} {rounds.length}</span>
+        <span className="task-progress">{t('Puntos', 'Points')} {totalScore + roundPoints}</span>
       </div>
       <p className="caption balloon-risk-task__caption">
-        Infla para acumular puntos y decide cuándo asegurar. Se registra estrategia agregada, no una secuencia cruda de clicks.
+        {t('Infla para acumular puntos y decide cuándo asegurar. Se registra estrategia agregada, no una secuencia cruda de clicks.', 'Inflate to accumulate points and decide when to secure them. Aggregated strategy is recorded, not a raw click sequence.')}
       </p>
       <div className="balloon-risk-task__arena">
         <div
           className="balloon-risk-task__balloon"
-          aria-label="Globo actual"
+          aria-label={t('Globo actual', 'Current balloon')}
           style={{ transform: `scale(${balloonScale})` }}
         >
           🎈
         </div>
         <div className="balloon-risk-task__stats" style={{ gridTemplateColumns: `repeat(${metrics.statColumns}, minmax(0, 1fr))` }}>
-          <span><strong>{pumpCount}</strong><small>Infladas</small></span>
-          <span><strong>{roundPoints}</strong><small>En riesgo</small></span>
-          <span><strong>{cashoutsRef.current}</strong><small>Aseguradas</small></span>
-          <span><strong>{popsRef.current}</strong><small>Explosiones</small></span>
+          <span><strong>{pumpCount}</strong><small>{t('Infladas', 'Pumps')}</small></span>
+          <span><strong>{roundPoints}</strong><small>{t('En riesgo', 'At risk')}</small></span>
+          <span><strong>{cashoutsRef.current}</strong><small>{t('Aseguradas', 'Secured')}</small></span>
+          <span><strong>{popsRef.current}</strong><small>{t('Explosiones', 'Pops')}</small></span>
         </div>
       </div>
       <div className="balloon-risk-task__controls" style={{ gap: metrics.controlsGap }}>
-        <button type="button" className="primary" onClick={pump}>Inflar</button>
-        <button type="button" className="secondary" onClick={cashout}>Asegurar puntos</button>
+        <button type="button" className="primary" onClick={pump}>{t('Inflar', 'Inflate')}</button>
+        <button type="button" className="secondary" onClick={cashout}>{t('Asegurar puntos', 'Secure points')}</button>
       </div>
       <p className="balloon-risk-task__status" role="status">{status}</p>
     </div>

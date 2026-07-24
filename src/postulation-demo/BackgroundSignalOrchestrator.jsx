@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { normalizeVideoInputDevices } from '../telemetry/cameraDevices.js';
 import { requestCameraWithFallback, stopStream } from '../telemetry/adaptiveCapture.js';
 import { useFaceLandmarkerWorker } from '../telemetry/useFaceLandmarkerWorker.js';
@@ -220,6 +221,7 @@ export function buildPostulationSignalSnapshot({
 }
 
 export default function BackgroundSignalOrchestrator({ active = false, eventCount = 0, mode = 'setup', onSnapshot, onSignalContext }) {
+  const { t } = useLanguage();
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const faceSamplesRef = useRef([]);
@@ -388,17 +390,17 @@ export default function BackgroundSignalOrchestrator({ active = false, eventCoun
   }
 
   return (
-    <section className="postulation-demo__signal-orchestrator" aria-label="Cámara local de fondo">
+    <section className="postulation-demo__signal-orchestrator" aria-label={t('Cámara local de fondo', 'Background local camera')}>
       <div className="postulation-demo__camera-card">
-        <video ref={videoRef} className="postulation-demo__camera-preview" muted playsInline aria-label="Vista previa local de cámara" />
+        <video ref={videoRef} className="postulation-demo__camera-preview" muted playsInline aria-label={t('Vista previa local de cámara', 'Local camera preview')} />
         <div>
-          <strong>{cameraActive ? 'Cámara local activa' : active ? 'Solicitando cámara local' : 'Cámara local en espera'}</strong>
-          <p>{cameraError ? `Caveat: ${cameraError}` : 'La vista se usa solo para procesamiento local de señales agregadas.'}</p>
+          <strong>{cameraActive ? t('Cámara local activa', 'Local camera active') : active ? t('Solicitando cámara local', 'Requesting local camera') : t('Cámara local en espera', 'Local camera on standby')}</strong>
+          <p>{cameraError ? `Caveat: ${cameraError}` : t('La vista se usa solo para procesamiento local de señales agregadas.', 'The view is used only for local processing of aggregated signals.')}</p>
         </div>
       </div>
       {cameraDevices.length > 1 && (
         <label className="postulation-demo__device-label" htmlFor="postulation-camera-device">
-          Cámara
+          {t('Cámara', 'Camera')}
           <select id="postulation-camera-device" value={selectedDeviceId} onChange={(event) => setSelectedDeviceId(event.target.value)}>
             {cameraDevices.map((device) => <option key={device.deviceId} value={device.deviceId}>{device.label}</option>)}
           </select>

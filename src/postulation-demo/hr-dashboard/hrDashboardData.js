@@ -1,12 +1,12 @@
 const CONSTRUCTS = Object.freeze([
-  ['decisionMaking', 'Toma de decisiones'],
-  ['problemSolving', 'Resolución de problemas'],
-  ['riskFeedbackProfile', 'Riesgo y feedback'],
-  ['planning', 'Planificación'],
-  ['adaptability', 'Adaptabilidad'],
-  ['analyticalThinking', 'Pensamiento analítico'],
-  ['leadership', 'Liderazgo'],
-  ['communication', 'Comunicación'],
+  ['decisionMaking', 'Toma de decisiones', 'Decision making'],
+  ['problemSolving', 'Resolución de problemas', 'Problem solving'],
+  ['riskFeedbackProfile', 'Riesgo y feedback', 'Risk and feedback'],
+  ['planning', 'Planificación', 'Planning'],
+  ['adaptability', 'Adaptabilidad', 'Adaptability'],
+  ['analyticalThinking', 'Pensamiento analítico', 'Analytical thinking'],
+  ['leadership', 'Liderazgo', 'Leadership'],
+  ['communication', 'Comunicación', 'Communication'],
 ]);
 
 const FORBIDDEN_KEYS = new Set([
@@ -38,9 +38,10 @@ function clampScore(value) {
 }
 
 function buildConstructs(scores = [], confidence = 0.55) {
-  return Object.freeze(CONSTRUCTS.map(([id, label], index) => Object.freeze({
+  return Object.freeze(CONSTRUCTS.map(([id, label, labelEn], index) => Object.freeze({
     id,
     label,
+    labelEn,
     score: clampScore(scores[index]),
     confidence: Number((index < 4 ? Math.min(0.6, confidence + 0.05) : confidence).toFixed(2)),
   })));
@@ -85,7 +86,7 @@ export const HR_DASHBOARD_CANDIDATES = Object.freeze([
   candidate({
     id: 'profile-042',
     alias: 'Perfil 042',
-    role: 'Analista de Operaciones',
+    role: 'Analista de Operaciones', roleEn: 'Operations Analyst',
     completedAt: '2026-07-21T15:42:00.000Z',
     status: 'ready',
     completedGames: 4,
@@ -98,16 +99,16 @@ export const HR_DASHBOARD_CANDIDATES = Object.freeze([
     ],
     caveats: ['Scores provisionales de demo; contrastar con entrevista y evidencia laboral.'],
     games: [
-      { id: 'laser', label: 'Puzzle láser', metric: '3/3 mapas', value: 93 },
-      { id: 'balloon', label: 'Riesgo y feedback', metric: '8/8 rondas', value: 72 },
-      { id: 'routes', label: 'Rutas', metric: '5/5 entregas', value: 95 },
-      { id: 'team', label: 'Operación Faro', metric: '4/4 escenarios', value: 83 },
+      { id: 'laser', label: 'Puzzle láser', labelEn: 'Laser puzzle', metric: '3/3 mapas', value: 93 },
+      { id: 'balloon', label: 'Riesgo y feedback', labelEn: 'Risk and feedback', metric: '8/8 rondas', value: 72 },
+      { id: 'routes', label: 'Rutas', labelEn: 'Routes', metric: '5/5 entregas', value: 95 },
+      { id: 'team', label: 'Operación Faro', labelEn: 'Faro Operation', metric: '4/4 escenarios', value: 83 },
     ],
   }),
   candidate({
     id: 'profile-017',
     alias: 'Perfil 017',
-    role: 'Coordinación de Proyectos',
+    role: 'Coordinación de Proyectos', roleEn: 'Project Coordination',
     completedAt: '2026-07-21T14:18:00.000Z',
     status: 'ready',
     completedGames: 4,
@@ -129,7 +130,7 @@ export const HR_DASHBOARD_CANDIDATES = Object.freeze([
   candidate({
     id: 'profile-063',
     alias: 'Perfil 063',
-    role: 'Analista de Operaciones',
+    role: 'Analista de Operaciones', roleEn: 'Operations Analyst',
     completedAt: '2026-07-21T12:06:00.000Z',
     status: 'needs_review',
     completedGames: 4,
@@ -173,7 +174,7 @@ export const HR_DASHBOARD_CANDIDATES = Object.freeze([
   candidate({
     id: 'profile-075',
     alias: 'Perfil 075',
-    role: 'Coordinación de Proyectos',
+    role: 'Coordinación de Proyectos', roleEn: 'Project Coordination',
     completedAt: '2026-07-21T16:05:00.000Z',
     status: 'in_progress',
     completedGames: 2,
@@ -192,9 +193,9 @@ export const HR_DASHBOARD_CANDIDATES = Object.freeze([
 ]);
 
 export const HR_DASHBOARD_STATUS = Object.freeze({
-  ready: Object.freeze({ label: 'Listo para revisión', tone: 'ready' }),
-  needs_review: Object.freeze({ label: 'Revisar caveats', tone: 'review' }),
-  in_progress: Object.freeze({ label: 'En progreso', tone: 'progress' }),
+  ready: Object.freeze({ label: 'Listo para revisión', labelEn: 'Ready for review', tone: 'ready' }),
+  needs_review: Object.freeze({ label: 'Revisar caveats', labelEn: 'Review caveats', tone: 'review' }),
+  in_progress: Object.freeze({ label: 'En progreso', labelEn: 'In progress', tone: 'progress' }),
 });
 
 export function getHrDashboardRoles(candidates = HR_DASHBOARD_CANDIDATES) {

@@ -60,7 +60,9 @@ function dimension({ id, rawScore, confidence, evidence, caveats, availability =
   return {
     id,
     label: definition.label,
+    labelEn: definition.labelEn,
     description: definition.description,
+    descriptionEn: definition.descriptionEn,
     score: score(rawScore),
     confidence: Number(clamp(confidence).toFixed(3)),
     availability,

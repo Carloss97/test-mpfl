@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import GameRuntime from '../GameRuntime.jsx';
+import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import {
   buildPassengerRouteDemoLevels,
   buildPassengerRouteResponseAggregate,
@@ -56,13 +57,14 @@ function hasLegalMove(level, position, budget, wallSet) {
   });
 }
 
-function getPassengerStatus(passenger, deliveredIds, onboardId) {
-  if (deliveredIds.includes(passenger.id)) return 'Entregado';
-  if (onboardId === passenger.id) return 'En vehículo';
-  return 'Esperando';
+function getPassengerStatus(passenger, deliveredIds, onboardId, t) {
+  if (deliveredIds.includes(passenger.id)) return t('Entregado', 'Delivered');
+  if (onboardId === passenger.id) return t('En vehículo', 'On board');
+  return t('Esperando', 'Waiting');
 }
 
 function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
+  const { t } = useLanguage();
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
   const levels = useMemo(
@@ -80,7 +82,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   const [routeBudget, setRouteBudget] = useState(() => levels[0].routeBudget);
   const [onboardId, setOnboardId] = useState(null);
   const [deliveredIds, setDeliveredIds] = useState([]);
-  const [status, setStatus] = useState('Revisa el mapa, recoge al pasajero y planifica el destino.');
+  const [status, setStatus] = useState(t('Revisa el mapa, recoge al pasajero y planifica el destino.', 'Review the map, pick up the passenger and plan the destination.'));
   const [finished, setFinished] = useState(false);
   const [failed, setFailed] = useState(false);
   const startTimeRef = useRef(now());
@@ -105,8 +107,8 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   const wallSet = useMemo(() => new Set(level?.walls ?? []), [level]);
   const authoredSolution = levelSolutions[levelIndex] ?? {};
   const rechargePlan = Number(authoredSolution.minimumStationUses ?? 0) === 0
-    ? 'No obligatoria'
-    : `${authoredSolution.minimumStationUses} estratégica`;
+    ? t('No obligatoria', 'Not required')
+    : t(`${authoredSolution.minimumStationUses} estratégica`, `${authoredSolution.minimumStationUses} strategic`);
   const budgetPercent = level ? Math.round((routeBudget / Math.max(1, level.routeBudget)) * 100) : 0;
   const budgetTone = budgetPercent <= 25 ? 'danger' : budgetPercent <= 50 ? 'warn' : 'ok';
 
@@ -286,7 +288,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
     setRouteBudget(level.routeBudget);
     setOnboardId(null);
     setDeliveredIds([]);
-    setStatus('Circuito reiniciado. Observa pasajeros, destinos y energía antes de moverte.');
+    setStatus(t('Circuito reiniciado. Observa pasajeros, destinos y energía antes de moverte.', 'Circuit reset. Observe passengers, destinations and energy before moving.'));
     levelStartRef.current = now();
   }, [level]);
 
@@ -310,7 +312,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
       || y >= level.rows
       || wallSet.has(cellKey(x, y))
     ) {
-      registerConstraintViolation('Tramo bloqueado. Revisa el plan antes de continuar.');
+      registerConstraintViolation(t('Tramo bloqueado. Revisa el plan antes de continuar.', 'Blocked segment. Review the plan before continuing.'));
       return;
     }
     if (routeBudget < direction.cost) {
@@ -318,7 +320,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
         failRun('energy_depleted');
         return;
       }
-      registerConstraintViolation('Presupuesto insuficiente para ese tramo. Elige un movimiento posible o busca una parada de apoyo.');
+      registerConstraintViolation(t('Presupuesto insuficiente para ese tramo. Elige un movimiento posible o busca una parada de apoyo.', 'Insufficient budget for that segment. Choose a possible move or look for a support stop.'));
       return;
     }
 
@@ -326,13 +328,14 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
     let nextBudget = routeBudget - direction.cost;
     let nextOnboardId = onboardId;
     let nextDeliveredIds = deliveredIds;
-    let nextStatus = 'Movimiento registrado. Continúa optimizando la ruta.';
+    let nextStatus = t('Movimiento registrado. Continúa optimizando la ruta.', 'Move registered. Keep optimizing the route.');
+
 
     const station = level.stations.find((item) => item.x === x && item.y === y);
     if (station && nextBudget < level.routeBudget) {
       nextBudget = level.routeBudget;
       stationUseCountRef.current += 1;
-      nextStatus = 'Parada de apoyo utilizada: presupuesto operativo restaurado.';
+      nextStatus = t('Parada de apoyo utilizada: presupuesto operativo restaurado.', 'Support stop used: operational budget restored.');
     }
 
     if (nextOnboardId) {
@@ -357,7 +360,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
       ));
       if (waitingPassenger) {
         nextOnboardId = waitingPassenger.id;
-        nextStatus = `${waitingPassenger.label} a bordo. Ahora dirígete al destino ${waitingPassenger.id}.`;
+        nextStatus = t(`${waitingPassenger.label} a bordo. Ahora dirígete al destino ${waitingPassenger.id}.`, `${waitingPassenger.label} on board. Now head to destination ${waitingPassenger.id}.`);
       }
     }
 
@@ -375,7 +378,7 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   const registerReplan = useCallback(() => {
     if (finished) return;
     replanCountRef.current += 1;
-    setStatus('Replanificación registrada. Revisa restricciones antes del siguiente tramo.');
+    setStatus(t('Replanificación registrada. Revisa restricciones antes del siguiente tramo.', 'Replan recorded. Review constraints before the next segment.'));
   }, [finished]);
 
   if (!level) return null;
@@ -383,12 +386,12 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   if (failed) {
     return (
       <div className="passenger-route-task passenger-route-task--failed" data-testid="passenger-route-failed">
-        <h3>Ruta fallida: sin energía</h3>
-        <p>El vehículo quedó sin energía para alcanzar una parada o destino. La partida termina con resultado agregado.</p>
-        <p>Pasajeros entregados: {passengersDeliveredRef.current} de {destinationCount}</p>
+        <h3>{t('Ruta fallida: sin energía', 'Route failed: out of energy')}</h3>
+        <p>{t('El vehículo quedó sin energía para alcanzar una parada o destino. La partida termina con resultado agregado.', 'The vehicle ran out of energy to reach a stop or destination. The run ends with an aggregated result.')}</p>
+        <p>{t('Pasajeros entregados', 'Passengers delivered')}: {passengersDeliveredRef.current} {t('de', 'of')} {destinationCount}</p>
         <div className="passenger-route-task__failed-actions">
-          <button type="button" className="secondary" onClick={retryCurrentCircuit}>Reintentar circuito</button>
-          <button type="button" className="primary" onClick={continueAfterFailure}>Continuar con resultado</button>
+          <button type="button" className="secondary" onClick={retryCurrentCircuit}>{t('Reintentar circuito', 'Retry circuit')}</button>
+          <button type="button" className="primary" onClick={continueAfterFailure}>{t('Continuar con resultado', 'Continue with result')}</button>
         </div>
       </div>
     );
@@ -397,9 +400,9 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   if (finished) {
     return (
       <div className="passenger-route-task passenger-route-task--finished" data-testid="passenger-route-finished">
-        <h3>Optimización de rutas completada</h3>
-        <p>Pasajeros entregados: {passengersDeliveredRef.current} de {destinationCount}</p>
-        <p>Resultados guardados como métricas agregadas para revisión humana.</p>
+        <h3>{t('Optimización de rutas completada', 'Route optimization completed')}</h3>
+        <p>{t('Pasajeros entregados', 'Passengers delivered')}: {passengersDeliveredRef.current} {t('de', 'of')} {destinationCount}</p>
+        <p>{t('Resultados guardados como métricas agregadas para revisión humana.', 'Results saved as aggregated metrics for human review.')}</p>
       </div>
     );
   }
@@ -465,24 +468,24 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
   return (
     <div className="passenger-route-task">
       <div className="task-header passenger-route-task__header">
-        <h3 className="task-title">🚐 Central de movilidad</h3>
-        <span className="task-progress">Circuito {levelIndex + 1} de {levels.length}</span>
-        <span className="task-progress">Destinos {deliveredIds.length}/{level.passengers.length}</span>
+        <h3 className="task-title">🚐 {t('Central de movilidad', 'Mobility center')}</h3>
+        <span className="task-progress">{t('Circuito', 'Circuit')} {levelIndex + 1} {t('de', 'of')} {levels.length}</span>
+        <span className="task-progress">{t('Destinos', 'Destinations')} {deliveredIds.length}/{level.passengers.length}</span>
       </div>
-      <section className="passenger-route-task__mission" aria-label="Misión de movilidad">
+      <section className="passenger-route-task__mission" aria-label={t('Misión de movilidad', 'Mobility mission')}>
         <div>
-          <span className="passenger-route-task__mission-kicker">Misión activa</span>
-          <strong>{level.name}</strong>
-          <p>{level.objective}</p>
+          <span className="passenger-route-task__mission-kicker">{t('Misión activa', 'Active mission')}</span>
+          <strong>{t(level.name, level.nameEn ?? level.name)}</strong>
+          <p>{t(level.objective, level.objectiveEn ?? level.objective)}</p>
         </div>
         <dl>
-          <div><dt>Reserva al finalizar</dt><dd>{authoredSolution.remainingBudget ?? '—'} de energía</dd></div>
-          <div><dt>Recarga</dt><dd>{rechargePlan}</dd></div>
-          <div><dt>Entregas</dt><dd>{level.passengers.length}</dd></div>
+          <div><dt>{t('Reserva al finalizar', 'Reserve at end')}</dt><dd>{authoredSolution.remainingBudget ?? '—'} {t('de energía', 'of energy')}</dd></div>
+          <div><dt>{t('Recarga', 'Recharge')}</dt><dd>{rechargePlan}</dd></div>
+          <div><dt>{t('Entregas', 'Deliveries')}</dt><dd>{level.passengers.length}</dd></div>
         </dl>
       </section>
       <p className="caption passenger-route-task__caption">
-        {level.coreChallenge ?? 'Recoge pasajeros y llévalos a su destino administrando la energía de ruta.'} Solo se conservan resultados agregados.
+        {t(level.coreChallenge ?? 'Recoge pasajeros y llévalos a su destino administrando la energía de ruta.', level.coreChallengeEn ?? 'Pick up passengers and take them to their destination managing route energy.')} {t('Solo se conservan resultados agregados.', 'Only aggregated results are kept.')}
       </p>
       <div className="passenger-route-task__workspace">
         <div
@@ -500,44 +503,44 @@ function PassengerRouteInner({ emit, trialCount, width, height, onComplete }) {
         >
           {cells}
         </div>
-        <aside className="passenger-route-task__side-panel" aria-label="Centro de despacho">
-          <strong>Panel de despacho</strong>
-          <span>Ruta activa: {level.name}</span>
-          <div className={`passenger-route-task__budget passenger-route-task__budget--${budgetTone}`} aria-label={`Energía ${routeBudget} de ${level.routeBudget}`}>
+        <aside className="passenger-route-task__side-panel" aria-label={t('Centro de despacho', 'Dispatch center')}>
+          <strong>{t('Panel de despacho', 'Dispatch panel')}</strong>
+          <span>{t('Ruta activa', 'Active route')}: {t(level.name, level.nameEn ?? level.name)}</span>
+          <div className={`passenger-route-task__budget passenger-route-task__budget--${budgetTone}`} aria-label={`${t('Energía', 'Energy')} ${routeBudget} ${t('de', 'of')} ${level.routeBudget}`}>
             <div>
-              <span>Energía</span>
+              <span>{t('Energía', 'Energy')}</span>
               <strong>{routeBudget}/{level.routeBudget}</strong>
             </div>
             <div className="passenger-route-task__budget-bar"><i style={{ width: `${budgetPercent}%` }} /></div>
           </div>
-          <span>Pasajero a bordo: {onboardId ?? 'ninguno'}</span>
-          <span>Estaciones disponibles: {level.stations.length}</span>
-          <span>Recarga planificada: {rechargePlan}</span>
-          <span>Costo por paso: ←/→ 1 · ↑/↓ 2 de energía</span>
-          <div className="passenger-route-task__map-legend" aria-label="Leyenda del mapa">
-            <span>● A Recoger</span>
-            <span>⚑ A Entregar</span>
-            {level.stations.length > 0 && <span>⛽ Recargar</span>}
+          <span>{t('Pasajero a bordo', 'Passenger on board')}: {onboardId ?? t('ninguno', 'none')}</span>
+          <span>{t('Estaciones disponibles', 'Available stations')}: {level.stations.length}</span>
+          <span>{t('Recarga planificada', 'Planned recharge')}: {rechargePlan}</span>
+          <span>{t('Costo por paso', 'Cost per step')}: ←/→ 1 · ↑/↓ 2 {t('de energía', 'of energy')}</span>
+          <div className="passenger-route-task__map-legend" aria-label={t('Leyenda del mapa', 'Map legend')}>
+            <span>● {t('A Recoger', 'Pick up')}</span>
+            <span>⚑ {t('A Entregar', 'Deliver')}</span>
+            {level.stations.length > 0 && <span>⛽ {t('Recargar', 'Recharge')}</span>}
           </div>
-          <div className="passenger-route-task__passenger-list" aria-label="Pasajeros y destinos">
+          <div className="passenger-route-task__passenger-list" aria-label={t('Pasajeros y destinos', 'Passengers and destinations')}>
             {level.passengers.map((passenger) => (
               <div key={passenger.id} className="passenger-route-task__passenger-row">
                 <b style={{ background: passenger.color }}>● {passenger.id}</b>
-                <span>{getPassengerStatus(passenger, deliveredIds, onboardId)} · entregar en ⚑ {passenger.id}</span>
+                <span>{getPassengerStatus(passenger, deliveredIds, onboardId, t)} · {t('entregar en', 'deliver at')} ⚑ {passenger.id}</span>
               </div>
             ))}
           </div>
-          <button type="button" className="secondary" onClick={registerReplan}>Registrar replanteo</button>
+          <button type="button" className="secondary" onClick={registerReplan}>{t('Registrar replanteo', 'Register replan')}</button>
         </aside>
       </div>
       <div className="passenger-route-task__footer">
-        <div className="passenger-route-task__controls" aria-label="Controles de ruta">
-          <strong>Conduce la unidad</strong>
-          <button type="button" aria-label="Arriba" onClick={() => move('up')} style={{ width: metrics.controlSize, height: metrics.controlSize }}>↑</button>
+        <div className="passenger-route-task__controls" aria-label={t('Controles de ruta', 'Route controls')}>
+          <strong>{t('Conduce la unidad', 'Drive the unit')}</strong>
+          <button type="button" aria-label={t('Arriba', 'Up')} onClick={() => move('up')} style={{ width: metrics.controlSize, height: metrics.controlSize }}>↑</button>
           <div>
-            <button type="button" aria-label="Izquierda" onClick={() => move('left')} style={{ width: metrics.controlSize, height: metrics.controlSize }}>←</button>
-            <button type="button" aria-label="Abajo" onClick={() => move('down')} style={{ width: metrics.controlSize, height: metrics.controlSize }}>↓</button>
-            <button type="button" aria-label="Derecha" onClick={() => move('right')} style={{ width: metrics.controlSize, height: metrics.controlSize }}>→</button>
+            <button type="button" aria-label={t('Izquierda', 'Left')} onClick={() => move('left')} style={{ width: metrics.controlSize, height: metrics.controlSize }}>←</button>
+            <button type="button" aria-label={t('Abajo', 'Down')} onClick={() => move('down')} style={{ width: metrics.controlSize, height: metrics.controlSize }}>↓</button>
+            <button type="button" aria-label={t('Derecha', 'Right')} onClick={() => move('right')} style={{ width: metrics.controlSize, height: metrics.controlSize }}>→</button>
           </div>
         </div>
         <p role="status">{status}</p>

@@ -1,52 +1,55 @@
 import React from 'react';
-import { postulationDemoCopy } from './postulationDemoCopy.js';
+import { usePostulationDemoCopy } from './postulationDemoCopy.js';
 import { POSTULATION_DEMO_BATTERY_MODES } from './postulationDemoConfig.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 export default function PostulationLanding({ onStart, batteryMode }) {
+  const copy = usePostulationDemoCopy();
+  const { t } = useLanguage();
   const isOriginalMode = batteryMode === POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES;
   return (
     <main className="postulation-demo__landing" aria-labelledby="postulation-demo-title">
       <section className="postulation-demo__hero">
         <div className="postulation-demo__hero-copy">
           <span className="postulation-demo__eyebrow">
-            {isOriginalMode ? 'Batería original · Demo controlada' : postulationDemoCopy.eyebrow}
+            {isOriginalMode ? t('Batería original · Demo controlada', 'Original battery · Controlled demo') : copy.eyebrow}
           </span>
-          <h1 id="postulation-demo-title">{postulationDemoCopy.title}</h1>
-          <p className="postulation-demo__subtitle">{postulationDemoCopy.subtitle}</p>
-          <p className="postulation-demo__description">{postulationDemoCopy.description}</p>
+          <h1 id="postulation-demo-title">{copy.title}</h1>
+          <p className="postulation-demo__subtitle">{copy.subtitle}</p>
+          <p className="postulation-demo__description">{copy.description}</p>
           <div className="postulation-demo__actions">
             <button type="button" className="postulation-demo__primary" onClick={onStart}>
-              {postulationDemoCopy.cta}
+              {copy.cta}
             </button>
             <a className="postulation-demo__secondary" href="#postulation-demo-background">
-              {postulationDemoCopy.secondaryCta}
+              {copy.secondaryCta}
             </a>
 
           </div>
         </div>
 
-        <aside className="postulation-demo__brief" aria-label="Resumen de demo">
+        <aside className="postulation-demo__brief" aria-label={t('Resumen de demo', 'Demo summary')}>
           <div>
-            <span>Duración estimada</span>
-            <strong>{isOriginalMode ? postulationDemoCopy.originalTimeEstimate : postulationDemoCopy.timeEstimate}</strong>
+            <span>{t('Duración estimada', 'Estimated duration')}</span>
+            <strong>{isOriginalMode ? copy.originalTimeEstimate : copy.timeEstimate}</strong>
           </div>
           <div>
-            <span>Modo</span>
-            <strong>{isOriginalMode ? 'Sesión local · batería original' : 'Sesión local'}</strong>
+            <span>{t('Modo', 'Mode')}</span>
+            <strong>{isOriginalMode ? t('Sesión local · batería original', 'Local session · original battery') : t('Sesión local', 'Local session')}</strong>
           </div>
           <div>
-            <span>Resultado</span>
-            <strong>Reporte humano</strong>
+            <span>{t('Resultado', 'Result')}</span>
+            <strong>{t('Reporte humano', 'Human report')}</strong>
           </div>
           <a className="postulation-demo__brief-link" href="/postulaciones-demo/hr">
-            <span>Vista separada</span>
-            <strong>Abrir vista HR →</strong>
+            <span>{t('Vista separada', 'Separate view')}</span>
+            <strong>{t('Abrir vista HR →', 'Open HR view →')}</strong>
           </a>
         </aside>
       </section>
 
-      <section id="postulation-demo-background" className="postulation-demo__grid" aria-label="Principios de la demo">
-        {postulationDemoCopy.cards.map((card) => (
+      <section id="postulation-demo-background" className="postulation-demo__grid" aria-label={t('Principios de la demo', 'Demo principles')}>
+        {copy.cards.map((card) => (
           <article key={card.title} className="postulation-demo__card">
             <h2>{card.title}</h2>
             <p>{card.body}</p>
@@ -54,10 +57,10 @@ export default function PostulationLanding({ onStart, batteryMode }) {
         ))}
       </section>
 
-      <section className="postulation-demo__privacy" aria-label="Privacidad y alcance">
-        <h2>Privacidad y alcance</h2>
+      <section className="postulation-demo__privacy" aria-label={t('Privacidad y alcance', 'Privacy and scope')}>
+        <h2>{t('Privacidad y alcance', 'Privacy and scope')}</h2>
         <ul>
-          {postulationDemoCopy.principles.map((principle) => (
+          {copy.principles.map((principle) => (
             <li key={principle}>{principle}</li>
           ))}
         </ul>

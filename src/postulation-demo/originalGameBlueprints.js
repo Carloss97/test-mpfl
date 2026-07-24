@@ -26,6 +26,7 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
   Object.freeze({
     gameId: 'laser_puzzle',
     label: 'Puzzle láser',
+    labelEn: 'Laser puzzle',
     shortLabel: 'Láser',
     source: Object.freeze({
       primary: '/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test/src/games/LaserPuzzleGame.jsx',
@@ -60,6 +61,7 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
   Object.freeze({
     gameId: 'balloon_risk',
     label: 'Globo de riesgo',
+    labelEn: 'Risk balloon',
     shortLabel: 'Globo',
     source: Object.freeze({
       primary: '/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test/src/games/BalloonGame.jsx',
@@ -95,6 +97,7 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
   Object.freeze({
     gameId: 'passenger_routes',
     label: 'Optimización de rutas de pasajeros',
+    labelEn: 'Passenger route optimization',
     shortLabel: 'Rutas',
     source: Object.freeze({
       primary: '/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test/src/games/GridFlowGame.jsx',
@@ -130,7 +133,8 @@ export const ORIGINAL_GAME_BLUEPRINTS = Object.freeze([
   Object.freeze({
     gameId: 'team_coordination',
     label: 'Operación Faro: coordinación de equipo',
-    shortLabel: 'Operación Faro',
+    labelEn: 'Operation Faro: team coordination',
+    shortLabel: 'Faro',
     source: Object.freeze({
       primary: 'src/tasks/original-games/TeamCoordinationPostulationTask.jsx',
       alternate: null,

@@ -1,10 +1,12 @@
 import React from 'react';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 /**
  * TaskImpact — muestra el efecto de la tarea en las métricas.
  * Explica la diferencia entre inferencia solo cámara y cámara + telemetría de actividad.
  */
 export default function TaskImpact({ edgeAIResult, taskActive, gameSummary = null, baselineEdgeAI = null }) {
+  const { t } = useLanguage();
   if (!taskActive) return null;
 
   const channels = edgeAIResult?.channels ?? {};
@@ -44,31 +46,31 @@ export default function TaskImpact({ edgeAIResult, taskActive, gameSummary = nul
       background: 'rgba(77,212,172,0.06)', border: '1px solid rgba(77,212,172,0.15)',
     }}>
       <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#7df0cb', marginBottom: '6px' }}>
-        📊 Impacto de la tarea
+        📊 {t('Impacto de la tarea', 'Task impact')}
       </div>
 
       {hasGameTelemetry && (
         <div style={{ marginBottom: '8px', padding: '8px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)' }}>
           <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#dff8ff', marginBottom: '4px' }}>
-            Cámara + actividad
+            {t('Cámara + actividad', 'Camera + activity')}
           </div>
           <p className="caption" style={{ margin: 0, fontSize: '0.58rem' }}>
-            Sin actividad, Edge AI usa cámara: AUs/FACS, emoción proxy, gaze, postura y MoveNet. Con actividad añade precisión/RT/errores/trayectoria para ajustar rendimiento, control motor, estrés/carga y score compuesto.
+            {t('Sin actividad, Edge AI usa cámara: AUs/FACS, emoción proxy, gaze, postura y MoveNet. Con actividad añade precisión/RT/errores/trayectoria para ajustar rendimiento, control motor, estrés/carga y score compuesto.', 'Without activity, Edge AI uses camera: AUs/FACS, proxy emotion, gaze, posture, and MoveNet. With activity it adds precision/RT/errors/trajectory to adjust performance, motor control, stress/load, and composite score.')}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
             <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: '999px', background: 'rgba(255,255,255,0.06)', color: '#c8d7e8' }}>
-              Sin actividad: cámara + AUs + gaze/postura
+              {t('Sin actividad: cámara + AUs + gaze/postura', 'No activity: camera + AUs + gaze/posture')}
             </span>
             <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: '999px', background: 'rgba(77,212,172,0.12)', color: '#7df0cb' }}>
-              Con actividad: precisión/RT/errores/trayectoria
+              {t('Con actividad: precisión/RT/errores/trayectoria', 'With activity: precision/RT/errors/trajectory')}
             </span>
             {!edgeAIResult && (
               <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: '999px', background: 'rgba(255,209,102,0.12)', color: '#ffd166' }}>
-                Inicia cámara para fusionar con AUs/gaze/postura
+                {t('Inicia cámara para fusionar con AUs/gaze/postura', 'Start camera to fuse with AUs/gaze/posture')}
               </span>
             )}
             <span style={{ fontSize: '0.58rem', padding: '2px 7px', borderRadius: '999px', background: 'rgba(77,212,172,0.12)', color: '#7df0cb' }}>
-              Rendimiento {Math.round((performance.accuracy ?? 0) * 100)}% · Motor {Math.round(((motor.pathEfficiencyMean ?? motor.smoothPursuitScore ?? 0) * 100))}%
+              {t('Rendimiento', 'Performance')} {Math.round((performance.accuracy ?? 0) * 100)}% · {t('Motor', 'Motor')} {Math.round(((motor.pathEfficiencyMean ?? motor.smoothPursuitScore ?? 0) * 100))}%
             </span>
           </div>
         </div>
@@ -77,8 +79,8 @@ export default function TaskImpact({ edgeAIResult, taskActive, gameSummary = nul
       {baselineEdgeAI && compositeDelta !== null && (
         <div style={{ marginBottom: '8px', padding: '8px', borderRadius: '10px', background: 'rgba(255,209,102,0.06)', border: '1px solid rgba(255,209,102,0.14)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.58rem', color: '#9fb0c2' }}>Baseline pre-actividad: <strong>{baselineComposite}%</strong></span>
-            <span style={{ fontSize: '0.58rem', color: '#9fb0c2' }}>Actual con actividad: <strong>{currentComposite}%</strong></span>
+            <span style={{ fontSize: '0.58rem', color: '#9fb0c2' }}>{t('Baseline pre-actividad', 'Pre-activity baseline')}: <strong>{baselineComposite}%</strong></span>
+            <span style={{ fontSize: '0.58rem', color: '#9fb0c2' }}>{t('Actual con actividad', 'Current with activity')}: <strong>{currentComposite}%</strong></span>
             <span style={{ fontSize: '0.6rem', color: compositeDelta >= 0 ? '#7df0cb' : '#ff6b6b', fontWeight: 800 }}>{deltaLabel(compositeDelta)}</span>
           </div>
           {channelDeltas.length > 0 && (
@@ -95,15 +97,15 @@ export default function TaskImpact({ edgeAIResult, taskActive, gameSummary = nul
 
       {emotions && (
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px' }}>
-          <span style={{ fontSize: '0.65rem', color: '#9fb0c2' }}>Estado:</span>
+          <span style={{ fontSize: '0.65rem', color: '#9fb0c2' }}>{t('Estado', 'State')}:</span>
           <span style={{ fontSize: '0.75rem', fontWeight: 800, color: emotions.dominant === 'neutral' ? '#9fb0c2' : '#dff8ff' }}>
-            {emotions.dominant === 'happiness' ? '😊 Alegría' :
-             emotions.dominant === 'sadness' ? '😢 Tristeza' :
-             emotions.dominant === 'surprise' ? '😲 Sorpresa' :
-             emotions.dominant === 'fear' ? '😨 Miedo' :
-             emotions.dominant === 'anger' ? '😠 Enojo' :
-             emotions.dominant === 'disgust' ? '🤢 Disgusto' :
-             emotions.dominant === 'contempt' ? '😏 Desprecio' : '😐 Neutral'}
+            {emotions.dominant === 'happiness' ? t('😊 Alegría', '😊 Happiness') :
+             emotions.dominant === 'sadness' ? t('😢 Tristeza', '😢 Sadness') :
+             emotions.dominant === 'surprise' ? t('😲 Sorpresa', '😲 Surprise') :
+             emotions.dominant === 'fear' ? t('😨 Miedo', '😨 Fear') :
+             emotions.dominant === 'anger' ? t('😠 Enojo', '😠 Anger') :
+             emotions.dominant === 'disgust' ? t('🤢 Disgusto', '🤢 Disgust') :
+             emotions.dominant === 'contempt' ? t('😏 Desprecio', '😏 Contempt') : t('😐 Neutral', '😐 Neutral')}
           </span>
           <span style={{ fontSize: '0.6rem', color: '#9fb0c2' }}>
             {Math.round(emotions.dominantScore * 100)}%
@@ -119,7 +121,7 @@ export default function TaskImpact({ edgeAIResult, taskActive, gameSummary = nul
               background: ch.source === 'game_telemetry' || ch.gameAdjusted ? 'rgba(77,212,172,0.12)' : 'rgba(255,255,255,0.06)',
               color: ch.source === 'game_telemetry' || ch.gameAdjusted ? '#7df0cb' : '#c8d7e8',
             }}>
-              {ch.label}: {ch.score}%{ch.source === 'game_telemetry' || ch.gameAdjusted ? ' + juego' : ''}
+              {ch.label}: {ch.score}%{ch.source === 'game_telemetry' || ch.gameAdjusted ? t(' + juego', ' + game') : ''}
             </span>
           ))}
         </div>
@@ -127,9 +129,9 @@ export default function TaskImpact({ edgeAIResult, taskActive, gameSummary = nul
 
       {composite && (
         <div style={{ marginTop: '4px', fontSize: '0.6rem', color: '#9fb0c2' }}>
-          Score compuesto: <strong>{composite.score}%</strong> · {composite.level}
+          {t('Score compuesto', 'Composite score')}: <strong>{composite.score}%</strong> · {composite.level}
           {confidence?.captureQuality && (
-            <span> · calidad: {confidence.captureQuality.overallScore}%</span>
+            <span> · {t('calidad', 'quality')}: {confidence.captureQuality.overallScore}%</span>
           )}
         </div>
       )}

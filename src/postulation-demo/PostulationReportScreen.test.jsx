@@ -7,6 +7,9 @@ import { POSTULATION_DEMO_BATTERY_MODES } from './postulationDemoConfig.js';
 import { buildPostulationDemoFixture } from './postulationDemoFixture.js';
 import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.js';
 
+const tEs = (es, en) => es;
+const tEn = (es, en) => en ?? es;
+
 const completedDemo = Object.freeze({
   completedCount: 2,
   totalCount: 2,
@@ -103,7 +106,7 @@ describe('PostulationReportScreen', () => {
   });
 
   it('formats normalized and historical point scores without impossible percentages', () => {
-    const cards = getPostulationGameCards({
+    const cards = getPostulationGameCards(tEs, {
       assessmentSession: {
         blocks: [
           { gameId: 'laser_puzzle', label: 'Puzzle', status: 'completed', result: { score: 0.84 } },
@@ -119,7 +122,7 @@ describe('PostulationReportScreen', () => {
 
   it('shows only relevant game metrics for original games instead of blank precision/time fields', () => {
     const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
-    const cards = getPostulationGameCards(fixture.artifacts, fixture.summary);
+    const cards = getPostulationGameCards(tEs, fixture.artifacts, fixture.summary);
     const laser = cards.find((card) => card.id === 'laser_puzzle');
     const balloon = cards.find((card) => card.id === 'balloon_risk');
     const passenger = cards.find((card) => card.id === 'passenger_routes');
@@ -193,7 +196,7 @@ describe('PostulationReportScreen', () => {
   });
 
   it('derives modular passenger-route feedback from aggregate-only game results', () => {
-    const cards = getPostulationGameCards({
+    const cards = getPostulationGameCards(tEs, {
       assessmentSession: {
         blocks: [{
           gameId: 'passenger_routes',
@@ -225,7 +228,7 @@ describe('PostulationReportScreen', () => {
 
   it('derives modular feedback for all original games without raw traces', () => {
     const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
-    const cards = getPostulationGameCards(fixture.artifacts, fixture.summary);
+    const cards = getPostulationGameCards(tEs, fixture.artifacts, fixture.summary);
 
     expect(cards.map((card) => card.feedback?.gameId)).toEqual([
       'laser_puzzle',

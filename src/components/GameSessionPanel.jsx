@@ -1,14 +1,15 @@
 import React from 'react';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 import GameTelemetrySummary from './GameTelemetrySummary.jsx';
 import GameCorrelationPanel from './GameCorrelationPanel.jsx';
 
 const CHANNEL_LABELS = Object.freeze({
-  taskPerformance: 'Rendimiento',
-  motorControl: 'Control motor',
-  inhibitionControl: 'Control inhibitorio',
-  visuomotorPrecision: 'Precisión visomotora',
-  visualSearchEfficiency: 'Búsqueda visual',
-  adaptiveResilience: 'Resiliencia adaptativa',
+  taskPerformance: { es: 'Rendimiento', en: 'Performance' },
+  motorControl: { es: 'Control motor', en: 'Motor control' },
+  inhibitionControl: { es: 'Control inhibitorio', en: 'Inhibitory control' },
+  visuomotorPrecision: { es: 'Precisión visomotora', en: 'Visuomotor precision' },
+  visualSearchEfficiency: { es: 'Búsqueda visual', en: 'Visual search' },
+  adaptiveResilience: { es: 'Resiliencia adaptativa', en: 'Adaptive resilience' },
 });
 
 function channelScore(channel) {
@@ -23,18 +24,19 @@ export default function GameSessionPanel({
   gameCorrelation = null,
   edgeAIResult = null,
 } = {}) {
+  const { t } = useLanguage();
   const channels = edgeAIResult?.channels ?? {};
   const channelEntries = Object.entries(CHANNEL_LABELS)
     .filter(([key]) => channels[key])
-    .map(([key, label]) => ({ key, label, channel: channels[key] }));
+    .map(([key, label]) => ({ key, label: label.es, channel: channels[key] }));
 
   return (
-    <section className="panel game-session-panel" aria-label="Sesión gamificada">
+    <section className="panel game-session-panel" aria-label={t('Sesión gamificada', 'Gamified session')}>
       <div className="panel-heading">
         <div>
-          <h2>Sesión gamificada</h2>
+          <h2>{t('Sesión gamificada', 'Gamified session')}</h2>
           <p className="caption">
-            {selectedGame?.label ?? 'Actividad'} · estado: {taskActive ? 'activa' : 'inactiva'} · {selectedGame?.description ?? 'telemetría conductual'}
+            {selectedGame?.label ?? t('Actividad', 'Activity')} · {t('estado', 'status')}: {taskActive ? t('activa', 'active') : t('inactiva', 'inactive')} · {selectedGame?.description ?? t('telemetría conductual', 'behavioral telemetry')}
           </p>
         </div>
         <span className="status ready">privacy-safe</span>
@@ -49,7 +51,7 @@ export default function GameSessionPanel({
         <div className="dash-section" style={{ marginTop: '12px' }}>
           <div className="dash-section-hdr" style={{ cursor: 'default', userSelect: 'none' }}>
             <span className="dash-section-arrow">◆</span>
-            <span className="dash-section-title">Canales Edge AI de actividad</span>
+            <span className="dash-section-title">{t('Canales Edge AI de actividad', 'Edge AI activity channels')}</span>
             <span className="dash-section-badge">v9.1</span>
           </div>
           <div className="dash-section-body">
@@ -66,7 +68,7 @@ export default function GameSessionPanel({
       )}
 
       <p className="caption" style={{ marginTop: '10px', fontSize: '0.58rem' }}>
-        Panel compacto de sesión: muestra resultados, correlaciones y canales derivados sin exponer video, landmarks, eventos crudos ni trayectorias.
+        {t('Panel compacto de sesión: muestra resultados, correlaciones y canales derivados sin exponer video, landmarks, eventos crudos ni trayectorias.', 'Compact session panel: shows results, correlations, and derived channels without exposing video, landmarks, raw events, or trajectories.')}
       </p>
     </section>
   );

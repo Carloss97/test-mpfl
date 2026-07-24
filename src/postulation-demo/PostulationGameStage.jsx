@@ -11,6 +11,7 @@ import TeamCoordinationPostulationTask from '../tasks/original-games/TeamCoordin
 import BehindTheScenesMiniHud from './BehindTheScenesMiniHud.jsx';
 import { POSTULATION_DEMO_BATTERY, listVisiblePostulationBlocks } from './postulationDemoConfig.js';
 import PostulationProgressHeader from './PostulationProgressHeader.jsx';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const DEFAULT_GAME_COMPONENTS = Object.freeze({
   simple_rt: SimpleRTTask,
@@ -70,6 +71,7 @@ export default function PostulationGameStage({
   onGameEvent,
   onCompleteDemo,
 } = {}) {
+  const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completed, setCompleted] = useState([]);
   const onGameEventRef = useRef(onGameEvent);
@@ -101,8 +103,8 @@ export default function PostulationGameStage({
 
   if (!currentBlock || !CurrentGame) {
     return (
-      <section className="postulation-demo__game-shell" aria-label="Juegos de postulación">
-        <p>No hay juegos disponibles para la demo.</p>
+      <section className="postulation-demo__game-shell" aria-label={t('Juegos de postulación', 'Application games')}>
+        <p>{t('No hay juegos disponibles para la demo.', 'No games available for the demo.')}</p>
       </section>
     );
   }

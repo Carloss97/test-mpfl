@@ -42,7 +42,9 @@ function unavailable(reason) {
     status: 'not_available',
     feedbackCategory: reason,
     candidateHint: 'No hay datos agregados suficientes para explicar el brief de coordinación.',
+    candidateHintEn: 'There is not enough aggregate data to explain the coordination brief.',
     reviewerCaveat: 'No interpretar ausencia o inconsistencia como baja comunicación o liderazgo.',
+    reviewerCaveatEn: 'Do not interpret absence or inconsistency as low communication or leadership.',
     nextDesignProbe: 'Revisar agregados de escenarios, claridad de opciones y comprensión antes de interpretar.',
     diagnostics: {},
     privacy: { aggregateOnly: false, structuredChoicesOnly: false, openTextStored: false },
@@ -87,7 +89,9 @@ export function buildTeamCoordinationFeedback(aggregate = {}) {
       ...common,
       feedbackCategory: 'incomplete_structured_brief',
       candidateHint: 'El brief no completó todos los escenarios; la lectura social queda incompleta.',
+      candidateHintEn: 'The brief did not complete all scenarios; the social reading remains incomplete.',
       reviewerCaveat: 'No inferir comunicación, liderazgo o adaptabilidad desde una simulación incompleta.',
+      reviewerCaveatEn: 'Do not infer communication, leadership, or adaptability from an incomplete simulation.',
       nextDesignProbe: 'Verificar duración, comprensión de instrucciones y layout del brief.',
     };
   }
@@ -97,7 +101,9 @@ export function buildTeamCoordinationFeedback(aggregate = {}) {
       ...common,
       feedbackCategory: 'structured_coordination_signal',
       candidateHint: 'Completaste el brief eligiendo intervenciones estructuradas: objetivo claro, roles, feedback y ajuste ante cambios.',
+      candidateHintEn: 'You completed the brief choosing structured interventions: clear goal, roles, feedback, and adjustment to changes.',
       reviewerCaveat: 'Es evidencia de demo en escenarios cerrados; no reemplaza una interacción grupal real ni una rúbrica validada.',
+      reviewerCaveatEn: 'It is demo evidence in closed scenarios; it does not replace real group interaction or a validated rubric.',
       nextDesignProbe: 'Mantener como cobertura demo de liderazgo/comunicación/adaptabilidad y validar con formas paralelas.',
     };
   }
@@ -106,7 +112,9 @@ export function buildTeamCoordinationFeedback(aggregate = {}) {
     ...common,
     feedbackCategory: 'structured_coordination_review',
     candidateHint: 'El brief muestra una estrategia mixta de coordinación; conviene revisar qué escenarios generaron menor claridad o adaptación.',
+    candidateHintEn: 'The brief shows a mixed coordination strategy; review which scenarios generated less clarity or adaptation.',
     reviewerCaveat: 'La opción elegida puede reflejar interpretación del escenario, experiencia previa o comprensión del juego; no usar como diagnóstico.',
+    reviewerCaveatEn: 'The chosen option may reflect scenario interpretation, prior experience, or game comprehension; do not use as a diagnosis.',
     nextDesignProbe: 'Revisar instrucciones, opciones y criterios antes de comparar candidatos.',
   };
 }
