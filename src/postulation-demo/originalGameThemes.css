@@ -1,0 +1,369 @@
+/* ==========================================================================
+   KRUMM postulation demo — original battery game themes (G.3 / W1)
+   Loaded AFTER postulationDemo.css: overrides via cascade (same-or-higher
+   specificity, later file wins). Visual layer only: no telemetry, no layout
+   metric helper changes, no battery contract changes.
+   Themes:
+   - .laser-puzzle-task      "Órbita"  — dark orbital comms console
+   - .balloon-risk-task      "Cielo"   — bright sky arena
+   - .passenger-route-task   "Urbano"  — city map accents
+   - .team-coordination-task "Faro"    — tactical RPG polish
+   Shared: unified .primary/.secondary button language (KRUMM palette) and
+   GamePips (.game-pips) progress dots.
+   ========================================================================== */
+
+/* ---------- Unified button language (replaces global teal legacy) ---------- */
+
+.postulation-demo .primary {
+  min-height: 48px;
+  border: 0;
+  border-radius: 16px;
+  padding: 0 22px;
+  background: linear-gradient(135deg, #6366f1, #4338ca);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 12px 26px rgba(79, 70, 229, 0.3);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.postulation-demo .primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(79, 70, 229, 0.38);
+}
+
+.postulation-demo .primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.28);
+}
+
+.postulation-demo .primary:focus-visible {
+  outline: 3px solid var(--postulation-game-focus-ring);
+  outline-offset: 3px;
+}
+
+.postulation-demo .primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ---------- Shared progress pips (GamePips.jsx, visual only) ---------- */
+
+.game-pips {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 2px;
+}
+
+.game-pips__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.game-pips__dot--done {
+  background: var(--game-pip-done, #10b981);
+}
+
+.game-pips__dot--current {
+  background: var(--game-pip-current, #4f46e5);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16);
+}
+
+.game-pips--compact .game-pips__dot {
+  width: 7px;
+  height: 7px;
+}
+
+/* ---------- Laser: "Órbita" — dark orbital comms console ---------- */
+
+.laser-puzzle-task {
+  --game-pip-done: #34d399;
+  --game-pip-current: #22d3ee;
+  padding: 14px;
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(34, 211, 238, 0.1), transparent 14rem),
+    linear-gradient(150deg, #0b1220 0%, #0f1b33 55%, #17204a 100%);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.4);
+}
+
+.laser-puzzle-task .task-title,
+.laser-puzzle-task .task-progress {
+  border-color: rgba(51, 65, 85, 0.9);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  box-shadow: none;
+}
+
+.laser-puzzle-task .game-pips__dot {
+  background: rgba(71, 85, 105, 0.75);
+}
+
+.laser-puzzle-task .game-pips__dot--current {
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
+}
+
+.laser-puzzle-task__caption {
+  color: #94a3b8;
+}
+
+.laser-puzzle-task__board {
+  border-color: rgba(34, 211, 238, 0.34);
+  background:
+    radial-gradient(circle at 20% 10%, rgba(34, 211, 238, 0.08), transparent 12rem),
+    linear-gradient(135deg, #020617 0%, #0f172a 55%, #1e1b4b 100%);
+  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.08), 0 18px 50px rgba(2, 6, 23, 0.55);
+}
+
+.laser-puzzle-task__cell {
+  border-color: rgba(51, 65, 85, 0.6);
+  background: rgba(15, 23, 42, 0.62);
+  color: #cbd5e1;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.laser-puzzle-task__cell:hover {
+  border-color: rgba(34, 211, 238, 0.55);
+  background: rgba(30, 41, 59, 0.72);
+  transform: translateY(-1px);
+}
+
+.laser-puzzle-task__cell:active {
+  transform: scale(0.96);
+}
+
+.laser-puzzle-task__cell:focus-visible {
+  outline: 3px solid rgba(34, 211, 238, 0.8);
+  outline-offset: 2px;
+}
+
+.laser-puzzle-task__cell--empty {
+  background: rgba(30, 41, 59, 0.42);
+}
+
+.laser-puzzle-task__cell--wall {
+  background: #1e293b;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.laser-puzzle-task__cell--ship,
+.laser-puzzle-task__cell--antenna {
+  background: rgba(29, 78, 216, 0.3);
+  border-color: rgba(96, 165, 250, 0.55);
+}
+
+.laser-puzzle-task__cell--relay {
+  background: rgba(8, 145, 178, 0.28);
+  color: #67e8f9;
+  border-color: rgba(34, 211, 238, 0.5);
+}
+
+.laser-puzzle-task__cell--movable {
+  border: 2px dashed rgba(251, 191, 36, 0.8);
+  background: linear-gradient(145deg, rgba(120, 53, 15, 0.55), rgba(69, 26, 3, 0.78));
+  color: #fde68a;
+  box-shadow: 0 4px 14px rgba(2, 6, 23, 0.4);
+}
+
+.laser-puzzle-task__cell--valid-target {
+  border: 2px dashed rgba(45, 212, 191, 0.8);
+  background: rgba(13, 148, 136, 0.22);
+}
+
+.laser-puzzle-task__cell--selected {
+  outline: 3px solid rgba(34, 211, 238, 0.85);
+  border-color: rgba(34, 211, 238, 0.9);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.35);
+}
+
+.laser-puzzle-task__cell--beam {
+  border-color: rgba(251, 191, 36, 0.75);
+  box-shadow: inset 0 0 0 999px rgba(250, 204, 21, 0.2), 0 0 14px rgba(251, 191, 36, 0.35);
+}
+
+.laser-puzzle-task__cell--relay.laser-puzzle-task__cell--beam,
+.laser-puzzle-task__cell--antenna.laser-puzzle-task__cell--beam {
+  box-shadow:
+    inset 0 0 0 999px rgba(52, 211, 153, 0.16),
+    0 0 0 3px rgba(52, 211, 153, 0.5),
+    0 0 16px rgba(52, 211, 153, 0.4);
+  color: #bbf7d0;
+}
+
+.laser-puzzle-task__side-panel,
+.laser-puzzle-task__footer,
+.laser-puzzle-task--finished {
+  border-color: rgba(51, 65, 85, 0.7);
+  background: rgba(15, 23, 42, 0.66);
+  color: #cbd5e1;
+}
+
+.laser-puzzle-task__side-panel strong {
+  color: #f1f5f9;
+}
+
+.laser-puzzle-task__legend {
+  border-top-color: rgba(51, 65, 85, 0.7);
+}
+
+.laser-puzzle-task__legend span {
+  color: #e2e8f0;
+}
+
+.laser-puzzle-task__footer p {
+  color: #94a3b8;
+}
+
+.laser-puzzle-task .secondary {
+  border-color: rgba(100, 116, 139, 0.5);
+  background: rgba(30, 41, 59, 0.8);
+  color: #e2e8f0;
+}
+
+.laser-puzzle-task .secondary:hover {
+  border-color: rgba(34, 211, 238, 0.6);
+  background: rgba(41, 52, 72, 0.9);
+}
+
+.laser-puzzle-task .primary {
+  background: linear-gradient(135deg, #22d3ee, #0891b2);
+  box-shadow: 0 12px 26px rgba(8, 145, 178, 0.35);
+}
+
+.laser-puzzle-task .primary:hover:not(:disabled) {
+  box-shadow: 0 16px 32px rgba(8, 145, 178, 0.45);
+}
+
+/* ---------- Balloon: "Cielo" — bright sky arena ---------- */
+
+.balloon-risk-task {
+  --game-pip-done: #10b981;
+  --game-pip-current: #3b82f6;
+  padding: 14px;
+  border: 1px solid rgba(59, 130, 246, 0.24);
+  border-radius: 28px;
+  background: linear-gradient(160deg, #f0f9ff 0%, #eef2ff 100%);
+  box-shadow: 0 18px 44px rgba(30, 64, 175, 0.1);
+}
+
+.balloon-risk-task__arena {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: linear-gradient(180deg, #bfdbfe 0%, #dbeafe 34%, #eff6ff 80%, #f0f9ff 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 -18px 40px rgba(191, 219, 254, 0.5);
+}
+
+.balloon-risk-task__balloon {
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 14px 30px rgba(30, 64, 175, 0.16);
+}
+
+.balloon-risk-task__stats span {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(148, 163, 184, 0.24);
+}
+
+.balloon-risk-task__controls .primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.32);
+}
+
+.balloon-risk-task__controls .primary:hover:not(:disabled) {
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.4);
+}
+
+.balloon-risk-task__controls .secondary {
+  border-color: rgba(15, 118, 110, 0.55);
+  background: linear-gradient(135deg, #14b8a6, #0f766e);
+  color: #ffffff;
+  box-shadow: 0 12px 26px rgba(15, 118, 110, 0.3);
+}
+
+.balloon-risk-task__controls .secondary:hover:not(:disabled) {
+  border-color: rgba(15, 118, 110, 0.75);
+  transform: translateY(-1px);
+}
+
+/* ---------- Passenger: "Urbano" — city map accents ---------- */
+
+.passenger-route-task {
+  --game-pip-done: #10b981;
+  --game-pip-current: #4f46e5;
+}
+
+.passenger-route-task__board {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55), 0 16px 40px rgba(15, 23, 42, 0.14);
+}
+
+.passenger-route-task__mission {
+  box-shadow: inset 3px 0 0 rgba(34, 211, 238, 0.65), 0 14px 30px rgba(15, 23, 42, 0.16);
+}
+
+.passenger-route-task__controls button {
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.passenger-route-task__controls button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* ---------- Faro: tactical RPG polish ---------- */
+
+.team-coordination-task__option {
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.team-coordination-task__option:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+  border-color: rgba(79, 70, 229, 0.5);
+}
+
+.team-coordination-task__option:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.team-coordination-task__option:focus-visible {
+  outline: 3px solid var(--postulation-game-focus-ring);
+  outline-offset: 3px;
+}
+
+.team-coordination-task__meter i {
+  transition: width 320ms ease;
+}
+
+/* ---------- Report (W5 / G1-L07): score-vs-caveat hierarchy ---------- */
+
+.postulation-demo__talent-score--provisional {
+  width: max-content;
+  min-width: 76px;
+  gap: 3px;
+  padding: 8px 10px;
+  align-content: start;
+}
+
+.postulation-demo__provisional-tag--solid {
+  margin-bottom: 0;
+  border-color: var(--postulation-primary);
+  background: var(--postulation-primary);
+  color: #ffffff;
+}
+
+.postulation-demo__talent-score--provisional strong {
+  color: #4338ca;
+  font-size: 0.95rem;
+}
+
+.postulation-demo__score-sub {
+  color: #64748b;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}

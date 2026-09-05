@@ -1,0 +1,761 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { normalizeVideoInputDevices } from './telemetry/cameraDevices.js';
+import { buildGestureInsights } from './telemetry/gestureInsights.js';
+import { computeInsightsFromAUs } from './telemetry/insightMetrics.js';
+import { computeEnhancedAUs, resetAUCache } from './telemetry/auEnhancer.js';
+import { setAUBaseline } from './telemetry/auProcessor.js';
+import { estimateGaze, resetGazeEstimator, calibrateGazeCenter } from './telemetry/gazeEstimator.js';
+import { useFaceLandmarkerWorker } from './telemetry/useFaceLandmarkerWorker.js';
+import { estimateUpperBodyPosture, resetUpperBodyPostureState, calibrateUpperBodyPostureUpright } from './telemetry/upperBodyPosture.js';
+import { useMoveNet } from './telemetry/useMoveNet.js';
+
+import { buildCalibrationProfile } from './telemetry/microgestureFeatures.js';
+import { requestCameraWithFallback, stopStream } from './telemetry/adaptiveCapture.js';
+import { adaptiveCalibrationSamples, estimateLightingQuality, canCalibrate } from './telemetry/lightingAdapter.js';
+import { runEdgeAIInference } from './telemetry/edgeAiEngine.js';
+import { createEmotionTemporalSmoother } from './telemetry/emotionTemporalSmoother.js';
+import Dashboard from './components/Dashboard.jsx';
+import StickyHeader from './components/StickyHeader.jsx';
+import GameSessionPanel from './components/GameSessionPanel.jsx';
+import UnifiedGameBattery from './assessment/UnifiedGameBattery.jsx';
+import FinalReportPanel from './assessment/FinalReportPanel.jsx';
+import FinalAssessmentHistoryPanel, { downloadStoredSessionDescriptors } from './assessment/FinalAssessmentHistoryPanel.jsx';
+import { buildUnifiedAssessmentSession } from './assessment/assessmentSession.js';
+import { buildTalentProfile } from './assessment/talentProfile.js';
+import { buildFinalAssessmentPayload } from './assessment/finalAssessmentPayload.js';
+import { generateTalentReport } from './assessment/talentReportGenerator.js';
+import { buildLocalReportBundle } from './assessment/reportSubmissionClient.js';
+import {
+  clearFinalAssessmentSessions,
+  loadFinalAssessmentSessions,
+  saveFinalAssessmentSession,
+} from './assessment/finalAssessmentStorage.js';
+import SimpleRTTask from './tasks/SimpleRTTask.jsx';
+import PrecisionTargetingTask from './tasks/PrecisionTargetingTask.jsx';
+import PursuitTrackingTask from './tasks/PursuitTrackingTask.jsx';
+import GoNoGoTask from './tasks/GoNoGoTask.jsx';
+import ColorInterferenceTask from './tasks/ColorInterferenceTask.jsx';
+import VisualSearchTask from './tasks/VisualSearchTask.jsx';
+import { summarizeGameEvents } from './telemetry/gameTelemetry.js';
+import { correlateGameWithMultimodalSignals } from './telemetry/gameCorrelation.js';
+import { buildAssessmentFeatureVectorV2 } from './telemetry/assessmentFeatureVector.js';
+import ReferenceGuide from './components/ReferenceGuide.jsx';
+import TaskImpact from './components/TaskImpact.jsx';
+import { generateReport } from './telemetry/reportGenerator.js';
+import { loadSessionsSafe, clearSessionsSafe } from './telemetry/storageManager.js';
+import { getRecommendedConfig } from './telemetry/deviceCapabilities.js';
+import { sanitizeFaceSampleForAggregation } from './telemetry/samplePrivacy.js';
+import './styles.css';
+import './dashboard.css';
+import './dashboard-ux.css';
+import './dashboard-v2.css';
+import './dashboard-stats.css';
+import './sticky.css';
+import './dashboard-toggles.css';
+import './reference-guide.css';
+import { useLanguage } from './i18n/LanguageContext.jsx';
+
+const DEVICE_CONFIG = getRecommendedConfig();
+const MIN_SAMPLES_FOR_REPORT = 20;
+
+const GAME_ACTIVITY_OPTIONS = Object.freeze([
+  { id: 'simple_rt', label: 'RT Simple', description: 'Tiempo de reacción básico' },
+  { id: 'precision_targeting', label: 'Precisión visomotora', description: 'Fitts Law, precisión y trayectoria' },
+  { id: 'pursuit_tracking', label: 'Seguimiento continuo', description: 'Tracking visuomotor y pérdida de seguimiento' },
+  { id: 'go_nogo', label: 'Go/No-Go', description: 'Inhibición motora y errores de comisión/omisión' },
+  { id: 'color_interference', label: 'Interferencia color-palabra', description: 'Conflicto cognitivo tipo Stroop' },
+  { id: 'visual_search', label: 'Búsqueda visual', description: 'Atención selectiva y eficiencia de búsqueda' },
+]);
+
+function clamp(v, min = 0, max = 1) { return Math.min(max, Math.max(min, Number.isFinite(v) ? v : min)); }
+function formatPercent(v) { return `${Math.round(clamp(v) * 100)}%`; }
+function hasEnoughSamples(t) { return (t?.sampleCount ?? 0) >= MIN_SAMPLES_FOR_REPORT; }
+function appendBounded(list, item, max = 900) { return [...list, item].slice(-max); }
+
+export default function App() {
+  const { t } = useLanguage();
+  const GAME_EN = {
+    simple_rt: { label: 'Simple RT', description: 'Basic reaction time' },
+    precision_targeting: { label: 'Visuomotor precision', description: 'Fitts Law, precision and trajectory' },
+    pursuit_tracking: { label: 'Continuous tracking', description: 'Visuomotor tracking and tracking loss' },
+    go_nogo: { label: 'Go/No-Go', description: 'Motor inhibition and commission/omission errors' },
+    color_interference: { label: 'Color-word interference', description: 'Stroop-type cognitive conflict' },
+    visual_search: { label: 'Visual search', description: 'Selective attention and search efficiency' },
+  };
+  // Error boundary for debugging
+  useEffect(() => {
+    const handler = (e) => { console.error('[App Runtime Error]', e.error?.message || e.message); };
+    window.addEventListener('error', handler);
+    window.addEventListener('unhandledrejection', handler);
+    return () => { window.removeEventListener('error', handler); window.removeEventListener('unhandledrejection', handler); };
+  }, []);
+
+  const videoRef = useRef(null);
+  const faceSamplesRef = useRef([]);
+  const taskEventsRef = useRef([]);
+  const gameEventsRef = useRef([]);
+  const gazeSamplesRef = useRef([]);
+  const postureSamplesRef = useRef([]);
+  const upperBodySamplesRef = useRef([]);
+  const edgeAIResultRef = useRef(null);
+  const sessionStartRef = useRef(0);
+  const calibrationTimerRef = useRef(null);
+  const streamRef = useRef(null);
+  const emotionSmootherRef = useRef(createEmotionTemporalSmoother());
+  const lastMoveNetMetricsKeyRef = useRef('');
+  const completedBatteryRunIdsRef = useRef(new Set());
+
+  const [isCameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const [selectedDeviceId, setSelectedDeviceId] = useState('');
+  const [cameraDevices, setCameraDevices] = useState([]);
+  const [showMesh, setShowMesh] = useState(true);
+  const [selectedGameId, setSelectedGameId] = useState('simple_rt');
+  const [taskActive, setTaskActive] = useState(false);
+  const [taskEventCount, setTaskEventCount] = useState(0);
+  const [gameEventCount, setGameEventCount] = useState(0);
+  const [lastGameSummary, setLastGameSummary] = useState(null);
+  const [baselineEdgeAI, setBaselineEdgeAI] = useState(null);
+  const [isCalibrating, setIsCalibrating] = useState(false);
+  const [calibrationProfile, setCalibrationProfile] = useState(null);
+  const [latestFaceSample, setLatestFaceSample] = useState(null);
+  const [latestLandmarks, setLatestLandmarks] = useState(null);
+  const [latestGaze, setLatestGaze] = useState(null);
+  const [latestPose, setLatestPose] = useState(null);
+  const [moveNetPose, setMoveNetPose] = useState(null);
+  const [lastQuality, setLastQuality] = useState({});
+  const [, setBlendshapeNames] = useState([]);
+  const [, setExportStatus] = useState(null);
+  const [, setShowReport] = useState(false);
+  const [reportContent, setReportContent] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [sessions, setSessions] = useState([]);
+  const [finalAssessmentSessions, setFinalAssessmentSessions] = useState([]);
+  const [finalAssessmentStatus, setFinalAssessmentStatus] = useState(null);
+  const [latestFinalAssessment, setLatestFinalAssessment] = useState(null);
+  const [reportTab, setReportTab] = useState('markdown');
+  const [reportFormat, setReportFormat] = useState('markdown');
+  const [manualCalStatus, setManualCalStatus] = useState(null);
+
+  const recordFaceSample = useCallback((sample, landmarks) => {
+    if (!sample?.blendshapes) return;
+    const safeSample = sanitizeFaceSampleForAggregation(sample);
+    faceSamplesRef.current = [...faceSamplesRef.current, safeSample];
+    setLatestFaceSample(safeSample);
+    setLatestLandmarks(landmarks ?? null);
+    if (landmarks) {
+      try {
+        const gaze = estimateGaze(landmarks);
+        setLatestGaze(gaze);
+        gazeSamplesRef.current = appendBounded(gazeSamplesRef.current, { ...gaze, timestamp: safeSample.timestamp });
+        const posture = estimateUpperBodyPosture(landmarks);
+        setLatestPose(posture);
+        postureSamplesRef.current = appendBounded(postureSamplesRef.current, { ...posture, timestamp: safeSample.timestamp });
+      } catch { /* optional */ }
+    }
+    setLastQuality(safeSample.quality ?? {});
+    if (safeSample.blendshapes) setBlendshapeNames(Object.keys(safeSample.blendshapes).sort());
+  }, []);
+
+  const faceWorker = useFaceLandmarkerWorker({
+    videoRef, active: isCameraActive, onSample: recordFaceSample,
+    fps: DEVICE_CONFIG?.fpsTarget ?? 15,
+    preferredDelegate: DEVICE_CONFIG?.mediapipeDelegate ?? 'GPU',
+  });
+
+  const moveNetSample = useCallback((sample) => {
+    if (sample?.metrics) {
+      const metrics = sample.metrics;
+      const metricsKey = [
+        metrics.confidence,
+        metrics.symmetry,
+        metrics.shoulderAngle,
+        metrics.upperBodyCoverage,
+        metrics.armActivity,
+        metrics.armsVisible,
+      ].map((value) => Number(value ?? 0).toFixed(3)).join('|');
+      if (metricsKey !== lastMoveNetMetricsKeyRef.current) {
+        lastMoveNetMetricsKeyRef.current = metricsKey;
+        setMoveNetPose(metrics);
+      }
+      upperBodySamplesRef.current = appendBounded(upperBodySamplesRef.current, {
+        timestamp: sample.timestamp ?? performance.now(),
+        confidence: metrics.confidence,
+        armActivity: metrics.armActivity,
+        upperBodyCoverage: metrics.upperBodyCoverage,
+      });
+    }
+  }, []);
+
+  const moveNet = useMoveNet({
+    videoRef, active: isCameraActive, fps: 8, onSample: moveNetSample,
+  });
+
+  const refreshCameraDevices = useCallback(async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) { setCameraDevices([]); return []; }
+    const all = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = all.filter((d) => d.kind === 'videoinput');
+    const normalized = normalizeVideoInputDevices(videoDevices);
+    setCameraDevices(normalized);
+    if (!selectedDeviceId && normalized.length > 0) setSelectedDeviceId(normalized[0].deviceId);
+    return normalized;
+  }, [selectedDeviceId]);
+
+  const attachCameraStream = useCallback(async (stream) => {
+    if (streamRef.current) stopStream(streamRef.current);
+    streamRef.current = stream;
+    if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play().catch(() => {}); }
+  }, []);
+
+  const startCamera = useCallback(async () => {
+    setCameraError(null);
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error('getUserMedia no disponible.');
+      const { stream } = await requestCameraWithFallback(selectedDeviceId, 'medium');
+      await attachCameraStream(stream);
+      await refreshCameraDevices().catch(() => []);
+      faceSamplesRef.current = [];
+      gazeSamplesRef.current = [];
+      postureSamplesRef.current = [];
+      upperBodySamplesRef.current = [];
+      lastMoveNetMetricsKeyRef.current = '';
+      resetAUCache();
+      resetGazeEstimator();
+      resetUpperBodyPostureState();
+      emotionSmootherRef.current.reset();
+      sessionStartRef.current = performance.now();
+      setCalibrationProfile(null);
+      setIsCalibrating(false);
+      setShowReport(false);
+      setReportContent(null);
+      setShowReportModal(false);
+      setLatestFinalAssessment(null);
+      setManualCalStatus(null);
+      setLatestFaceSample(null);
+      setLatestLandmarks(null);
+      setBlendshapeNames([]);
+      setCameraActive(true);
+    } catch (err) { setCameraError(err?.message ?? String(err)); setCameraActive(false); }
+  }, [selectedDeviceId, attachCameraStream, refreshCameraDevices]);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) { stopStream(streamRef.current); streamRef.current = null; }
+    setCameraActive(false);
+    setLatestFaceSample(null);
+    setLatestLandmarks(null);
+    setMoveNetPose(null);
+    lastMoveNetMetricsKeyRef.current = '';
+  }, []);
+
+  const handleCalibrateGazeCenter = useCallback(() => {
+    const result = calibrateGazeCenter(latestLandmarks);
+    setManualCalStatus(result.ok ? 'Mirada calibrada al centro' : 'No hay iris/rostro suficiente para calibrar mirada');
+  }, [latestLandmarks]);
+
+  const handleCalibratePostureUpright = useCallback(() => {
+    const result = calibrateUpperBodyPostureUpright(latestLandmarks);
+    setManualCalStatus(result.ok ? 'Postura erguida calibrada' : 'No hay rostro suficiente para calibrar postura');
+  }, [latestLandmarks]);
+
+  const switchCamera = useCallback(async (deviceId) => {
+    setSelectedDeviceId(deviceId);
+    if (!isCameraActive) return;
+    try {
+      const { stream } = await requestCameraWithFallback(deviceId, 'medium');
+      await attachCameraStream(stream);
+      await refreshCameraDevices().catch(() => []);
+    } catch (err) { setCameraError(err?.message ?? String(err)); }
+  }, [isCameraActive, attachCameraStream, refreshCameraDevices]);
+
+  const handleTaskStart = useCallback((event) => {
+    taskEventsRef.current = [...taskEventsRef.current, event];
+    setTaskEventCount((c) => c + 1);
+  }, []);
+  const handleTaskEnd = useCallback((event) => {
+    taskEventsRef.current = [...taskEventsRef.current, event];
+    setTaskEventCount((c) => c + 1);
+  }, []);
+  const handleGameEvent = useCallback((event) => {
+    gameEventsRef.current = [...gameEventsRef.current, event];
+    setGameEventCount((c) => c + 1);
+  }, []);
+  const handleTaskComplete = useCallback((summary) => {
+    setLastGameSummary(summary ?? null);
+  }, []);
+
+  const startTask = useCallback(() => {
+    taskEventsRef.current = [];
+    gameEventsRef.current = [];
+    setTaskEventCount(0);
+    setGameEventCount(0);
+    setLastGameSummary(null);
+    setBaselineEdgeAI(edgeAIResultRef.current ? {
+      composite: edgeAIResultRef.current.composite,
+      channels: edgeAIResultRef.current.channels,
+    } : null);
+    setTaskActive(true);
+    setTimeout(() => {
+      if (typeof document === 'undefined') return;
+      const el = document.querySelector('.task-panel');
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 150);
+  }, []);
+
+  const startCalibration = useCallback(() => {
+    setIsCalibrating(true);
+    setCalibrationProfile(null);
+    const light = estimateLightingQuality(faceSamplesRef.current);
+    const adapt = adaptiveCalibrationSamples(light);
+    const duration = adapt.durationMs;
+    calibrationTimerRef.current = setTimeout(() => {
+      const samples = faceSamplesRef.current;
+      const check = canCalibrate(samples, { minSamples: adapt.minSamples, minPresenceRatio: 0.2, minConfidence: 0.3 });
+      if (!check.eligible) {
+        setCalibrationProfile({ eligible: false, caveats: [check.reason], usableSampleCount: samples.length });
+        setIsCalibrating(false);
+        return;
+      }
+      const actualSamples = samples.filter((s) => s?.quality?.facePresent);
+      const firstTs = actualSamples[0]?.timestamp ?? samples[0]?.timestamp ?? performance.now();
+      const lastTs = samples[samples.length - 1]?.timestamp ?? firstTs + duration;
+      const profile = buildCalibrationProfile(samples, { from: firstTs, to: lastTs });
+      setCalibrationProfile(profile);
+      if (profile.eligible) { setAUBaseline(computeEnhancedAUs(samples)); }
+      setIsCalibrating(false);
+    }, duration);
+  }, []);
+
+  const cancelCalibration = useCallback(() => {
+    if (calibrationTimerRef.current) { clearTimeout(calibrationTimerRef.current); calibrationTimerRef.current = null; }
+    setIsCalibrating(false);
+  }, []);
+
+  useEffect(() => () => { if (calibrationTimerRef.current) clearTimeout(calibrationTimerRef.current); }, []);
+
+  // ─── Telemetry ───
+  const gameSummary = useMemo(() => summarizeGameEvents(gameEventsRef.current), [gameEventCount]);
+  const gameCorrelation = useMemo(() => correlateGameWithMultimodalSignals({
+    gameEvents: gameEventsRef.current,
+    faceSamples: faceSamplesRef.current,
+    pointerSamples: [],
+    gazeSamples: gazeSamplesRef.current,
+    postureSamples: postureSamplesRef.current,
+    upperBodySamples: upperBodySamplesRef.current,
+  }), [gameEventCount, latestFaceSample, latestGaze, latestPose, moveNetPose]);
+
+  const telemetry = useMemo(() => {
+    const allSamples = faceSamplesRef.current;
+    const recentSamples = allSamples.slice(-60);
+    const recentCount = recentSamples.length;
+    const presentSamples = recentSamples.filter((s) => s?.quality?.facePresent);
+    const facePresenceRatio = recentCount ? presentSamples.length / recentCount : 0;
+    const confidences = presentSamples.map((s) => s?.quality?.confidence ?? 0);
+    const meanConfidence = confidences.length ? confidences.reduce((s, v) => s + v, 0) / confidences.length : 0;
+    const fpsEstimate = allSamples.length ? allSamples.length / Math.max(1, (performance.now() - (sessionStartRef.current || performance.now())) / 1000) : 0;
+    const insights = buildGestureInsights(recentSamples);
+    // Override metric proxies with AU-based calculations
+    if (recentSamples.length > 0 && insights.auScores) {
+      const auMetrics = computeInsightsFromAUs(insights.auScores, facePresenceRatio, {
+        gaze: latestGaze,
+        posture: latestPose,
+        upperBody: moveNetPose,
+        task: gameSummary.performance,
+      });
+      Object.assign(insights, auMetrics);
+    }
+    if (recentSamples.length > 0) {
+      const enhanced = computeEnhancedAUs(recentSamples);
+      insights.enhancedAUs = enhanced;
+    }
+    return { sampleCount: allSamples.length, recentCount, facePresenceRatio, meanConfidence, fpsEstimate, insights };
+  }, [latestFaceSample, latestGaze, latestPose, moveNetPose, gameSummary]);
+
+  // ─── Edge AI Inference (direct, no worker) ───
+  const edgeAIResult = useMemo(() => {
+    const samples = faceSamplesRef.current;
+    if (!samples.length || samples.length < 2) return null;
+    try {
+      const result = runEdgeAIInference({
+        faceSamples: samples,
+        pointerSamples: [],
+        taskEvents: taskEventsRef.current,
+        calibrationProfile,
+        runtime: { delegate: faceWorker.delegate ?? 'CPU' },
+        latestGaze,
+        latestPosture: latestPose,
+        moveNetPose,
+        gameSummary,
+        gameCorrelation,
+      });
+      return { ...result, emotions: emotionSmootherRef.current.smooth(result.emotions, { timestamp: latestFaceSample?.timestamp ?? null }) };
+    } catch (e) { console.error('Edge AI inference failed:', e); return null; }
+  }, [latestFaceSample, calibrationProfile, faceWorker.delegate, taskEventCount, gameEventCount, faceSamplesRef.current?.length, latestGaze, latestPose, moveNetPose, gameSummary, gameCorrelation]);
+
+  useEffect(() => {
+    edgeAIResultRef.current = edgeAIResult;
+  }, [edgeAIResult]);
+
+  // ─── Pipeline Worker (future: optional, fallback to direct) ───
+  // const pipeline = usePipelineWorker({ ... });
+  // Currently using direct inference for stability; pipeline worker
+  // can be re-enabled once structured clone + transferables are solved.
+
+  const edgeChannels = edgeAIResult?.calibratedChannels ?? edgeAIResult?.channels ?? {};
+  const edgeConfidence = edgeAIResult?.confidence;
+  const edgeComposite = edgeAIResult?.composite;
+  const selectedGame = GAME_ACTIVITY_OPTIONS.find((option) => option.id === selectedGameId) ?? GAME_ACTIVITY_OPTIONS[0];
+  const assessmentFeatureVectorV2 = useMemo(() => (
+    gameSummary?.eventCount > 0
+      ? buildAssessmentFeatureVectorV2({
+        gameSummary,
+        gameCorrelation,
+        edgeModelOutput: edgeAIResult,
+        runtime: { delegate: faceWorker.delegate ?? 'CPU' },
+      })
+      : null
+  ), [gameSummary, gameCorrelation, edgeAIResult, faceWorker.delegate]);
+
+  const handleGenerateReport = useCallback((format = 'markdown') => {
+    if (!hasEnoughSamples(telemetry)) return;
+    const durationMs = performance.now() - (sessionStartRef.current ?? performance.now());
+    const report = generateReport({
+      format, telemetry, edgeAIResult, calibrationProfile,
+      gameSummary,
+      gameCorrelation,
+      assessmentFeatureVector: assessmentFeatureVectorV2,
+      runtime: { delegate: faceWorker.delegate ?? 'CPU' },
+      durationMs, sessionId: `session-${Date.now()}`,
+    });
+    setReportContent(report);
+    setReportFormat(format);
+    setShowReportModal(true);
+  }, [telemetry, edgeAIResult, calibrationProfile, faceWorker.delegate, gameSummary, gameCorrelation, assessmentFeatureVectorV2]);
+
+  const handleExportReport = useCallback(() => {
+    if (!reportContent) return;
+    const ext = reportFormat === 'markdown' ? 'md' : reportFormat === 'html' ? 'html' : 'json';
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `krumm-report-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.${ext}`;
+    a.click(); URL.revokeObjectURL(url);
+    setExportStatus('exported');
+    setTimeout(() => setExportStatus(null), 3000);
+  }, [reportContent, reportFormat]);
+
+  const refreshFinalAssessmentSessions = useCallback(async () => {
+    try {
+      const records = await loadFinalAssessmentSessions();
+      setFinalAssessmentSessions(records);
+    } catch {
+      setFinalAssessmentSessions([]);
+    }
+  }, []);
+
+  const handleClearFinalAssessmentSessions = useCallback(async () => {
+    await clearFinalAssessmentSessions().catch(() => {});
+    setFinalAssessmentSessions([]);
+    setFinalAssessmentStatus(t('Historial final limpiado localmente.','Final history cleared locally.'));
+  }, []);
+
+  const handleDownloadFinalAssessmentSession = useCallback((_, descriptors) => {
+    downloadStoredSessionDescriptors(descriptors);
+  }, []);
+
+  const handleDownloadFinalReportFile = useCallback((descriptor) => {
+    downloadStoredSessionDescriptors([descriptor]);
+  }, []);
+
+  const handleDownloadFinalReportAll = useCallback((descriptors) => {
+    downloadStoredSessionDescriptors(descriptors);
+  }, []);
+
+  const handleBatteryComplete = useCallback(async (batterySession) => {
+    const runId = batterySession?.runId;
+    if (!runId || completedBatteryRunIdsRef.current.has(runId)) return;
+    completedBatteryRunIdsRef.current.add(runId);
+    setFinalAssessmentStatus(t('Generando y guardando evaluación final local...','Generating and saving local final assessment...'));
+    try {
+      const assessmentSession = buildUnifiedAssessmentSession({
+        batterySession,
+        generatedAt: new Date().toISOString(),
+        consent: { camera: isCameraActive, aggregateExport: true, humanReviewOnly: true },
+        telemetry,
+        gameSummary,
+        gameCorrelation,
+        edgeAIResult,
+        featureVectorV2: assessmentFeatureVectorV2,
+      });
+      const talentProfile = buildTalentProfile({ assessmentSession });
+      const payload = buildFinalAssessmentPayload({
+        assessmentSession,
+        talentProfile,
+        participant: { aliasHash: null, declaredRoleTarget: null },
+        generatedAt: new Date().toISOString(),
+      });
+      const reports = ['markdown', 'html', 'json'].map((format) => generateTalentReport({ payload, format }));
+      const bundle = buildLocalReportBundle({ payload, reports, generatedAt: new Date().toISOString() });
+      setLatestFinalAssessment({ payload, reports, bundle, record: null });
+      const record = await saveFinalAssessmentSession({ payload, bundle });
+      const records = await loadFinalAssessmentSessions();
+      setLatestFinalAssessment({ payload, reports, bundle, record });
+      setFinalAssessmentSessions(records);
+      setFinalAssessmentStatus(`${t('Evaluación final','Final assessment')} ${record.runId} ${t('guardada localmente','saved locally')} (${record.bundle?.manifest?.fileCount ?? 0} ${t('archivos','files')}).`);
+    } catch (error) {
+      completedBatteryRunIdsRef.current.delete(runId);
+      setFinalAssessmentStatus(`${t('No se pudo guardar la evaluación final','Could not save the final assessment')}: ${error?.message ?? String(error)}`);
+    }
+  }, [assessmentFeatureVectorV2, edgeAIResult, gameCorrelation, gameSummary, isCameraActive, telemetry]);
+
+  // ─── Derived values ───
+  const insightItems = [
+    { id: 'tension', label: t('Tensión','Tension'), value: telemetry.insights?.tension ?? 0 },
+    { id: 'attention', label: t('Atención','Attention'), value: telemetry.insights?.attention ?? 0 },
+    { id: 'surprise', label: t('Sorpresa','Surprise'), value: telemetry.insights?.surprise ?? 0 },
+    { id: 'fatigue', label: t('Fatiga','Fatigue'), value: telemetry.insights?.fatigue ?? 0 },
+    { id: 'stress', label: t('Estrés','Stress'), value: telemetry.insights?.stress ?? 0 },
+    { id: 'calmness', label: t('Calma','Calm'), value: telemetry.insights?.calmness ?? 0 },
+    { id: 'engagement', label: t('Engagement','Engagement'), value: telemetry.insights?.engagement ?? 0 },
+    { id: 'boredom', label: t('Aburrimiento','Boredom'), value: telemetry.insights?.boredom ?? 0 },
+    { id: 'confusion', label: t('Confusión','Confusion'), value: telemetry.insights?.confusion ?? 0 },
+    { id: 'cognitive', label: t('Carga cognitiva','Cognitive load'), value: telemetry.insights?.cognitiveLoad ?? 0 },
+    { id: 'valence', label: t('Valencia','Valence'), value: telemetry.insights?.valence ?? 0 },
+  ];
+  const auEntries = Object.entries(telemetry.insights?.auScores ?? {}).sort((a, b) => (b[1]?.intensity ?? 0) - (a[1]?.intensity ?? 0));
+  const activeAUCount = auEntries.filter(([, au]) => au.intensity > 0.03).length;
+  const signalReadiness = useMemo(() => ({
+    telemetry,
+    faceWorker,
+    latestGaze,
+    latestPose,
+    moveNet,
+    moveNetPose,
+    activeAUCount,
+  }), [telemetry, faceWorker, latestGaze, latestPose, moveNet, moveNetPose, activeAUCount]);
+  const calStatusLabel = isCalibrating ? t('Calibrando...','Calibrating...')
+    : !calibrationProfile ? t('Sin calibrar','Not calibrated')
+    : calibrationProfile.eligible ? t('Baseline válido','Valid baseline') : t('Baseline no elegible','Baseline not eligible');
+  const statusClassName = isCalibrating ? 'calibrating'
+    : calibrationProfile?.eligible ? 'ready'
+    : calibrationProfile && !calibrationProfile.eligible ? 'error' : '';
+
+  useEffect(() => {
+    loadSessionsSafe().then(setSessions).catch(() => setSessions([]));
+    refreshFinalAssessmentSessions();
+  }, [refreshFinalAssessmentSessions]);
+
+  return (
+    <div className="app-shell">
+      <header className="app-header">
+        <h1>{t('KRUMM Edge Fusion PoC','KRUMM Edge Fusion PoC')}</h1>
+        <p className="subtitle">{t('Telemetría facial · AUs (FACS) · Edge AI · Tareas cognitivas','Facial telemetry · AUs (FACS) · Edge AI · Cognitive tasks')}</p>
+      </header>
+
+      {(isCameraActive) && (
+        <StickyHeader
+          edgeComposite={edgeComposite}
+          edgeConfidence={edgeConfidence}
+          auEntries={auEntries}
+          topChannels={Object.entries(edgeChannels).sort((a, b) => b[1].score - a[1].score).slice(0, 1)}
+          calibrationProfile={calibrationProfile}
+          calStatusLabel={calStatusLabel}
+          telemetry={telemetry}
+          faceWorker={faceWorker}
+          emotions={edgeAIResult?.emotions}
+          captureQuality={edgeAIResult?.confidence?.captureQuality}
+        />
+      )}
+
+      <section className="hero-card">
+        <div className="hero-controls">
+          <div className="camera-controls">
+            {!isCameraActive ? (
+              <button type="button" className="primary" onClick={startCamera}>{t('Iniciar cámara','Start camera')}</button>
+            ) : (
+              <button type="button" className="secondary" onClick={stopCamera}>{t('Detener cámara','Stop camera')}</button>
+            )}
+            <select value={selectedDeviceId} onChange={(e) => switchCamera(e.target.value)} aria-label={t('Seleccionar cámara','Select camera')}>
+              <option value="">{t('Cámara por defecto','Default camera')}</option>
+              {cameraDevices.map((d) => (
+                <option key={d.deviceId} value={d.deviceId}>{d.label}</option>
+              ))}
+            </select>
+            <button type="button" onClick={startCalibration} disabled={!isCameraActive || isCalibrating} className={isCalibrating ? 'secondary' : 'primary'}>
+              {isCalibrating ? t('Calibrando...','Calibrating...') : t('Calibrar baseline','Calibrate baseline')}
+            </button>
+            <button type="button" onClick={cancelCalibration} disabled={!isCalibrating} className="secondary">{t('Cancelar','Cancel')}</button>
+          </div>
+          <div className="task-controls">
+            <div style={{display:'grid',gap:'6px',minWidth:'260px'}}>
+              <strong>{t('Actividades gamificadas','Gamified activities')}</strong>
+              <label className="caption" htmlFor="game-activity-select">{t('Actividad gamificada','Gamified activity')}</label>
+              <select id="game-activity-select" value={selectedGameId} onChange={(e) => setSelectedGameId(e.target.value)} disabled={taskActive} aria-label={t('Actividad gamificada','Gamified activity')}>
+                {GAME_ACTIVITY_OPTIONS.map((option) => <option key={option.id} value={option.id}>{t(option.label, GAME_EN[option.id].label)}</option>)}
+              </select>
+              <span className="caption">{t('Fases A-M integradas · actividades A-I · ','A-M phases integrated · activities A-I · ')}{t(selectedGame.description, GAME_EN[selectedGame.id].description)}</span>
+            </div>
+            {!taskActive ? (
+              <button type="button" onClick={startTask} className="primary">
+                {t('▶ Iniciar actividad','▶ Start activity')}
+              </button>
+            ) : (
+              <button type="button" onClick={() => setTaskActive(false)} className="secondary">
+                {t('Detener actividad','Stop activity')}
+              </button>
+            )}
+            <button type="button" onClick={() => handleGenerateReport('markdown')} disabled={!hasEnoughSamples(telemetry)} className="secondary">
+              {t('📝 Reporte MD','📝 MD Report')}
+            </button>
+          </div>
+        </div>
+        {cameraError && <p className="error">{cameraError}</p>}
+        {faceWorker.error && <p className="error">{t('Error de MediaPipe: ','MediaPipe error: ')}{faceWorker.error}</p>}
+      </section>
+
+      <UnifiedGameBattery
+        cameraActive={isCameraActive}
+        onRequestCamera={startCamera}
+        onGameEvent={handleGameEvent}
+        onBlockComplete={({ summary }) => handleTaskComplete(summary)}
+        onBatteryComplete={handleBatteryComplete}
+        signalReadiness={signalReadiness}
+      />
+
+      {latestFinalAssessment && (
+        <FinalReportPanel
+          payload={latestFinalAssessment.payload}
+          reports={latestFinalAssessment.reports}
+          bundle={latestFinalAssessment.bundle}
+          storageRecord={latestFinalAssessment.record}
+          onDownloadFile={handleDownloadFinalReportFile}
+          onDownloadAll={handleDownloadFinalReportAll}
+        />
+      )}
+
+      {isCameraActive ? (
+        <Dashboard
+          videoRef={videoRef} isCameraActive={isCameraActive} showMesh={showMesh} setShowMesh={setShowMesh}
+          telemetry={telemetry} faceWorker={faceWorker} statusClassName={statusClassName} lastQuality={lastQuality}
+          calibrationProfile={calibrationProfile} calStatusLabel={calStatusLabel}
+          insightItems={insightItems} auEntries={auEntries} activeAUCount={activeAUCount}
+          edgeAIResult={edgeAIResult} edgeChannels={edgeChannels} edgeConfidence={edgeConfidence} edgeComposite={edgeComposite}
+          latestLandmarks={latestLandmarks} latestGaze={latestGaze} latestPose={latestPose} moveNetPose={moveNetPose} moveNet={moveNet} auRegionSummary={telemetry.insights?.auRegionSummary}
+          gameSummary={gameSummary}
+          gameCorrelation={gameCorrelation}
+          DEVICE_CONFIG={DEVICE_CONFIG}
+          onCalibrateGazeCenter={handleCalibrateGazeCenter}
+          onCalibratePostureUpright={handleCalibratePostureUpright}
+          manualCalStatus={manualCalStatus}
+        />
+      ) : (
+        <section className="grid-two">
+          <article className="panel">
+            <div className="panel-heading"><h2>{t('1. Cámara y señal','1. Camera and signal')}</h2></div>
+            <div className="camera-container"><video ref={videoRef} className="camera" muted playsInline aria-label={t('Vista previa local de cámara','Local camera preview')} /></div>
+            <p className="caption">{t('Inicia la cámara para comenzar la telemetría.','Start the camera to begin telemetry.')}</p>
+          </article>
+          <article className="panel">
+            <p className="caption">{t('Inicia la cámara para ver indicadores de microgestos.','Start the camera to see microgesture indicators.')}</p>
+          </article>
+        </section>
+      )}
+
+      {taskActive && (
+        <section className="panel task-panel" style={{ scrollMarginTop: '80px' }}>
+          <div className="panel-heading">
+            <div>
+              <h2>{t('🎮 ','🎮 ')}{selectedGame.label}</h2>
+              <p className="caption">{t('Eventos de juego: ','Game events: ')}{gameEventCount}{t(' · Eventos legacy: ',' · Legacy events: ')}{taskEventCount}</p>
+            </div>
+          </div>
+          {selectedGameId === 'simple_rt' && (
+            <SimpleRTTask
+              active={taskActive}
+              onTrialStart={handleTaskStart}
+              onTrialEnd={handleTaskEnd}
+              onGameEvent={handleGameEvent}
+              onComplete={handleTaskComplete}
+              width={600} height={400}
+            />
+          )}
+          {selectedGameId === 'precision_targeting' && (
+            <PrecisionTargetingTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete} width={600} height={400}/>
+          )}
+          {selectedGameId === 'pursuit_tracking' && (
+            <PursuitTrackingTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete} width={600} height={400} durationMs={6000}/>
+          )}
+          {selectedGameId === 'go_nogo' && (
+            <GoNoGoTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete}/>
+          )}
+          {selectedGameId === 'color_interference' && (
+            <ColorInterferenceTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete}/>
+          )}
+          {selectedGameId === 'visual_search' && (
+            <VisualSearchTask active={taskActive} onGameEvent={handleGameEvent} onComplete={handleTaskComplete} width={600} height={400}/>
+          )}
+          {lastGameSummary && (
+            <p className="caption">{t('Último resultado: ','Last result: ')}{Math.round((lastGameSummary.accuracy ?? lastGameSummary.meanScore ?? lastGameSummary.score ?? 0) * 100)}%</p>
+          )}
+          <GameSessionPanel
+            selectedGame={selectedGame}
+            taskActive={taskActive}
+            gameSummary={gameSummary}
+            gameCorrelation={gameCorrelation}
+            edgeAIResult={edgeAIResult}
+          />
+          <TaskImpact edgeAIResult={edgeAIResult} taskActive={taskActive} gameSummary={gameSummary} baselineEdgeAI={baselineEdgeAI} />
+        </section>
+      )}
+
+      {sessions.length > 0 && (
+        <section className="panel sessions-panel">
+          <div className="panel-heading">
+            <div><h2>{t('4. Sesiones guardadas','4. Saved sessions')}</h2><p className="caption">{t('Historial de mediciones almacenadas localmente.','History of locally stored measurements.')}</p></div>
+            <button type="button" className="secondary" onClick={() => { clearSessionsSafe(); setSessions([]); }} style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}>{t('Limpiar historial','Clear history')}</button>
+          </div>
+          <div className="sessions-list">
+            {sessions.map((session) => (
+              <div className="session-row" key={session.id}>
+                <div className="session-meta">
+                  <span className="session-date">{new Date(session.savedAt).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })}</span>
+                  <span className="session-duration">{session.durationMs ? `${(session.durationMs / 1000).toFixed(1)}s` : '—'}</span>
+                  <span className="session-face-presence">{t('Rostro','Face')}: {formatPercent(session.facePresenceRatio)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <FinalAssessmentHistoryPanel
+        sessions={finalAssessmentSessions}
+        status={finalAssessmentStatus}
+        onRefresh={refreshFinalAssessmentSessions}
+        onClear={handleClearFinalAssessmentSessions}
+        onDownloadSession={handleDownloadFinalAssessmentSession}
+      />
+
+      {showReportModal && reportContent && (
+        <div className="modal-overlay" onClick={() => setShowReportModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{t('Reporte generado','Generated report')}</h2>
+              <button type="button" className="secondary" onClick={() => setShowReportModal(false)}>✕</button>
+            </div>
+            <div className="modal-tabs">
+              {['markdown', 'html', 'json'].map((fmt) => (
+                <button key={fmt} className={reportTab === fmt ? 'active' : ''} onClick={() => { setReportTab(fmt); handleGenerateReport(fmt); }}>{fmt.toUpperCase()}</button>
+              ))}
+            </div>
+            <pre className="report-preview"><code>{reportContent}</code></pre>
+            <div className="modal-actions">
+              <button type="button" className="primary" onClick={handleExportReport}>{t('Descargar','Download')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ReferenceGuide />
+    </div>
+  );
+}

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.vite/
+# AWS installer binaries
+awscliv2.zip
+session-manager-plugin.deb

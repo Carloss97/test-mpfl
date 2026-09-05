@@ -1,0 +1,64 @@
+/* Collapsible sections */
+.dash-section {
+  margin-bottom: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.02);
+  overflow: hidden;
+}
+.dash-section-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  transition: background 150ms;
+}
+.dash-section-hdr:hover { background: rgba(255,255,255,0.04); }
+.dash-section-arrow { font-size: 0.65rem; color: #4dd4ac; min-width: 14px; }
+.dash-section-title { font-size: 0.78rem; font-weight: 800; color: #dff8ff; }
+.dash-section-badge {
+  margin-left: auto;
+  font-size: 0.6rem;
+  color: #9fb0c2;
+  background: rgba(255,255,255,0.06);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.dash-section-body { padding: 0 16px 14px; }
+
+/* Mesh info footer - clean and readable */
+.mesh-info-footer {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mesh-emotion-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.mesh-au-line, .mesh-mg-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.mesh-au-chip {
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 2px 7px;
+  font-size: 0.6rem;
+  color: #9fb0c2;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.mesh-au-chip.active {
+  border-color: rgba(77,212,172,0.3);
+  color: #7df0cb;
+  background: rgba(77,212,172,0.06);
+}

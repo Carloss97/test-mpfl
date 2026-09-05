@@ -1,0 +1,147 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  KRUMM M2 backend aggregate-only — DynamoDB (sessions + audit_log) + Lambda
+  (Node 20) + API Gateway HTTP API. Última frontera de privacidad server-side.
+
+Parameters:
+  Environment:
+    Type: String
+    Default: staging
+    AllowedValues: [staging, production]
+  RetentionDays:
+    Type: Number
+    Default: 30
+    Description: Días de retención antes del TTL (EventBridge Scheduler refuerza).
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Handler: index.handler
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        SESSIONS_TABLE: !Ref SessionsTable
+        AUDIT_LOG_TABLE: !Ref AuditLogTable
+        KRUMM_RETENTION_DAYS: !Ref RetentionDays
+
+Resources:
+  # --- DynamoDB: sessions (aggregate-only, TTL 30d) ---
+  SessionsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'krumm-${Environment}-sessions'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      AttributeDefinitions:
+        - AttributeName: sessionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: sessionId
+          KeyType: HASH
+
+  # --- DynamoDB: audit_log (append-only por API; acceso solo via Lambda) ---
+  AuditLogTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'krumm-${Environment}-audit-log'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      AttributeDefinitions:
+        - AttributeName: auditId
+          AttributeType: S
+        - AttributeName: sessionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: auditId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: sessionId-index
+          KeySchema:
+            - AttributeName: sessionId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  # --- Lambda rol mínimo privilegio (solo estas dos tablas) ---
+  SessionsFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: KrummSessionsDynamoDb
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                Resource:
+                  - !Sub '${SessionsTable.Arn}'
+                  - !Sub '${AuditLogTable.Arn}'
+                  - !Sub '${AuditLogTable.Arn}/index/sessionId-index'
+
+  # --- Lambda ---
+  SessionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'krumm-${Environment}-sessions'
+      CodeUri: ./dist/
+      Role: !GetAtt SessionsFunctionRole.Arn
+      Events:
+        Sessions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SessionsApi
+            Path: /sessions
+            Method: POST
+        SessionItem:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SessionsApi
+            Path: /sessions/{id}
+            Method: ANY
+
+  # --- API Gateway HTTP ---
+  SessionsApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Environment
+      CorsConfiguration:
+        AllowMethods: [GET, POST, DELETE, OPTIONS]
+        AllowOrigins: ['*']
+        AllowHeaders: ['content-type', 'authorization']
+
+Outputs:
+  SessionsApiEndpoint:
+    Description: Endpoint base de la API /sessions
+    Value: !Sub 'https://${SessionsApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+  SessionsTableName:
+    Value: !Ref SessionsTable
+  AuditLogTableName:
+    Value: !Ref AuditLogTable

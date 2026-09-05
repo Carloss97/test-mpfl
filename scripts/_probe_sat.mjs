@@ -1,0 +1,4 @@
+import { estimateUpperBodyPosture, resetUpperBodyPostureState, calibrateUpperBodyPostureUpright } from '../src/telemetry/upperBodyPosture.js';
+const makeFace=(s)=>{const L=new Float32Array(478*3);const put=(i,x,y,z=0)=>{L[i*3]=x;L[i*3+1]=y;L[i*3+2]=z;};put(234,0.30,0.50);put(454,0.70,0.50);put(10,0.50,0.30);put(152,0.50,0.30+0.40*s);put(123,0.38,0.48);put(352,0.62,0.48);put(1,0.50,0.43);for(const idx of [0,17,37,39,40,61,146,91,181,84,314,405,321,375,291,308,324,318,402,317,14,87,178,88,95])put(idx,0.45+(idx%7)*0.01,0.55+(idx%5)*0.01);return L;};
+resetUpperBodyPostureState();calibrateUpperBodyPostureUpright(makeFace(1.15));
+for(const s of [0.9,0.7,0.5,0.3,0.15]){const p=estimateUpperBodyPosture(makeFace(s));console.log('s='+s,'hf='+p.headForward.toFixed(3),'stab='+p.stability.toFixed(4),'score='+p.postureScore.toFixed(4));}

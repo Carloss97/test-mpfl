@@ -1,0 +1,330 @@
+import { describe, expect, it } from 'vitest';
+import { validateFinalAssessmentPayload } from '../assessment/finalAssessmentPayload.js';
+import { validateAssessmentSessionPrivacy } from '../assessment/assessmentSession.js';
+import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.js';
+import { POSTULATION_DEMO_BATTERY_MODES } from './postulationDemoConfig.js';
+
+const completedDemo = Object.freeze({
+  completedCount: 2,
+  totalCount: 2,
+  blocks: [
+    {
+      block: { gameId: 'precision_targeting', label: 'Precisión visomotora', skill: 'visuomotor_precision', trialCount: 4 },
+      summary: {
+        completedTrialCount: 4,
+        trialCount: 4,
+        accuracy: 0.9,
+        score: 0.82,
+        meanReactionTimeMs: 520,
+        trials: [{ target: { x: 120, y: 80 }, click: { x: 119, y: 81 } }],
+      },
+    },
+    {
+      block: { gameId: 'go_nogo', label: 'Control inhibitorio', skill: 'inhibitory_control', trialCount: 8 },
+      summary: { completedTrialCount: 8, trialCount: 8, accuracy: 0.75, score: 0.74, meanReactionTimeMs: 610 },
+    },
+  ],
+});
+
+const gameEvents = Object.freeze([
+  { type: 'game_event_v1', eventType: 'game_start', gameId: 'precision_targeting', timestamp: 100 },
+  { type: 'game_event_v1', eventType: 'response', gameId: 'precision_targeting', trialId: 'p1', timestamp: 300, response: { correct: true, reactionTimeMs: 520, score: 0.82 } },
+  { type: 'game_event_v1', eventType: 'response', gameId: 'go_nogo', trialId: 'g1', timestamp: 900, response: { correct: false, outcome: 'commission_error', reactionTimeMs: 610, score: 0.4, inhibition: { responseRequired: false } } },
+]);
+
+const dv2GameEvents = Object.freeze([
+  { type: 'game_event_v1', eventType: 'stimulus_shown', gameId: 'precision_targeting', trialId: 'p1', targetId: 'target-1', timestamp: 1000, stimulus: { kind: 'fitts_target_after_start_pad', payload: { items: [{ id: 'raw-item' }], target: { x: 100, y: 80 }, origin: { x: 20, y: 20 } } } },
+  { type: 'game_event_v1', eventType: 'response', gameId: 'precision_targeting', trialId: 'p1', targetId: 'target-1', timestamp: 1320, response: { correct: true, outcome: 'hit', reactionTimeMs: 320, score: 0.9, fitts: { indexDifficulty: 3.1, throughput: 4.2 }, pointerSummary: { pathEfficiency: 0.82, overshootCount: 0, correctionCount: 1, meanJerkPxPerMs3: 0.004 } } },
+  { type: 'game_event_v1', eventType: 'stimulus_shown', gameId: 'go_nogo', trialId: 'g1', targetId: 'cue-1', timestamp: 1800, stimulus: { kind: 'go_nogo_cue', payload: { cue: 'NO-GO', responseRequired: false } } },
+  { type: 'game_event_v1', eventType: 'response', gameId: 'go_nogo', trialId: 'g1', targetId: 'cue-1', timestamp: 2100, response: { correct: false, outcome: 'commission_error', reactionTimeMs: 300, score: 0, inhibition: { responseRequired: false } } },
+]);
+
+const dv2SignalContext = Object.freeze({
+  faceSamples: [
+    { timestamp: 820, quality: { facePresent: true, confidence: 0.78 }, blendshapes: { browDownLeft: 0.03, browDownRight: 0.03, eyeBlinkLeft: 0.02, eyeBlinkRight: 0.02 } },
+    { timestamp: 1040, quality: { facePresent: true, confidence: 0.84 }, blendshapes: { browDownLeft: 0.16, browDownRight: 0.17, eyeBlinkLeft: 0.03, eyeBlinkRight: 0.03 } },
+    { timestamp: 1240, quality: { facePresent: true, confidence: 0.87 }, blendshapes: { browDownLeft: 0.18, browDownRight: 0.2, eyeBlinkLeft: 0.04, eyeBlinkRight: 0.04 } },
+    { timestamp: 1840, quality: { facePresent: true, confidence: 0.82 }, blendshapes: { browDownLeft: 0.09, browDownRight: 0.1, eyeBlinkLeft: 0.03, eyeBlinkRight: 0.03 } },
+    { timestamp: 2080, quality: { facePresent: true, confidence: 0.8 }, blendshapes: { browDownLeft: 0.2, browDownRight: 0.21, eyeBlinkLeft: 0.05, eyeBlinkRight: 0.05 } },
+  ],
+  gazeSamples: [
+    { timestamp: 900, lookingAtScreen: true, confidence: 0.86, screenX: 0.5, screenY: 0.5 },
+    { timestamp: 1200, lookingAtScreen: true, confidence: 0.82, screenX: 0.53, screenY: 0.48 },
+    { timestamp: 2000, lookingAtScreen: false, confidence: 0.44, screenX: 0.82, screenY: 0.22 },
+  ],
+  postureSamples: [
+    { timestamp: 900, postureScore: 0.88, headForward: 0.08, confidence: 0.8 },
+    { timestamp: 1200, postureScore: 0.72, headForward: 0.28, confidence: 0.8 },
+    { timestamp: 2000, postureScore: 0.68, headForward: 0.32, confidence: 0.75 },
+  ],
+  upperBodySamples: [
+    { timestamp: 900, confidence: 0.78, armActivity: 0.12, upperBodyCoverage: 0.62 },
+    { timestamp: 1220, confidence: 0.82, armActivity: 0.38, upperBodyCoverage: 0.8 },
+    { timestamp: 2020, confidence: 0.76, armActivity: 0.31, upperBodyCoverage: 0.74 },
+  ],
+  latestGaze: { lookingAtScreen: true, confidence: 0.82, screenX: 0.53, screenY: 0.48 },
+  latestPosture: { postureScore: 0.72, headForward: 0.28, confidence: 0.8 },
+  moveNetPose: { confidence: 0.82, symmetry: 0.9, upperBodyCoverage: 0.8, armActivity: 0.38, visibleUpperBodyKeypoints: 8, armsVisible: 2 },
+  runtime: { delegate: 'GPU' },
+});
+
+describe('postulationDemoSessionBuilder', () => {
+  it('builds privacy-safe final artifacts from completed demo blocks and aggregate signals', () => {
+    const artifacts = buildPostulationDemoArtifacts({
+      completedDemo,
+      gameEvents,
+      signalSnapshot: {
+        sampleCount: 24,
+        facePresenceRatio: 0.82,
+        meanConfidence: 0.76,
+        caveats: ['MoveNet sin hombros visibles'],
+      },
+      generatedAt: '2026-07-09T17:30:00.000Z',
+      runId: 'postulation-demo-test',
+    });
+
+    expect(artifacts.schemaVersion).toBe('krumm_postulation_demo_artifacts_v1');
+    expect(artifacts.assessmentSession.schemaVersion).toBe('krumm_unified_assessment_session_v1');
+    expect(artifacts.assessmentSession.mode).toBe('postulation_demo');
+    expect(artifacts.assessmentSession.blocks).toHaveLength(2);
+    expect(artifacts.assessmentSession.blocks[0].result).not.toHaveProperty('trials');
+    expect(artifacts.payload.behavioral.gameResults[0].result).not.toHaveProperty('trials');
+    expect(artifacts.assessmentSession.gameSummary.performance.completedTrialCount).toBeGreaterThan(0);
+    expect(artifacts.talentProfile.schemaVersion).toBe('krumm_talent_profile_v2');
+    expect(validateFinalAssessmentPayload(artifacts.payload).ok).toBe(true);
+    expect(validateAssessmentSessionPrivacy(artifacts.assessmentSession).ok).toBe(true);
+    expect(artifacts.reports.map((report) => report.format)).toEqual(['markdown', 'html', 'json']);
+    expect(artifacts.bundle.schemaVersion).toBe('krumm_report_delivery_bundle_v1');
+    expect(artifacts.bundle.manifest.fileCount).toBe(3);
+  });
+
+  it('does not invent camera quality when no camera snapshot exists', () => {
+    const artifacts = buildPostulationDemoArtifacts({
+      completedDemo,
+      gameEvents: [],
+      signalSnapshot: null,
+      cameraConsent: true,
+      generatedAt: '2026-07-09T17:31:00.000Z',
+      runId: 'postulation-demo-no-camera',
+    });
+
+    expect(artifacts.assessmentSession.qualitySummary.sampleCount).toBe(0);
+    expect(artifacts.assessmentSession.consent.camera).toBe(true);
+    expect(artifacts.assessmentSession.qualitySummary.facePresenceRatio).toBe(0);
+    expect(artifacts.assessmentSession.qualitySummary.caveats).toEqual(expect.arrayContaining(['low_sample_count', 'low_face_presence', 'low_face_confidence']));
+    expect(artifacts.payload.validation.ok).toBe(true);
+    expect(artifacts.assessmentSession.edgeAI.channels.visualAttention.score).toBe(50);
+    expect(artifacts.assessmentSession.edgeAI.channels.stressResponse.score).toBe(50);
+    expect(artifacts.assessmentSession.edgeAI.channels.fatigueIndex.score).toBe(50);
+    expect(artifacts.assessmentSession.edgeAI.caveats).toContain('biometric_channels_not_inferred_without_signal_context');
+    const serializedSafePayloads = JSON.stringify({
+      assessmentSession: artifacts.assessmentSession,
+      payload: artifacts.payload,
+      manifest: artifacts.bundle.manifest,
+    });
+    for (const forbiddenKey of ['land' + 'marks', 'face' + 'Samples', 'pointer' + 'Samples', 'raw' + 'GameEvents']) {
+      expect(serializedSafePayloads).not.toContain(forbiddenKey);
+    }
+  });
+
+  it('Dv2 builds route-specific correlation aggregate and assessment_feature_vector_v2 without exporting raw windows', () => {
+    const artifacts = buildPostulationDemoArtifacts({
+      completedDemo,
+      gameEvents: dv2GameEvents,
+      signalSnapshot: {
+        sampleCount: 42,
+        facePresenceRatio: 0.86,
+        meanConfidence: 0.81,
+        caveats: [],
+      },
+      signalContext: dv2SignalContext,
+      generatedAt: '2026-07-09T17:32:00.000Z',
+      runId: 'postulation-demo-dv2',
+    });
+
+    expect(artifacts.assessmentSession.gameCorrelation).toMatchObject({
+      schemaVersion: 'game_signal_correlation_v3',
+      aggregate: {
+        trialCount: 2,
+        completedTrialCount: 2,
+        byGameId: { precision_targeting: 1, go_nogo: 1 },
+      },
+    });
+    expect(artifacts.assessmentSession.qualitySummary.correlatedTrialCount).toBe(2);
+    expect(artifacts.assessmentSession.qualitySummary.caveats).not.toContain('missing_game_correlation');
+    expect(artifacts.assessmentSession.featureVectorV2).toMatchObject({
+      type: 'assessment_feature_vector_v2',
+      aggregate: { correlatedTrialCount: 2 },
+      privacy: { payloadContainsAggregatesOnly: true },
+    });
+    expect(artifacts.payload.behavioral.gameCorrelationAggregate.completedTrialCount).toBe(2);
+    expect(artifacts.payload.behavioral.featureVectorV2.type).toBe('assessment_feature_vector_v2');
+    expect(artifacts.payload.edgeAI.modelVersion).toBe('krumm-edge-ai-v9.2.0-game-aware');
+    expect(artifacts.validation.ok).toBe(true);
+
+    const serializedSafeOutputs = JSON.stringify({
+      assessmentSession: artifacts.assessmentSession,
+      payload: artifacts.payload,
+      manifest: artifacts.bundle.manifest,
+    });
+    for (const forbiddenKey of ['windows', 'land' + 'marks', 'face' + 'Samples', 'pointer' + 'Samples', 'raw' + 'GameEvents']) {
+      expect(serializedSafeOutputs).not.toContain(forbiddenKey);
+    }
+    // Guard flags are safe: verify they are false instead of banning their substrings (avoids false positives).
+    const correlationPrivacy = artifacts.assessmentSession.gameCorrelation?.privacy ?? {};
+    expect(correlationPrivacy.rawStimuliStored).toBe(false);
+    expect(serializedSafeOutputs).not.toMatch(/"stimuli"\s*:/);
+    expect(serializedSafeOutputs).not.toMatch(/"items"\s*:/);
+    expect(serializedSafeOutputs).not.toMatch(/"keypoints"\s*:/);
+  });
+
+  it('preserves original-game aggregate results and battery identity with an explicit R-6 mapping caveat', () => {
+    const originalCompletedDemo = {
+      batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES,
+      completedCount: 3,
+      totalCount: 3,
+      blocks: [
+        {
+          block: { gameId: 'laser_puzzle', label: 'Puzzle láser', skill: 'spatial_planning', trialCount: 2 },
+          summary: { aggregateSchemaVersion: 'laser_puzzle_aggregate_v1', score: 0.88, completed: true, solvedLevels: 2, levelCount: 2, solutionEfficiency: 0.9, ruleViolationCount: 0, aggregateOnly: true },
+        },
+        {
+          block: { gameId: 'balloon_risk', label: 'Globo de riesgo', skill: 'risk_feedback_adjustment', trialCount: 8 },
+          summary: { aggregateSchemaVersion: 'balloon_risk_aggregate_v1', score: 0.72, completed: true, roundsCompleted: 8, totalRounds: 8, riskEfficiency: 0.72, cashoutCount: 6, popCount: 2, postPopAdjustment: -1.5, postPopAdjustmentCount: 1, aggregateOnly: true },
+        },
+        {
+          block: { gameId: 'passenger_routes', label: 'Optimización de rutas de pasajeros', skill: 'constraint_planning', trialCount: 2 },
+          summary: { aggregateSchemaVersion: 'passenger_routes_aggregate_v1', score: 0.84, completed: true, passengersDelivered: 3, destinationCount: 3, routeEfficiency: 0.84, movementAttemptCount: 16, constraintViolationCount: 0, satisfactionScore: 88, aggregateOnly: true },
+        },
+        {
+          block: { gameId: 'team_coordination', label: 'Brief de coordinación', skill: 'structured_social_judgment', trialCount: 4 },
+          summary: {
+            aggregateSchemaVersion: 'team_coordination_aggregate_v1',
+            score: 0.86,
+            completed: true,
+            scenarioCount: 4,
+            completedScenarioCount: 4,
+            leadershipScore: 0.87,
+            communicationScore: 0.88,
+            adaptabilityScore: 0.82,
+            decisionQualityScore: 0.86,
+            alignmentScore: 0.88,
+            roleClarityScore: 0.86,
+            feedbackUseScore: 0.76,
+            changeResponseScore: 0.84,
+            aggregateOnly: true,
+          },
+        },
+      ],
+    };
+    const artifacts = buildPostulationDemoArtifacts({
+      completedDemo: originalCompletedDemo,
+      batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES,
+      gameEvents: [],
+      signalSnapshot: { sampleCount: 48, facePresenceRatio: 0.9, meanConfidence: 0.82, fpsEstimate: 15, caveats: [] },
+      cameraConsent: true,
+      generatedAt: '2026-07-15T20:00:00.000Z',
+      runId: 'postulation-original-test',
+    });
+
+    expect(artifacts.batteryMode).toBe('original_games');
+    expect(artifacts.batteryId).toMatch(/original/);
+    expect(artifacts.assessmentSession.mode).toBe('postulation_demo_original_games');
+    expect(artifacts.assessmentSession.qualitySummary.caveats).toContain('original_games_r6d_provisional_mapping');
+    expect(artifacts.assessmentSession.edgeAI.channels.visuomotorPrecision.score).toBe(50);
+    expect(artifacts.assessmentSession.edgeAI.channels.inhibitionControl.score).toBe(50);
+    expect(artifacts.assessmentSession.edgeAI.channels.visualSearchEfficiency.score).toBe(50);
+    expect(Object.values(artifacts.talentProfile.dimensions).every((dimension) => dimension.score === null)).toBe(true);
+    expect(Object.values(artifacts.talentProfile.dimensions).every((dimension) => dimension.confidence <= 0.25)).toBe(true);
+    expect(artifacts.talentProfile.globalSummary).toMatchObject({ strengths: [], watchAreas: [] });
+    expect(artifacts.assessmentSession.originalGameFeatureVector).toMatchObject({
+      type: 'original_game_feature_vector_v1',
+      gameAvailability: {
+        laser_puzzle: 'measured_complete',
+        balloon_risk: 'measured_complete',
+        passenger_routes: 'measured_complete',
+        team_coordination: 'measured_complete',
+      },
+    });
+    expect(artifacts.assessmentSession.talentFramework).toMatchObject({
+      schemaVersion: 'krumm_workbook_talent_framework_v2',
+      classification: { strengths: null, watchAreas: null, availability: 'not_available_without_norms' },
+      constructs: {
+        leadership: { score: expect.any(Number), availability: 'provisional_score', confidence: 0.55 },
+        communication: { score: expect.any(Number), availability: 'provisional_score', confidence: 0.55 },
+      },
+    });
+    const scoredConstructs = ['problemSolving', 'riskFeedbackProfile', 'planning', 'analyticalThinking', 'leadership', 'communication'];
+    const descriptiveConstructs = ['decisionMaking', 'adaptability'];
+    const frameworkConstructs = artifacts.assessmentSession.talentFramework.constructs;
+    expect(scoredConstructs.every((id) => frameworkConstructs[id].score != null && frameworkConstructs[id].availability === 'provisional_score')).toBe(true);
+    expect(descriptiveConstructs.every((id) => frameworkConstructs[id].score === null && frameworkConstructs[id].availability === 'descriptive_only')).toBe(true);
+    expect(artifacts.payload.behavioral.originalGameFeatureVector.type).toBe('original_game_feature_vector_v1');
+    expect(artifacts.payload.talentFramework.schemaVersion).toBe('krumm_workbook_talent_framework_v2');
+    expect(artifacts.payload.behavioral.gameResults).toEqual([
+      expect.objectContaining({ gameId: 'laser_puzzle', result: expect.objectContaining({ solutionEfficiency: 0.9 }) }),
+      expect.objectContaining({ gameId: 'balloon_risk', result: expect.objectContaining({ riskEfficiency: 0.72 }) }),
+      expect.objectContaining({ gameId: 'passenger_routes', result: expect.objectContaining({ routeEfficiency: 0.84 }) }),
+      expect.objectContaining({ gameId: 'team_coordination', result: expect.objectContaining({ score: 0.86 }) }),
+    ]);
+    expect(artifacts.validation.ok).toBe(true);
+  });
+
+  it('excludes practice/preview blocks from the evaluative profile but reports them in diagnostics (G.2)', () => {
+    const practiceCompletedDemo = {
+      batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES,
+      completedCount: 4,
+      totalCount: 4,
+      blocks: [
+        {
+          block: { gameId: 'laser_puzzle', label: 'Puzzle láser', skill: 'spatial_planning', trialCount: 1, practice: true },
+          summary: { score: 0.0, solvedLevels: 0, moveCount: 0, aggregateOnly: true, practice: true, preview: true, is_tutorial: true },
+        },
+        {
+          block: { gameId: 'laser_puzzle', label: 'Puzzle láser', skill: 'spatial_planning', trialCount: 2 },
+          summary: { aggregateSchemaVersion: 'laser_puzzle_aggregate_v1', score: 0.88, completed: true, solvedLevels: 2, levelCount: 2, solutionEfficiency: 0.9, ruleViolationCount: 0, aggregateOnly: true },
+        },
+        {
+          block: { gameId: 'balloon_risk', label: 'Globo de riesgo', skill: 'risk_feedback_adjustment', trialCount: 8 },
+          summary: { aggregateSchemaVersion: 'balloon_risk_aggregate_v1', score: 0.72, completed: true, roundsCompleted: 8, totalRounds: 8, riskEfficiency: 0.72, cashoutCount: 6, popCount: 2, postPopAdjustment: -1.5, postPopAdjustmentCount: 1, aggregateOnly: true, practice: true },
+        },
+        {
+          block: { gameId: 'team_coordination', label: 'Operación Faro', skill: 'structured_team_coordination', trialCount: 4 },
+          summary: { score: 0.86, completed: true, scenarioCount: 4, completedScenarioCount: 4, leadershipScore: 0.87, communicationScore: 0.88, adaptabilityScore: 0.82, decisionQualityScore: 0.86, alignmentScore: 0.88, roleClarityScore: 0.86, feedbackUseScore: 0.76, changeResponseScore: 0.84, aggregateOnly: true },
+        },
+      ],
+    };
+    const artifacts = buildPostulationDemoArtifacts({
+      completedDemo: practiceCompletedDemo,
+      batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES,
+      gameEvents: [],
+      signalSnapshot: { sampleCount: 48, facePresenceRatio: 0.9, meanConfidence: 0.82, fpsEstimate: 15, caveats: [] },
+      cameraConsent: true,
+      generatedAt: '2026-09-03T20:00:00.000Z',
+      runId: 'postulation-practice-test',
+    });
+
+    // Only evaluative blocks survive into the talent profile / gameResults.
+    expect(artifacts.assessmentSession.blocks).toHaveLength(2);
+    expect(artifacts.payload.behavioral.gameResults.map((entry) => entry.gameId)).toEqual(['laser_puzzle', 'team_coordination']);
+    // The practice run is still surfaceable as aggregate-only metadata.
+    expect(artifacts.practice.practiceRunCount).toBe(2);
+    expect(artifacts.practice.practiceGameIds).toEqual(expect.arrayContaining(['laser_puzzle', 'balloon_risk']));
+  });
+
+  it('collapses evaluative totals unchanged when no practice runs exist', () => {
+    const artifacts = buildPostulationDemoArtifacts({
+      completedDemo: {
+        completedCount: 1,
+        totalCount: 1,
+        blocks: [
+          { block: { gameId: 'go_nogo', label: 'Control inhibitorio', skill: 'inhibitory_control', trialCount: 8 }, summary: { completedTrialCount: 8, trialCount: 8, accuracy: 0.75, score: 0.74, meanReactionTimeMs: 610 } },
+        ],
+      },
+      gameEvents: [],
+      cameraConsent: false,
+    });
+    expect(artifacts.assessmentSession.gameSummary.performance.completedTrialCount).toBe(8);
+    expect(artifacts.practice.practiceRunCount).toBe(0);
+  });
+});

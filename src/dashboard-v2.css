@@ -1,0 +1,169 @@
+/* ═══ Dashboard v2: webcam + mesh paralelos ═══ */
+.dashboard-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dash-cam-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dash-cam-panel, .dash-mesh-panel {
+  min-height: 360px;
+}
+
+/* Dark mesh background */
+.mesh-dark-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  max-height: 400px;
+  background: #020712;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.mesh-dark-container canvas {
+  border-radius: 16px;
+}
+
+/* Summary grid compact */
+.summary-grid-compact {
+  grid-template-columns: repeat(4,1fr) !important;
+  gap: 6px !important;
+}
+.summary-grid-compact div {
+  padding: 6px 8px !important;
+}
+.summary-grid-compact span { font-size: 0.6rem !important; }
+.summary-grid-compact strong { font-size: 0.75rem !important; }
+
+/* Data row: metrics + edge AI */
+.dash-data-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dash-metrics-panel, .dash-edge-panel {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+/* Metrics grid compact */
+.metrics-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+}
+.metrics-grid-compact .metric-compact {
+  padding: 6px 8px;
+}
+.metrics-grid-compact .metric-label span { font-size: 0.6rem; }
+.metrics-grid-compact .metric-label strong { font-size: 0.72rem; }
+.metrics-grid-compact .metric-bar { height: 4px; }
+
+/* Edge channels compact */
+.edge-channels-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px;
+}
+
+/* Signal overview: always-visible telemetry status */
+.signal-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.9fr);
+  gap: 12px;
+}
+
+.compact-heading {
+  margin-bottom: 10px;
+}
+.compact-heading h2 { margin-bottom: 2px; }
+.compact-heading .caption { margin: 0; font-size: 0.72rem; }
+
+.signal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.signal-card {
+  min-height: 92px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.025));
+  border: 1px solid rgba(255,255,255,0.075);
+}
+.signal-card.priority {
+  border-color: rgba(77,212,172,0.28);
+  background: linear-gradient(180deg, rgba(77,212,172,0.12), rgba(255,255,255,0.025));
+}
+.signal-card.privacy-card {
+  border-color: rgba(116,167,255,0.25);
+}
+.signal-card span,
+.method-row small {
+  display: block;
+  color: #9fb0c2;
+  font-size: 0.62rem;
+  line-height: 1.35;
+}
+.signal-card strong {
+  display: block;
+  margin: 5px 0 4px;
+  color: #eef6ff;
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+.signal-card small {
+  color: #b9c9dc;
+  font-size: 0.62rem;
+  line-height: 1.35;
+}
+
+.method-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.method-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.method-row strong {
+  display: block;
+  color: #eaf7ff;
+  font-size: 0.76rem;
+  margin-bottom: 2px;
+}
+.method-row .status {
+  min-width: 64px;
+  text-align: center;
+  font-size: 0.58rem;
+  padding: 0.28rem 0.45rem;
+}
+.status.calibrating {
+  background: rgba(255, 209, 102, 0.15);
+  color: #ffd166;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .dash-cam-row, .dash-data-row, .signal-overview {
+    grid-template-columns: 1fr;
+  }
+  .dash-cam-panel, .dash-mesh-panel { min-height: 280px; }
+}

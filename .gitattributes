@@ -1,0 +1,4 @@
+# Los PDF son artefactos binarios generados (reportlab): tratarlos como binary
+# evita falsos positivos de "trailing whitespace" en `git diff --check` y
+# diffs ilegibles.
+*.pdf binary

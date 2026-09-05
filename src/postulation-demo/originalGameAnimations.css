@@ -1,0 +1,428 @@
+/* ==========================================================================
+   KRUMM postulation demo — original battery motion layer (G.3/G.4 / W2)
+   Loaded AFTER originalGameThemes.css.
+   All motion is cosmetic: no telemetry, no layout metric changes.
+   Animations are disabled under prefers-reduced-motion (WCAG 2.3.3);
+   functional transitions (token movement, meter width) stay enabled.
+   ========================================================================== */
+
+/* ---------- Static structure for W2 surfaces ---------- */
+
+.balloon-risk-task__arena {
+  position: relative;
+}
+
+.passenger-route-task__board {
+  position: relative;
+}
+
+.team-coordination-task__rpg-stage {
+  position: relative;
+}
+
+.laser-puzzle-task__board {
+  position: relative;
+}
+
+.laser-puzzle-task__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: rgba(2, 6, 23, 0.74);
+  backdrop-filter: blur(2px);
+}
+
+.laser-puzzle-task__overlay-card {
+  display: grid;
+  gap: 6px;
+  padding: 18px 26px;
+  border: 1px solid rgba(34, 211, 238, 0.4);
+  border-radius: 18px;
+  background: linear-gradient(150deg, rgba(15, 23, 42, 0.96), rgba(23, 32, 58, 0.96));
+  color: #e2e8f0;
+  text-align: center;
+  font-size: 0.86rem;
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.5);
+}
+
+.laser-puzzle-task__overlay-card strong {
+  color: #67e8f9;
+  font-size: 1.05rem;
+}
+
+.laser-puzzle-task__overlay-kicker {
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.laser-puzzle-task__actions {
+  flex-wrap: wrap;
+}
+
+.laser-puzzle-task__check-hint {
+  flex-basis: 100%;
+  margin-top: 2px;
+  text-align: right;
+  color: rgba(148, 163, 184, 0.85);
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+.balloon-risk-task__balloon-emoji {
+  display: block;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.game-pips__dot--popped {
+  background: #ef4444;
+}
+
+.passenger-route-task__token {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  font-size: 1rem;
+  transition: transform 150ms ease;
+  filter: drop-shadow(0 3px 4px rgba(15, 23, 42, 0.35));
+}
+
+.passenger-route-task__token--loaded {
+  filter: drop-shadow(0 3px 6px rgba(79, 70, 229, 0.45));
+}
+
+.passenger-route-task__destination--delivered {
+  background: #10b981;
+  border-color: #047857;
+  color: #ffffff;
+}
+
+.passenger-route-task__circuit-toast {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 7;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  border-radius: 999px;
+  background: rgba(209, 250, 229, 0.96);
+  color: #065f46;
+  font-size: 0.8rem;
+  font-weight: 950;
+  box-shadow: 0 12px 28px rgba(6, 95, 70, 0.25);
+  white-space: nowrap;
+}
+
+.postulation-demo__sfx-toggle {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 6;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  font-size: 1.05rem;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.postulation-demo__sfx-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.postulation-demo__sfx-toggle[aria-pressed="true"] {
+  border-color: rgba(79, 70, 229, 0.6);
+  box-shadow: 0 8px 22px rgba(79, 70, 229, 0.28);
+}
+
+.postulation-demo__sfx-toggle:focus-visible {
+  outline: 3px solid var(--postulation-game-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---------- W3 micro-intro overlay (skippable, ≤15s, no telemetry) ---------- */
+
+.game-micro-intro__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  border-radius: inherit;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(3px);
+}
+
+.game-micro-intro {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 20px;
+  background: rgba(248, 250, 252, 0.97);
+  color: #0f172a;
+  box-shadow: 0 20px 50px rgba(2, 6, 23, 0.5);
+}
+
+.game-micro-intro__icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(6, 182, 212, 0.12));
+  font-size: 1.9rem;
+}
+
+.game-micro-intro__body strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.game-micro-intro__body p {
+  margin: 3px 0 0;
+  color: #475569;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.game-micro-intro__dots {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.game-micro-intro__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.5);
+}
+
+.game-micro-intro__dot--active {
+  background: #4f46e5;
+}
+
+.game-micro-intro__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.game-micro-intro__actions button {
+  flex: 1 1 auto;
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes laser-beam-pulse {
+  0%, 100% {
+    box-shadow: inset 0 0 0 999px rgba(250, 204, 21, 0.2), 0 0 8px rgba(251, 191, 36, 0.28);
+  }
+  50% {
+    box-shadow: inset 0 0 0 999px rgba(250, 204, 21, 0.36), 0 0 20px rgba(251, 191, 36, 0.55);
+  }
+}
+
+@keyframes laser-lit-pulse {
+  0%, 100% {
+    box-shadow: inset 0 0 0 999px rgba(52, 211, 153, 0.16), 0 0 0 3px rgba(52, 211, 153, 0.45), 0 0 12px rgba(52, 211, 153, 0.35);
+  }
+  50% {
+    box-shadow: inset 0 0 0 999px rgba(52, 211, 153, 0.28), 0 0 0 3px rgba(52, 211, 153, 0.75), 0 0 22px rgba(52, 211, 153, 0.6);
+  }
+}
+
+@keyframes laser-piece-pop {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes balloon-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes balloon-shake {
+  0%, 100% { translate: 0 0; }
+  25% { translate: var(--shake-amp, 2px) 0; }
+  75% { translate: calc(var(--shake-amp, 2px) * -1) 0; }
+}
+
+@keyframes balloon-burst {
+  0% { transform: scale(1); opacity: 1; }
+  40% { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(0.4); opacity: 0; }
+}
+
+@keyframes arena-shake {
+  0%, 100% { translate: 0 0; }
+  20% { translate: -4px 2px; }
+  40% { translate: 4px -2px; }
+  60% { translate: -3px 1px; }
+  80% { translate: 3px -1px; }
+}
+
+@keyframes stat-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.08); background: rgba(16, 185, 129, 0.25); }
+  100% { transform: scale(1); }
+}
+
+@keyframes flag-deliver {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+@keyframes token-badge-pop {
+  0% { transform: scale(0.4); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes faro-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes faro-slide-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pip-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--pip-pulse-color, rgba(79, 70, 229, 0.35)); }
+  50% { box-shadow: 0 0 0 4px var(--pip-pulse-color, rgba(79, 70, 229, 0.35)); }
+}
+
+@keyframes micro-intro-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes micro-intro-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(79, 70, 229, 0); }
+}
+
+/* ---------- Motion (skipped when the user prefers reduced motion) ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .laser-puzzle-task {
+    --pip-pulse-color: rgba(34, 211, 238, 0.3);
+  }
+
+  .laser-puzzle-task__cell--beam {
+    animation: laser-beam-pulse 1.5s ease-in-out infinite;
+  }
+
+  .laser-puzzle-task__cell--relay.laser-puzzle-task__cell--beam,
+  .laser-puzzle-task__cell--antenna.laser-puzzle-task__cell--beam {
+    animation: laser-lit-pulse 1.5s ease-in-out infinite;
+  }
+
+  .laser-puzzle-task__cell--just-placed {
+    animation: laser-piece-pop 240ms ease;
+  }
+
+  .laser-puzzle-task__overlay {
+    animation: overlay-in 260ms ease;
+  }
+
+  .balloon-risk-task__balloon-emoji {
+    animation: balloon-bob 2.8s ease-in-out infinite;
+  }
+
+  .balloon-risk-task__balloon-emoji--tense {
+    animation:
+      balloon-bob 2.8s ease-in-out infinite,
+      balloon-shake 0.55s linear infinite;
+  }
+
+  .balloon-risk-task__balloon--popped .balloon-risk-task__balloon-emoji {
+    animation: balloon-burst 700ms ease forwards;
+  }
+
+  .balloon-risk-task__arena--shaking {
+    animation: arena-shake 450ms ease;
+  }
+
+  .balloon-risk-task__stats--cashout span:nth-child(3) {
+    animation: stat-pulse 520ms ease;
+  }
+
+  .passenger-route-task__destination--delivered {
+    animation: flag-deliver 420ms ease;
+  }
+
+  .passenger-route-task__onboard-badge {
+    animation: token-badge-pop 300ms ease;
+  }
+
+  .passenger-route-task__circuit-toast {
+    animation: toast-in 320ms ease;
+  }
+
+  .team-coordination-task__dialogue--enter {
+    animation: faro-fade-up 380ms ease;
+  }
+
+  .team-coordination-task__option--enter {
+    animation: faro-fade-up 320ms ease backwards;
+    animation-delay: calc(var(--opt-i, 0) * 90ms);
+  }
+
+  .team-coordination-task__turn-effect--enter {
+    animation: faro-slide-in 300ms ease;
+  }
+
+  .game-pips__dot--current {
+    animation: pip-pulse 1.8s ease-in-out infinite;
+  }
+
+  .game-micro-intro {
+    animation: overlay-in 240ms ease;
+  }
+
+  .game-micro-intro__icon {
+    animation: micro-intro-bob 2.2s ease-in-out infinite;
+  }
+
+  .game-micro-intro__icon--laser_puzzle {
+    animation: micro-intro-pulse 1.6s ease-in-out infinite;
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "krumm-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "KRUMM backend aggregate-only — API Gateway + Lambda + DynamoDB (M2)",
+  "scripts": {
+    "test": "NODE_ENV=test vitest run --pool=threads --reporter=default",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0"
+  }
+}

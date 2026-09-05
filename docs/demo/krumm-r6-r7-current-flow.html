@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KRUMM — Flujo actual R-6/R-7 y módulos de mejora</title>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #526070;
+      --paper: #ffffff;
+      --line: #cbd5e1;
+      --blue: #2563eb;
+      --cyan: #0ea5e9;
+      --green: #16a34a;
+      --amber: #f59e0b;
+      --purple: #7c3aed;
+      --red: #dc2626;
+      --slate: #64748b;
+      --bg: #f8fbff;
+      --shadow: 0 14px 34px rgba(15, 23, 42, 0.10);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 0 0, #eaf6ff 0, rgba(234,246,255,0) 30rem), linear-gradient(180deg, #fff 0%, #f5f7fb 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .page { width: min(1740px, calc(100vw - 28px)); margin: 0 auto; padding: 24px 0 38px; }
+    header { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; margin-bottom: 14px; }
+    .eyebrow { color: var(--purple); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; font-weight: 950; }
+    h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.02; letter-spacing: -.04em; }
+    .subtitle { max-width: 1120px; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+    .meta { text-align: right; color: var(--muted); font-size: 12px; line-height: 1.6; white-space: nowrap; }
+    code { background: #eef2ff; color: #3730a3; border-radius: 7px; padding: 1px 6px; font-size: 11px; }
+    .card { background: rgba(255,255,255,.92); border: 1px solid #e2e8f0; border-radius: 28px; box-shadow: var(--shadow); overflow: hidden; }
+    .diagram-shell { padding: 16px 16px 12px; }
+    svg { width: 100%; height: auto; display: block; }
+    .legend { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; padding: 11px 12px 0; color: var(--muted); font-size: 11px; }
+    .legend span { display: flex; align-items: center; gap: 7px; }
+    .dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
+    .done { background: var(--green); } .work { background: var(--amber); } .next { background: var(--blue); } .future { background: var(--purple); } .risk { background: var(--red); } .guard { background: var(--slate); }
+    .grid { display: grid; grid-template-columns: 1.12fr .88fr; gap: 16px; margin-top: 16px; }
+    .panel { padding: 16px; }
+    h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: -.02em; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th, td { border-bottom: 1px solid #e7edf5; padding: 8px 7px; vertical-align: top; text-align: left; }
+    th { background: #f8fafc; color: #334155; font-weight: 950; }
+    td { color: #334155; line-height: 1.35; }
+    .pill { display: inline-flex; border-radius: 999px; padding: 3px 7px; color: white; font-size: 9px; font-weight: 950; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+    .pill.done { background: var(--green); } .pill.work { background: var(--amber); } .pill.next { background: var(--blue); } .pill.future { background: var(--purple); } .pill.guard { background: var(--slate); }
+    ul { margin: 0; padding-left: 18px; color: #334155; font-size: 11px; line-height: 1.42; }
+    @page { size: A3 landscape; margin: 9mm; }
+    @media print {
+      body { background: white; }
+      .page { width: 100%; padding: 0; }
+      .card { box-shadow: none; break-inside: avoid; }
+      .grid { grid-template-columns: 1.1fr .9fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <div class="eyebrow">KRUMM · R-6/R-7 · flujo actual · módulos de mejora</div>
+        <h1>Entradas, feature vectors, framework KRUMM y feedback modular de juegos</h1>
+        <p class="subtitle">Vista consolidada del estado real de <code>/postulaciones-demo</code>: batería estable como default, batería original controlada, vector original separado, framework provisional del Excel, reporte HR conservador y módulos puros para mejorar juegos difíciles de explicar.</p>
+      </div>
+      <div class="meta">
+        Repo: <code>test-mpfl</code><br />
+        Fecha: <code>2026-07-20</code><br />
+        Output: <code>exports/krumm-r6-r7-current-flow.pdf</code>
+      </div>
+    </header>
+
+    <section class="card diagram-shell" aria-label="Diagrama de flujo actual KRUMM R6 R7">
+      <svg viewBox="0 0 1720 900" role="img" aria-labelledby="flowTitle flowDesc">
+        <title id="flowTitle">KRUMM R6 R7 current data flow</title>
+        <desc id="flowDesc">Flujo desde entradas del candidato y Excel KRUMM hasta payload, reporte y módulos de mejora.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L10,6 L1,11 Z" fill="#0f172a" /></marker>
+          <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L10,6 L1,11 Z" fill="#2563eb" /></marker>
+          <marker id="arrowPurple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L10,6 L1,11 Z" fill="#7c3aed" /></marker>
+          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="9" stdDeviation="7" flood-color="#0f172a" flood-opacity=".14" /></filter>
+          <style>
+            .box { fill: #fff; stroke: #dbe5ef; stroke-width: 1.4; filter: url(#shadow); }
+            .doneStroke { stroke: #16a34a; stroke-width: 2.8; }
+            .workStroke { stroke: #f59e0b; stroke-width: 2.8; }
+            .nextStroke { stroke: #2563eb; stroke-width: 2.8; }
+            .futureStroke { stroke: #7c3aed; stroke-width: 2.6; stroke-dasharray: 8 6; }
+            .guardStroke { stroke: #64748b; stroke-width: 2.6; }
+            .riskStroke { stroke: #dc2626; stroke-width: 2.6; stroke-dasharray: 6 5; }
+            .flow { fill: none; stroke: #0f172a; stroke-width: 3.2; marker-end: url(#arrow); }
+            .flowBlue { fill: none; stroke: #2563eb; stroke-width: 3; marker-end: url(#arrowBlue); }
+            .flowPurple { fill: none; stroke: #7c3aed; stroke-width: 3; marker-end: url(#arrowPurple); }
+            .flowFuture { fill: none; stroke: #7c3aed; stroke-width: 2.6; stroke-dasharray: 8 7; marker-end: url(#arrowPurple); }
+            .title { font: 950 13px Inter, Arial, sans-serif; fill: #111827; letter-spacing: .02em; }
+            .txt { font: 700 10.5px Inter, Arial, sans-serif; fill: #475569; }
+            .tiny { font: 750 9px Inter, Arial, sans-serif; fill: #64748b; }
+            .lane { font: 950 16px Inter, Arial, sans-serif; fill: #0f172a; letter-spacing: .04em; }
+            .status { font: 950 8.5px Inter, Arial, sans-serif; fill: white; letter-spacing: .05em; }
+          </style>
+        </defs>
+
+        <rect x="0" y="0" width="1720" height="900" rx="28" fill="#fbfdff" />
+        <rect x="38" y="82" width="300" height="708" rx="28" fill="#eef6ff" stroke="#93c5fd" stroke-width="2" />
+        <rect x="370" y="82" width="780" height="708" rx="28" fill="#eefcf6" stroke="#86efac" stroke-width="2" />
+        <rect x="1182" y="82" width="500" height="708" rx="28" fill="#f8f5ff" stroke="#c4b5fd" stroke-width="2" />
+        <text class="lane" x="188" y="116" text-anchor="middle">ENTRADAS</text>
+        <text class="lane" x="760" y="116" text-anchor="middle">PIPELINE BROWSER-LOCAL</text>
+        <text class="lane" x="1432" y="116" text-anchor="middle">SALIDAS + R-7</text>
+
+        <g>
+          <rect class="box doneStroke" x="70" y="150" width="236" height="92" rx="18" />
+          <rect x="84" y="162" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="106" y="174" text-anchor="middle">DONE</text>
+          <text class="title" x="188" y="195" text-anchor="middle">stable_dg</text>
+          <text class="txt" x="188" y="216" text-anchor="middle">default / fallback</text>
+        </g>
+        <g>
+          <rect class="box doneStroke" x="70" y="270" width="236" height="118" rx="18" />
+          <rect x="84" y="282" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="106" y="294" text-anchor="middle">DONE</text>
+          <text class="title" x="188" y="318" text-anchor="middle">original_games</text>
+          <text class="txt" x="188" y="341" text-anchor="middle">Laser · Balloon · Passenger</text>
+          <text class="tiny" x="188" y="360" text-anchor="middle">?battery=original</text>
+        </g>
+        <g>
+          <rect class="box doneStroke" x="70" y="420" width="236" height="110" rx="18" />
+          <rect x="84" y="432" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="106" y="444" text-anchor="middle">DONE</text>
+          <text class="title" x="188" y="468" text-anchor="middle">XLSX KRUMM</text>
+          <text class="txt" x="188" y="491" text-anchor="middle">8 constructos + hipótesis</text>
+          <text class="tiny" x="188" y="510" text-anchor="middle">fuente de mapeo, no validación</text>
+        </g>
+        <g>
+          <rect class="box guardStroke" x="70" y="562" width="236" height="132" rx="18" />
+          <rect x="84" y="574" width="62" height="16" rx="8" fill="#64748b" /><text class="status" x="115" y="586" text-anchor="middle">GUARD</text>
+          <text class="title" x="188" y="612" text-anchor="middle">Entradas prohibidas</text>
+          <text class="txt" x="188" y="635" text-anchor="middle">video · frames · landmarks</text>
+          <text class="txt" x="188" y="654" text-anchor="middle">rutas · pointer samples</text>
+          <text class="txt" x="188" y="673" text-anchor="middle">raw events / trials</text>
+        </g>
+
+        <g>
+          <rect class="box doneStroke" x="410" y="152" width="210" height="102" rx="18" />
+          <rect x="424" y="164" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="446" y="176" text-anchor="middle">DONE</text>
+          <text class="title" x="515" y="200" text-anchor="middle">Game runtime</text>
+          <text class="txt" x="515" y="223" text-anchor="middle">game_event_v1</text>
+          <text class="tiny" x="515" y="241" text-anchor="middle">stimulus/response/end</text>
+        </g>
+        <g>
+          <rect class="box guardStroke" x="410" y="300" width="210" height="110" rx="18" />
+          <rect x="424" y="312" width="62" height="16" rx="8" fill="#64748b" /><text class="status" x="455" y="324" text-anchor="middle">GUARD</text>
+          <text class="title" x="515" y="350" text-anchor="middle">Allowlist por juego</text>
+          <text class="txt" x="515" y="373" text-anchor="middle">originalGameBlueprints</text>
+          <text class="tiny" x="515" y="392" text-anchor="middle">aggregateOnly</text>
+        </g>
+        <g>
+          <rect class="box doneStroke" x="410" y="462" width="210" height="110" rx="18" />
+          <rect x="424" y="474" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="446" y="486" text-anchor="middle">DONE</text>
+          <text class="title" x="515" y="512" text-anchor="middle">gameCorrelation</text>
+          <text class="txt" x="515" y="535" text-anchor="middle">aggregate metadata</text>
+          <text class="tiny" x="515" y="554" text-anchor="middle">sin raw logs</text>
+        </g>
+
+        <g>
+          <rect class="box doneStroke" x="690" y="150" width="225" height="122" rx="20" />
+          <rect x="704" y="162" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="726" y="174" text-anchor="middle">DONE</text>
+          <text class="title" x="803" y="200" text-anchor="middle">assessment_feature_vector_v2</text>
+          <text class="txt" x="803" y="225" text-anchor="middle">pipeline existente</text>
+          <text class="tiny" x="803" y="245" text-anchor="middle">estable / compatible</text>
+        </g>
+        <g>
+          <rect class="box doneStroke" x="690" y="310" width="225" height="122" rx="20" />
+          <rect x="704" y="322" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="726" y="334" text-anchor="middle">DONE</text>
+          <text class="title" x="803" y="360" text-anchor="middle">original_game_feature_vector_v1</text>
+          <text class="txt" x="803" y="385" text-anchor="middle">featureArray + observedMask</text>
+          <text class="tiny" x="803" y="405" text-anchor="middle">missing ≠ cero</text>
+        </g>
+        <g>
+          <rect class="box doneStroke" x="690" y="470" width="225" height="122" rx="20" />
+          <rect x="704" y="482" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="726" y="494" text-anchor="middle">DONE</text>
+          <text class="title" x="803" y="520" text-anchor="middle">Feature definitions</text>
+          <text class="txt" x="803" y="545" text-anchor="middle">input → fórmula → racional</text>
+          <text class="tiny" x="803" y="565" text-anchor="middle">límites por métrica</text>
+        </g>
+        <g>
+          <rect class="box workStroke" x="690" y="630" width="225" height="122" rx="20" />
+          <rect x="704" y="642" width="54" height="16" rx="8" fill="#f59e0b" /><text class="status" x="731" y="654" text-anchor="middle">R-7</text>
+          <text class="title" x="803" y="680" text-anchor="middle">Improvement modules</text>
+          <text class="txt" x="803" y="705" text-anchor="middle">feedback · authoring · QA</text>
+          <text class="tiny" x="803" y="725" text-anchor="middle">Laser + Passenger authoring</text>
+        </g>
+
+        <g>
+          <rect class="box doneStroke" x="970" y="230" width="146" height="92" rx="18" />
+          <rect x="984" y="242" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="1006" y="254" text-anchor="middle">DONE</text>
+          <text class="title" x="1043" y="282" text-anchor="middle">Session</text>
+          <text class="tiny" x="1043" y="304" text-anchor="middle">privacy-safe</text>
+        </g>
+        <g>
+          <rect class="box doneStroke" x="970" y="360" width="146" height="92" rx="18" />
+          <rect x="984" y="372" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="1006" y="384" text-anchor="middle">DONE</text>
+          <text class="title" x="1043" y="412" text-anchor="middle">Payload</text>
+          <text class="tiny" x="1043" y="434" text-anchor="middle">validated</text>
+        </g>
+        <g>
+          <rect class="box workStroke" x="970" y="630" width="146" height="92" rx="18" />
+          <rect x="984" y="642" width="64" height="16" rx="8" fill="#f59e0b" /><text class="status" x="1016" y="654" text-anchor="middle">CORE</text>
+          <text class="title" x="1043" y="682" text-anchor="middle">Laser/Passenger</text>
+          <text class="tiny" x="1043" y="704" text-anchor="middle">producto + authoring</text>
+        </g>
+
+        <g>
+          <rect class="box doneStroke" x="1226" y="138" width="210" height="118" rx="18" />
+          <rect x="1240" y="150" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="1262" y="162" text-anchor="middle">DONE</text>
+          <text class="title" x="1331" y="190" text-anchor="middle">Reporte local</text>
+          <text class="txt" x="1331" y="214" text-anchor="middle">Markdown · HTML · JSON</text>
+          <text class="tiny" x="1331" y="234" text-anchor="middle">human review only</text>
+        </g>
+        <g>
+          <rect class="box doneStroke" x="1226" y="292" width="210" height="126" rx="18" />
+          <rect x="1240" y="304" width="44" height="16" rx="8" fill="#16a34a" /><text class="status" x="1262" y="316" text-anchor="middle">DONE</text>
+          <text class="title" x="1331" y="344" text-anchor="middle">Framework workbook</text>
+          <text class="txt" x="1331" y="368" text-anchor="middle">provisional / descriptive</text>
+          <text class="tiny" x="1331" y="388" text-anchor="middle">no percentiles · no corte</text>
+        </g>
+        <g>
+          <rect class="box workStroke" x="1226" y="456" width="210" height="130" rx="18" />
+          <rect x="1240" y="468" width="54" height="16" rx="8" fill="#f59e0b" /><text class="status" x="1267" y="480" text-anchor="middle">NEXT</text>
+          <text class="title" x="1331" y="508" text-anchor="middle">Feedback visible</text>
+          <text class="txt" x="1331" y="532" text-anchor="middle">3 juegos + QA técnico</text>
+          <text class="tiny" x="1331" y="552" text-anchor="middle">sin trazas crudas</text>
+        </g>
+        <g>
+          <rect class="box futureStroke" x="1226" y="630" width="210" height="126" rx="18" />
+          <rect x="1240" y="642" width="58" height="16" rx="8" fill="#7c3aed" /><text class="status" x="1269" y="654" text-anchor="middle">R-7</text>
+          <text class="title" x="1331" y="682" text-anchor="middle">Validación externa</text>
+          <text class="txt" x="1331" y="706" text-anchor="middle">contenido · confiabilidad</text>
+          <text class="tiny" x="1331" y="726" text-anchor="middle">criterio · fairness</text>
+        </g>
+        <g>
+          <rect class="box futureStroke" x="1486" y="292" width="160" height="126" rx="18" />
+          <rect x="1500" y="304" width="58" height="16" rx="8" fill="#7c3aed" /><text class="status" x="1529" y="316" text-anchor="middle">FUT</text>
+          <text class="title" x="1566" y="344" text-anchor="middle">HR workspace</text>
+          <text class="txt" x="1566" y="368" text-anchor="middle">dashboard/recruiter</text>
+          <text class="tiny" x="1566" y="388" text-anchor="middle">aún no decisional</text>
+        </g>
+
+        <path class="flow" d="M306 196 C350 196,360 196,410 196" />
+        <path class="flowBlue" d="M306 329 C350 329,360 348,410 348" />
+        <path class="flowBlue" d="M620 355 C650 355,655 370,690 370" />
+        <path class="flow" d="M620 510 C656 510,657 210,690 210" />
+        <path class="flowBlue" d="M915 370 C942 370,943 276,970 276" />
+        <path class="flow" d="M915 210 C950 210,950 276,970 276" />
+        <path class="flow" d="M1116 276 C1160 276,1172 196,1226 196" />
+        <path class="flow" d="M1116 406 C1160 406,1172 355,1226 355" />
+        <path class="flowBlue" d="M915 531 C948 531,949 406,970 406" />
+        <path class="flowPurple" d="M306 475 C470 475,530 531,690 531" />
+        <path class="flowPurple" d="M915 691 C942 691,943 676,970 676" />
+        <path class="flowPurple" d="M1116 676 C1162 676,1174 522,1226 522" />
+        <path class="flowFuture" d="M1436 355 C1460 355,1464 355,1486 355" />
+        <path class="flowFuture" d="M1436 693 C1472 693,1485 420,1566 420" />
+        <path class="flow" d="M188 694 C188 780,456 800,690 740" />
+      </svg>
+      <div class="legend">
+        <span><i class="dot done"></i>Implementado/verificado</span>
+        <span><i class="dot work"></i>En trabajo / núcleo listo</span>
+        <span><i class="dot next"></i>Siguiente integración</span>
+        <span><i class="dot future"></i>Validación futura</span>
+        <span><i class="dot guard"></i>Privacidad/gobernanza</span>
+        <span><i class="dot risk"></i>Riesgo de sobreinterpretación</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card panel">
+        <h2>Estado operativo</h2>
+        <table>
+          <thead><tr><th>Elemento</th><th>Estado</th><th>Nota</th></tr></thead>
+          <tbody>
+            <tr><td>R-6 feature vector</td><td><span class="pill done">DONE</span></td><td><code>original_game_feature_vector_v1</code> separado de <code>assessment_feature_vector_v2</code>.</td></tr>
+            <tr><td>Framework Excel</td><td><span class="pill done">DONE</span></td><td><code>krumm_workbook_talent_framework_v1</code>; no genera cortes, percentiles ni decisión automática.</td></tr>
+            <tr><td>Laser/Passenger producto</td><td><span class="pill done">DONE</span></td><td>3 niveles/circuitos, feedback visible y authoring QA en drawer técnico.</td></tr>
+            <tr><td>R-7 validación</td><td><span class="pill future">FUTURE</span></td><td>Requiere datos/participantes, revisión experta, confiabilidad, criterio y fairness.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card panel">
+        <h2>Riesgos anotados</h2>
+        <ul>
+          <li>Laser depende de par/authoring justo: revisar niveles antes de interpretar eficiencia.</li>
+          <li>Balloon describe estrategia riesgo/recompensa; no personalidad ni tolerancia a frustración.</li>
+          <li>Passenger requiere explicación de restricciones; violaciones se normalizan por intentos.</li>
+          <li>Ausencia de evidencia se mantiene como <code>No medido</code>, <code>insufficient</code> o <code>descriptive_only</code>.</li>
+          <li>Nuevos módulos deben recibir solo agregados allowlist-only.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
