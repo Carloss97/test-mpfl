@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
+import LanguageToggle from '../i18n/LanguageToggle.jsx';
 import './landing.css';
 
 /**
@@ -22,6 +23,7 @@ export default function LandingPage() {
           <a href="/reclutador">{t('Reclutador', 'Recruiter')}</a>
           <a href="#producto">{t('Producto', 'Product')}</a>
           <a href="#contacto">{t('Contacto', 'Contact')}</a>
+          <LanguageToggle />
         </nav>
       </header>
 
@@ -51,7 +53,8 @@ export default function LandingPage() {
       </section>
 
       <section id="producto" className="landing__cards" aria-label={t('Qué hacemos', 'What we do')}>
-        <h2>{t('Qué hacemos', 'What we do')}</h2>
+        <h2 className="landing__section-title">{t('Qué hacemos', 'What we do')}</h2>
+        <p className="landing__section-sub">{t('Evaluación gamificada con privacidad por diseño y revisión humana al centro.', 'Gamified assessment with privacy by design and human review at the core.')}</p>
         <div className="landing__cards-grid">
           <article className="landing__card">
             <h3>{t('Evaluación basada en juegos', 'Game-based assessment')}</h3>
@@ -63,7 +66,7 @@ export default function LandingPage() {
           </article>
           <article className="landing__card">
             <h3>{t('Revisión humana al centro', 'Human review at the core')}</h3>
-            <p>{t('Los reportes son herramientas para humanos, no decisiones automáticas. En RIMAS siempre hay una persona revisando el resultado.', 'Reports are human tools, not automated decisions. At RIMAS a person always reviews the outcome.')}</p>
+            <p>{t('Los reportes son herramientas para humanos, no decisiones automáticas. En KRUMM siempre hay una persona revisando el resultado.', 'Reports are human tools, not automated decisions. At KRUMM a person always reviews the outcome.')}</p>
           </article>
           <article className="landing__card">
             <h3>{t('Rigor técnico', 'Technical rigor')}</h3>
@@ -73,7 +76,8 @@ export default function LandingPage() {
       </section>
 
       <section className="landing__how" id="como-funciona" aria-label={t('Cómo funciona', 'How it works')}>
-        <h2>{t('Cómo funciona', 'How it works')}</h2>
+        <h2 className="landing__section-title">{t('Cómo funciona', 'How it works')}</h2>
+        <p className="landing__section-sub">{t('Un flujo simple, transparente y privado de punta a punta.', 'A simple, transparent, private end-to-end flow.')}</p>
         <ol className="landing__steps">
           <li>{t('La persona accede al portal /postulaciones y activa la cámara si es necesario.', 'The person accesses the /postulaciones portal and enables the camera if needed.')}</li>
           <li>{t('Juega a una batería de 4 juegos gamificados; las métricas se recopilan localmente.', 'They play a battery of 4 gamified games; metrics are gathered locally.')}</li>
@@ -83,11 +87,11 @@ export default function LandingPage() {
       </section>
 
       <section id="contacto" className="landing__contact" aria-label={t('Contacto', 'Contact')}>
-        <h2>{t('Contacto', 'Contact')}</h2>
+        <h2 className="landing__section-title">{t('Contacto', 'Contact')}</h2>
         <p>{t('¿Preguntas sobre la plataforma o sobre una prueba?', 'Questions about the platform or a test?')}</p>
         <ul className="landing__contact-list">
-          <li><strong>{t('Candidatos e incidencias técnicas', 'Candidates & technical issues')}</strong>: <a href="mailto:candidato@krumm.cl">candidato@krumm.cl</a></li>
-          <li><strong>{t('Alianzas y despliegue', 'Partnerships & deployment')}</strong>: <a href="mailto:carlos@krumm.cl">carlos@krumm.cl</a></li>
+          <li><strong>{t('Candidatos e incidencias técnicas', 'Candidates & technical issues')}</strong>: <a href="mailto:contacto@krumm.cl">contacto@krumm.cl</a></li>
+          <li><strong>{t('Alianzas y despliegue', 'Partnerships & deployment')}</strong>: <a href="mailto:carlossaldivia@krumm.cl">carlossaldivia@krumm.cl</a></li>
         </ul>
         <p className="landing__note">{t('Tecnología de evaluación humana desarrollada en Chile. La cámara y las señales biométricas son opcionales y no se utilizan para decisiones finales.', 'Human evaluation technology developed in Chile. Camera and biometric signals are optional and never drive final decisions.')}</p>
       </section>

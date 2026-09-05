@@ -12,10 +12,8 @@ import {
   normalizeLegacyPostulationPath,
 } from './postulation-demo/postulationDemoRoute.js';
 import { LanguageProvider } from './i18n/LanguageContext.jsx';
-import LanguageToggle from './i18n/LanguageToggle.jsx';
 
 // Redirige rutas legacy /postulaciones-demo* a producción conservando query/hash.
-// Así fixtures guardados y enlaces en circulación no se rompen.
 const currentPath = window.location.pathname;
 if (isLegacyPostulationPath(currentPath) || isLegacyPostulationHrPath(currentPath)) {
   const target = normalizeLegacyPostulationPath(currentPath)
@@ -25,7 +23,6 @@ if (isLegacyPostulationPath(currentPath) || isLegacyPostulationHrPath(currentPat
 }
 
 const effectivePath = window.location.pathname;
-// `/` → landing pública; `/tecnico` → la app técnica (Edge AI / debug); rutas prod por defecto.
 const isLandingPath = effectivePath === '/' || effectivePath === '';
 const isTechnicalAppPath = effectivePath.startsWith('/tecnico');
 const RootApp = isPostulationHrDashboardPath(effectivePath)
@@ -36,11 +33,12 @@ const RootApp = isPostulationHrDashboardPath(effectivePath)
       ? App
       : LandingPage;
 
+// LanguageToggle se oculta del árbol principal: se renderiza dentro de cada página
+// en su header (landing: nav) para evitar el botón flotante sobre contenido.
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <LanguageProvider>
       <RootApp />
-      <LanguageToggle />
     </LanguageProvider>
   </React.StrictMode>,
 );
