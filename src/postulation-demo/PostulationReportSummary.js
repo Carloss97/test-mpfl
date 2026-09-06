@@ -2,6 +2,7 @@ import { buildBalloonRiskFeedback } from '../tasks/original-games/balloonRiskFee
 import { buildLaserPuzzleFeedback } from '../tasks/original-games/laserPuzzleFeedback.js';
 import { buildPassengerConstraintFeedback } from '../tasks/original-games/passengerRouteFeedback.js';
 import { buildTeamCoordinationFeedback } from '../tasks/original-games/teamCoordinationFeedback.js';
+import { buildTangramReportFeedback } from '../tasks/original-games/tangramReportFeedback.js';
 import { getOriginalGameBlueprint } from './originalGameBlueprints.js';
 import { getConstructDefinition } from '../assessment/originalGameTalentMapping.js';
 
@@ -74,6 +75,14 @@ function getOriginalGameMetrics(t, gameId, result = {}, fallbackTrialCount = 0) 
     pushMetric(metrics, t('Tiempo total', 'Total time'), formatDurationMs(result.timeMs));
     return metrics;
   }
+  if (gameId === 'tangram_exp001') {
+    pushMetric(metrics, t('Niveles resueltos', 'Levels solved'), `${result.solvedLevels ?? 0}/${result.levelsAttempted ?? fallbackTrialCount ?? 0}`);
+    if (Number(result.levelsAttempted) > 0) pushMetric(metrics, t('Precisión', 'Accuracy'), pct((Number(result.solvedLevels) || 0) / Number(result.levelsAttempted)));
+    if (Number.isFinite(Number(result.avgCoveragePercent))) pushMetric(metrics, t('Cobertura media', 'Average coverage'), `${Math.round(Number(result.avgCoveragePercent))}%`);
+    pushMetric(metrics, t('Eficiencia de trayectoria', 'Trajectory efficiency'), pct(result.avgTrajectoryEfficiency));
+    pushMetric(metrics, t('Tiempo total', 'Total time'), formatDurationMs(result.totalTimeMs));
+    return metrics;
+  }
   return metrics;
 }
 
@@ -94,6 +103,7 @@ function buildOriginalGameFeedback(gameId, result) {
   if (gameId === 'balloon_risk') return buildBalloonRiskFeedback(result);
   if (gameId === 'passenger_routes') return buildPassengerConstraintFeedback(result);
   if (gameId === 'team_coordination') return buildTeamCoordinationFeedback(result);
+  if (gameId === 'tangram_exp001') return buildTangramReportFeedback(result);
   return null;
 }
 
@@ -116,6 +126,9 @@ const FEEDBACK_CATEGORY_LABELS = Object.freeze({
   structured_coordination_signal: { es: 'Coordinación estructurada', en: 'Structured coordination' },
   incomplete_structured_brief: { es: 'Brief incompleto', en: 'Incomplete brief' },
   structured_coordination_review: { es: 'Coordinación a revisar', en: 'Coordination to review' },
+  efficient_assembly: { es: 'Ensamblaje eficiente', en: 'Efficient assembly' },
+  move_overhead_review: { es: 'Encaje a revisar', en: 'Fit to review' },
+  incomplete_assembly: { es: 'Ensamblaje incompleto', en: 'Incomplete assembly' },
 });
 
 function normalizeFeedback(t, feedback = null) {

@@ -56,6 +56,7 @@ const MOCK_GAMES = {
   balloon_risk: MockGame,
   passenger_routes: MockGame,
   team_coordination: MockGame,
+  tangram_exp001: MockGame,
 };
 
 /** Accept the explicit-consent checkbox and continue into the game stage. */
@@ -167,7 +168,7 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(screen.queryByRole('heading', { name: /KRUMM Postulaciones/i })).not.toBeInTheDocument();
   });
 
-  it('activates the original games only through the explicit battery query and completes all four blocks', () => {
+  it('activates the original games only through the explicit battery query and completes all five blocks', () => {
     window.history.pushState({}, '', '/postulaciones?battery=original');
     render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
 
@@ -175,14 +176,15 @@ describe('PostulationDemoApp shell and flow', () => {
     startGames();
 
     expect(screen.getByRole('heading', { name: /Puzzle láser/i })).toBeInTheDocument();
-    expect(screen.getByText(/Juego 1 de 4/i)).toBeInTheDocument();
+    expect(screen.getByText(/Juego 1 de 5/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Completar laser_puzzle/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar balloon_risk/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar passenger_routes/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar team_coordination/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Completar tangram_exp001/i }));
 
     expect(screen.getByRole('heading', { name: /Reporte de sesión listo para revisión humana/i })).toBeInTheDocument();
-    expect(screen.getByText(/Completaste\s+4\s+de\s+4\s+juegos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Completaste\s+5\s+de\s+5\s+juegos/i)).toBeInTheDocument();
     expect(document.querySelector('[data-battery-mode="original_games"]')).toBeInTheDocument();
   });
 
@@ -191,10 +193,11 @@ describe('PostulationDemoApp shell and flow', () => {
     render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
 
     expect(screen.getByRole('heading', { name: /Reporte de muestra listo para revisión humana/i })).toBeInTheDocument();
-    expect(screen.getByText(/Completaste\s+4\s+de\s+4\s+juegos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Completaste\s+5\s+de\s+5\s+juegos/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Puzzle láser/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Globo de riesgo/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Optimización de rutas de pasajeros/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Operación Faro: coordinación de equipo/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Ensamblaje Geométrico/i })).toBeInTheDocument();
   });
 });

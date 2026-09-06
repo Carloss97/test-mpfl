@@ -104,7 +104,6 @@ export function isValidSnap(piece, slot, tolerancePx = 8) {
   const pieceShape = TANGRAM_SHAPES[piece.shapeId];
   if (!pieceShape) return false;
 
-  const scale = slot.scale ?? 1;
   const rotDelta = normalizeRotationDeg(piece.rotationDeg - slot.rotationDeg);
   const symMatch = pieceShape.symmetry.some((s) => Math.abs(normalizeRotationDeg(rotDelta) - normalizeRotationDeg(s)) < 1e-6);
   if (!symMatch) return false;
@@ -219,11 +218,11 @@ export function buildTangramLevelAggregate(level, levelMetrics = {}, context = {
     solved: Boolean(levelMetrics.completed && !levelMetrics.timedOut && !(levelMetrics.moveLimitReached)),
     timedOut: Boolean(levelMetrics.timedOut),
     moveLimitReached: Boolean(levelMetrics.moveLimitReached),
-    coveragePercent: clampPct(Number(levelMetrics.coveragePercent) ?? 0),
-    movesUsed: Number(levelMetrics.movesUsed) ?? 0,
-    rotationsUsed: Number(levelMetrics.rotationsUsed) ?? 0,
-    timeMs: Number(levelMetrics.timeMs) ?? 0,
-    score: Number(levelMetrics.score) ?? 0,
+    coveragePercent: clampPct(Number(levelMetrics.coveragePercent) || 0),
+    movesUsed: Number(levelMetrics.movesUsed) || 0,
+    rotationsUsed: Number(levelMetrics.rotationsUsed) || 0,
+    timeMs: Number(levelMetrics.timeMs) || 0,
+    score: Number(levelMetrics.score) || 0,
     ...computeTangramBehavioralMetrics({
       initialLatencyMs: levelMetrics.initialLatencyMs,
       trajectoryDistance: levelMetrics.trajectoryDistance,

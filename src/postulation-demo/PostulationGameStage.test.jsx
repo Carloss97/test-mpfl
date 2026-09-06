@@ -22,7 +22,7 @@ function MockGame({ active, block, onComplete, onGameEvent }) {
   );
 }
 
-function MockTrackingGame({ active, block, practice, onGameEvent, onComplete }) {
+function MockTrackingGame({ block, practice, onGameEvent, onComplete }) {
   React.useEffect(() => {
     onGameEvent?.({ type: 'game_event_v1', eventType: 'game_start', gameId: block.gameId, practice: practice === true, timestamp: performance.now() });
   }, [block.gameId, onGameEvent, practice]);

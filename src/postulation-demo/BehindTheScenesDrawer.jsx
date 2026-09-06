@@ -66,7 +66,7 @@ export function buildBehindTheScenesPipeline(status = {}) {
   });
 }
 
-export default function BehindTheScenesDrawer({ snapshot }) {
+export default function BehindTheScenesDrawer({ snapshot: _snapshot }) {
   const { t } = useLanguage();
   const steps = buildPipelineSteps(t);
   return (

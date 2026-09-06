@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GameRuntime from '../GameRuntime.jsx';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import {
-  TANGRAM_EXP_ID,
   buildTangramLevelAggregate,
   buildTangramSessionAggregate,
   getTangramLevelParams,
@@ -29,7 +28,6 @@ import {
   getTangramWelcomeCopy,
 } from './tangramFeedback.js';
 import GamePips from '../../postulation-demo/GamePips.jsx';
-import GameMicroIntro from '../../postulation-demo/GameMicroIntro.jsx';
 import { playSfx } from './originalGameSfx.js';
 import { installGameFocusClock, now } from './gameClock.js';
 import { GAME_KEYBOARD, tangramKeyAction } from './gameKeyboard.js';
@@ -50,7 +48,7 @@ function polyPath(verts) {
   return verts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x},${y}`).join(' ') + ' Z';
 }
 
-function TangramInner({ emit, width, height, onComplete, practice = false }) {
+function TangramInner({ emit, onComplete, practice = false }) {
   const { t } = useLanguage();
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
@@ -77,7 +75,6 @@ function TangramInner({ emit, width, height, onComplete, practice = false }) {
   const dragPathRef = useRef([]); // distancia acumulada de drag (eficiencia trayectoria)
   const straightDistanceRef = useRef(0); // distancia ideal pieza→slot
   const hesitationRef = useRef(0);
-  const lastMoveRef = useRef(0);
   const movesRef = useRef(0);
   const rotationsRef = useRef(0);
   const levelAggregatesRef = useRef([]);
@@ -407,7 +404,7 @@ function TangramInner({ emit, width, height, onComplete, practice = false }) {
       <div className="tangram-task tangram-task--transition" data-testid="tangram-transition" onPointerMove={handlePointerMove}>
         <h3 className="task-title">{transition.title}</h3>
         <p>{transition.message}</p>
-        <button type="button" className="primary" data-testid="tangram-start-eval" onClick={() => { setPhase('play'); setLevel(1); }}>
+        <button type="button" className="primary" data-testid="tangram-start-eval" onClick={() => { setIntroDone(true); setPhase('play'); setLevel(1); }}>
           {transition.cta}
         </button>
       </div>
@@ -505,7 +502,7 @@ function TangramInner({ emit, width, height, onComplete, practice = false }) {
   );
 }
 
-export default function TangramPostulationTask({ active = false, onGameEvent, onComplete, trialCount = 1, width = 606, height = 338, practice = false }) {
+export default function TangramPostulationTask({ active = false, onGameEvent, onComplete, width = 606, height = 338, practice = false }) {
   return (
     <GameRuntime
       active={active}

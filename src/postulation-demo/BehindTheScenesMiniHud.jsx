@@ -2,22 +2,6 @@ import React, { useState } from 'react';
 import BehindTheScenesDrawer from './BehindTheScenesDrawer.jsx';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 
-const STATUS_LABEL = Object.freeze({
-  ok: 'OK',
-  warning: 'Caveat',
-  pending: 'Pendiente',
-  error: 'Error',
-  idle: 'En espera',
-});
-
-const STATUS_LABEL_EN = Object.freeze({
-  ok: 'OK',
-  warning: 'Caveat',
-  pending: 'Pending',
-  error: 'Error',
-  idle: 'On hold',
-});
-
 function statusLabel(status, t) {
   if (status === 'pending') return t('Pendiente', 'Pending');
   if (status === 'error') return t('Error', 'Error');

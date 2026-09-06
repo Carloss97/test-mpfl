@@ -14,7 +14,7 @@ export function usePostulationDemoCopy() {
       'A gamified experience where each activity contributes aggregated metrics and KRUMM prepares an 8-construct assessment-signal report for human review.',
     ),
     timeEstimate: t('6-8 min', '6-8 min'),
-    originalTimeEstimate: t('10–12 min', '10–12 min'),
+    originalTimeEstimate: t('14–16 min', '14–16 min'),
     cta: t('Comenzar prueba de postulación', 'Start application assessment'),
     secondaryCta: t('Ver qué procesa KRUMM', 'See what KRUMM processes'),
     principles: [

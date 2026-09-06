@@ -12,7 +12,7 @@ describe('PostulationLanding HR dashboard access', () => {
     const hrLink = screen.getByRole('link', { name: /Abrir vista reclutador/i });
     expect(hrLink).toHaveAttribute('href', '/reclutador');
     expect(hrLink.closest('.postulation-demo__brief')).not.toBeNull();
-    expect(screen.getByText(/10–12 min/i)).toBeInTheDocument();
+    expect(screen.getByText(/14–16 min/i)).toBeInTheDocument();
     expect(screen.getByText(/Sesión local · batería original/i)).toBeInTheDocument();
     expect(screen.getByText(/no reduce el desempeño de los juegos/i)).toBeInTheDocument();
   });

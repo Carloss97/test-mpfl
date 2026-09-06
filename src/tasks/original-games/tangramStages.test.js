@@ -8,7 +8,6 @@ import {
   trayVerticesPx,
   coveragePercent,
 } from './tangramStages.js';
-import { getTangramLevelParams } from './tangramTelemetry.js';
 
 describe('tangramStages — slots por nivel', () => {
   it('genera tantos slots como pieceCount del nivel', () => {

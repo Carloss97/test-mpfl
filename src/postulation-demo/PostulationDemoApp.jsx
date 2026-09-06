@@ -1,5 +1,4 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { useLanguage } from '../i18n/LanguageContext.jsx';
 import PostulationConsentSetup from './PostulationConsentSetup.jsx';
 import PostulationGameStage from './PostulationGameStage.jsx';
 import PostulationLanding from './PostulationLanding.jsx';
@@ -8,7 +7,7 @@ import PostulationReportScreen from './PostulationReportScreen.jsx';
 import { buildPostulationDemoFixture, isPostulationFixtureMode } from './postulationDemoFixture.js';
 import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.js';
 import { getPostulationDemoBattery, getPostulationDemoBatteryId, listVisiblePostulationBlocks, normalizePostulationDemoBatteryMode, resolvePostulationDemoBatteryMode } from './postulationDemoConfig.js';
-import { parseInviteToken, validateInvitationToken, runIdForInvitation, INVITATION_STATUS, INVITATION_GUARD_MESSAGES } from './postulationDemoInvite.js';
+import { parseInviteToken, runIdForInvitation, INVITATION_STATUS } from './postulationDemoInvite.js';
 import './postulationDemo.css';
 import './originalGameThemes.css';
 import './originalGameAnimations.css';
@@ -59,7 +58,7 @@ function buildInitialDemoState(requestedBatteryMode) {
 export default function PostulationDemoApp({ gameComponents, batteryMode: requestedBatteryMode } = {}) {
   const initialStateRef = useRef(null);
   if (initialStateRef.current === null) initialStateRef.current = buildInitialDemoState(requestedBatteryMode);
-  const { batteryMode, batteryId, blocks, inviteToken, inviteStatus } = initialStateRef.current;
+  const { batteryMode, batteryId, blocks, inviteToken } = initialStateRef.current;
   const gameEventsRef = useRef([]);
   const signalContextRef = useRef(null);
   const [phase, setPhase] = useState(initialStateRef.current.phase);

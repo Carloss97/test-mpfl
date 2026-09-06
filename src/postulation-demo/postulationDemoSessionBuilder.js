@@ -18,7 +18,7 @@ import {
   normalizePostulationDemoBatteryMode,
 } from './postulationDemoConfig.js';
 import { getOriginalGameBlueprint, sanitizeOriginalGameAggregate } from './originalGameBlueprints.js';
-import { isPracticeSummary, markPracticeSummary, summarizePractice, splitBlocksByPractice } from './originalGamePractice.js';
+import { summarizePractice, splitBlocksByPractice } from './originalGamePractice.js';
 
 export const POSTULATION_DEMO_ARTIFACTS_SCHEMA = 'krumm_postulation_demo_artifacts_v1';
 export const POSTULATION_DEMO_BATTERY_ID = POSTULATION_DEMO_BATTERY_IDS.stable_dg;

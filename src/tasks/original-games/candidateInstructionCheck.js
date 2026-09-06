@@ -103,6 +103,15 @@ function summarizeTeamCoordination(result = {}) {
   return baseSummary('team_coordination', 'low', 'no_instruction_signal_detected', diagnostics);
 }
 
+function summarizeTangram(result = {}) {
+  const solvedRate = ratio(result.solvedLevels, result.levelsAttempted);
+  const diagnostics = { solvedRate: round(solvedRate) };
+  if ((solvedRate ?? 1) <= 0.25) {
+    return baseSummary('tangram_exp001', 'review', 'controls_comprehension_review', diagnostics);
+  }
+  return baseSummary('tangram_exp001', 'low', 'no_instruction_signal_detected', diagnostics);
+}
+
 function normalizeBlock(block = {}) {
   const gameId = block.gameId ?? block.block?.gameId ?? block.result?.gameId ?? block.summary?.gameId ?? 'unknown';
   const result = block.result ?? block.summary ?? block;
@@ -118,6 +127,7 @@ function summarizeGame(block = {}) {
   if (gameId === 'passenger_routes') return summarizePassenger(result);
   if (gameId === 'balloon_risk') return summarizeBalloon(result);
   if (gameId === 'team_coordination') return summarizeTeamCoordination(result);
+  if (gameId === 'tangram_exp001') return summarizeTangram(result);
   return baseSummary(gameId, 'review', 'unsupported_game_for_instruction_check');
 }
 

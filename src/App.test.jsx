@@ -46,13 +46,13 @@ describe('App shell', () => {
     expect(screen.getByRole('heading', { name: /Búsqueda visual/i })).toBeInTheDocument();
   });
 
-  it('shows session history when localStorage has saved sessions', () => {
-    const sessions = [{ id: 's1', savedAt: '2026-01-01T00:00:00Z', facePresenceRatio: 0.8, durationMs: 5000 }];
-    localStorageMock.setItem('krumm_edge_sessions_v1', JSON.stringify(sessions));
-    render(<App />);
-    // Wait for async loadSessionsSafe
-    setTimeout(() => {
-      expect(screen.getByText(/2026/)).toBeInTheDocument();
-    }, 100);
-  });
+  it('shows session history when localStorage has saved sessions', async () => {
+      const sessions = [{ id: 's1', savedAt: '2026-01-01T00:00:00Z', facePresenceRatio: 0.8, durationMs: 5000 }];
+      localStorageMock.setItem('krumm_edge_sessions_v1', JSON.stringify(sessions));
+      render(<App />);
+      // Wait for the async loadSessionsSafe to render the saved session row.
+      // The session row always shows the "Rostro" (Face) label independent of
+      // locale/timezone formatting.
+      expect(await screen.findByText(/Rostro/)).toBeInTheDocument();
+    });
 });

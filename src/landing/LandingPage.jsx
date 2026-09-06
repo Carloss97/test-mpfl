@@ -80,7 +80,7 @@ export default function LandingPage() {
         <p className="landing__section-sub">{t('Un flujo simple, transparente y privado de punta a punta.', 'A simple, transparent, private end-to-end flow.')}</p>
         <ol className="landing__steps">
           <li>{t('La persona accede al portal /postulaciones y activa la cámara si es necesario.', 'The person accesses the /postulaciones portal and enables the camera if needed.')}</li>
-          <li>{t('Juega a una batería de 4 juegos gamificados; las métricas se recopilan localmente.', 'They play a battery of 4 gamified games; metrics are gathered locally.')}</li>
+          <li>{t('Juega a una batería de 5 juegos gamificados; las métricas se recopilan localmente.', 'They play a battery of 5 gamified games; metrics are gathered locally.')}</li>
           <li>{t('KRUMM procesa en local → genera un reporte para revisión humana.', 'KRUMM processes locally → generates a report for human review.')}</li>
           <li>{t('El reclutador revisa en /reclutador, ve la evidencia y toma una decisión contextualizada.', 'The recruiter reviews at /reclutador, sees the evidence, and makes a grounded decision.')}</li>
         </ol>

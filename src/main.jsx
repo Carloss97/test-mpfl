@@ -23,7 +23,6 @@ if (isLegacyPostulationPath(currentPath) || isLegacyPostulationHrPath(currentPat
 }
 
 const effectivePath = window.location.pathname;
-const isLandingPath = effectivePath === '/' || effectivePath === '';
 const isTechnicalAppPath = effectivePath.startsWith('/tecnico');
 const RootApp = isPostulationHrDashboardPath(effectivePath)
   ? PostulationHrDashboard

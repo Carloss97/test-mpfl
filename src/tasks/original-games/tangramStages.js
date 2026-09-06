@@ -4,7 +4,6 @@
 // de "canvas lógico" (el componente las escala a px).
 
 import {
-  TANGRAM_SHAPES,
   buildTangramLevelShapes,
   getTangramLevelParams,
   getShapeVertices,
@@ -53,7 +52,7 @@ export function buildTangramSlots(level) {
   return Object.freeze(slots);
 }
 
-export function buildTangramTray(level, width, height) {
+export function buildTangramTray(level, _width, _height) {
   // piezas en bandeja inferior, repartidas de forma estable
   const shapes = buildTangramLevelShapes(level);
   const n = Math.max(1, shapes.length);
@@ -88,11 +87,6 @@ export function trayVerticesPx(piece, width, height) {
 
 // Polígono actual de una pieza en el lienzo (si está "en curso"): tray o en curso con offset.
 export function polygonForPiece(piece, dragOffset, width, height) {
-  const base = piece.snappedSlotId
-    ? null
-    : (dragOffset
-      ? [[round(piece.dragX), round(piece.dragY)]]
-      : [toPixels(piece.trayPosition, width, height)]);
   if (piece.snappedSlotId) return null;
   const [px, py] = dragOffset ? [piece.dragX, piece.dragY] : toPixels(piece.trayPosition, width, height);
   const verts = getShapeVertices(piece.shapeId, piece.rotationDeg, 40);

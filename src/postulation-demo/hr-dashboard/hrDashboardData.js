@@ -274,7 +274,6 @@ function mapSessionToCandidate(item) {
   ];
 
   // Try to extract game values from feature vector or game results.
-  const featureMap = payload?.featureVectorV2?.featureMap ?? {};
   const gameResults = payload?.behavioral?.gameResults ?? [];
 
   // Map game results if present.

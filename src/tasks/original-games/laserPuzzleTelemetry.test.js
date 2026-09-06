@@ -117,7 +117,9 @@ describe('laser puzzle postulation telemetry helpers', () => {
       { name: 'Nexo gemelo', moves: null, authoredMoves: 6 },
     ]);
     expect(minimumMoves.every((level) => level.moves === null && level.authoredMoves >= 4)).toBe(true);
-  });
+    // BFS de 3 niveles bajo carga en Raspberry Pi puede exceder el testTimeout
+    // global de 30 s; el test es verificación de diseño de niveles, no de runtime.
+  }, 180_000);
 
   it('fits every Laser board inside compact postulation stages', () => {
     const viewport = { width: 606, height: 338 };

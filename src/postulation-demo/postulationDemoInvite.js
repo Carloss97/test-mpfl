@@ -48,7 +48,7 @@ export function hasInviteParam(search) {
  *  - cualquier otro token válido     -> valid (demo abierta)
  * Cualquier token que no pase el regex -> invalid.
  */
-export function localValidateInvitationToken(token, now = Date.now()) {
+export function localValidateInvitationToken(token) {
   if (!TOKEN_REGEX.test(token)) return { status: INVITATION_STATUS.INVALID, token, source: 'local' };
   const lower = token.toLowerCase();
   if (lower.startsWith('tok-expired')) return { status: INVITATION_STATUS.EXPIRED, token, source: 'local' };

@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   TANGRAM_EXP_ID,
-  TANGRAM_SHAPES,
-  TANGRAM_LEVEL_PARAMS,
   getTangramLevelParams,
   buildTangramLevelShapes,
   rotatePoint,

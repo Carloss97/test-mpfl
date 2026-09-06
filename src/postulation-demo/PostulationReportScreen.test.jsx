@@ -7,8 +7,7 @@ import { POSTULATION_DEMO_BATTERY_MODES } from './postulationDemoConfig.js';
 import { buildPostulationDemoFixture } from './postulationDemoFixture.js';
 import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.js';
 
-const tEs = (es, en) => es;
-const tEn = (es, en) => en ?? es;
+const tEs = (es, _en) => es;
 
 const completedDemo = Object.freeze({
   completedCount: 2,
@@ -247,12 +246,14 @@ describe('PostulationReportScreen', () => {
       'balloon_risk',
       'passenger_routes',
       'team_coordination',
+      'tangram_exp001',
     ]);
     expect(cards.map((card) => card.feedback?.displayCategory)).toEqual([
       'clear_solution',
       'balanced_feedback_strategy',
       'clear_success',
       'structured_coordination_signal',
+      'efficient_assembly',
     ]);
     expect(JSON.stringify(cards.map((card) => card.feedback))).not.toMatch(/beamCells|pumpSequence|fullRoute|visitedCells|rawGameEvents|pointerSamples|freeText|typedResponse|choiceSequence/i);
   });

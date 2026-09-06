@@ -1,6 +1,6 @@
 # Handoff — Nueva sesión: iterar la landing pública KRUMM
 
-**Fecha:** 2026-09-05
+**Fecha:** 2026-09-05 (actualizado 09-06: integración Tangram EXP-001 completada y suite verde)
 **Repo:** `/home/sarlock/krumm/test-mpfl` (rama `main`, remoto `Carloss97/test-mpfl`, GitHub)
 **Modelo:** `qwen-model` (GPU Lambda 2xH100 activa, túnel local :18000 — ver protocolo en AGENTS.md §GPU)
 **Ruta:** `src/landing/LandingPage.jsx` + `src/landing/landing.css`
@@ -15,13 +15,19 @@
   - `/postulaciones` → portal candidato (antes `/postulaciones-demo`)
   - `/reclutador` → dashboard HR (antes `/postulaciones-demo/hr`)
   - `/postulaciones-demo/*` → redirect automático a las nuevas (en `src/main.jsx`)
-- **Cambios UI/UX hechos en esta sesión pero NO redesplegados aún** (modificados en `src/landing/*`, `src/postulation-demo/postulationDemo.css`, `src/main.jsx`):
+- **Cambios UI/UX hechos y PENDIENTES de redesplegar** (modificados en `src/landing/*`, `src/postulation-demo/postulationDemo.css`, `src/main.jsx`):
   1. Landing modernizada: hero alineado, secciones «Qué hacemos / Cómo funciona / Contacto» con recuadros de color (`#4dd4ac/#74a7ff/#ffd166/#ff6b6b`), numeración en pasos, contacto como bloque final.
-  2. `LanguageToggle` pasó de botón flotante a slot fijo en la barra de navegación (clase `.krumm-lang-toggle` en `postulationDemo.css` ahora `position: static` + tema oscuro; ya no tapa contenido).
-  3. Emails de contacto actualizados: `candidato@krumm.cl` → `contacto@krumm.cl`; `carlos@krumm.cl` → `carlossaldivia@krumm.cl`.
+  2. `LanguageToggle` pasó de botón flotante a slot fijo en la barra de navegación (`.krumm-lang-toggle` en `postulationDemo.css` ahora `position: static`; ya no tapa contenido).
+  3. Emails de contacto: `contacto@krumm.cl` y `carlossaldivia@krumm.cl`.
   4. Se quitó el `LanguageToggle` global de `src/main.jsx` (se renderiza por página).
-
-- **Git:** `main` en `e4310ba` (último commit: "refactor(ui): landing pública moderna + idioma fijo + corrección de emails"). Los 4 cambios de arriba en esta lista AÚN NO commit/push. Verifica con `git status`.
+- **NUEVO en esta sesión — integración Tangram EXP-001 completada** (el 5.º juego de la batería original):
+  - Batería original ahora = 5 juegos: laser, balloon, passenger, team_coordination, `tangram_exp001`.
+  - Módulo de reporte nuevo `src/tasks/original-games/tangramReportFeedback.js` (+tests), categorías `efficient_assembly` / `move_overhead_review` / `incomplete_assembly`.
+  - `candidateInstructionCheck.js`: `summarizeTangram` (soporte de instrucciones).
+  - `PostulationReportSummary.js`: métricas + feedback + labels de tangram.
+  - `TangramPostulationTask.jsx`: arreglado el arranque de evaluación (`setIntroDone(true)` en el botón start-eval — antes el tutorial nunca pasaba a play durante transición evaluativa).
+  - Copy actualizada: landing «batería de 5 juegos», `originalTimeEstimate` 14–16 min.
+- **Git:** `main` en `e4310ba` (commit "refactor(ui): landing…"). El trabajo de Tangram + arreglos de tests está SIN commitear. Verifica con `git status`.
 
 ## Trabajo pendiente para la nueva sesión (usuario debe guiar con más detalle)
 
@@ -33,28 +39,31 @@
    *Nota:* `scripts/deploy-frontend.sh` usa `PROFILE=default` (corregido; **no** `admin-carlos`).
 2. **UI/UX general de todas las páginas** (usuario: "Mejora la UI/UX en general de todas las paginas. Haz solo un par de iteraciones... te daré instrucciones más detalladas más adelante"). Foco sugerido:
    - Coherencia visual del tema KRUMM (dark `#07111f`, acentos `#4dd4ac`/`#74a7ff`) entre landing, /postulaciones y /reclutador.
-   - Revisar que el botón de idioma esté bien anclado en /postulaciones y /reclutador (hoy solo está en la landing; verifica si el flujo candidato lo necesita).
+   - Revisar que el botón de idioma esté bien anclado en /postulaciones y /reclutador (hoy solo está en la landing; el flujo candidato usa el componente PostulationLanding que NO incluye LanguageToggle — decide si debe).
    - Verificación visual con navegador real (Vite `:5173` o el dominio) en desktop + móvil antes de dar por bueno.
    - Mantener «sin demo» en texto visible (regla del usuario).
+   - Revisar visualmente el flujo Tangram (tutorial → transición → 4 niveles) y el reporte con la tarjeta de Ensamblaje Geométrico.
 
 ## Comandos de verificación y gates (recordatorio AGENTS.md)
 
 ```bash
 NODE_ENV=test npx vitest run <focales> --pool=threads --reporter=default
-npx oxlint src/postulation-demo src/landing src/main.jsx
+npx oxlint src/postulation-demo src/landing src/tasks/original-games src/main.jsx   # 0 warnings
 npm run build
 bash scripts/deploy-frontend.sh   # tras build
 ```
 
+Nota test lento: `laserPuzzleTelemetry.test.js` "does not author throwaway…" tiene timeout explícito de 180s por la BFS bajo carga en la Pi.
+
 ## GPU / modelo (activo)
 
-- vLLM up sirviendo `qwen-model` (Qwen3.8-27B-FP8) en `http://127.0.0.1:18000/v1`.
+- vLLM up sirviendo `qwen-model` (Qwen3.8-27B-FP8) en `http://127.0.0.1:18000/v1`. Salud: `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18000/v1/models` → 200. (NO usar `/health`: responde 200 con cuerpo vacío y es normal.)
 - Costo vivo ~$6.38/h; watchdog apaga tras 40 min idle o 6 h. Si el boot se pierde: `sudo systemctl restart krumm-vllm.service` en la instancia (ver `~/.hermes/gpu_state.json` para la IP).
 - `config.yaml` default ya es `qwen-model`.
 
 ## Alertas (nuevo)
 
-- Cron job `krumm-alerts` (`142f86b5517f`, cada hora) entrega informe de estado al canal **hermes-alerts** (`discord:1545165790641258557`). Primer run disparado en background.
+- Cron job `krumm-alerts` (`142f86b5517f`, cada hora) entrega informe de estado al canal **hermes-alerts** (`discord:1545165790641258557`). El chequeo de GPU usa `/v1/models` (ver arriba). Varía la salida (no [SILENT]) para que siempre publique.
 
 ## Recordatorios operativos de esta sesión
 

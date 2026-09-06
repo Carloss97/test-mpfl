@@ -97,6 +97,34 @@ describe('candidate instruction check', () => {
     expect(JSON.stringify(check)).not.toMatch(/personalidad|impulsividad|frustración baja/i);
   });
 
+  it('supports tangram_exp001 assembly aggregates as an instruction-check source', () => {
+    const check = buildCandidateInstructionCheck([
+      { gameId: 'tangram_exp001', result: { aggregateOnly: true, completed: true, levelsAttempted: 4, completedLevels: 4, solvedLevels: 3 } },
+    ]);
+
+    expect(check.instructionRiskFlag).toBe('low');
+    expect(check.excludeFromTalentMappingFlag).toBe(false);
+    expect(check.gameSummaries[0]).toMatchObject({
+      gameId: 'tangram_exp001',
+      instructionRisk: 'low',
+      reason: 'no_instruction_signal_detected',
+    });
+    expectNoForbiddenKeys(check);
+  });
+
+  it('flags tangram control-comprehension review when barely any level is solved', () => {
+    const check = buildCandidateInstructionCheck([
+      { gameId: 'tangram_exp001', result: { aggregateOnly: true, completed: false, levelsAttempted: 4, completedLevels: 4, solvedLevels: 1 } },
+    ]);
+
+    expect(check.instructionRiskFlag).toBe('review');
+    expect(check.gameSummaries[0]).toMatchObject({
+      instructionRisk: 'review',
+      reason: 'controls_comprehension_review',
+    });
+    expectNoForbiddenKeys(check);
+  });
+
   it('rejects non aggregate or raw-field contaminated inputs', () => {
     const check = buildCandidateInstructionCheck([
       { gameId: 'laser_puzzle', result: { aggregateOnly: true, completed: true, beamCells: ['1,1'] } },
