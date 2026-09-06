@@ -82,23 +82,27 @@ export function resolveInvitationStatus(item, now = nowSeconds()) {
 
 /** Marca la invitación como usada (si singleUse). Devuelve el item actualizado. */
 export function markInvitationUsed({ docClient, token, sessionId }) {
-  const item = {
-    invitationId: token,
-    usage: { sessionId, usedAt: nowSeconds() },
-    status: 'used',
-  };
-  return docClient.put({
-    TableName: INVITATIONS_TABLE,
-    Item: item,
-    // En DynamoDB update no muta la clave; aquí re-put = no-idempotente salvo
-    // que el handler valide el estado antes (así lo hace). Mantener simple.
-  }).then(() => item);
+  // PutItem de DynamoDB REEMPLAZA el item completo (el mock de test hace merge,
+  // divergencia que ocultó este bug en prod): re-leer y re-putear el item fusionado
+  // preserva singleUse/email/createdAt/expiresAt — resolveInvitationStatus necesita
+  // `singleUse` para reportar 'used'.
+  return docClient
+    .get({ TableName: INVITATIONS_TABLE, Key: { invitationId: token } })
+    .then((out) => {
+      const existing = out?.Item ?? {};
+      const item = { ...existing, invitationId: token, usage: { sessionId, usedAt: nowSeconds() }, status: 'used' };
+      return docClient.put({ TableName: INVITATIONS_TABLE, Item: item }).then(() => item);
+    });
 }
 
 /** Revoca explícitamente una invitación (respaldado por el admin con Cognito). */
 export function revokeInvitation({ docClient, token }) {
-  return docClient.put({
-    TableName: INVITATIONS_TABLE,
-    Item: { invitationId: token, status: 'revoked' },
-  }).then(() => ({ invitationId: token, status: 'revoked' }));
+  // Mismas semánticas de merge que markInvitationUsed (ver su comentario).
+  return docClient
+    .get({ TableName: INVITATIONS_TABLE, Key: { invitationId: token } })
+    .then((out) => {
+      const existing = out?.Item ?? {};
+      const item = { ...existing, invitationId: token, status: 'revoked' };
+      return docClient.put({ TableName: INVITATIONS_TABLE, Item: item }).then(() => item);
+    });
 }

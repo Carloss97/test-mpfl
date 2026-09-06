@@ -3,7 +3,13 @@
 // y routea según path. En tests se inyecta docClient; en producción se usa el real.
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  GetCommand,
+  ScanCommand,
+  DeleteCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { routeSessions } from './handlers/sessions.mjs';
 import { routeInvitations } from './handlers/invitations.mjs';
 
@@ -12,9 +18,19 @@ const docClient = DynamoDBDocumentClient.from(client, {
   marshallOptions: { removeUndefinedValues: true, convertEmptyValues: false },
 });
 
+// Adaptador producción: la capa de repositorios (y sus mocks de test) usa la API
+// de conveniencia put/get/scan/delete inyectable; el SDK v3 es command-based.
+// El adaptador vive SOLO aquí: los tests inyectan su propio docClient.
+const productionDocClient = Object.freeze({
+  put: (input) => docClient.send(new PutCommand(input)),
+  get: (input) => docClient.send(new GetCommand(input)),
+  scan: (input) => docClient.send(new ScanCommand(input)),
+  delete: (input) => docClient.send(new DeleteCommand(input)),
+});
+
 export async function handler(event, context = {}) {
   // Se permite inyectar un docClient vía context (tests / integración).
-  const deps = { docClient: context.docClient ?? docClient };
+  const deps = { docClient: context.docClient ?? productionDocClient };
   try {
     const routeKey = event?.routeKey ?? event?.resource ?? '';
     if (routeKey.includes('/invitations')) {

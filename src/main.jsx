@@ -2,7 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import PostulationDemoApp from './postulation-demo/PostulationDemoApp.jsx';
-import PostulationHrDashboard from './postulation-demo/hr-dashboard/PostulationHrDashboard.jsx';
+import PostulationHrDashboard from './postulation-demo/hr-dashboard/HrDashboardRoot.jsx';
 import LandingPage from './landing/LandingPage.jsx';
 import {
   isPostulationDemoPath,

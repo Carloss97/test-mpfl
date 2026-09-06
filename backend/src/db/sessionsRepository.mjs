@@ -79,12 +79,16 @@ export function deleteSession({ docClient, sessionId }) {
 export function appendAuditLog({ docClient, auditId, sessionId, actor = 'system', action, detail = null }) {
   const item = {
     auditId,
-    sessionId: sessionId ?? null,
     actor,
     action,
     timestamp: nowIso(),
     detail: detail ?? null,
   };
+  // sessionId es clave del GSI sessionId-index (tipo S): escribir NULL explícito
+  // lanza ValidationException (type mismatch S vs NULL). Omitir el atributo
+  // excluye el item del índice (semántica sparse) — lo correcto para auditorías
+  // previas a la sesión (invitation.create, sessionId aún null).
+  if (sessionId != null) item.sessionId = sessionId;
   return docClient.put({
     TableName: AUDIT_LOG_TABLE,
     Item: item,

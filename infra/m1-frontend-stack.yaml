@@ -42,6 +42,11 @@ Resources:
         DefaultRootObject: index.html
         HttpVersion: http2
         PriceClass: PriceClass_100
+        Aliases:
+          Quantity: 2
+          Items:
+            - krumm.cl
+            - www.krumm.cl
         Origins:
           - Id: s3-origin
             DomainName: !GetAtt SiteBucket.RegionalDomainName
@@ -66,8 +71,14 @@ Resources:
             ResponseCode: 200
             ResponsePagePath: /index.html
             ErrorCachingMinTTL: 0
+        # Sync con estado live 2026-09-06: dominio krumm.cl/www con cert ACM
+        # (antes el template decía CloudFrontDefaultCertificate, drift que un
+        # deploy CFN habría revertido el dominio — riesgo detectado en B1).
         ViewerCertificate:
-          CloudFrontDefaultCertificate: true
+          CloudFrontDefaultCertificate: false
+          ACMCertificateArn: arn:aws:acm:us-east-1:931932531447:certificate/d201648d-885c-4aea-b84b-5eef978866db
+          SSLSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -89,17 +100,17 @@ Resources:
     Type: AWS::CloudFront::ResponseHeadersPolicy
     Properties:
       ResponseHeadersPolicyConfig:
-        Name: krumm-staging-rhp-m1
-        Comment: KRUMM M1 staging - security headers (CSP, HSTS, XFO, referrer)
+        Name: krumm-staging-rhp-m2
+        Comment: KRUMM staging - security headers (CSP con API backend B1, HSTS, XFO, referrer)
         SecurityHeadersConfig:
-          # CSP: la app es 100% same-origin; el único recurso externo son los
-          # modelos MediaPipe (face + pose) que se fetchan en worker desde
-          # storage.googleapis.com (ver src/telemetry/mediapipeAssets.js).
-          # WASM se sirve local desde /mediapipe/wasm.
+          # CSP: same-origin + modelos MediaPipe (storage.googleapis.com) +
+          # API backend KRUMM (B1, 2026-09-06): rwm08ik23m.execute-api.us-east-1
+          # (invitaciones M3 + sesiones/reportes M4). Las policies de CloudFront
+          # son inmutables: por eso se renombra a -m2 en cada cambio de CSP.
           # style-src 'unsafe-inline': React usa atributos style=""; auditar en
           # iteración posterior para eliminarlo.
           ContentSecurityPolicy:
-            ContentSecurityPolicy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://storage.googleapis.com; worker-src 'self' blob:; wasm-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+            ContentSecurityPolicy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://storage.googleapis.com https://rwm08ik23m.execute-api.us-east-1.amazonaws.com; worker-src 'self' blob:; wasm-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
             Override: true
           # X-Frame-Options: DENY (anti clickjacking)
           FrameOptions:

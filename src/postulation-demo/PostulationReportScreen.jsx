@@ -118,11 +118,19 @@ export default function PostulationReportScreen({
   artifacts = null,
   completedDemo = null,
   reportError = null,
+  sessionStatus = null,
   onRestart,
   onDownloadFile,
   onDownloadAll,
 } = {}) {
   const { t } = useLanguage();
+  const sessionNote = sessionStatus === 'saved'
+    ? t('Evaluación registrada para revisión humana.', 'Assessment registered for human review.')
+    : sessionStatus === 'error'
+      ? t('No fue posible registrar la evaluación en el servidor; el reporte local sigue disponible.', 'Could not register the assessment on the server; the local report is still available.')
+      : sessionStatus === 'saving'
+        ? t('Registrando evaluación…', 'Registering assessment…')
+        : null;
   const validationOk = artifacts?.payload?.validation?.ok === true && artifacts?.validation?.ok !== false;
   const descriptors = useMemo(() => buildPostulationReportDownloadDescriptors(artifacts), [artifacts]);
   const primaryReport = getPostulationPrimaryReportDescriptor(descriptors);
@@ -190,6 +198,12 @@ export default function PostulationReportScreen({
           <p>{reportFormats || t('Formatos no disponibles', 'Formats unavailable')}</p>
         </div>
       </div>
+
+      {sessionNote && (
+        <div className="postulation-demo__fixture-banner" role="status" data-testid="session-status-note">
+          <span>{sessionNote}</span>
+        </div>
+      )}
 
       {artifacts.fixture?.synthetic && (
         <div className="postulation-demo__fixture-banner" role="note">

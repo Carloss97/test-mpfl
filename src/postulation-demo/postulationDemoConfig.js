@@ -1,5 +1,10 @@
 import { buildOriginalGamePostulationBlocks } from './originalGameBlueprints.js';
 
+// Base URL de la API backend (DynamoDB + Lambda). Se fija en build-time vía
+// VITE_KRUMM_API_BASE. null/'' = modo local sin backend (demo determinista).
+export const KRUMM_API_BASE = (typeof import.meta !== 'undefined'
+  && import.meta.env?.VITE_KRUMM_API_BASE) || null;
+
 export const POSTULATION_DEMO_BATTERY_MODES = Object.freeze({
   STABLE_DG: 'stable_dg',
   ORIGINAL_GAMES: 'original_games',

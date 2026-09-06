@@ -193,7 +193,7 @@ function CandidateDetail({ candidate, t, lang }) {
   );
 }
 
-export default function PostulationHrDashboard({ candidates = HR_DASHBOARD_CANDIDATES } = {}) {
+export default function PostulationHrDashboard({ candidates = HR_DASHBOARD_CANDIDATES, dataSource = 'synthetic' } = {}) {
   const { t, language } = useLanguage();
   const lang = language === 'en' ? 'en' : 'es';
   const [query, setQuery] = useState('');
@@ -243,14 +243,14 @@ export default function PostulationHrDashboard({ candidates = HR_DASHBOARD_CANDI
         </nav>
         <div className="hr-dashboard__user">
           <span aria-hidden="true">HR</span>
-          <div><strong>{t('Equipo Personas', 'People Team')}</strong><small>{t('Entorno demo', 'Demo environment')}</small></div>
+          <div><strong>{t('Equipo Personas', 'People Team')}</strong><small>{dataSource === 'real' ? t('Sesiones reales (staging)', 'Live sessions (staging)') : dataSource === 'checking' ? t('Cargando sesiones…', 'Loading sessions…') : t('Entorno demo', 'Demo environment')}</small></div>
         </div>
       </header>
 
       <main className="hr-dashboard__main">
         <section className="hr-dashboard__hero" aria-labelledby="hr-dashboard-title">
           <div>
-            <span className="hr-dashboard__eyebrow">{t('Workspace HR · Datos sintéticos', 'HR Workspace · Synthetic data')}</span>
+            <span className="hr-dashboard__eyebrow">{dataSource === 'real' ? t('Workspace HR · Sesiones reales', 'HR Workspace · Live sessions') : dataSource === 'checking' ? t('Workspace HR · Cargando sesiones…', 'HR Workspace · Loading sessions…') : t('Workspace HR · Datos sintéticos', 'HR Workspace · Synthetic data')}</span>
             <h1 id="hr-dashboard-title">{t('Panel de evaluaciones', 'Evaluation panel')}</h1>
             <p>{t('Revisa cobertura, calidad y señales agregadas sin perderte en detalles técnicos.', 'Review coverage, quality, and aggregated signals without getting lost in technical details.')}</p>
           </div>

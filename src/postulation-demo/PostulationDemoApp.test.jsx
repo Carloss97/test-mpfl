@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import PostulationDemoApp from './PostulationDemoApp.jsx';
 import PostulationConsentSetup from './PostulationConsentSetup.jsx';
@@ -199,5 +199,25 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(screen.getByRole('heading', { name: /Optimización de rutas de pasajeros/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Operación Faro: coordinación de equipo/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Ensamblaje Geométrico/i })).toBeInTheDocument();
+  });
+
+  it('invite guard (M3): an expired invitation token blocks the flow with a specific message', async () => {
+    window.history.pushState({}, '', '/postulaciones?invite=tok-expired-abc123');
+    render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Invitación no válida/i })).toBeInTheDocument();
+    });
+    expect(screen.getByText(/ha expirado/i)).toBeInTheDocument();
+  });
+
+  it('invite guard (M3): a valid token proceeds to session setup (local validator sin endpoint)', async () => {
+    window.history.pushState({}, '', '/postulaciones?invite=tok-live-abc123');
+    render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Preparación de la sesión/i })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('heading', { name: /Invitación no válida/i })).not.toBeInTheDocument();
   });
 });

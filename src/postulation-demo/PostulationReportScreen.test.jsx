@@ -267,4 +267,20 @@ describe('PostulationReportScreen', () => {
     expect(visibleText).toMatch(/Contrastar con entrevista/i);
     expect(visibleText).not.toMatch(/contratar|rechazar|seleccionar automáticamente|apto\/no apto/i);
   });
+
+  it('muestra la nota de registro en el backend según sessionStatus (B1/B2)', () => {
+    const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
+    const { unmount } = render(<PostulationReportScreen artifacts={fixture.artifacts} completedDemo={fixture.summary} sessionStatus="saved" />);
+    expect(screen.getByTestId('session-status-note')).toHaveTextContent(/Evaluación registrada para revisión humana/i);
+    unmount();
+
+    render(<PostulationReportScreen artifacts={fixture.artifacts} completedDemo={fixture.summary} sessionStatus="error" />);
+    expect(screen.getByTestId('session-status-note')).toHaveTextContent(/No fue posible registrar la evaluación en el servidor/i);
+  });
+
+  it('no muestra nota de sesión cuando no hay backend (sessionStatus null)', () => {
+    const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
+    render(<PostulationReportScreen artifacts={fixture.artifacts} completedDemo={fixture.summary} />);
+    expect(screen.queryByTestId('session-status-note')).not.toBeInTheDocument();
+  });
 });

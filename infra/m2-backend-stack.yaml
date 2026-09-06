@@ -17,13 +17,14 @@ Parameters:
 Globals:
   Function:
     Runtime: nodejs20.x
-    Handler: index.handler
+    Handler: backend/src/index.handler
     Timeout: 30
     MemorySize: 256
     Environment:
       Variables:
         SESSIONS_TABLE: !Ref SessionsTable
         AUDIT_LOG_TABLE: !Ref AuditLogTable
+        INVITATIONS_TABLE: !Ref InvitationsTable
         KRUMM_RETENTION_DAYS: !Ref RetentionDays
 
 Resources:
@@ -77,7 +78,29 @@ Resources:
           Projection:
             ProjectionType: ALL
 
-  # --- Lambda rol mínimo privilegio (solo estas dos tablas) ---
+  # --- DynamoDB: invitations (single-use tokens, TTL 72h por defecto) ---
+  InvitationsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'krumm-${Environment}-invitations'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      AttributeDefinitions:
+        - AttributeName: invitationId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: invitationId
+          KeyType: HASH
+
+  # --- Lambda rol mínimo privilegio (solo estas tablas) ---
   SessionsFunctionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -101,10 +124,12 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:DeleteItem
                   - dynamodb:Query
+                  - dynamodb:Scan
                 Resource:
                   - !Sub '${SessionsTable.Arn}'
                   - !Sub '${AuditLogTable.Arn}'
                   - !Sub '${AuditLogTable.Arn}/index/sessionId-index'
+                  - !Sub '${InvitationsTable.Arn}'
 
   # --- Lambda ---
   SessionsFunction:
@@ -120,12 +145,36 @@ Resources:
             ApiId: !Ref SessionsApi
             Path: /sessions
             Method: POST
+        SessionsList:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SessionsApi
+            Path: /sessions
+            Method: GET
         SessionItem:
           Type: HttpApi
           Properties:
             ApiId: !Ref SessionsApi
             Path: /sessions/{id}
             Method: ANY
+        Invitations:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SessionsApi
+            Path: /invitations
+            Method: POST
+        InvitationItem:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SessionsApi
+            Path: /invitations/{token}
+            Method: GET
+        InvitationRevoke:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SessionsApi
+            Path: /invitations/{token}/revoke
+            Method: POST
 
   # --- API Gateway HTTP ---
   SessionsApi:
@@ -135,7 +184,7 @@ Resources:
       CorsConfiguration:
         AllowMethods: [GET, POST, DELETE, OPTIONS]
         AllowOrigins: ['*']
-        AllowHeaders: ['content-type', 'authorization']
+        AllowHeaders: ['content-type', 'authorization', 'x-invitation-id']
 
 Outputs:
   SessionsApiEndpoint:

@@ -86,7 +86,12 @@ function actorFrom(event) {
 
 function invitationHeader(event) {
   const headers = event?.headers ?? event?.multiValueHeaders ?? {};
-  return String(headers['x-invitation-id'] ?? headers['X-Invitation-Id'] ?? '').trim() || null;
+  // Búsqueda case-insensitive: API Gateway (y clientes) pueden normalizar el
+  // caso del header de forma distinta (x-invitation-id / X-invitation-id / …).
+  const value = Object.entries(headers).find(
+    ([key]) => String(key).toLowerCase() === 'x-invitation-id',
+  )?.[1];
+  return String(value ?? '').trim() || null;
 }
 
 /** Consume una invitación single-use cuando viene en el header x-invitation-id.

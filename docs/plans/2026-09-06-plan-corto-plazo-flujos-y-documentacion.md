@@ -13,8 +13,8 @@
 | Backend M2-M6 | Código done en repo (DynamoDB+Lambdas aggregate-only, invitaciones, dashboard real, hardening) — **deploy AWS no autorizado/ejecutado** (regla vigente) | kanban t_bb757100…t_3b00a223 |
 | Docs de módulos | **2 de 5 juegos** documentados (`balloon_risk.md`, `caminos.md`); template v1 existe; **tangram sin doc de módulo** (aun con plan + PDFs) | docs/design/modulos/ |
 | Audit G.1 (08-27) | **Obsoleto**: lista G.2/G.5 como pendientes (ya done); G1-P01 teclado cerrado vía G.5; G1-P05 (hueco breakpoint 760/768) sin re-verificar | docs/design/game-experience-audit.md |
-| R-7 validación | R-7A QA técnica ejecutable hoy; R-7B requiere 2+ expertos; R-7C = 3 entrevistas (KRU-65 en curso) | plan R-7 + Linear |
-| GPU/infra | GPU Lambda retenida (manual), dispatcher con regla de retención, SSO AWS vigente ~11 h | sesión de hoy |
+| R-7 validación | R-7A QA técnica ejecutable hoy; **R-7B pendiente hasta nuevo aviso (decisión usuario 2026-09-06)**; R-7C = 3 entrevistas (KRU-65 en curso) | plan R-7 + Linear |
+| T.3 cámara | **Done (2026-09-06)**: sanity realizado en equipo externo con webcam — detección OK en gran mayoría; ajuste de sensibilidades pendiente (card T.3b, t_c1892485) | reporte usuario |
 | **Decisiones 2026-09-06 (tarde)** | **Exp 7/8 fuera del plan** (user); **B1 autorizado** (user); limpieza de ruido: 13 docs → `docs/archive/`, raíz sin basura | esta sesión |
 
 ## 1. Mejoras de corto plazo por flujo
@@ -34,10 +34,10 @@
 
 | # | Mejora | Evidencia / gap | Esfuerzo |
 |---|---|---|---|
-| B1 | **Deploy backend M2-M6 a AWS** — **AUTORIZADO por el usuario (2026-09-06)**: instalar SAM CLI, desplegar `infra/m2-backend-stack.yaml` (staging: DynamoDB sessions + audit_log TTL 30d, Lambda nodejs20, API Gateway HTTP), wirear el frontend a la API y verificar con invitación real | código listo; SSO vigente (renovable) | 1 d — **siguiente ejecución** |
-| B2 | **Invitación real (M3)**: link de invitación → sesión candidata real → reporte en `/reclutador` (reemplaza datos sintéticos) | hr-dashboard sin fetch | depende B1 |
+| B1 | **Deploy backend M2-M6 a AWS** — **AUTORIZADO (2026-09-06)**: SAM CLI, `infra/m2-backend-stack.yaml` (staging: DynamoDB sessions+audit_log+invitations, Lambda nodejs20, API GW HTTP), wire frontend, verificar invitación real | **DONE 2026-09-06**: API `https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/staging` (stack `krumm-m2-backend-staging`); E2E 7/7 (invitación single-use, sesiones, lista HR, privacy 422); frontend wireado (guard invitaciones + POST sesión + /reclutador con sesiones reales) | — |
+| B2 | **Invitación real (M3) + vista HR con datos reales** | **DONE dentro de B1**: `/postulaciones?invite=<token>` valida contra backend; al completar, POST `/sessions` (consume single-use); `/reclutador` fetch `GET /sessions` (fallback sintéticos etiquetados) | — |
 | B3 | **Vista HR**: brief de entrevista por evaluación, filtros (fecha/estado), export Markdown/CSV de agregados (humanReviewOnly) | KRU-50 "Recruiter Dashboard v1 Real" | 1–2 d (tras B1) |
-| B4 | **R-7B validez de contenido**: 2+ expertos I-O/psicometría/producto califican matriz constructo×tarea (aceptar/revisar/rechazar) | plan R-7; requiere agenda | externo |
+| B4 | **R-7B validez de contenido** — **PENDIENTE hasta nuevo aviso** (decisión usuario 2026-09-06). 2+ expertos I-O/psicometría/producto califican matriz constructo×tarea (aceptar/revisar/rechazar). Preparar materiales (matriz + rúbrica + formulario) cuando se reactive | plan R-7 | en espera |
 | B5 | **R-7C entrevistas cognitivas**: 3 candidatos con guía (KRU-65 en curso) — verificar que instrucciones no explican más varianza que el constructo | plan R-7 | externo (1 sem) |
 
 ### 1.3 Juegos (batería original)
@@ -86,11 +86,11 @@ Flujo objetivo para que un agente implemente una experiencia nueva en 1–2 día
 
 | Bloque | Contenido | Estado |
 |---|---|---|
-| 0 (ahora) | **B1 deploy backend** (AUTORIZADO): SAM CLI → `infra/m2-backend-stack.yaml` (staging) → wire frontend → verificar invitación real | siguiente ejecución |
+| 0 (ahora) | **B1 deploy backend** — **COMPLETADO 2026-09-06** (ver B1/B2 en §1) | hecho |
 | 1 (QA) | C1 re-audit G.1 en vivo + C2 práctica completatable en los 5 juegos | tras B1 (o paralelo) |
 | 2 (docs) | J2 backfill laser + team_coordination (plantilla v2) | en curso de la ola de limpieza |
 | 3 (UX) | C3 onboarding copy + C5 SFX (KRU-64) + C6 tangram táctil | tras QA |
-| 4 (validación) | R-7B (B4, expertos) + R-7C (B5, KRU-65) — R-7A se puede adelantar | depende de agenda |
+| 4 (validación) | **R-7B en espera hasta nuevo aviso** (user 2026-09-06); R-7C (B5, KRU-65) — R-7A se puede adelantar con C1 | depende de agenda |
 
 ## 4. Limpieza de proyecto (ejecutada 2026-09-06)
 
@@ -101,7 +101,7 @@ Flujo objetivo para que un agente implemente una experiencia nueva en 1–2 día
 ## 5. Decisiones pendientes del usuario (actualizado 2026-09-06)
 
 1. ~~**Exp 7 y 8**~~ → **FUERA del plan por ahora** (decisión 2026-09-06). Cards archivadas; KRU-61/62 a Backlog. Se reactivan solo con spec (§2).
-2. ~~**Backend a AWS**~~ → **AUTORIZADO** (2026-09-06). B1 es la siguiente ejecución.
-3. **R-7B**: ¿quién/quiénes califican validez de contenido (2+ expertos)?
-4. **T.3**: ¿disponibilidad de hardware de cámara para el sanity empírico?
+2. ~~**Backend a AWS**~~ → **AUTORIZADO (2026-09-06) y COMPLETADO la misma noche** — API staging operativa, E2E 7/7. Bugs hallados y fijados en prod: (a) SDK v3 command-based sin métodos `put/get` (adaptador en `index.mjs`, pin `@aws-sdk/*@3.600.0`); (b) IAM faltaba `dynamodb:Scan`; (c) DynamoDB rechaza `NULL` en clave de GSI (audit `sessionId` omitido cuando es null); (d) header `x-invitation-id` case-insensitive; (e) **mock de tests mergeaba items vs PutItem real que reemplaza** → `markInvitationUsed` perdía `singleUse` (invitación "consumida" leía como valid) — fix read-merge-write + test de regresión con semántica replace; (f) CSP CloudFront bloqueaba fetch a la API (nueva policy `krumm-staging-rhp-m2` con API en `connect-src`); (g) template m1-front drift (aliases/cert ACM ausentes) — sync para evitar revert del dominio.
+3. ~~**R-7B**~~ → **pendiente hasta nuevo aviso** (decisión 2026-09-06).
+4. ~~**T.3**~~ → **realizado** en equipo externo con webcam (usuario, 2026-09-06); follow-up de sensibilidades en card T.3b.
 5. **Key Lambda vieja** (leak en `gpu_manager.py`, ya eliminada del repo): confirmar en Lambda que `secret_hx100_cafacf0a…` (key del archivo) esté invalidada/rotada — quedó en la historia git del repo público.

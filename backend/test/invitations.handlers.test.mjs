@@ -152,4 +152,38 @@ describe('backend invitations (RED -> GREEN)', () => {
     const bad = await routeInvitations(event({ method: 'GET', route: 'POST /invitations' }), deps);
     expect(bad.statusCode).toBe(405);
   });
+
+  it('regresión: consumo single-use con semántica REPLACE (PutItem real de DynamoDB, no merge del mock)', async () => {
+    // DynamoDB PutItem reemplaza el item completo; el mock de este archivo hace
+    // merge. Este test replica la semántica real para detectar pérdida de campos
+    // (p. ej. singleUse) en markInvitationUsed.
+    const invitations = new Map();
+    const replaceDoc = {
+      async put({ TableName, Item }) {
+        if (TableName === 'krumm-invitations') invitations.set(Item.invitationId, { ...Item });
+        return { Item };
+      },
+      async get({ TableName, Key }) {
+        if (TableName !== 'krumm-invitations') return {};
+        const item = invitations.get(Key.invitationId);
+        return item ? { Item: item } : {};
+      },
+      async delete() {
+        return {};
+      },
+      async scan() {
+        return { Items: [] };
+      },
+    };
+    const created = await handlePostInvitation(event({ method: 'POST', route: 'POST /invitations', body: { email: 'c@d.cl', ttlHours: 24 } }), { docClient: replaceDoc });
+    const token = JSON.parse(created.body).invitationId;
+    expect(invitations.get(token).singleUse).toBe(true);
+
+    const consumed = await consumeInvitation({ event: event({ method: 'POST', route: 'POST /sessions', body: {}, headers: { 'x-invitation-id': token } }), docClient: replaceDoc, sessionId: 'run-replace' });
+    expect(consumed.invitationId).toBe(token);
+
+    const after = await handleGetInvitation(event({ method: 'GET', route: 'GET /invitations/{token}', pathParameters: { token } }), { docClient: replaceDoc });
+    expect(after.statusCode).toBe(410);
+    expect(JSON.parse(after.body).error).toBe('invitation_already_used');
+  });
 });

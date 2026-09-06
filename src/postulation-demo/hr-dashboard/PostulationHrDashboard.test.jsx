@@ -17,6 +17,13 @@ describe('PostulationHrDashboard', () => {
     expect(document.body.textContent).not.toMatch(/contratar|rechazar|apto\/no apto/i);
   });
 
+  it('etiqueta el entorno según dataSource (B2: sesiones reales vs sintéticos)', () => {
+    render(<PostulationHrDashboard dataSource="real" />);
+    expect(screen.getByText(/Workspace HR · Sesiones reales/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sesiones reales \(staging\)/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Datos sintéticos/i)).not.toBeInTheDocument();
+  });
+
   it('filters the review queue by alias and updates the selected profile', () => {
     render(<PostulationHrDashboard />);
 
