@@ -36,8 +36,8 @@ export function usePostulationDemoCopy() {
       {
         title: t('Juegos primero', 'Games first'),
         body: t(
-          'La demo prioriza tareas breves, instrucciones claras y progreso visible para la persona postulante.',
-          'The demo prioritizes short tasks, clear instructions, and visible progress for the applicant.',
+          'La prueba prioriza tareas breves, instrucciones claras y progreso visible para la persona postulante.',
+          'The assessment prioritizes short tasks, clear instructions, and visible progress for the applicant.',
         ),
       },
       {
@@ -56,7 +56,7 @@ export function usePostulationDemoCopy() {
       },
     ],
     setupPreview: {
-      title: t('Preparación de demo', 'Demo preparation'),
+      title: t('Preparación de la prueba', 'Assessment preparation'),
       body: t(
         'La cámara es opcional y las señales habilitadas se procesan localmente; si faltan, la sesión continúa con caveats explícitos.',
         'The camera is optional and enabled signals are processed locally; if missing, the session continues with explicit caveats.',

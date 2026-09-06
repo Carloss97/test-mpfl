@@ -10,7 +10,7 @@ export default function PostulationProgressHeader({ currentBlock, currentIndex =
       <div>
         <span className="postulation-demo__eyebrow">{t('KRUMM Postulaciones', 'KRUMM Applications')}</span>
         <h1>{currentBlock?.label ?? t('Actividad', 'Activity')}</h1>
-        <p>{currentBlock?.description ?? t('Juego breve para la demo de postulación.', 'Short game for the application demo.')}</p>
+        <p>{currentBlock?.description ?? t('Juego breve de la prueba de postulación.', 'Short game from the application assessment.')}</p>
       </div>
       <div className="postulation-demo__game-progress" aria-label={t('Progreso de juegos', 'Game progress')}>
         <strong>{t('Juego {current} de {total}', 'Game {current} of {total}', { current: safeTotal ? safeIndex + 1 : 0, total: safeTotal })}</strong>

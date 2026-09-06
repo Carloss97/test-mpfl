@@ -48,7 +48,7 @@ describe('SignalReadinessPanel', () => {
     );
 
     expect(screen.getByText(/Si MoveNet no detecta hombros/i)).toBeInTheDocument();
-    expect(screen.getByText(/La demo puede continuar con caveats; no se inventan hombros ni datos faltantes/i)).toBeInTheDocument();
+    expect(screen.getByText(/La prueba puede continuar con caveats; no se inventan hombros ni datos faltantes/i)).toBeInTheDocument();
     expect(screen.getByText(/sin hombros detectados/i)).toBeInTheDocument();
     expect(within(screen.getByTestId('readiness-Cámara')).getByText(/Pendiente/i)).toBeInTheDocument();
     expect(within(screen.getByTestId('readiness-FaceMesh')).getByText(/Error/i)).toBeInTheDocument();

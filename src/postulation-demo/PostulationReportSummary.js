@@ -350,12 +350,12 @@ export function getPostulationExecutiveSummary(t, artifacts = null, completedDem
       },
       {
         label: isOriginalBattery ? t('Cobertura y límites', 'Coverage and limits') : t('Qué no mide', 'What it does not measure'),
-        title: isOriginalBattery && notMeasured === 0 ? t('8 constructos con señal de demo', '8 constructs with demo signal') : isOriginalBattery ? t('No medido explícito', 'Explicit not measured') : t('Caveats visibles', 'Visible caveats'),
+        title: isOriginalBattery && notMeasured === 0 ? t('8 constructos con señal de prueba', '8 constructs with assessment signal') : isOriginalBattery ? t('No medido explícito', 'Explicit not measured') : t('Caveats visibles', 'Visible caveats'),
         body: isOriginalBattery
           ? notMeasured === 0
             ? descriptive === 0
-              ? `${workbookCards.length} ${t('constructos tienen score provisional y confianza por constructo; ninguna capacidad queda sin tarea de demo asociada.', 'constructs have provisional score and per-construct confidence; no capability is left without an associated demo task.')}`
-              : `${descriptive} ${t('lectura(s) se mantienen descriptivas por prudencia científica, pero ninguna capacidad queda sin tarea de demo asociada.', 'reading(s) remain descriptive for scientific prudence, but no capability is left without an associated demo task.')}`
+              ? `${workbookCards.length} ${t('constructos tienen score provisional y confianza por constructo; ninguna capacidad queda sin tarea asociada.', 'constructs have provisional score and per-construct confidence; no capability is left without an associated task.')}`
+              : `${descriptive} ${t('lectura(s) se mantienen descriptivas por prudencia científica, pero ninguna capacidad queda sin tarea asociada.', 'reading(s) remain descriptive for scientific prudence, but no capability is left without an associated task.')}`
             : `${notMeasured} ${t('capacidades quedan como No medido o evidencia insuficiente;', 'capabilities remain Not measured or insufficient evidence;')} ${descriptive} ${t('lectura(s) son solo descriptivas. Cada tarjeta explica qué habría que agregar para medirlas.', 'reading(s) are descriptive only. Each card explains what would need to be added to measure them.')}`
           : `${observationLabel} ${t('acompañan la sesión; la cámara se usa como calidad/contexto, no como inferencia diagnóstica.', 'accompany the session; the camera is used as quality/context, not diagnostic inference.')}`,
       },

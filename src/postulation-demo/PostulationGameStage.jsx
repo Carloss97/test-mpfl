@@ -116,7 +116,7 @@ export default function PostulationGameStage({
   if (!currentBlock || !CurrentGame) {
     return (
       <section className="postulation-demo__game-shell" aria-label={t('Juegos de postulación', 'Application games')}>
-        <p>{t('No hay juegos disponibles para la demo.', 'No games available for the demo.')}</p>
+        <p>{t('No hay juegos disponibles para la prueba.', 'No games available for the assessment.')}</p>
       </section>
     );
   }

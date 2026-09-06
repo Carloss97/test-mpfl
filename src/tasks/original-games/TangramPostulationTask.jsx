@@ -62,8 +62,8 @@ function TangramInner({ emit, onComplete, practice = false }) {
   const [introDone, setIntroDone] = useState(false);
   const [finished, setFinished] = useState(false);
 
-  // piezas del nivel actual
-  const slots = useMemo(() => (phase === 'play' ? buildTangramSlots(level) : []), [level, phase]);
+  // piezas del nivel actual (el tutorial también muestra zonas objetivo)
+  const slots = useMemo(() => ((phase === 'play' || phase === 'tutorial') ? buildTangramSlots(level) : []), [level, phase]);
   const [pieces, setPieces] = useState([]);
   const [selectedPieceId, setSelectedPieceId] = useState(null);
   const [snapFlashId, setSnapFlashId] = useState(null);
@@ -216,9 +216,10 @@ function TangramInner({ emit, onComplete, practice = false }) {
     });
   }, [coverage, level, levelOutcome]);
 
-  // transición a siguiente nivel o fin
+  // transición a siguiente nivel o fin (el tutorial/level 0 también debe poder
+  // avanzar; antes el gate de 'play' dejaba atorado el modo práctica)
   useEffect(() => {
-    if (!levelOutcome || phase !== 'play') return undefined;
+    if (!levelOutcome || (phase !== 'play' && phase !== 'tutorial')) return undefined;
     pushTimeout(() => {
       if (level >= 4 || practice) {
         // fin del módulo
@@ -257,7 +258,11 @@ function TangramInner({ emit, onComplete, practice = false }) {
   }, [levelOutcome, phase]);
 
   const rotateSelected = useCallback(() => {
-    if (phase !== 'play' || !introDone || levelOutcome) return;
+    // La rotación es una mecánica central: debe funcionar en la práctica (tutorial)
+    // y en los niveles evaluativos (play, tras el onboarding introDone).
+    if (phase !== 'play' && phase !== 'tutorial') return;
+    if (phase === 'play' && !introDone) return;
+    if (levelOutcome) return;
     const sel = selectedPieceId;
     if (!sel) return;
     setPieces((ps) => ps.map((p) => (

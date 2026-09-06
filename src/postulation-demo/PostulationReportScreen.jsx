@@ -71,8 +71,8 @@ function TalentDimensionCard({ dimension, t }) {
 function WorkbookTalentCard({ construct, t }) {
   return (
     <article className="postulation-demo__talent-card">
-      <div className={`postulation-demo__talent-score postulation-demo__talent-score--provisional`} aria-label={`${t('Score de demo', 'Demo score')} ${construct.scoreLabel} ${t('de', 'of')} 100, ${t('provisional', 'provisional')}`}>
-        <span className="postulation-demo__provisional-tag postulation-demo__provisional-tag--solid">{t('Demo provisional', 'Provisional demo')}</span>
+      <div className={`postulation-demo__talent-score postulation-demo__talent-score--provisional`} aria-label={`${construct.scoreLabel} ${t('de', 'of')} 100, ${t('score provisional', 'provisional score')}`}>
+        <span className="postulation-demo__provisional-tag postulation-demo__provisional-tag--solid">{t('Score provisional', 'Provisional score')}</span>
         <strong>{construct.scoreLabel}</strong>
         <small className="postulation-demo__score-sub">{t('Sin baremos · no comparable', 'No norms · not comparable')}</small>
       </div>
@@ -169,7 +169,7 @@ export default function PostulationReportScreen({
         <span className="postulation-demo__eyebrow">{t('Reporte', 'Report')}</span>
         <h1 id="postulation-report-title">{t('Reporte en preparación', 'Report in preparation')}</h1>
         <p>{t('KRUMM todavía no tiene artefactos finales para mostrar.', 'KRUMM does not have final artifacts to show yet.')}</p>
-        <button type="button" className="postulation-demo__primary" onClick={onRestart}>{t('Reiniciar demo', 'Restart demo')}</button>
+        <button type="button" className="postulation-demo__primary" onClick={onRestart}>{t('Reiniciar prueba', 'Restart assessment')}</button>
       </section>
     );
   }
@@ -256,12 +256,12 @@ export default function PostulationReportScreen({
             <div>
               <h2>{t('Mapa de evidencia KRUMM', 'KRUMM evidence map')}</h2>
               <p>{completeWorkbookCoverage
-                ? t('Cobertura de tareas en demo: los ocho constructos tienen señal de juego (score provisional o lectura descriptiva) con confianza por constructo.', 'Demo task coverage: the eight constructs have game signal (provisional score or descriptive reading) with per-construct confidence.')
-                : t('Lectura de demo: muestra qué capacidades tienen señales de juego y cuáles requieren evidencia adicional.', 'Demo reading: shows which capabilities have game signals and which need additional evidence.')}</p>
+                ? t('Cobertura de tareas: los ocho constructos tienen señal de juego (score provisional o lectura descriptiva) con confianza por constructo.', 'Task coverage: the eight constructs have game signal (provisional score or descriptive reading) with per-construct confidence.')
+                : t('Lectura observacional: muestra qué capacidades tienen señales de juego y cuáles requieren evidencia adicional.', 'Observational reading: shows which capabilities have game signals and which need additional evidence.')}</p>
             </div>
           </div>
           <div className="postulation-demo__evidence-warning" role="note">
-            {t('Scores de demo no validados, sin baremos y no aptos para comparar personas.', 'Unvalidated demo scores, no norms, and not suitable for comparing people.')}
+            {t('Scores provisionales no validados, sin baremos y no aptos para comparar personas.', 'Unvalidated provisional scores, no norms, and not suitable for comparing people.')}
           </div>
           <div className="postulation-demo__talent-grid">
             {workbookFramework.map((construct) => <WorkbookTalentCard key={construct.id} construct={construct} t={t} />)}
@@ -301,7 +301,7 @@ export default function PostulationReportScreen({
       <div className="postulation-demo__report-actions">
         <button type="button" className="postulation-demo__primary" disabled={!validationOk || !primaryReport} onClick={downloadPrimaryReport}>{t('Descargar reporte local', 'Download local report')}</button>
         <button type="button" className="postulation-demo__secondary" disabled={!validationOk || descriptors.length === 0} onClick={downloadBundle}>{t('Descargar bundle técnico', 'Download technical bundle')}</button>
-        <button type="button" className="postulation-demo__secondary" onClick={onRestart}>{t('Repetir demo', 'Repeat demo')}</button>
+        <button type="button" className="postulation-demo__secondary" onClick={onRestart}>{t('Repetir prueba', 'Repeat assessment')}</button>
       </div>
     </section>
   );

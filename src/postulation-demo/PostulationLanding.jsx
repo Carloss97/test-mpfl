@@ -32,7 +32,7 @@ export default function PostulationLanding({ onStart, batteryMode }) {
           </div>
         </div>
 
-        <aside className="postulation-demo__brief" aria-label={t('Resumen de demo', 'Demo summary')}>
+        <aside className="postulation-demo__brief" aria-label={t('Resumen de la prueba', 'Assessment summary')}>
           <div>
             <span>{t('Duración estimada', 'Estimated duration')}</span>
             <strong>{isOriginalMode ? copy.originalTimeEstimate : copy.timeEstimate}</strong>
@@ -52,7 +52,7 @@ export default function PostulationLanding({ onStart, batteryMode }) {
         </aside>
       </section>
 
-      <section id="postulation-demo-background" className="postulation-demo__grid" aria-label={t('Principios de la demo', 'Demo principles')}>
+      <section id="postulation-demo-background" className="postulation-demo__grid" aria-label={t('Principios de la prueba', 'Assessment principles')}>
         {copy.cards.map((card) => (
           <article key={card.title} className="postulation-demo__card">
             <h2>{card.title}</h2>

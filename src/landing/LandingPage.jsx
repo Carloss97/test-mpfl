@@ -44,10 +44,10 @@ export default function LandingPage() {
         </div>
         <figure className="landing__plot" aria-hidden="true">
           <div className="landing__plot-grid">
-            <div className="landing__plot-cell">{t('Privacidad', 'Privacy')}</div>
-            <div className="landing__plot-cell">{t('Latencia local', 'Local latency')}</div>
-            <div className="landing__plot-cell">{t('Revisión humana', 'Human review')}</div>
-            <div className="landing__plot-cell">{t('Calidad de señal', 'Signal quality')}</div>
+            <div className="landing__plot-cell"><strong>{t('Privacidad', 'Privacy')}</strong><small>{t('Procesamiento local, sin rastreo.', 'Local processing, no tracking.')}</small></div>
+            <div className="landing__plot-cell"><strong>{t('Latencia local', 'Local latency')}</strong><small>{t('Juega sin depender de la red.', 'Play without depending on the network.')}</small></div>
+            <div className="landing__plot-cell"><strong>{t('Revisión humana', 'Human review')}</strong><small>{t('Reportes para personas, no robots.', 'Reports for people, not robots.')}</small></div>
+            <div className="landing__plot-cell"><strong>{t('Calidad de señal', 'Signal quality')}</strong><small>{t('Caveats y límites explícitos.', 'Explicit caveats and limits.')}</small></div>
           </div>
         </figure>
       </section>

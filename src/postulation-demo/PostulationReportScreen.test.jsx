@@ -156,15 +156,15 @@ describe('PostulationReportScreen', () => {
     expect(screen.getByText(/Muestras simuladas/i)).toBeInTheDocument();
     expect(screen.getByText(/Estado del entorno de demostración/i)).toBeInTheDocument();
     expect(screen.getByText(/No son métricas de una persona real/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Demo provisional/i)).toHaveLength(8);
+    expect(document.querySelectorAll('.postulation-demo__provisional-tag--solid')).toHaveLength(8);
     expect(screen.getAllByText(/Ver alcance y validación/i)).toHaveLength(8);
     expect(screen.queryByText(/Framework R-6 del workbook/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Batería original: lectura preliminar controlada/i)).toBeInTheDocument();
-    expect(screen.getByText(/8 constructos con señal de demo/i)).toBeInTheDocument();
+    expect(screen.getByText(/8 constructos con señal de prueba/i)).toBeInTheDocument();
     expect(screen.getByText(/Cobertura y límites/i)).toBeInTheDocument();
-    expect(screen.getByText(/Scores de demo no validados, sin baremos y no aptos para comparar personas/i)).toBeInTheDocument();
+    expect(screen.getByText(/Scores provisionales no validados, sin baremos y no aptos para comparar personas/i)).toBeInTheDocument();
     expect(screen.getByText(/ocho constructos tienen señal de juego/i)).toBeInTheDocument();
-    expect(screen.getByText(/8 constructos con señal de demo/i)).toBeInTheDocument();
+    expect(screen.getByText(/8 constructos con señal de prueba/i)).toBeInTheDocument();
     expect(screen.getByText(/Validar antes de comparar candidatos/i)).toBeInTheDocument();
 
     // W5 / G1-L07: the provisional caveat stays on par with the number (not after it).
@@ -173,7 +173,7 @@ describe('PostulationReportScreen', () => {
     scoreBoxes.forEach((box) => {
       const tag = box.querySelector('.postulation-demo__provisional-tag--solid');
       expect(tag).not.toBeNull();
-      expect(tag.textContent).toMatch(/Demo provisional/i);
+      expect(tag.textContent).toMatch(/Score provisional/i);
       const sub = box.querySelector('.postulation-demo__score-sub');
       expect(sub).not.toBeNull();
       expect(sub.textContent).toMatch(/Sin baremos/i);

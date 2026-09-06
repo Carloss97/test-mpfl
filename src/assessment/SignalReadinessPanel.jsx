@@ -165,7 +165,7 @@ export default function SignalReadinessPanel(props) {
         </div>
         <ul className="caption">
           <li>{t('Si MoveNet no detecta hombros, aléjate hasta que ambos hombros entren en cuadro.', 'If MoveNet does not detect shoulders, step back until both shoulders are in frame.')}</li>
-          <li>{t('La demo puede continuar con caveats; no se inventan hombros ni datos faltantes.', 'The demo may continue with caveats; no shoulders or missing data are invented.')}</li>
+          <li>{t('La prueba puede continuar con caveats; no se inventan hombros ni datos faltantes.', 'The assessment may continue with caveats; no shoulders or missing data are invented.')}</li>
           <li>{t('No se guarda video, frames, landmarks crudos ni trayectorias de puntero.', 'No video, frames, raw landmarks, or pointer trajectories are stored.')}</li>
         </ul>
       </div>
