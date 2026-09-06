@@ -182,25 +182,78 @@ function teamComposite(vector) {
   };
 }
 
-function buildProblemSolving(vector, L, P) {
+function tangramComposite(vector) {
+  if (!isComplete(vector, 'tangram_exp001') || !hasObserved(vector, [
+    'tangram.solvedRate',
+    'tangram.avgCoverage',
+    'tangram.totalMoveOverhead',
+  ])) return null;
+  const solvedRate = getFeature(vector, 'tangram.solvedRate');
+  const coverage = getFeature(vector, 'tangram.avgCoverage');
+  const moves = getFeature(vector, 'tangram.totalMoves') ?? 1;
+  const overhead = getFeature(vector, 'tangram.totalMoveOverhead');
+  const moveEfficiency = Math.max(0, 1 - Math.min(1, overhead / Math.max(1, moves)));
+  return (0.45 * solvedRate) + (0.35 * coverage) + (0.20 * moveEfficiency);
+}
+
+function buildProblemSolving(vector, L, P, TG) {
   if (L === null || P === null) return insufficientConstruct('problemSolving', ['Requiere Laser y Passenger completos.']);
   const value = (0.65 * L) + (0.35 * P);
+  const evidence = [
+    { feature: 'laser.solutionEfficiency', value: getFeature(vector, 'laser.solutionEfficiency') },
+    { feature: 'laser.solvedRate', value: getFeature(vector, 'laser.solvedRate') },
+    { feature: 'passenger.routeEfficiency', value: getFeature(vector, 'passenger.routeEfficiency') },
+    { formula: '0.65·L + 0.35·P', value },
+  ];
+  if (TG !== null) {
+    evidence.push(
+      { feature: 'tangram.solvedRate', value: getFeature(vector, 'tangram.solvedRate') },
+      { feature: 'tangram.avgCoverage', value: getFeature(vector, 'tangram.avgCoverage') },
+    );
+  }
   return scoredConstruct('problemSolving', {
     scoreValue: value,
     confidenceCeiling: 0.6,
-    evidence: [
-      { feature: 'laser.solutionEfficiency', value: getFeature(vector, 'laser.solutionEfficiency') },
-      { feature: 'laser.solvedRate', value: getFeature(vector, 'laser.solvedRate') },
-      { feature: 'passenger.routeEfficiency', value: getFeature(vector, 'passenger.routeEfficiency') },
-      { formula: '0.65·L + 0.35·P', value },
-    ],
+    evidence,
     narrative: 'Índice provisional de desempeño en resolución de problemas dentro de tareas con reglas explícitas y planificación de restricciones.',
     narrativeEn: 'Provisional index of problem-solving performance within tasks with explicit rules and constraint planning.',
   });
 }
 
-function buildPlanning(vector, P) {
-  if (P === null) return insufficientConstruct('planning', ['Requiere Passenger Routes completo y válido.']);
+function buildPlanning(vector, P, TG) {
+  if (P === null && TG === null) return insufficientConstruct('planning', ['Requiere Passenger Routes o Tangram completo y válido.']);
+  if (P !== null && TG !== null) {
+    const value = (0.50 * P) + (0.50 * TG);
+    return scoredConstruct('planning', {
+      scoreValue: value,
+      confidenceCeiling: 0.6,
+      evidence: [
+        { feature: 'passenger.routeEfficiency', value: getFeature(vector, 'passenger.routeEfficiency') },
+        { feature: 'passenger.deliveryRate', value: getFeature(vector, 'passenger.deliveryRate') },
+        { feature: 'passenger.constraintCompliance', value: getFeature(vector, 'passenger.constraintCompliance') },
+        { feature: 'tangram.solvedRate', value: getFeature(vector, 'tangram.solvedRate') },
+        { feature: 'tangram.avgCoverage', value: getFeature(vector, 'tangram.avgCoverage') },
+        { formula: '0.50·P + 0.50·TG', value },
+      ],
+      narrative: 'Índice provisional de planificación: combina la planificación de restricciones de Passenger Routes con la planificación espacial del ensamblaje Tangram.',
+      narrativeEn: 'Provisional planning index: combines Passenger Routes constraint planning with Tangram spatial assembly planning.',
+    });
+  }
+  if (TG !== null) {
+    return scoredConstruct('planning', {
+      scoreValue: TG,
+      confidenceCeiling: 0.55,
+      evidence: [
+        { feature: 'tangram.solvedRate', value: getFeature(vector, 'tangram.solvedRate') },
+        { feature: 'tangram.avgCoverage', value: getFeature(vector, 'tangram.avgCoverage') },
+        { feature: 'tangram.totalMoveOverhead', value: getFeature(vector, 'tangram.totalMoveOverhead') },
+        { formula: 'TG = 0.45·solvedRate + 0.35·avgCoverage + 0.20·moveEfficiency', value: TG },
+      ],
+      caveats: ['single_game_evidence'],
+      narrative: 'Índice provisional de planificación basado solo en el ensamblaje geométrico Tangram (espacio y restricciones).',
+      narrativeEn: 'Provisional planning index based only on Tangram geometric assembly (space and constraints).',
+    });
+  }
   return scoredConstruct('planning', {
     scoreValue: P,
     confidenceCeiling: 0.6,
@@ -383,11 +436,12 @@ export function buildOriginalGameTalentFramework({
   const L = laserComposite(vector);
   const P = passengerComposite(vector);
   const T = teamComposite(vector);
+  const TG = tangramComposite(vector);
   const constructs = {
     decisionMaking: buildDecisionMaking(vector, P, T),
-    problemSolving: buildProblemSolving(vector, L, P),
+    problemSolving: buildProblemSolving(vector, L, P, TG),
     riskFeedbackProfile: buildRiskFeedback(vector),
-    planning: buildPlanning(vector, P),
+    planning: buildPlanning(vector, P, TG),
     adaptability: buildAdaptability(T),
     analyticalThinking: buildAnalyticalThinking(vector, L, P),
     leadership: buildLeadership(T),

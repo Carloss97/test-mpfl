@@ -163,7 +163,7 @@ describe('PostulationDemoApp shell and flow', () => {
 
     expect(screen.getByRole('heading', { name: /Reporte de muestra listo para revisión humana/i })).toBeInTheDocument();
     expect(screen.getAllByText(/Datos sintéticos|prueba/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Datos sintéticos locales para reuniones/i)).toBeInTheDocument();
+    expect(screen.getByText(/Datos sintéticos de muestra/i)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /KRUMM Postulaciones/i })).not.toBeInTheDocument();
   });
 

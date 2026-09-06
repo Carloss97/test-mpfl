@@ -8,19 +8,20 @@ import {
 } from './originalGameBlueprints.js';
 
 describe('original game integration blueprints', () => {
-  it('declares the original games plus the structured team brief completion probe', () => {
+  it('declares the original games plus the structured team brief completion probe and the tangram module', () => {
     expect(ORIGINAL_GAME_BLUEPRINTS.map((blueprint) => blueprint.gameId)).toEqual([
       'laser_puzzle',
       'balloon_risk',
       'passenger_routes',
       'team_coordination',
+      'tangram_exp001',
     ]);
   });
 
   it('keeps source paths, target roles, aggregate fields and human-review language explicit', () => {
     for (const blueprint of ORIGINAL_GAME_BLUEPRINTS) {
       expect(blueprint.label).toMatch(/\S/);
-      expect(blueprint.source.primary).toMatch(blueprint.gameId === 'team_coordination' ? /src\/tasks\/original-games/ : /\/Test\/src\//);
+      expect(blueprint.source.primary).toMatch(['team_coordination', 'tangram_exp001'].includes(blueprint.gameId) ? /src\/tasks\/original-games/ : /\/Test\/src\//);
       expect(blueprint.postulation.skill).toMatch(/\S/);
       expect(blueprint.postulation.durationLabel).toMatch(/min|s/);
       expect(blueprint.allowedAggregateFields.length).toBeGreaterThanOrEqual(5);
@@ -35,6 +36,7 @@ describe('original game integration blueprints', () => {
       expect.objectContaining({ gameId: 'balloon_risk', visible: false, phase: 'original_games_replacement', activationStatus: 'ported_hidden' }),
       expect.objectContaining({ gameId: 'passenger_routes', visible: false, phase: 'original_games_replacement', activationStatus: 'ported_hidden' }),
       expect.objectContaining({ gameId: 'team_coordination', visible: false, phase: 'original_games_completion_probe', activationStatus: 'controlled_active' }),
+      expect.objectContaining({ gameId: 'tangram_exp001', visible: false, phase: 'original_games_completion_probe', activationStatus: 'controlled_active' }),
     ]);
   });
 

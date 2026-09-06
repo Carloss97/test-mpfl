@@ -98,6 +98,29 @@ function blockSummary(block, index) {
       aggregateOnly: true,
     };
   }
+  if (block.gameId === 'tangram_exp001') {
+    return {
+      gameId: block.gameId,
+      aggregateSchemaVersion: 'tangram_exp001_aggregate_v1',
+      completed: true,
+      completedTrialCount: block.trialCount,
+      trialCount: block.trialCount,
+      score: 0.87,
+      levelsAttempted: 4,
+      completedLevels: 4,
+      solvedLevels: 3,
+      totalTimeMs: 214_000,
+      totalMoves: 19,
+      totalRotations: 11,
+      avgCoveragePercent: 88,
+      avgInitialLatencyMs: 3400,
+      avgTrajectoryEfficiency: 0.82,
+      avgHesitationTimeMs: 900,
+      totalMoveOverhead: 3,
+      timingPressureHighLatency: false,
+      aggregateOnly: true,
+    };
+  }
   const accuracy = [0.88, 0.76, 0.82, 0.9][index] ?? 0.82;
   const score = [0.84, 0.72, 0.8, 0.87][index] ?? 0.8;
   const meanReactionTimeMs = [520, 610, 680, 740][index] ?? 620;
@@ -123,6 +146,7 @@ function fixtureResponse(block, index) {
   if (block.gameId === 'balloon_risk') return { ...base, outcome: 'cashout', balloonRisk: summary };
   if (block.gameId === 'passenger_routes') return { ...base, correct: true, outcome: 'route_completed', passengerRoutes: summary };
   if (block.gameId === 'team_coordination') return { ...base, correct: true, outcome: 'structured_choice', teamCoordination: summary };
+  if (block.gameId === 'tangram_exp001') return { ...base, correct: true, outcome: 'assembly_completed', tangram: summary };
   return {
     ...base,
     pointerSummary: { pathEfficiency: 0.78 + (index * 0.03), correctionCount: index === 1 ? 2 : 0 },

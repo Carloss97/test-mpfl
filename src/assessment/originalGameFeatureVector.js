@@ -34,6 +34,15 @@ export const ORIGINAL_GAME_FEATURE_ORDER = Object.freeze([
   'team.feedbackUseScore',
   'team.changeResponseScore',
   'team.timeMs',
+  'tangram.completion',
+  'tangram.solvedRate',
+  'tangram.avgCoverage',
+  'tangram.avgTrajectoryEfficiency',
+  'tangram.avgInitialLatencyMs',
+  'tangram.avgHesitationMs',
+  'tangram.totalMoveOverhead',
+  'tangram.totalMoves',
+  'tangram.totalTimeMs',
 ]);
 
 const FEATURE_UNITS = Object.freeze({
@@ -69,6 +78,15 @@ const FEATURE_UNITS = Object.freeze({
   'team.feedbackUseScore': 'ratio',
   'team.changeResponseScore': 'ratio',
   'team.timeMs': 'ms',
+  'tangram.completion': 'binary',
+  'tangram.solvedRate': 'ratio',
+  'tangram.avgCoverage': 'ratio',
+  'tangram.avgTrajectoryEfficiency': 'ratio',
+  'tangram.avgInitialLatencyMs': 'ms',
+  'tangram.avgHesitationMs': 'ms',
+  'tangram.totalMoveOverhead': 'count',
+  'tangram.totalMoves': 'count',
+  'tangram.totalTimeMs': 'ms',
 });
 
 export const ORIGINAL_GAME_FEATURE_DEFINITIONS = Object.freeze({
@@ -328,6 +346,78 @@ export const ORIGINAL_GAME_FEATURE_DEFINITIONS = Object.freeze({
     constructRelevance: 'Reviewer context and future validation covariate.',
     limitations: Object.freeze(['Not a communication speed norm.', 'May reflect reading speed.']),
   }),
+  'tangram.completion': Object.freeze({
+    sourceGame: 'tangram_exp001',
+    aggregateInputs: Object.freeze(['completed']),
+    metricFormula: 'completed ? 1 : 0',
+    metricRationale: 'Completion marks whether the candidate finished the geometric assembly module; it is a coarse availability gate for interpreting the spatial planning features.',
+    constructRelevance: 'Availability flag for spatial assembly evidence; not an ability score by itself.',
+    limitations: Object.freeze(['Binary completion ignores strategy quality.', 'Can be affected by instructions, device, or time limits.']),
+  }),
+  'tangram.solvedRate': Object.freeze({
+    sourceGame: 'tangram_exp001',
+    aggregateInputs: Object.freeze(['solvedLevels', 'levelsAttempted']),
+    metricFormula: 'solvedLevels / levelsAttempted',
+    metricRationale: 'Ratio of geometric assembly levels solved within their constraints; only the count ratio is stored, never the piece placements.',
+    constructRelevance: 'Feeds provisional planning and problem-solving composites when Tangram is complete.',
+    limitations: Object.freeze(['Small level count; not a norm or percentile.', 'Does not separate insight from trial-and-error.']),
+  }),
+  'tangram.avgCoverage': Object.freeze({
+    sourceGame: 'tangram_exp001',
+    aggregateInputs: Object.freeze(['avgCoveragePercent']),
+    metricFormula: 'avgCoveragePercent / 100 (clamped [0,1])',
+    metricRationale: 'Average silhouette coverage reached per level summarizes partial-goal attainment without recording which pieces landed where.',
+    constructRelevance: 'Descriptive context for planning quality and persistence under constraints.',
+    limitations: Object.freeze(['Coverage is task-specific and author-dependent.', 'A mid-level failure can dominate the average.']),
+  }),
+  'tangram.avgTrajectoryEfficiency': Object.freeze({
+    sourceGame: 'tangram_exp001',
+    aggregateInputs: Object.freeze(['avgTrajectoryEfficiency']),
+    metricFormula: 'mean(idealDistance / actualDragDistance) per level, bounded [0,1]',
+    metricRationale: 'Directness of pointer trajectories during piece manipulation; aggregates discard the raw pointer path by design.',
+    constructRelevance: 'Reviewer context for motor planning efficiency under time pressure.',
+    limitations: Object.freeze(['Pointer efficiency conflates planning with motor skill.', 'Input-device dependent.']),
+  }),
+  'tangram.avgInitialLatencyMs': Object.freeze({
+    sourceGame: 'tangram_exp001',
+    aggregateInputs: Object.freeze(['avgInitialLatencyMs']),
+    metricFormula: 'mean ms from level render to first interaction',
+    metricRationale: 'Initial response latency distinguishes upfront planning from impulsive trial-and-error without storing timestamps of actions.',
+    constructRelevance: 'Descriptive planning-vs-impulsivity covariate for human review.',
+    limitations: Object.freeze(['Slower latency is not worse; it may reflect planning.', 'Reading speed and device affect the value.']),
+  }),
+  'tangram.avgHesitationMs': Object.freeze({
+    sourceGame: 'tangram_exp001',
+    aggregateInputs: Object.freeze(['avgHesitationTimeMs']),
+    metricFormula: 'mean ms of sustained cursor pauses (>200ms) per level',
+    metricRationale: 'Aggregate hesitation time captures decision uncertainty during placement without preserving the moment-by-moment cursor trace.',
+    constructRelevance: 'Reviewer context for confidence/uncertainty during assembly.',
+    limitations: Object.freeze(['Hesitation is not a trait; it is task-contextual.', 'Cannot be interpreted as anxiety without biometric corroboration (not stored).']),
+  }),
+  'tangram.totalMoveOverhead': Object.freeze({
+    sourceGame: 'tangram_exp001',
+    aggregateInputs: Object.freeze(['totalMoveOverhead']),
+    metricFormula: 'sum(actualMoves - optimalMoves) across solved levels',
+    metricRationale: 'Move overhead is the extra placement effort beyond the theoretical minimum; the count is kept, the sequence is not.',
+    constructRelevance: 'Efficiency covariate for the provisional planning composite.',
+    limitations: Object.freeze(['Depends on authored optimal-move quality.', 'Does not separate strategy from motor error.']),
+  }),
+  'tangram.totalMoves': Object.freeze({
+    sourceGame: 'tangram_exp001',
+    aggregateInputs: Object.freeze(['totalMoves']),
+    metricFormula: 'non-negative aggregate count',
+    metricRationale: 'Total placement actions across the module; diagnostic context only, never stored per-move.',
+    constructRelevance: 'Reviewer context for effort, not scored as talent.',
+    limitations: Object.freeze(['Higher count is not always worse without level context.', 'Does not preserve strategy path by design.']),
+  }),
+  'tangram.totalTimeMs': Object.freeze({
+    sourceGame: 'tangram_exp001',
+    aggregateInputs: Object.freeze(['totalTimeMs']),
+    metricFormula: 'elapsed milliseconds for the whole assembly module',
+    metricRationale: 'Elapsed time contextualizes performance under the authored time limits without storing event timestamps.',
+    constructRelevance: 'Reviewer context and future validation covariate.',
+    limitations: Object.freeze(['Device interruptions and reading speed can affect time.', 'Not a speed norm.']),
+  }),
 });
 
 const FORBIDDEN_KEYS = Object.freeze([
@@ -421,6 +511,7 @@ function initializeFeatureState() {
       balloon_risk: 'not_administered',
       passenger_routes: 'not_administered',
       team_coordination: 'not_administered',
+      tangram_exp001: 'not_administered',
     },
     qualityFlags: [],
   };
@@ -590,6 +681,44 @@ function addTeamCoordinationFeatures(state, block) {
   setObserved(state, 'team.timeMs', Math.max(0, finite(result.timeMs) ?? 0));
 }
 
+function addTangramFeatures(state, block) {
+  if (!block) return;
+  const result = block.result ?? {};
+  if (hasForbiddenKeys(result)) state.qualityFlags.push('tangram_exp001_contains_forbidden_raw_keys');
+  const levelsAttempted = nonNegativeInteger(result.levelsAttempted);
+  const completedLevels = nonNegativeInteger(result.completedLevels);
+  const solvedLevels = nonNegativeInteger(result.solvedLevels);
+  const avgCoveragePercent = finite(result.avgCoveragePercent);
+  const avgTrajectory = finite(result.avgTrajectoryEfficiency);
+  const aggregateOnly = result.aggregateOnly === true;
+  const valid = aggregateOnly
+    && levelsAttempted != null
+    && levelsAttempted > 0
+    && completedLevels != null
+    && completedLevels <= levelsAttempted
+    && solvedLevels != null
+    && solvedLevels <= completedLevels
+    && avgCoveragePercent != null
+    && avgCoveragePercent >= 0
+    && avgCoveragePercent <= 100
+    && (avgTrajectory == null || (avgTrajectory >= 0 && avgTrajectory <= 1))
+    && !hasForbiddenKeys(result);
+  if (!valid) {
+    setInvalidGame(state, 'tangram_exp001', 'tangram', 'invalid_aggregate');
+    return;
+  }
+  state.gameAvailability.tangram_exp001 = result.completed === true ? 'measured_complete' : 'measured_partial';
+  setObserved(state, 'tangram.completion', result.completed === true ? 1 : 0);
+  setObserved(state, 'tangram.solvedRate', solvedLevels / levelsAttempted);
+  setObserved(state, 'tangram.avgCoverage', avgCoveragePercent / 100);
+  if (avgTrajectory != null) setObserved(state, 'tangram.avgTrajectoryEfficiency', avgTrajectory);
+  setObserved(state, 'tangram.avgInitialLatencyMs', Math.max(0, finite(result.avgInitialLatencyMs) ?? 0));
+  setObserved(state, 'tangram.avgHesitationMs', Math.max(0, finite(result.avgHesitationTimeMs) ?? 0));
+  setObserved(state, 'tangram.totalMoveOverhead', nonNegativeInteger(result.totalMoveOverhead ?? 0));
+  setObserved(state, 'tangram.totalMoves', nonNegativeInteger(result.totalMoves ?? 0));
+  setObserved(state, 'tangram.totalTimeMs', Math.max(0, finite(result.totalTimeMs) ?? 0));
+}
+
 export function validateOriginalGameFeatureVectorPrivacy(value = {}) {
   const violations = [];
   const visit = (node) => {
@@ -614,6 +743,7 @@ export function buildOriginalGameFeatureVector({ blocks = [], runId = null, batt
   addBalloonFeatures(state, blockByGame(blocks, 'balloon_risk'));
   addPassengerFeatures(state, blockByGame(blocks, 'passenger_routes'));
   addTeamCoordinationFeatures(state, blockByGame(blocks, 'team_coordination'));
+  addTangramFeatures(state, blockByGame(blocks, 'tangram_exp001'));
 
   const featureArray = ORIGINAL_GAME_FEATURE_ORDER.map((key) => {
     const value = state.featureMap[key];
@@ -623,7 +753,7 @@ export function buildOriginalGameFeatureVector({ blocks = [], runId = null, batt
   const vector = {
     type: ORIGINAL_GAME_FEATURE_VECTOR_TYPE,
     version: ORIGINAL_GAME_FEATURE_VECTOR_VERSION,
-    featureDefinitionsVersion: '2.0.0',
+    featureDefinitionsVersion: '2.1.0',
     runId,
     batteryId,
     featureOrder: [...ORIGINAL_GAME_FEATURE_ORDER],

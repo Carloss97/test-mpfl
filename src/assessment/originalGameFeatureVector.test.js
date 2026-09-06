@@ -121,7 +121,7 @@ describe('original_game_feature_vector_v1', () => {
     expect(vector).toMatchObject({
       type: 'original_game_feature_vector_v1',
       version: '1.0.0',
-      featureDefinitionsVersion: '2.0.0',
+      featureDefinitionsVersion: '2.1.0',
       runId: 'r6-vector-test',
       batteryId: 'krumm_postulation_demo_original_games_v1',
       encoding: { missingValue: 0, requiresObservedMask: true },

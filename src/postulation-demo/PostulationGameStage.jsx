@@ -8,6 +8,7 @@ import LaserPuzzlePostulationTask from '../tasks/original-games/LaserPuzzlePostu
 import BalloonRiskPostulationTask from '../tasks/original-games/BalloonRiskPostulationTask.jsx';
 import PassengerRouteOptimizationTask from '../tasks/original-games/PassengerRouteOptimizationTask.jsx';
 import TeamCoordinationPostulationTask from '../tasks/original-games/TeamCoordinationPostulationTask.jsx';
+import TangramPostulationTask from '../tasks/original-games/TangramPostulationTask.jsx';
 import BehindTheScenesMiniHud from './BehindTheScenesMiniHud.jsx';
 import { POSTULATION_DEMO_BATTERY, listVisiblePostulationBlocks } from './postulationDemoConfig.js';
 import PostulationProgressHeader from './PostulationProgressHeader.jsx';
@@ -24,6 +25,7 @@ const DEFAULT_GAME_COMPONENTS = Object.freeze({
   balloon_risk: BalloonRiskPostulationTask,
   passenger_routes: PassengerRouteOptimizationTask,
   team_coordination: TeamCoordinationPostulationTask,
+  tangram_exp001: TangramPostulationTask,
 });
 
 function getCurrentViewport() {
