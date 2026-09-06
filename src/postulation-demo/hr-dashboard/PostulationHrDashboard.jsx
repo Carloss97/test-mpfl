@@ -65,7 +65,7 @@ function CandidateRow({ candidate, selected, onSelect, lang, t }) {
         <small title={t(candidate.role, candidate.roleEn ?? candidate.role)}>{t(candidate.role, candidate.roleEn ?? candidate.role)}</small>
       </span>
       <span className="hr-dashboard__candidate-progress">
-        <strong>{candidate.completion.completed}/{candidate.completion.total}</strong>
+        <strong>{candidate.completion?.completed ?? '—'}/{candidate.completion?.total ?? '—'}</strong>
         <small>{lang === 'en' ? 'games' : 'juegos'}</small>
       </span>
       <span className="hr-dashboard__candidate-quality">
@@ -123,7 +123,7 @@ function CandidateDetail({ candidate, t, lang }) {
           <div>
             <span className="hr-dashboard__eyebrow">{t('Perfil de evidencia', 'Evidence profile')}</span>
             <h2>{candidate.alias}</h2>
-            <p>{t(candidate.role, candidate.roleEn ?? candidate.role)} · {formatDate(candidate.completedAt, lang)}</p>
+            <p>{t(candidate.role ?? 'Candidato', candidate.roleEn ?? candidate.role ?? 'Candidate')} · {formatDate(candidate.completedAt, lang)}</p>
           </div>
         </div>
         <StatusPill status={candidate.status} t={t} />
@@ -132,7 +132,7 @@ function CandidateDetail({ candidate, t, lang }) {
       <div className="hr-dashboard__coverage-note">
         <div>
           <span>{t('Cobertura', 'Coverage')}</span>
-          <strong>{candidate.completion.completed}/{candidate.completion.total} {t('juegos', 'games')}</strong>
+          <strong>{candidate.completion?.completed ?? '—'}/{candidate.completion?.total ?? '—'} {t('juegos', 'games')}</strong>
         </div>
         <div>
           <span>{t('Calidad de sesión', 'Session quality')}</span>
@@ -154,7 +154,7 @@ function CandidateDetail({ candidate, t, lang }) {
         <small>{t('Score provisional · no percentil', 'Provisional score · not a percentile')}</small>
       </div>
       <div className="hr-dashboard__construct-grid">
-        {candidate.constructs.map((construct) => <ConstructBar key={construct.id} construct={construct} t={t} />)}
+        {(candidate.constructs ?? []).map((construct) => <ConstructBar key={construct.id} construct={construct} t={t} />)}
       </div>
 
       <div className="hr-dashboard__section-head">
@@ -164,7 +164,7 @@ function CandidateDetail({ candidate, t, lang }) {
         </div>
       </div>
       <div className="hr-dashboard__game-grid">
-        {candidate.games.map((game) => (
+        {(candidate.games ?? []).map((game) => (
           <article key={game.id} className="hr-dashboard__game-card">
             <span>{t(game.label, game.labelEn ?? game.label)}</span>
             <strong>{game.metric}</strong>
@@ -178,14 +178,14 @@ function CandidateDetail({ candidate, t, lang }) {
           <span className="hr-dashboard__eyebrow">{t('Siguiente conversación', 'Next conversation')}</span>
           <h3>{t('Contexto para entrevista', 'Interview context')}</h3>
           <ul>
-            {candidate.interviewPrompts.map((prompt) => <li key={prompt}>{prompt}</li>)}
+            {(candidate.interviewPrompts ?? []).map((prompt) => <li key={prompt}>{prompt}</li>)}
           </ul>
         </article>
         <article className="hr-dashboard__review-card hr-dashboard__review-card--caveat">
           <span className="hr-dashboard__eyebrow">{t('Antes de interpretar', 'Before interpreting')}</span>
           <h3>{t('Caveats visibles', 'Visible caveats')}</h3>
           <ul>
-            {candidate.caveats.map((caveat) => <li key={caveat}>{caveat}</li>)}
+            {(candidate.caveats ?? []).map((caveat) => <li key={caveat}>{caveat}</li>)}
           </ul>
         </article>
       </div>

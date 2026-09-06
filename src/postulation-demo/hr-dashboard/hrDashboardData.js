@@ -223,7 +223,7 @@ export function buildHrDashboardSummary(candidates = HR_DASHBOARD_CANDIDATES) {
   const completed = candidates.filter((item) => item.status !== 'in_progress').length;
   const ready = candidates.filter((item) => item.status === 'ready').length;
   const needsReview = candidates.filter((item) => item.status === 'needs_review').length;
-  const coverage = candidates.map((item) => item.completion.completed / Math.max(1, item.completion.total));
+  const coverage = candidates.map((item) => (item.completion?.completed ?? 0) / Math.max(1, item.completion?.total ?? 1));
   const averageCoverage = total > 0 ? coverage.reduce((sum, value) => sum + value, 0) / total : 0;
   return { total, completed, ready, needsReview, averageCoverage };
 }

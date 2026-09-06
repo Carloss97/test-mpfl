@@ -30,8 +30,8 @@ Carpeta de especificaciones por módulo/juego del proyecto KRUMM (postulaciones-
 | Globo de Riesgo (`balloon_risk`) | `balloon_risk.md` | **aprobado (datos reales del repo)** | `src/tasks/original-games/BalloonRiskPostulationTask.jsx`, `balloonRiskTelemetry.js`, `balloonRiskFeedback.js`, `src/assessment/originalGameFeatureVector.js` |
 | Caminos (`caminos`) | `caminos.md` | **aprobado** | PDF "Diseño y Contenido V3" + "Especificación Técnica V3" (EXP-NODES-001), reescrito a convenciones KRUMM |
 | Ensamblaje Geométrico / Tangram (`tangram_exp001`) | `tangram_exp001.md` | **implementado (v2, datos reales del repo)** — primer ejemplo de la plantilla v2; incluye bitácora del incidente 2026-09-06 (3 bugs P0 phase-gate + fix) | `TangramPostulationTask.jsx` (+ test componente), `tangramTelemetry.js`, `tangramStages.js`, `tangramFeedback.js`, `originalGameFeatureVector.js` (v2.1.0, 9 features) |
-| Puzzle láser (`laser_puzzle`) | — | ⏳ backfill pendiente | `LaserPuzzlePostulationTask.jsx`, `laserPuzzleTelemetry.js` |
-| Operación Faro (`team_coordination`) | — | ⏳ backfill pendiente | `TeamCoordinationPostulationTask.jsx` |
+| Puzzle láser (`laser_puzzle`) | `laser_puzzle.md` | **implementado (datos reales del repo, backfill J2 2026-09-06)** | `LaserPuzzlePostulationTask.jsx`, `laserPuzzleTelemetry.js`, `laserPuzzleFeedback.js`, `originalGameFeatureVector.js` (features `laser.*`) |
+| Operación Faro (`team_coordination`) | `team_coordination.md` | **implementado (datos reales del repo, backfill J2 2026-09-06)** | `TeamCoordinationPostulationTask.jsx`, `teamCoordinationTelemetry.js`, `teamCoordinationFeedback.js`, `originalGameFeatureVector.js` (features `team.*`) |
 
 > **Nota:** Los archivos `.pdf` de referencia (`balloon-diseno.pdf`, `balloon-tecnica.pdf`, `caminos-diseno.pdf`, `caminos-tecnica.pdf`, `plantilla-diseno-contenido.pdf`, `plantilla-especificacion-tecnica.pdf`) son fuentes históricas; la fuente de verdad actual son los `.md` instanciados arriba + la plantilla unificada **v2**.
 

@@ -3,6 +3,7 @@ import {
   handlePostSessions,
   handleGetSession,
   handleDeleteSession,
+  handleListSessions,
   routeSessions,
 } from '../src/handlers/sessions.mjs';
 
@@ -125,5 +126,30 @@ describe('backend sessions handlers (RED -> GREEN)', () => {
     expect(res.statusCode).toBe(201);
     const bad = await routeSessions(event({ method: 'GET', route: 'POST /sessions' }), deps);
     expect(bad.statusCode).toBe(405);
+  });
+
+  it('GET /sessions lista: candidato con completion/constructs/interviewPrompts + caveats en texto (B1 dashboard real)', async () => {
+    const created = await handlePostSessions(event({ method: 'POST', route: 'POST /sessions', body: {
+      ...VALID_BODY,
+      quality: { sampleCount: 150, facePresenceRatio: 0.91, caveats: ['low_face_presence'] },
+    } }), deps);
+    expect(created.statusCode).toBe(201);
+
+    const res = await handleListSessions({
+      requestContext: { http: { method: 'GET' } },
+      routeKey: 'GET /sessions',
+      queryStringParameters: { limit: '10' },
+    }, deps);
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.candidates).toHaveLength(1);
+    const cand = body.candidates[0];
+    // Campos que el dashboard HR consume (antes faltaban -> página en blanco en prod)
+    expect(cand.completion).toEqual({ completed: 1, total: 4 });
+    expect(cand.constructs).toHaveLength(8);
+    expect(cand.constructs[0]).toMatchObject({ id: 'decisionMaking', label: 'Toma de decisiones', score: null });
+    expect(Array.isArray(cand.interviewPrompts)).toBe(true);
+    expect(cand.alias).toBe('h-abc123');
+    expect(cand.caveats).toEqual(['Presencia facial baja']);
   });
 });

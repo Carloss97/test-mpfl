@@ -24,6 +24,27 @@ describe('PostulationHrDashboard', () => {
     expect(screen.queryByText(/Datos sintéticos/i)).not.toBeInTheDocument();
   });
 
+  it('regresión B1: resiste candidatos REALES del backend (sin constructs/completion/interviewPrompts, role null)', () => {
+    // El backend GET /sessions (B1) devuelve menos campos que los sintéticos.
+    // Antes del fix, candidate.constructs.map crash-eaba React (página en blanco).
+    const realCandidate = {
+      id: 'sess-old-1',
+      alias: 'h-real-old',
+      role: null,
+      completedAt: '2026-09-06T22:00:00.000Z',
+      status: 'in_progress',
+      completedGames: 0,
+      sessionQuality: 0,
+      scores: Array(8).fill(null),
+      summary: 'Evaluación en progreso',
+      caveats: [],
+      games: [{ id: 'laser', label: 'Puzzle láser', metric: '—', value: null }],
+    };
+    render(<PostulationHrDashboard candidates={[realCandidate]} />);
+    expect(screen.getByRole('heading', { name: /Panel de evaluaciones/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/h-real-old/i).length).toBeGreaterThanOrEqual(1);
+  });
+
   it('filters the review queue by alias and updates the selected profile', () => {
     render(<PostulationHrDashboard />);
 

@@ -117,6 +117,28 @@ function pathParam(event, key) {
   return event?.pathParameters?.[key] ?? null;
 }
 
+// Etiquetas bilingües de los 8 constructos (MISMO ORDEN/IDS que el frontend
+// hrDashboardData.js CONSTRUCTS; score por índice). Mantener sincronizado.
+const CONSTRUCT_LABELS = [
+  ['decisionMaking', 'Toma de decisiones', 'Decision making'],
+  ['problemSolving', 'Resolución de problemas', 'Problem solving'],
+  ['riskFeedbackProfile', 'Riesgo y feedback', 'Risk and feedback'],
+  ['planning', 'Planificación', 'Planning'],
+  ['adaptability', 'Adaptabilidad', 'Adaptability'],
+  ['analyticalThinking', 'Pensamiento analítico', 'Analytical thinking'],
+  ['leadership', 'Liderazgo', 'Leadership'],
+  ['communication', 'Comunicación', 'Communication'],
+];
+
+// Caveats de calidad (códigos agregados, sin PII) -> texto visible en el dashboard.
+const CAVEAT_LABELS = {
+  camera_not_enabled_or_no_samples: 'Cámara no habilitada o sin muestras',
+  low_sample_count: 'Poca muestra de señal',
+  low_face_presence: 'Presencia facial baja',
+  low_face_confidence: 'Confianza facial baja',
+  missing_game_correlation: 'Correlación de juego incompleta',
+};
+
 /** Lista sesiones agregadas — read‑only, paginado por createdAt descendente. */
 export async function handleListSessions(event, { docClient, auditClient } = {}) {
   const limit = Number(event?.queryStringParameters?.limit ?? 50) || 50;
@@ -161,14 +183,16 @@ export async function handleListSessions(event, { docClient, auditClient } = {})
     const featureMap = payload?.featureVectorV2?.featureMap ?? {};
     const gameResults = payload?.behavioral?.gameResults ?? [];
 
-    // Map game results if present.
+    // Map game results if present. (gameIds reales del frontend: laser_puzzle,
+    // balloon_risk, passenger_routes, team_coordination; cortos por compat.)
     if (gameResults && gameResults.length > 0) {
       gameResults.forEach((gr, gi) => {
         if (gi >= 4) return;
-        const idMap = { laser: 0, balloon: 1, routes: 2, team: 3 };
+        const idMap = { laser: 0, laser_puzzle: 0, balloon: 1, balloon_risk: 1, routes: 2, passenger_routes: 2, team: 3, team_coordination: 3 };
         const idx = idMap[gr.gameId];
         if (idx !== undefined) {
-          games[idx].value = gr.score != null ? Math.round(clamp01(gr.score) * 100) : null;
+          const rawScore = gr.result?.score ?? gr.score;
+          games[idx].value = rawScore != null ? Math.round(clamp01(rawScore) * 100) : null;
           games[idx].metric = gr.metric ?? games[idx].metric;
         }
       });
@@ -199,6 +223,19 @@ export async function handleListSessions(event, { docClient, auditClient } = {})
       ? `${payload.talentProfile.globalSummary.strengths && payload.talentProfile.globalSummary.strengths.length > 0 ? payload.talentProfile.globalSummary.strengths[0] : 'Sin fortalezas dominantes'} · ${payload.talentProfile.globalSummary.watchAreas && payload.talentProfile.globalSummary.watchAreas.length > 0 ? payload.talentProfile.globalSummary.watchAreas[0] : 'Áreas a revisar'}`
       : 'Evaluación en progreso';
 
+    // Mapa de constructos para el dashboard HR (mismos 8 ids que el frontend;
+    // score null = constructo sin señal -> la UI lo muestra como "Pendiente").
+    const constructs = CONSTRUCT_LABELS.map(([id, label, labelEn], index) => ({
+      id,
+      label,
+      labelEn,
+      score: scores[index],
+      confidence: 0.55,
+    }));
+    // Cobertura de juegos (para el KPI "X/4 juegos"); distintos de completedCount
+    // (que cuenta constructos con score).
+    const gamesCompleted = games.filter((g) => g.value != null).length;
+
     return {
       id: item.sessionId,
       alias,
@@ -206,8 +243,11 @@ export async function handleListSessions(event, { docClient, auditClient } = {})
       completedAt: item.createdAt,
       status,
       completedGames: completedCount,
+      completion: { completed: gamesCompleted, total: games.length },
       sessionQuality: quality?.facePresenceRatio ?? 0,
       scores,
+      constructs,
+      interviewPrompts: [], // brief de entrevista generado = scope B3
       summary,
       caveats: [
         quality?.caveats?.includes('camera_not_enabled_or_no_samples') && 'camera_not_enabled_or_no_samples',
@@ -215,7 +255,7 @@ export async function handleListSessions(event, { docClient, auditClient } = {})
         quality?.caveats?.includes('low_face_presence') && 'low_face_presence',
         quality?.caveats?.includes('low_face_confidence') && 'low_face_confidence',
         quality?.caveats?.includes('missing_game_correlation') && 'missing_game_correlation',
-      ].filter(Boolean),
+      ].filter(Boolean).map((code) => CAVEAT_LABELS[code] ?? code),
       games,
     };
   });
