@@ -16,12 +16,21 @@ Cómo usar:
      - docs/design/krumm-postulation-sdd.md (proceso scope-driven)
      - AGENTS.md (privacidad/gobernanza y contrato científico R-6)
   4. Verificar trazabilidad §14 contra src/ real.
+  5. Seguir el checklist de implementación para agentes §16 (orden RED→GREEN)
+     y los casos de test componente obligatorios de §15.
+
+CHANGELOG:
+  v2 (2026-09-06) — lesson del incidente Tangram (3 bugs P0 de phase-gate que
+  pasaron 40 tests de lógica pura): §2 requirement duro de práctica
+  completatable, §7 anti-pattern phase-gate, §15 casos de test componente
+  obligatorios, §16 checklist agente, §17 pitfalls de incidentes reales.
+  v1 (2026-07-30) — unificación de diseño + técnica en un solo doc por juego.
 ================================================================================
 -->
 
 # Módulo Juego Original: <NOMBRE_HUMANO> (`<game-id>`)
 
-> **Versión plantilla:** `original-game-unified_v1`
+> **Versión plantilla:** `original-game-unified_v2`
 > **Versión del módulo:** `<x.y.z>`
 > **Fecha:** `<YYYY-MM-DD>`
 > **Autor(es):** `<nombre>`
@@ -87,6 +96,12 @@ Cómo usar:
 | `<Fase 1: Calibración>` | `<1-3>` | `<baseline>` | `false` |
 | `<Fase 2: Dilemas>` | `<4-7>` | `<tentación vs seguridad>` | `false` |
 | `<Fase 3: Cierre>` | `<8-10>` | `<riesgo crítico si bajo meta>` | `false` |
+
+> **Requisito duro (lección Tangram, 2026-09-06):** toda fase práctica/tutorial debe ser
+> **completatable**: zonas/objetivos renderizados, interacciones núcleo operativas en esa
+> fase, y avance de fase sin gates de otra phase. Una práctica que no se puede completar
+> es un bug P0, no un detalle de UX (Tangram: zonas invisibles + rotación muerta +
+> transición atascada — 3 bugs P0 en la práctica, detectados solo por test de componente).
 
 ---
 
@@ -155,6 +170,14 @@ STATE_2_PAYLOAD_BUILD -> serialización + métricas + despacho local (aggregate-
 | `STATE_0_TUTORIAL` | `<init>` | `<N nodos>` | `is_tutorial: true`; no entra al reporte |
 | `STATE_1_EVALUATION` | `<ok tutorial>` | `<N nodos>` | correlación con ventanas biométricas (contexto) |
 | `STATE_2_PAYLOAD_BUILD` | `<fin nodos>` | `<payload local>` | aggregate-only; sin raw |
+
+> **Anti-pattern phase-gate (P0, incidente real 2026-09-06):** TODO handler/effect con
+> gate de fase (`phase !== 'play'`, `introDone`, `finished`, ...) debe auditarse por fase:
+> si una fase RENDERIZA una interacción (zona, botón, hint de teclado), esa interacción
+> DEBE funcionar en esa fase. En Tangram, gates escritos para aislar la telemetría
+> evaluativa bloquearon también: slots (no se renderizaban en tutorial), rotación (botón +
+> teclado muertos en la práctica que la enseña) y la transición tutorial→evaluación
+> (candidato atorado). Regla: los gates aíslan TELEMETRÍA (is_tutorial), nunca UI/interacción.
 
 ---
 
@@ -319,6 +342,56 @@ git diff --check
 - [ ] Browser smoke (stable/original + fixtures, 1280×720 y 390×844): consola limpia, page errors 0, request failures 0, 0 overflow, semántica "No medido" donde aplica, privacidad y ausencia de claims HR no soportados.
 - [ ] Feature vector (`assessment_feature_vector_v2` o `original_game_feature_vector_v1`) con `featureArray` finito y `qualityFlags`.
 - [ ] Payload sin raw fields prohibidos (ver §12.4).
+
+**Test de componente OBLIGATORIO (`<Game>PostulationTask.test.jsx`) — no es opcional:**
+los tests de lógica pura (telemetry/stages/feedback) NO cubren la máquina de estados.
+Casos mínimos (lección Tangram 2026-09-06):
+- [ ] Onboarding: pantalla bienvenida → CTA → primera fase jugable (con zonas/objetivos VISIBLES).
+- [ ] Interacción núcleo funciona en la fase práctica/tutorial **por teclado Y por botón**
+      (ej. rotación: keyDown en el canvas + click en el botón).
+- [ ] Completar la práctica avanza de verdad (transición/evaluación) — con `waitFor`
+      y timeout ≥ 2.5 s si hay `pushTimeout` real (~1400 ms).
+- [ ] Evento emitido (response/game_end) sin campos prohibidos (assert privacy sobre el payload).
+
+---
+
+## 16. Checklist de implementación para agentes (orden RED→GREEN)
+
+Secuencia obligatoria para implementar el módulo. Cada paso deja tests verdes antes de
+pasar al siguiente (evita el patrón Tangram: todo el stack de lógica verde y la UI rota).
+
+1. **Doc del módulo**: copiar plantilla → `docs/design/modulos/<game-id>.md`, estado
+   `en implementación`. Llenar §0 traza + §1-§6 (diseño) + §7-§12 (técnica) CON la
+   especificación real — no completar §0 después.
+2. **`<game>Telemetry.js`** (puro): builders de niveles/fases + agregado + allowlist
+   escalar. Tests RED primero (agregado, allowlist, determinismo).
+3. **`<game>Feedback.js`** (puro): feedback comprehension + `<GAME>_FEEDBACK_FORBIDDEN_KEYS`
+   + caveats. Tests RED (privacidad: hasForbiddenKeys = 0, lenguaje observacional).
+4. **Blueprint + feature vector**: `originalGameBlueprints.js` (entry `<game-id>`) +
+   `originalGameFeatureVector.js` (`add<X>Features`, bump de versión). Tests (featureOrder
+   estable, finite array, keys en §1.2).
+5. **`<Game>PostulationTask.jsx`**: máquina de estados §7 + onboarding §3 + interacción
+   núcleo. **Test componente obligatorio §15** (onboarding, interacción teclado+botón en
+   tutorial, avance de práctica, payload privacy-safe). Auditar CADA gate de fase contra §7.
+6. **Integración**: mapa de juegos en `PostulationGameStage`, config de batería, fixture,
+   workbook card del reporte. Tests de integración (PostulationGameStage/fixture).
+7. **Gates §15** completos + browser smoke (desktop 1280×720 + móvil 390×844, original +
+   fixture).
+8. **Cierre**: doc → `implementado` (rellenar §14/§15 reales), tabla README modulos,
+   kanban done + Linear sync, handoff de sesión.
+
+## 17. Pitfalls comunes (incidentes reales — revisar antes de cerrar)
+
+| Pitfall | Incidente | Prevención |
+|---|---|---|
+| Phase-gate bloquea interacción visible | Tangram 2026-09-06: rotación muerta en tutorial; slots no renderizados; transición atascada | Anti-pattern §7; gates aíslan telemetría, nunca UI |
+| Solo tests de lógica pura | Tangram: 40 tests verdes + 3 bugs P0 de UI | Test componente obligatorio §15 |
+| Copia que enseña controles inexistentes | Tangram welcome 2026-09-06: "clic y arrastra" / "botón secundario" sin implementar | §3 = fuente única de interacción; verificar contra handlers reales (`onKeyDown`, `onClick`) |
+| Testids renumerados | Tangram: `tangram-piece-N` se reindexa al encajar una pieza | En tests, referenciar la primera pieza libre o identidad estable |
+| Handler en hijo, testid en padre | SVG: `onClick` en `<path>`, testid en `<g>` — click al `<g>` no dispara | En tests, click al elemento visible exacto |
+| Transición con timeout | Tangram: tutorial→transition tras `pushTimeout` 1400 ms | `waitFor` con timeout ≥ 2.5 s (timers reales) |
+| Restos de copy "demo" en ruta prod | P1 2026-09-06: "Demo provisional", "Repetir demo" en /postulaciones | Tabla §3 + grep de copy visible antes de deploy |
+| Practica sin flag is_tutorial | — | §2: toda fase práctica con `is_tutorial: true` y telemetría aislada |
 
 ---
 

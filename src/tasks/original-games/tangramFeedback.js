@@ -96,7 +96,7 @@ export function getTangramWelcomeCopy(t) {
       'Bienvenido/a a la prueba de resolución espacial y planificación. En esta simulación, tu objetivo es construir la figura sombreada utilizando las piezas disponibles en la bandeja. Debes ajustar y encajar cada pieza respetando los límites de tiempo y movimientos de cada nivel.',
       'Welcome to the spatial resolution and planning assessment. Your goal is to build the shaded figure using the available pieces in the tray. Fit each piece while respecting the time and move limits of each level.',
     ),
-    pieces: t('Uso de Piezas: Haz clic y arrastra una pieza al lienzo. Para rotarla, usa el botón secundario del ratón, la barra espaciadora o el botón de rotación en pantalla.', 'Pieces: Click and drag a piece to the canvas. To rotate it, use the secondary mouse button, the space bar, or the on-screen rotate button.'),
+    pieces: t('Uso de Piezas: Haz clic en una pieza para seleccionarla y luego en la zona de su forma para encajarla. Para rotarla, usa Espacio o R, o el botón de rotación en pantalla.', 'Pieces: Click a piece to select it, then click its matching zone to snap it in. To rotate it, press Space or R, or use the on-screen rotate button.'),
     resources: t('Gestión de Recursos: Algunos niveles limitarán la cantidad de movimientos permitidos; otros pondrán a prueba tu velocidad con un temporizador estricto.', 'Resources: Some levels limit the number of allowed moves; others test your speed with a strict timer.'),
     precision: t('Precisión: Las piezas deben quedar perfectamente alineadas dentro de la figura sin sobreponerse.', 'Precision: Pieces must align perfectly within the figure without overlapping.'),
     cta: t('Iniciar Tutorial de Práctica', 'Start Practice Tutorial'),
