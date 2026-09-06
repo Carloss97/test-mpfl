@@ -8,7 +8,7 @@
 - Batería predeterminada/fallback: `stable_dg`.
 - Batería interna controlada: `?battery=original`.
 - Fixtures: `?fixture=1` y `?fixture=1&battery=original`.
-- R-0 a R-6 completados técnicamente (R-6d: cobertura completa de demo, 8 constructos con señal provisional, reporte sin `No medido`). Foco actual: **R-7 QA/validación comparativa**.
+- R-0 a R-6 completados técnicamente (R-6d: cobertura completa de demo, 8 constructos con señal provisional, reporte sin `No medido`). Foco actual (2026-09-06): **B1 deploy backend a AWS (AUTORIZADO)** + plan corto plazo (QA, docs, UX) — `docs/plans/2026-09-06-plan-corto-plazo-flujos-y-documentacion.md`. Exp 6 (Tangram) done; **Exp 7/8 fuera de scope por ahora** (reactivación requiere spec, plantilla v2).
 
 ## Skills obligatorias según tarea
 

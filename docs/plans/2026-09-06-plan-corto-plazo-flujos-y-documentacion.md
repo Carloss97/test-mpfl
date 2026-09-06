@@ -15,6 +15,7 @@
 | Audit G.1 (08-27) | **Obsoleto**: lista G.2/G.5 como pendientes (ya done); G1-P01 teclado cerrado vía G.5; G1-P05 (hueco breakpoint 760/768) sin re-verificar | docs/design/game-experience-audit.md |
 | R-7 validación | R-7A QA técnica ejecutable hoy; R-7B requiere 2+ expertos; R-7C = 3 entrevistas (KRU-65 en curso) | plan R-7 + Linear |
 | GPU/infra | GPU Lambda retenida (manual), dispatcher con regla de retención, SSO AWS vigente ~11 h | sesión de hoy |
+| **Decisiones 2026-09-06 (tarde)** | **Exp 7/8 fuera del plan** (user); **B1 autorizado** (user); limpieza de ruido: 13 docs → `docs/archive/`, raíz sin basura | esta sesión |
 
 ## 1. Mejoras de corto plazo por flujo
 
@@ -33,7 +34,7 @@
 
 | # | Mejora | Evidencia / gap | Esfuerzo |
 |---|---|---|---|
-| B1 | **Deploy backend M2-M6 a AWS** (S3/CF frontend ya; backend DynamoDB+Lambdas): **requiere autorización explícita del usuario** (regla) | SSO vigente ~11 h; código listo | 1 d (tras OK) |
+| B1 | **Deploy backend M2-M6 a AWS** — **AUTORIZADO por el usuario (2026-09-06)**: instalar SAM CLI, desplegar `infra/m2-backend-stack.yaml` (staging: DynamoDB sessions + audit_log TTL 30d, Lambda nodejs20, API Gateway HTTP), wirear el frontend a la API y verificar con invitación real | código listo; SSO vigente (renovable) | 1 d — **siguiente ejecución** |
 | B2 | **Invitación real (M3)**: link de invitación → sesión candidata real → reporte en `/reclutador` (reemplaza datos sintéticos) | hr-dashboard sin fetch | depende B1 |
 | B3 | **Vista HR**: brief de entrevista por evaluación, filtros (fecha/estado), export Markdown/CSV de agregados (humanReviewOnly) | KRU-50 "Recruiter Dashboard v1 Real" | 1–2 d (tras B1) |
 | B4 | **R-7B validez de contenido**: 2+ expertos I-O/psicometría/producto califican matriz constructo×tarea (aceptar/revisar/rechazar) | plan R-7; requiere agenda | externo |
@@ -43,7 +44,7 @@
 
 | # | Mejora | Evidencia | Esfuerzo |
 |---|---|---|---|
-| J1 | **Spec Exp 7 y 8** con la plantilla v2 (ver §2): hoy están bloqueadas (KRU-61/62) por spec inexistente; se puede generar el esqueleto desde la plantilla para que el usuario solo decida mecánica/constructo | kanban blocked; 2 tickets Linear vacíos | 0.5 d (esqueleto) + decisión del usuario |
+| J1 | **Exp 7 y 8: FUERA del plan por ahora** (decisión del usuario 2026-09-06). Cards kanban archivadas, KRU-61/62 → Backlog. Si se reactivan: plantilla v2 + spec 1-pager (§2) antes de implementar | — | — |
 | J2 | **Backfill docs de módulos**: `laser_puzzle.md`, `team_coordination.md` (faro) → 5/5 juegos documentados | solo 2/5 hoy | 0.5 d c/u |
 | J3 | **Tangram doc de módulo** (primer ejemplo de la plantilla v2) — **hecho hoy** | `docs/design/modulos/tangram_exp001.md` | done |
 
@@ -81,19 +82,26 @@ Flujo objetivo para que un agente implemente una experiencia nueva en 1–2 día
 
 **Regla de oro:** la experiencia no existe hasta que el doc de módulo (§0 traza) está completo y los gates pasan — el doc no es burocracia post-mortem, es el contrato que evita bugs tipo Tangram (práctica incompletable, 3 defectos de phase-gate).
 
-## 3. Orden recomendado de ejecución (siguientes 2 semanas)
+## 3. Orden de ejecución (actualizado 2026-09-06 tarde)
 
-| Semana | Bloque | Contenido |
+| Bloque | Contenido | Estado |
 |---|---|---|
-| S1 (esta) | Docs | Plantilla v2 + tangram doc (done hoy); backfill laser (J2); esqueleto Exp 7/8 (J1) para decisión del usuario |
-| S1 | QA | Re-audit G.1 en vivo (C1) + práctica en 5 juegos (C2) |
-| S2 (tras OK tuyo) | Prod | Deploy backend (B1) + invitación real (B2) — **requiere tu autorización explícita** |
-| S2 | UX | Onboarding copy (C3) + SFX (C5) + tangram táctil (C6) |
-| S2-S3 | Validación | R-7B (B4, expertos) + R-7C (B5, KRU-65) — R-7A QA técnica se puede adelantar |
+| 0 (ahora) | **B1 deploy backend** (AUTORIZADO): SAM CLI → `infra/m2-backend-stack.yaml` (staging) → wire frontend → verificar invitación real | siguiente ejecución |
+| 1 (QA) | C1 re-audit G.1 en vivo + C2 práctica completatable en los 5 juegos | tras B1 (o paralelo) |
+| 2 (docs) | J2 backfill laser + team_coordination (plantilla v2) | en curso de la ola de limpieza |
+| 3 (UX) | C3 onboarding copy + C5 SFX (KRU-64) + C6 tangram táctil | tras QA |
+| 4 (validación) | R-7B (B4, expertos) + R-7C (B5, KRU-65) — R-7A se puede adelantar | depende de agenda |
 
-## 4. Decisiones pendientes del usuario
+## 4. Limpieza de proyecto (ejecutada 2026-09-06)
 
-1. **Exp 7 y 8**: ¿spec (mecánica + constructo) o se eliminan? (KRU-61/62 vacías, kanban blocked).
-2. **Backend a AWS**: ¿autorizar deploy M2-M6? (B1; SSO vigente hoy ~11 h).
+- **13 docs obsoletos → `docs/archive/`** (`git mv`, reversible) con `docs/archive/README.md` que documenta la fuente de verdad vigente y la regla de mantenimiento (al cerrar una sesión, su handoff superado se archiva).
+- **Raíz del repo:** `git rm gpu_manager.py` (script viejo con `LAMBDA_API_KEY` antigua hardcoded como default — **verificar en Lambda que esa key esté invalidada/rotada**) y `kanban.db` (0 bytes, erróneo). Eliminados `awscliv2.zip` (73 MB) y `session-manager-plugin.deb` (artefactos locales gitignored; AWS CLI ya instalado).
+- **Fuera de scope:** Exp 7/8 (kanban archivadas, Linear → Backlog).
+
+## 5. Decisiones pendientes del usuario (actualizado 2026-09-06)
+
+1. ~~**Exp 7 y 8**~~ → **FUERA del plan por ahora** (decisión 2026-09-06). Cards archivadas; KRU-61/62 a Backlog. Se reactivan solo con spec (§2).
+2. ~~**Backend a AWS**~~ → **AUTORIZADO** (2026-09-06). B1 es la siguiente ejecución.
 3. **R-7B**: ¿quién/quiénes califican validez de contenido (2+ expertos)?
 4. **T.3**: ¿disponibilidad de hardware de cámara para el sanity empírico?
+5. **Key Lambda vieja** (leak en `gpu_manager.py`, ya eliminada del repo): confirmar en Lambda que `secret_hx100_cafacf0a…` (key del archivo) esté invalidada/rotada — quedó en la historia git del repo público.
