@@ -4,6 +4,7 @@ import { buildPassengerConstraintFeedback } from '../tasks/original-games/passen
 import { buildTeamCoordinationFeedback } from '../tasks/original-games/teamCoordinationFeedback.js';
 import { buildTangramReportFeedback } from '../tasks/original-games/tangramReportFeedback.js';
 import { getOriginalGameBlueprint } from './originalGameBlueprints.js';
+import { getPostulationDemoBlock } from './postulationDemoConfig.js';
 import { getConstructDefinition } from '../assessment/originalGameTalentMapping.js';
 
 function pct(value) {
@@ -237,6 +238,7 @@ export function getPostulationGameCards(t, artifacts = null, completedDemo = nul
     index,
     gameId: entry.block?.gameId,
     label: entry.block?.label,
+    labelEn: entry.block?.labelEn,
     result: entry.summary,
     trialCount: entry.block?.trialCount,
   })) ?? [];
@@ -250,7 +252,9 @@ export function getPostulationGameCards(t, artifacts = null, completedDemo = nul
     const originalMetrics = getOriginalGameMetrics(t, block.gameId, result, trialCount);
     return {
       id: block.gameId ?? `game-${index}`,
-      label: t(block.label ?? block.gameId ?? t('Juego', 'Game'), getOriginalGameBlueprint(block.gameId)?.labelEn ?? block.labelEn ?? block.gameId ?? 'Game'),
+      // t_42978412: los bloques de sesión no portan labelEn (allowlist estricta);
+      // se resuelve el EN desde la config de batería original o stable_dg.
+      label: t(block.label ?? block.gameId ?? t('Juego', 'Game'), getOriginalGameBlueprint(block.gameId)?.labelEn ?? getPostulationDemoBlock(block.gameId)?.labelEn ?? block.labelEn ?? block.gameId ?? 'Game'),
       status: block.status ?? 'completed',
       trialCount,
       accuracy: Number.isFinite(Number(accuracy)) ? pct(accuracy) : '—',

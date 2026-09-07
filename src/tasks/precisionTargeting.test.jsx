@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { LanguageProvider } from '../i18n/LanguageContext.jsx';
 import PrecisionTargetingTask, {
   buildPrecisionResponseAggregate,
   buildPrecisionRouteGuide,
@@ -8,6 +9,19 @@ import PrecisionTargetingTask, {
   buildPrecisionTrials,
   computeFittsIndex,
 } from './PrecisionTargetingTask.jsx';
+
+// t_42978412: LanguageProvider lee localStorage al inicializar (jsdom about:blank
+// sin origin). Patrón del mock: PostulationGameStage.test.jsx.
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => (key in store ? store[key] : null),
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 describe('PrecisionTargetingTask helpers', () => {
   it('computes Fitts index of difficulty from distance and target width', () => {
@@ -172,5 +186,26 @@ describe('PrecisionTargetingTask', () => {
     expect(JSON.stringify(responseEvent)).not.toContain('samples');
 
     expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ totalTrials: 1, accuracy: 1, meanScore: 1 }));
+  });
+});
+
+describe('PrecisionTargetingTask EN copy (t_42978412)', () => {
+  it('renders the game chrome in English when the provider language is en', () => {
+    window.localStorage.setItem('krumm-lang', 'en');
+    render(
+      <LanguageProvider>
+        <PrecisionTargetingTask active trialCount={1} width={600} height={400} onGameEvent={vi.fn()} />
+      </LanguageProvider>,
+    );
+
+    expect(screen.getAllByText(/Adaptive precision route/i).length).toBeGreaterThan(0);
+    expect(screen.getByText('Target 1 of 1')).toBeInTheDocument();
+    expect(screen.getByText(/Not simple RT: touch the start point/i)).toBeInTheDocument();
+    expect(screen.getByText('Ideal corridor')).toBeInTheDocument();
+    expect(screen.getByText('Controlled start')).toBeInTheDocument();
+    expect(screen.getByText('Active target')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start point' })).toHaveTextContent('Start');
+    expect(screen.getByText('Touch the start point')).toBeInTheDocument();
+    window.localStorage.removeItem('krumm-lang');
   });
 });

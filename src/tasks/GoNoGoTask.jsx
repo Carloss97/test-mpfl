@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import GameRuntime from './GameRuntime.jsx';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const DEFAULT_TRIAL_COUNT = 10;
 const DEFAULT_STIMULUS_MS = 900;
@@ -129,6 +130,7 @@ export function summarizeGoNoGoResults(results = []) {
 }
 
 function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, width = 520, onComplete }) {
+  const { t } = useLanguage();
   const trials = useMemo(() => buildGoNoGoTrials({ count: trialCount, noGoEvery: 2 }), [trialCount]);
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
@@ -213,8 +215,8 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, width = 520, onCompl
     const summary = summarizeGoNoGoResults(resultsRef.current);
     return (
       <div className="go-nogo-task" data-testid="gonogo-finished">
-        <h3>Go/No-Go completado</h3>
-        <p>Precisión: {Math.round(summary.accuracy * 100)}%</p>
+        <h3>{t('Go/No-Go completado', 'Go/No-Go complete')}</h3>
+        <p>{t('Precisión: {pct}%', 'Accuracy: {pct}%', { pct: `${Math.round(summary.accuracy * 100)}%` })}</p>
       </div>
     );
   }
@@ -225,8 +227,8 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, width = 520, onCompl
   return (
     <div className="go-nogo-task">
       <div className="task-header">
-        <span className="task-title">🚦 {presentation.heading}</span>
-        <span className="task-progress">Señal {current + 1} de {trials.length}</span>
+        <span className="task-title">🚦 {t('Semáforo de impulso', 'Impulse traffic light')}</span>
+        <span className="task-progress">{t('Señal {n} de {total}', 'Signal {n} of {total}', { n: current + 1, total: trials.length })}</span>
       </div>
       <div className="task-area" data-testid="gonogo-task-area" style={{ width, height: 300, display: 'grid', placeItems: 'center' }}>
         <div className="go-nogo-task__cue-card">
@@ -242,9 +244,13 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, width = 520, onCompl
           >
             {trial.cue}
           </div>
-          <p className="go-nogo-task__instruction">{presentation.instruction}</p>
+          <p className="go-nogo-task__instruction">
+            {presentation.state === 'go'
+              ? t('Pulsa responder solo cuando aparezca GO.', 'Press respond only when GO appears.')
+              : t('NO-GO: espera sin pulsar para inhibir la respuesta.', 'NO-GO: wait without pressing to inhibit the response.')}
+          </p>
           {presentation.temptationLabel && (
-            <p className="go-nogo-task__temptation">{presentation.temptationLabel}</p>
+            <p className="go-nogo-task__temptation">{t('No lo pulses en NO-GO', 'Do not press on NO-GO')}</p>
           )}
           <button
             type="button"
@@ -252,7 +258,7 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, width = 520, onCompl
             data-state={presentation.state}
             onClick={() => finalizeTrial('press')}
           >
-            {presentation.buttonLabel}
+            {t('Responder ahora', 'Respond now')}
           </button>
         </div>
       </div>

@@ -1,12 +1,26 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { LanguageProvider } from '../i18n/LanguageContext.jsx';
 import GoNoGoTask, {
   buildGoNoGoCuePresentation,
   buildGoNoGoTrials,
   scoreGoNoGoResponse,
   summarizeGoNoGoResults,
 } from './GoNoGoTask.jsx';
+
+// t_42978412: LanguageProvider lee localStorage al inicializar (jsdom about:blank
+// sin origin). Patrón del mock: PostulationGameStage.test.jsx.
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => (key in store ? store[key] : null),
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 describe('GoNoGoTask helpers', () => {
   it('builds deterministic GO/NO-GO trials with both cue types', () => {
@@ -171,5 +185,43 @@ describe('GoNoGoTask', () => {
   it('adapta el ancho de .task-area al prop width (t_f40921bf: sin 520px hardcodeado en móvil)', () => {
     render(<GoNoGoTask active trialCount={1} stimulusMs={300} itiMs={20} width={312} onGameEvent={vi.fn()} onComplete={vi.fn()} />);
     expect(screen.getByTestId('gonogo-task-area')).toHaveStyle({ width: '312px', height: '300px' });
+  });
+});
+
+describe('GoNoGoTask EN copy (t_42978412)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('renders instructions, button and progress in English for GO and NO-GO states', async () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    window.localStorage.setItem('krumm-lang', 'en');
+    render(
+      <LanguageProvider>
+        <GoNoGoTask active trialCount={2} stimulusMs={300} itiMs={20} onGameEvent={vi.fn()} onComplete={vi.fn()} />
+      </LanguageProvider>,
+    );
+
+    expect(screen.getByText('Signal 1 of 2')).toBeInTheDocument();
+    expect(screen.getByText(/Impulse traffic light/i)).toBeInTheDocument();
+    expect(screen.getByText('Press respond only when GO appears.')).toBeInTheDocument();
+    const goButton = screen.getByRole('button', { name: 'Respond now' });
+    expect(goButton).toHaveClass('go-nogo-task__response');
+
+    await act(async () => {
+      now = 160;
+      fireEvent.click(goButton);
+      vi.advanceTimersByTime(25);
+    });
+
+    expect(screen.getByText('NO-GO: wait without pressing to inhibit the response.')).toBeInTheDocument();
+    expect(screen.getByText('Do not press on NO-GO')).toBeInTheDocument();
+    window.localStorage.removeItem('krumm-lang');
   });
 });

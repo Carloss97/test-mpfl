@@ -1,12 +1,26 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { LanguageProvider } from '../i18n/LanguageContext.jsx';
 import VisualSearchTask, {
   buildVisualSearchGridMetrics,
   buildVisualSearchTilePresentation,
   buildVisualSearchTrials,
   summarizeVisualSearchResults,
 } from './VisualSearchTask.jsx';
+
+// t_42978412: LanguageProvider lee localStorage al inicializar (jsdom about:blank
+// sin origin). Patrón del mock: PostulationGameStage.test.jsx.
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => (key in store ? store[key] : null),
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 describe('VisualSearchTask helpers', () => {
   it('builds trials with one target among distractors and increasing set sizes', () => {
@@ -120,5 +134,27 @@ describe('VisualSearchTask', () => {
     expect(target).toHaveClass('visual-search-task__tile--target');
     expect(target).toHaveAttribute('data-preselection-highlight', 'false');
     expect(target.style.width).toBe('42px');
+  });
+});
+
+describe('VisualSearchTask EN copy (t_42978412)', () => {
+  it('renders header, panel brief, tiles and caption in English', () => {
+    window.localStorage.setItem('krumm-lang', 'en');
+    render(
+      <LanguageProvider>
+        <VisualSearchTask active trialCount={1} width={600} height={400} onGameEvent={vi.fn()} onComplete={vi.fn()} />
+      </LanguageProvider>,
+    );
+
+    expect(screen.getByText(/Visual search/i)).toBeInTheDocument();
+    expect(screen.getByText('Panel 1 of 1')).toBeInTheDocument();
+    expect(screen.getByText('8 stimuli')).toBeInTheDocument();
+    expect(screen.getByText('Active search panel')).toBeInTheDocument();
+    expect(screen.getByText('Target: solid dot')).toBeInTheDocument();
+    const target = screen.getByRole('button', { name: 'Target: solid dot' });
+    expect(target).toHaveClass('visual-search-task__tile--target');
+    expect(screen.getAllByRole('button', { name: 'Distractor: geometric shape' }).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Find the solid dot among distractors/i)).toBeInTheDocument();
+    window.localStorage.removeItem('krumm-lang');
   });
 });

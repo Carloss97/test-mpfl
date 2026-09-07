@@ -10,8 +10,8 @@ export default function PostulationProgressHeader({ currentBlock, currentIndex =
     <header className="postulation-demo__game-header">
       <div>
         <span className="postulation-demo__eyebrow">{t('KRUMM Postulaciones', 'KRUMM Applications')}</span>
-        <h1>{currentBlock?.label ?? t('Actividad', 'Activity')}</h1>
-        <p>{currentBlock?.description ?? t('Juego breve de la prueba de postulación.', 'Short game from the application assessment.')}</p>
+        <h1>{t(currentBlock?.label ?? t('Actividad', 'Activity'), currentBlock?.labelEn)}</h1>
+        <p>{t(currentBlock?.description ?? t('Juego breve de la prueba de postulación.', 'Short game from the application assessment.'), currentBlock?.descriptionEn)}</p>
       </div>
       {/* H3.2 (2026-09-07): toggle de idioma en la esquina superior derecha del
           stage (chrome de la demo, fuera del área jugable) junto al progreso. */}

@@ -72,4 +72,21 @@ describe('postulation demo config', () => {
     expect(resolvePostulationDemoBatteryMode('?battery=unknown')).toBe(POSTULATION_DEMO_BATTERY_MODES.STABLE_DG);
     expect(resolvePostulationDemoBatteryMode('')).toBe(POSTULATION_DEMO_BATTERY_MODES.STABLE_DG);
   });
+
+  it('adds presentation-only EN siblings to the stable_dg blocks without mutating ES fields (t_42978412)', () => {
+    expect(POSTULATION_DEMO_BATTERY_STABLE_DG.every((block) => typeof block.labelEn === 'string' && block.labelEn.length > 0)).toBe(true);
+    expect(POSTULATION_DEMO_BATTERY_STABLE_DG.every((block) => typeof block.shortLabelEn === 'string' && block.shortLabelEn.length > 0)).toBe(true);
+    expect(POSTULATION_DEMO_BATTERY_STABLE_DG.every((block) => typeof block.descriptionEn === 'string' && block.descriptionEn.length > 0)).toBe(true);
+    expect(getPostulationDemoBlock('precision_targeting')).toMatchObject({
+      label: 'Ruta de precisión adaptativa',
+      labelEn: 'Adaptive precision route',
+      shortLabel: 'Precisión',
+      shortLabelEn: 'Precision',
+    });
+    expect(getPostulationDemoBlock('simple_rt').labelEn).toBe('Reaction warmup');
+    expect(getPostulationDemoBlock('go_nogo').labelEn).toBe('Inhibitory control');
+    expect(getPostulationDemoBlock('color_interference').labelEn).toBe('Cognitive interference');
+    expect(getPostulationDemoBlock('visual_search').labelEn).toBe('Visual search');
+    expect(getPostulationDemoBlock('precision_targeting').descriptionEn).toMatch(/corridor/i);
+  });
 });

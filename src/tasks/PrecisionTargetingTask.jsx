@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import GameRuntime from './GameRuntime.jsx';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { createPointerSampler, appendPointerSample } from '../telemetry/pointerSampler.js';
 import { summarizePointerTrial } from '../telemetry/kinematics.js';
 
@@ -8,6 +9,19 @@ const DEFAULT_HEIGHT = 400;
 const DEFAULT_TRIAL_COUNT = 8;
 const TARGET_RADII = [34, 26, 20, 16];
 const PRECISION_GAME_DEFINITION = Object.freeze({ id: 'precision_targeting', label: 'Precisión visomotora', difficulty: 'fitts' });
+
+// t_42978412: EN de presentación para labels ES canónicos. El payload de
+// telemetría conserva los valores ES (contrato game_event_v1); solo el UI
+// traduce en el render.
+const ROUTE_LABEL_EN = Object.freeze({
+  'Ruta con correcciones': 'Route with corrections',
+  'Ruta precisa': 'Precise route',
+  'Ruta estable': 'Stable route',
+});
+const PRECISION_HEADLINE_EN = Object.freeze({
+  'Precisión estable': 'Stable precision',
+  'Ajuste fino requerido': 'Fine adjustment needed',
+});
 
 function round(value, digits = 4) {
   const numeric = Number(value);
@@ -116,21 +130,23 @@ export function buildPrecisionTrialFeedback({ correct = false, reactionTimeMs = 
 }
 
 function PrecisionFeedbackStrip({ feedback }) {
+  const { t } = useLanguage();
   if (!feedback) return null;
   return (
     <div
       className={`precision-targeting-task__feedback-strip precision-targeting-task__feedback-strip--${feedback.tone}`}
       role="status"
-      aria-label="Feedback de precisión"
+      aria-label={t('Feedback de precisión', 'Precision feedback')}
     >
-      <strong>{feedback.headline}</strong>
-      <span>{feedback.routeLabel}</span>
+      <strong>{t(feedback.headline, PRECISION_HEADLINE_EN[feedback.headline] ?? feedback.headline)}</strong>
+      <span>{t(feedback.routeLabel, ROUTE_LABEL_EN[feedback.routeLabel] ?? feedback.routeLabel)}</span>
       <span>{feedback.detail}</span>
     </div>
   );
 }
 
 function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }) {
+  const { t } = useLanguage();
   const areaRef = useRef(null);
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
@@ -294,9 +310,9 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
     return (
       <div className="precision-targeting-task" data-testid="precision-task-finished">
         <PrecisionFeedbackStrip feedback={feedback} />
-        <h3>Precisión completada</h3>
-        <p>Precisión espacial: {Math.round(accuracy * 100)}%</p>
-        <p>Eficiencia de trayectoria: {Math.round(meanPathEfficiency * 100)}%</p>
+        <h3>{t('Precisión completada', 'Precision complete')}</h3>
+        <p>{t('Precisión espacial: {pct}%', 'Spatial accuracy: {pct}%', { pct: `${Math.round(accuracy * 100)}%` })}</p>
+        <p>{t('Eficiencia de trayectoria: {pct}%', 'Path efficiency: {pct}%', { pct: `${Math.round(meanPathEfficiency * 100)}%` })}</p>
       </div>
     );
   }
@@ -308,18 +324,18 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
   return (
     <div className="precision-targeting-task">
       <div className="task-header">
-        <span className="task-title">🎯 Ruta de precisión adaptativa</span>
-        <span className="task-progress">Objetivo {current + 1} de {trials.length}</span>
-        <span className="task-progress">Fitts ID {trial.fittsId.toFixed(2)}</span>
+        <span className="task-title">🎯 {t('Ruta de precisión adaptativa', 'Adaptive precision route')}</span>
+        <span className="task-progress">{t('Objetivo {n} de {total}', 'Target {n} of {total}', { n: current + 1, total: trials.length })}</span>
+        <span className="task-progress">{t('Fitts ID {id}', 'Fitts ID {id}', { id: trial.fittsId.toFixed(2) })}</span>
       </div>
       <p className="caption" style={{ margin: '4px 0 8px' }}>
-        No es RT simple: toca el punto de inicio y luego alcanza un blanco de tamaño/distancia variable. Se penaliza error espacial, overshoot y trayectoria ineficiente.
+        {t('No es RT simple: toca el punto de inicio y luego alcanza un blanco de tamaño/distancia variable. Se penaliza error espacial, overshoot y trayectoria ineficiente.', 'Not simple RT: touch the start point, then reach a target of variable size/distance. Spatial error, overshoot, and inefficient paths are penalized.')}
       </p>
       <div className="precision-targeting-task__route-card" data-tone={routeGuide.difficultyTone}>
-        <strong>{routeGuide.label}</strong>
-        <span>{routeGuide.startLabel}</span>
-        <span>{routeGuide.corridorLabel}</span>
-        <span>{routeGuide.targetLabel}</span>
+        <strong>{t(routeGuide.label, 'Adaptive precision route')}</strong>
+        <span>{t(routeGuide.startLabel, 'Controlled start')}</span>
+        <span>{t(routeGuide.corridorLabel, 'Ideal corridor')}</span>
+        <span>{t(routeGuide.targetLabel, 'Active target')}</span>
       </div>
       <PrecisionFeedbackStrip feedback={feedback} />
       <div
@@ -346,13 +362,13 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
             fontWeight: 800,
             zIndex: 2,
           }}
-          aria-label="Punto de inicio"
+          aria-label={t('Punto de inicio', 'Start point')}
         >
-          Inicio
+          {t('Inicio', 'Start')}
         </button>
         {phase === 'ready' && (
           <div className="trial-feedback" style={{ left: '50%', top: '22%' }}>
-            <span className="rt-display">Toca el punto de inicio</span>
+            <span className="rt-display">{t('Toca el punto de inicio', 'Touch the start point')}</span>
           </div>
         )}
         {phase === 'target' && (
@@ -365,7 +381,7 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
               className="precision-targeting-task__target-label"
               style={{ left: trial.target.x, top: trial.target.y - trial.target.radius - 24 }}
             >
-              {routeGuide.targetLabel}
+              {t(routeGuide.targetLabel, 'Active target')}
             </div>
             <div
               className="rt-target precision-targeting-task__target"

@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { LanguageProvider } from '../i18n/LanguageContext.jsx';
 import ColorInterferenceTask, {
   buildColorInterferenceChoiceCards,
   buildColorInterferenceFeedback,
@@ -10,6 +11,19 @@ import ColorInterferenceTask, {
   scoreColorInterferenceResponse,
   summarizeColorInterferenceResults,
 } from './ColorInterferenceTask.jsx';
+
+// t_42978412: LanguageProvider lee localStorage al inicializar (jsdom about:blank
+// sin origin). Patrón del mock: PostulationGameStage.test.jsx.
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => (key in store ? store[key] : null),
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 describe('ColorInterferenceTask helpers', () => {
   it('builds deterministic congruent and incongruent trials', () => {
@@ -175,5 +189,48 @@ describe('ColorInterferenceTask', () => {
   it('adapta el ancho de .task-area al prop width (t_f40921bf: sin 520px hardcodeado en móvil)', () => {
     render(<ColorInterferenceTask active trialCount={1} itiMs={20} width={312} onGameEvent={vi.fn()} onComplete={vi.fn()} />);
     expect(screen.getByTestId('color-task-area')).toHaveStyle({ width: '312px' });
+  });
+});
+
+describe('ColorInterferenceTask EN copy (t_42978412)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('renders header, timer, prompt, choice cards and feedback in English', async () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    window.localStorage.setItem('krumm-lang', 'en');
+    render(
+      <LanguageProvider>
+        <ColorInterferenceTask active trialCount={2} itiMs={200} onGameEvent={vi.fn()} onComplete={vi.fn()} />
+      </LanguageProvider>,
+    );
+
+    expect(screen.getByText(/Color cards/i)).toBeInTheDocument();
+    expect(screen.getByText('Question 1 of 2')).toBeInTheDocument();
+    expect(screen.getByText('Type: congruent')).toBeInTheDocument();
+    expect(screen.getByRole('timer', { name: 'Time remaining' })).toHaveTextContent('Time 3.2s');
+    expect(screen.getByText('Pick the ink, ignore the text.')).toBeInTheDocument();
+    expect(screen.getByText('Select the ink color, not the word.')).toBeInTheDocument();
+
+    const red = screen.getByRole('button', { name: 'Pick ink Red' });
+    expect(red).toHaveClass('color-interference-task__choice-card');
+    expect(red).toHaveTextContent('Red');
+
+    await act(async () => {
+      now = 220;
+      fireEvent.click(red);
+      vi.advanceTimersByTime(25);
+    });
+
+    expect(screen.getByText('Correct')).toBeInTheDocument();
+    expect(screen.getByText('Expected ink: Red')).toBeInTheDocument();
+    window.localStorage.removeItem('krumm-lang');
   });
 });

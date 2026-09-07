@@ -146,10 +146,10 @@ export default function PostulationGameStage({
   }
 
   return (
-    <section className="postulation-demo__game-shell" aria-label="Juegos de postulación">
+    <section className="postulation-demo__game-shell" aria-label={t('Juegos de postulación', 'Application games')}>
       <PostulationProgressHeader currentBlock={currentBlock} currentIndex={currentIndex} total={blockList.length} completed={completed} />
       <div className="postulation-demo__game-body">
-        <div className="postulation-demo__game-stage" aria-label="Stage de juego">
+        <div className="postulation-demo__game-stage" aria-label={t('Stage de juego', 'Game stage')}>
           <CurrentGame
             active
             block={currentBlock}

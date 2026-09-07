@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import GameRuntime from './GameRuntime.jsx';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const COLOR_OPTIONS = Object.freeze([
-  { value: 'red', label: 'Rojo', word: 'ROJO', css: '#dc2626' },
-  { value: 'blue', label: 'Azul', word: 'AZUL', css: '#2563eb' },
-  { value: 'green', label: 'Verde', word: 'VERDE', css: '#059669' },
-  { value: 'yellow', label: 'Amarillo', word: 'AMARILLO', css: '#b45309' },
+  { value: 'red', label: 'Rojo', labelEn: 'Red', word: 'ROJO', css: '#dc2626' },
+  { value: 'blue', label: 'Azul', labelEn: 'Blue', word: 'AZUL', css: '#2563eb' },
+  { value: 'green', label: 'Verde', labelEn: 'Green', word: 'VERDE', css: '#059669' },
+  { value: 'yellow', label: 'Amarillo', labelEn: 'Yellow', word: 'AMARILLO', css: '#b45309' },
 ]);
 
 const TRIAL_PATTERN = Object.freeze([
@@ -34,6 +35,10 @@ function mean(values) {
 
 function labelForColor(value) {
   return COLOR_OPTIONS.find((option) => option.value === value)?.label ?? String(value);
+}
+
+function labelEnForColor(value) {
+  return COLOR_OPTIONS.find((option) => option.value === value)?.labelEn ?? labelForColor(value);
 }
 
 function cssForColor(value) {
@@ -73,18 +78,25 @@ export function buildColorInterferenceChoiceCards(trial = {}) {
 
 export function buildColorInterferenceFeedback(scored = {}) {
   const expectedLabel = labelForColor(scored.expectedResponse ?? scored.ink);
+  const expectedLabelEn = labelEnForColor(scored.expectedResponse ?? scored.ink);
   const correct = scored.correct === true;
+  // t_42978412: label/detail ES canónicos (tests + contrato); los siblings EN son
+  // solo de presentación para el render.
   if (scored.outcome === 'timeout') {
     return {
       tone: 'incorrect',
       label: 'Tiempo agotado',
+      labelEn: 'Time out',
       detail: `Tinta esperada: ${expectedLabel}`,
+      detailEn: `Expected ink: ${expectedLabelEn}`,
     };
   }
   return {
     tone: correct ? 'correct' : 'incorrect',
     label: correct ? 'Correcto' : 'Interferencia detectada',
+    labelEn: correct ? 'Correct' : 'Interference detected',
     detail: `Tinta esperada: ${expectedLabel}`,
+    detailEn: `Expected ink: ${expectedLabelEn}`,
   };
 }
 
@@ -97,6 +109,7 @@ export function buildColorInterferenceTiming({ durationMs = DEFAULT_TRIAL_DURATI
     remainingMs: Math.round(remaining),
     percentRemaining,
     label: `Tiempo ${(remaining / 1000).toFixed(1)}s`,
+    labelEn: `Time ${(remaining / 1000).toFixed(1)}s`,
     urgency: percentRemaining <= 25 ? 'high' : percentRemaining <= 55 ? 'medium' : 'low',
   };
 }
@@ -146,6 +159,7 @@ export function summarizeColorInterferenceResults(results = []) {
 }
 
 function ColorInterferenceInner({ emit, trialCount, itiMs, trialDurationMs, width = 520, onComplete }) {
+  const { t } = useLanguage();
   const trials = useMemo(() => buildColorInterferenceTrials({ count: trialCount }), [trialCount]);
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
@@ -255,8 +269,8 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, trialDurationMs, widt
     const summary = summarizeColorInterferenceResults(resultsRef.current);
     return (
       <div className="color-interference-task" data-testid="color-finished">
-        <h3>Interferencia completada</h3>
-        <p>Precisión: {Math.round(summary.accuracy * 100)}%</p>
+        <h3>{t('Interferencia completada', 'Interference complete')}</h3>
+        <p>{t('Precisión: {pct}%', 'Accuracy: {pct}%', { pct: `${Math.round(summary.accuracy * 100)}%` })}</p>
       </div>
     );
   }
@@ -268,17 +282,17 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, trialDurationMs, widt
   return (
     <div className="color-interference-task">
       <div className="task-header">
-        <span className="task-title">🌈 Tarjetas de color</span>
-        <span className="task-progress">Pregunta {current + 1} de {trials.length}</span>
-        <span className="task-progress">Tipo: {trial.congruent ? 'congruente' : 'incongruente'}</span>
-        <span className="task-progress color-interference-task__timer" role="timer" aria-label="Tiempo restante">{timing.label}</span>
+        <span className="task-title">🌈 {t('Tarjetas de color', 'Color cards')}</span>
+        <span className="task-progress">{t('Pregunta {n} de {total}', 'Question {n} of {total}', { n: current + 1, total: trials.length })}</span>
+        <span className="task-progress">{t('Tipo: {type}', 'Type: {type}', { type: trial.congruent ? t('congruente', 'congruent') : t('incongruente', 'incongruent') })}</span>
+        <span className="task-progress color-interference-task__timer" role="timer" aria-label={t('Tiempo restante', 'Time remaining')}>{t(timing.label, timing.labelEn)}</span>
       </div>
       <div className="task-area" data-testid="color-task-area" style={{ width, minHeight: 260, display: 'grid', placeItems: 'center' }}>
         <div className="color-interference-task__card-stage">
           <div className="color-interference-task__timebar" data-testid="color-timebar" data-urgency={timing.urgency}>
             <span style={{ width: `${timing.percentRemaining}%` }} />
           </div>
-          <p className="color-interference-task__prompt">Elige la tinta, ignora el texto.</p>
+          <p className="color-interference-task__prompt">{t('Elige la tinta, ignora el texto.', 'Pick the ink, ignore the text.')}</p>
           <div
             data-testid="color-stimulus"
             className={`color-interference-task__stimulus-card ${classifyStimulusWordLength(trial.word)}`}
@@ -293,18 +307,24 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, trialDurationMs, widt
           >
             {trial.word}
           </div>
-          <p className="caption">Selecciona el color de la tinta, no la palabra.</p>
+          <p className="caption">{t('Selecciona el color de la tinta, no la palabra.', 'Select the ink color, not the word.')}</p>
           <div className="color-interference-task__choice-grid">
             {choiceCards.map((option) => (
-              <button key={option.value} type="button" aria-label={option.ariaLabel} className={option.className} onClick={() => handleResponse(option.value)}>
-                {option.label}
+              <button
+                key={option.value}
+                type="button"
+                aria-label={t('Elegir tinta {color}', 'Pick ink {color}', { color: t(option.label, option.labelEn ?? option.label) })}
+                className={option.className}
+                onClick={() => handleResponse(option.value)}
+              >
+                {t(option.label, option.labelEn ?? option.label)}
               </button>
             ))}
           </div>
           {feedback && (
             <div className={`color-interference-task__feedback color-interference-task__feedback--${feedback.tone}`} role="status">
-              <strong>{feedback.label}</strong>
-              <span>{feedback.detail}</span>
+              <strong>{t(feedback.label, feedback.labelEn ?? feedback.label)}</strong>
+              <span>{t(feedback.detail, feedback.detailEn ?? feedback.detail)}</span>
             </div>
           )}
         </div>

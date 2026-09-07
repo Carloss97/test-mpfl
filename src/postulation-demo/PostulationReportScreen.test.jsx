@@ -22,6 +22,7 @@ const localStorageMock = (() => {
 Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 const tEs = (es, _en) => es;
+const tEn = (es, en) => en ?? es;
 
 const completedDemo = Object.freeze({
   completedCount: 2,
@@ -131,6 +132,26 @@ describe('PostulationReportScreen', () => {
 
     expect(cards.map((card) => card.score)).toEqual(['84%', '84', '120']);
     expect(cards.map((card) => card.score).join(' ')).not.toMatch(/8400%|12000%/);
+  });
+
+  it('resolves stable_dg game card labels from the config labelEn in EN, not raw game ids (t_42978412)', () => {
+    const cards = getPostulationGameCards(tEn, {
+      assessmentSession: {
+        blocks: [
+          { gameId: 'precision_targeting', label: 'Ruta de precisión adaptativa', status: 'completed', result: { accuracy: 0.9 } },
+          { gameId: 'go_nogo', label: 'Control inhibitorio', status: 'completed', result: { accuracy: 0.75 } },
+          { gameId: 'color_interference', label: 'Interferencia cognitiva', status: 'completed', result: { accuracy: 0.8 } },
+          { gameId: 'visual_search', label: 'Búsqueda visual', status: 'completed', result: { accuracy: 0.85 } },
+        ],
+      },
+    });
+
+    expect(cards.map((card) => card.label)).toEqual([
+      'Adaptive precision route',
+      'Inhibitory control',
+      'Cognitive interference',
+      'Visual search',
+    ]);
   });
 
   it('shows only relevant game metrics for original games instead of blank precision/time fields', () => {

@@ -104,6 +104,22 @@ sin overflow horizontal en desktop ni móvil; 0 errores de consola en el recorri
    "🎯 Ruta de precisión adaptativa", captions, route cards) están hardcodeados en español sin
    `useLanguage`. La batería original (5 juegos, `?battery=original`) sí usa `t()` (audit H1).
    Con EN activo, el chrome del stage se traduce pero el contenido del juego no.
+   - **RESUELTO (t_42978412, 2026-09-07):** los 5 bloques stable_dg ganan siblings de
+     presentación `labelEn`/`shortLabelEn`/`descriptionEn` (campo ES canónico intacto —
+     pattern `originalGameBlueprints.js`); `PostulationProgressHeader` renderiza
+     `t(label, labelEn)`/`t(description, descriptionEn)`; las 4 tareas (precision, go_nogo,
+     color, visual_search) usan `useLanguage()` + `t(es,en)` en todo el copy in-game
+     (títulos, instrucciones, botones, timer, aria, feedback, pantallas de cierre) — los
+     helpers puros conservan salida ES (contrato de telemetría: `routeLabel` en payload,
+     cues GO/NO-GO, estímulo Stroop). El reporte resuelve el EN de las game cards desde la
+     config (antes mostraba el gameId crudo en stable_dg EN). **Limitación documentada:**
+     las palabras-estímulo del Stroop (ROJO/AMARILLO/AZUL/VERDE) permanecen en español en
+     ambas lenguas — dato congelado + payload; la tarea mide selección de tinta ("ignora
+     el texto"), no lectura. Walkthrough vivo EN+ES 1280×720
+     (`scripts/smoke-t_42978412-stable-dg-en.mjs`): setup→4 juegos jugados→reporte,
+     0 fallos, 0 console errors, 10 capturas (`t_42978412-*.png`). Hallazgo colateral (fuera
+     de scope, candidate para t_24a0e428): el hero del reporte EN muestra "observations
+     **de alcance**" (`de alcance` hardcodeado en `PostulationReportSummary.js`).
 
 ## Nota de recuperación (WIP H4.2 mezclado en el stash del run 75)
 

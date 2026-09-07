@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import GameRuntime from './GameRuntime.jsx';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const DEFAULT_WIDTH = 600;
 const DEFAULT_HEIGHT = 400;
@@ -45,6 +46,8 @@ export function buildVisualSearchTilePresentation(item = {}) {
   return {
     label: item.symbol ?? (target ? TARGET_SYMBOL : '○'),
     ariaLabel: target ? 'Objetivo: punto sólido' : 'Distractor: forma geométrica',
+    // t_42978412: sibling EN de presentación (el aria ES canónico no cambia).
+    ariaLabelEn: target ? 'Target: solid dot' : 'Distractor: geometric shape',
     className: `visual-search-task__item visual-search-task__tile ${target ? 'visual-search-task__tile--target visual-search-task__item--target' : 'visual-search-task__tile--distractor visual-search-task__item--distractor'}`,
     visualTone: 'neutral',
     preSelectionHighlight: false,
@@ -124,6 +127,7 @@ export function summarizeVisualSearchResults(trials = []) {
 }
 
 function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
+  const { t } = useLanguage();
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
   const [current, setCurrent] = useState(0);
@@ -212,9 +216,9 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
     const summary = summarizeVisualSearchResults(trialsRef.current);
     return (
       <div className="visual-search-task" data-testid="visual-search-finished">
-        <h3>Búsqueda visual completada</h3>
-        <p>Precisión: {Math.round(summary.accuracy * 100)}%</p>
-        <p>Eficiencia: {summary.searchEfficiency.toFixed(2)}</p>
+        <h3>{t('Búsqueda visual completada', 'Visual search complete')}</h3>
+        <p>{t('Precisión: {pct}%', 'Accuracy: {pct}%', { pct: `${Math.round(summary.accuracy * 100)}%` })}</p>
+        <p>{t('Eficiencia: {value}', 'Efficiency: {value}', { value: summary.searchEfficiency.toFixed(2) })}</p>
       </div>
     );
   }
@@ -224,16 +228,16 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
   return (
     <div className="visual-search-task">
       <div className="task-header">
-        <span className="task-title">🔎 Búsqueda visual</span>
-        <span className="task-progress">Panel {current + 1} de {trials.length}</span>
-        <span className="task-progress">{trial.setSize} estímulos</span>
+        <span className="task-title">🔎 {t('Búsqueda visual', 'Visual search')}</span>
+        <span className="task-progress">{t('Panel {n} de {total}', 'Panel {n} of {total}', { n: current + 1, total: trials.length })}</span>
+        <span className="task-progress">{t('{n} estímulos', '{n} stimuli', { n: trial.setSize })}</span>
       </div>
       <div className="visual-search-task__panel-brief">
-        <strong>Panel de búsqueda activa</strong>
-        <span>Objetivo: punto sólido</span>
+        <strong>{t('Panel de búsqueda activa', 'Active search panel')}</strong>
+        <span>{t('Objetivo: punto sólido', 'Target: solid dot')}</span>
       </div>
       <p className="caption" style={{ margin: '4px 0 8px' }}>
-        Encuentra el punto sólido entre distractores. Mide eficiencia de búsqueda, distracción y precisión bajo carga visual.
+        {t('Encuentra el punto sólido entre distractores. Mide eficiencia de búsqueda, distracción y precisión bajo carga visual.', 'Find the solid dot among distractors. It measures search efficiency, distraction, and accuracy under visual load.')}
       </p>
       <div className="task-area" data-testid="visual-search-area" style={{ width, height, position: 'relative', cursor: 'pointer' }}>
         {trial.items.map((item) => {
@@ -247,7 +251,7 @@ function VisualSearchInner({ emit, trialCount, width, height, onComplete }) {
               data-x={item.x}
               data-y={item.y}
               className={presentation.className}
-              aria-label={presentation.ariaLabel}
+              aria-label={t(presentation.ariaLabel, presentation.ariaLabelEn ?? presentation.ariaLabel)}
               data-preselection-highlight={String(presentation.preSelectionHighlight)}
               data-visual-tone={presentation.visualTone}
               onClick={(event) => handleItemClick(event, item)}

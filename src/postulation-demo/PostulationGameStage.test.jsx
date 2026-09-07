@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PostulationGameStage, { getPostulationGameViewport } from './PostulationGameStage.jsx';
 import { buildOriginalGamePostulationBlocks } from './originalGameBlueprints.js';
+import { listVisiblePostulationBlocks } from './postulationDemoConfig.js';
 import { LanguageProvider } from '../i18n/LanguageContext.jsx';
 
 // jsdom corre con URL about:blank (sin origin) → window.localStorage es undefined.
@@ -303,6 +304,27 @@ describe('PostulationGameStage', () => {
       fireEvent.click(screen.getByRole('button', { name: 'ES' }));
       expect(window.localStorage.getItem('krumm-lang')).toBe('es');
       expect(screen.getByText(/Juego 1 de 2/i)).toBeInTheDocument();
+    });
+
+    it('t_42978412: traduce label/description de los bloques stable_dg en el header (EN hidratado)', () => {
+      window.localStorage.setItem('krumm-lang', 'en');
+      render(
+        <LanguageProvider>
+          <PostulationGameStage
+            blocks={listVisiblePostulationBlocks()}
+            gameComponents={{
+              precision_targeting: MockGame,
+              go_nogo: MockGame,
+              color_interference: MockGame,
+              visual_search: MockGame,
+            }}
+            onGameEvent={vi.fn()}
+          />
+        </LanguageProvider>,
+      );
+      expect(screen.getByRole('heading', { name: 'Adaptive precision route' })).toBeInTheDocument();
+      expect(screen.getByText(/Touch the start, follow the ideal corridor/i)).toBeInTheDocument();
+      expect(screen.getByText(/Game 1 of 4/i)).toBeInTheDocument();
     });
   });
 
