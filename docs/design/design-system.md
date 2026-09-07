@@ -171,5 +171,14 @@ Objetivos de smoke (plan H1.2): desktop 1280×720 y móvil 390×844 — cero ove
 ## 9. Notas de ejecución
 
 - Tokens (`--k-*`) ya están en el repo y aplicados globalmente (`main.jsx`), sin cambios visuales hasta H4.2. Build + App.test OK (commit `d42bcd1`).
+- H4.2 (2026-09-07): rebuild de `LandingPage` completado sobre los tokens
+  (verificado por `src/landing/LandingPage.test.jsx`, 13 tests GREEN) y smoke
+  browser real en 1280×720 / 800×1000 / 390×844: overflow horizontal 0, h1
+  único, logo `/logo.svg` resuelto, 0 console errors, cards flotantes navy
+  dentro del hero a todo breakpoint. El commit externo `e61f44d` (card
+  t_9e3506b6, message "docs") absorbió por colisión la migración
+  LandingPage.jsx + landing.css; el asset `public/logo.svg` y la spec test se
+  commitearon en `86e71e1` (H4.2). Push pendiente (H4.6 + doble verificación
+  del rebase, main ahead 1 de origin).
 - H4.3/H4.4 (2026-09-07): tokens aplicados al flujo candidato (landing interna, guard, setup, stage, reporte — `postulationDemo.css` + `PostulationReportScreen.jsx`) y a `/reclutador` (`postulationHrDashboard.css`: topbar espresso, cards crema, métricas oro). El guard de invitación pasó de sin estilos a pantalla espresso con texto crema. `report-status-card` es navy (dato frío sobre cálido) y gana modificador `--blocked` cuando la integridad no verifica. Extensión de tokens en §3.1. La sección de juegos de `postulationDemo.css` (UI de tasks, ~líneas 792–1547 y 2165 en adelante) conserva la paleta anterior hasta H4.5 (t_5d775c9a).
 - Browser remoto compartido (también lo usa el worker de C1): si queda 401, el worker lo re-autentica en su sesión; no forzar uso en paralelo.
