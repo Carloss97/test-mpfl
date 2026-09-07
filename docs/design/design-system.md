@@ -113,12 +113,14 @@ conector de fórmulas, separador `·` en kickers.
 7. **Responsive**: medidas con `clamp()`; splits colapsan a 1 columna < 900px;
    cards flotantes del hero se anclan dentro de la foto en mobile.
 
-## 8. Decisiones abiertas (cerrar en H4.2)
+## 8. Decisiones del usuario (resueltas 2026-09-07)
 
-- Confirma el copy de la referencia como final (o entrega variantes) — el usuario lo verá
-  en la primera iteración de H4.2 antes de deploy.
-- Foto del hero: la referencia usa foto de equipo de stock; ¿usar foto real KRUMM,
-  ilustración, o mockup de la plataforma? (Default en H4.2: mockup de la plataforma +
-  cards flotantes, sin depender de stock.)
-- "Iniciar sesión" en nav: hoy no hay login de cuenta; default H4.2 = link a los portales
-  existentes (/reclutador y /postulaciones) con el mismo copy "¿Dónde quieres ingresar?".
+1. **Copy**: usar el de las referencias como **working copy** (sujeto a ajuste por el usuario en la primera iteración de H4.2, antes de deploy).
+2. **Foto/visual del hero**: el usuario autoriza "cualquier foto accesible manteniendo la narrativa". El repo no trae fotos (solo favicon + WASM). Decision: **captura de gameplay real de la plataforma** (juego más rico visualmente — candidato: balloon o rutas). Las capturas las genera el **walkthrough de C1** (se le pidió guardarlas en `docs/qa/c1-audit-shots/`); H4.2 elige la mejor. Alternativa de respaldo: mockup del reporte con cards flotantes navy.
+   - Capturas tentativas de esta sesión (laser pre-partida + gameplay inicial + reporte fixture) descartadas: tablero pobre en estado inicial y el reporte actual tiene un **bug de layout** (badge "SCORE PROVISIONAL" superpone texto en las cards de constructos) → agregar a findings de H1/C1.
+3. **"Iniciar sesión" en nav**: SÍ → ancla al bloque "¿Dónde quieres ingresar?" (cards Empresa/Candidato) dentro de la misma landing.
+
+## 9. Notas de ejecución
+
+- Tokens (`--k-*`) ya están en el repo y aplicados globalmente (`main.jsx`), sin cambios visuales hasta H4.2. Build + App.test OK (commit `d42bcd1`).
+- Browser remoto compartido (también lo usa el worker de C1): si queda 401, el worker lo re-autentica en su sesión; no forzar uso en paralelo.
