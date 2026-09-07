@@ -55,6 +55,31 @@ generados por IA." · "Datos en tu dispositivo" · "Tiempo de evaluación −60%
 
 Regla: acento oro ÚNICO por vista (una palabra del H1 o un CTA — nunca ambos saturando).
 
+### 3.1 Extensión de tokens (H4.3/H4.4, 2026-09-07)
+
+Añadidos a `krumm-tokens.css` al aplicar los tokens al flujo candidato y a /reclutador
+(rol funcional, no paleta de marca; el oro/arena sigue siendo el único acento cálido):
+
+| Rol | Token | Valor | Uso |
+|---|---|---|---|
+| Estado ok (texto) | `--k-status-ok` | `#0f766e` | badges/pills ok (AA ≥4.5:1 sobre crema) |
+| Estado ok (fondo) | `--k-status-ok-soft` | rgba 12% | fondos de pill ok |
+| Estado warn (texto) | `--k-status-warn` | `#92400e` | caveats, banners fixture |
+| Estado warn (fondo) | `--k-status-warn-soft` | rgba 12% | fondos de warn |
+| Estado error (texto) | `--k-status-error` | `#b42318` | errores, integridad bloqueada |
+| Estado error (fondo) | `--k-status-error-soft` | rgba 10% | fondos de error |
+| Tinte cálido | `--k-tint-gold` | rgba(212,180,131,0.16) | chips, iconos, filas seleccionadas |
+| Tinte cálido fuerte | `--k-tint-gold-strong` | rgba 34% | bordes/selección/focus sobre claro |
+| Hover sobre claro | `--k-hover-soft` | rgba(107,88,68,0.06) | hover de filas |
+| Sombra sobre claro | `--k-shadow-soft` | 0 8px 24px rgba(51,38,29,0.08) | cards de flujo/HR |
+| Sombra CTA | `--k-shadow-cta` | 0 14px 30px rgba(107,88,68,0.28) | CTA primario |
+| Radio panel | `--k-radius-panel` | 22px | paneles grandes (setup, reporte, stage, queue) |
+| Radio pill | `--k-radius-pill` | 999px | pills / badges |
+
+Nota de contraste: el oro `--k-accent-sand` solo va como **texto** sobre oscuro
+(kickers arena); sobre claro se usa como relleno (CTA, barras, dots) y el texto
+de acento pequeño usa `--k-ink-terracotta`.
+
 ## 4. Tipografía
 
 Familia: **Inter** (ya es la fuente del sitio — sin cambio). Jerarquía:
@@ -82,6 +107,18 @@ conector de fórmulas, separador `·` en kickers.
 - **Retícula de fondo** solo en secciones oscuras (líneas a ~100-120px, opacidad 6%).
 - Padding vertical de sección: 96px desktop / 64px mobile.
 
+### 5.1 Breakpoints (evidencia del código actual)
+
+| Breakpoint | Uso |
+|---|---|
+| ≥ 900px | Desktop: splits 2 columnas (45/55), gutter 64px, padding de sección 96px |
+| < 900px | Splits colapsan a 1 columna (regla §7.7); nav compacta |
+| < 860px | Colapso actual de landing (`src/landing/landing.css`) — base tablet |
+| < 560px | Móvil pequeño: gutter 20-24px, padding sección 64px, medidas micro |
+| max-height 820/800px | Viewports cortos (dashboard/juegos): HUD compacto, sin scroll vertical |
+
+Objetivos de smoke (plan H1.2): desktop 1280×720 y móvil 390×844 — cero overflow horizontal.
+
 ## 6. Componentes
 
 | Componente | Especificación |
@@ -95,6 +132,17 @@ conector de fórmulas, separador `·` en kickers.
 | **Kicker numerado** | "01 · CÓMO FUNCIONA" terracota sobre claro / arena sobre oscuro |
 | **Footer** | Barra crema full-width: © izq, tagline der |
 | **Logo** | Glifo cabeza-árbol con nodos (marca existente) + wordmark MAYÚSCULAS tracking amplio |
+
+### 6.1 Estados (regla para todo interactivo, aplicable desde H4.2)
+
+| Estado | Regla |
+|---|---|
+| `:hover` | Nav: subrayado animado; CTA: leve elevación/tono; cards: sombra `--k-shadow-float` (patrones actuales en `landing.css`) |
+| `:focus-visible` | Obligatorio en todo interactivo (nav, CTAs, pills, opciones de juegos): outline 3px — terracotta sobre claro (≥3:1, WCAG 1.4.11) o crema/arena sobre oscuro (refinado en H4.3: el arena puro no llega a 3:1 sobre crema) |
+| `:active` | Feedback inmediato en botones, sin delay |
+| `:disabled` | Opacidad reducida + `cursor: not-allowed`; el hover se excluye con `:hover:not(:disabled)` (patrón `postulationDemo.css`) |
+| Idioma activo | Pill EN\|ES: activo subrayado (patrón existente) |
+| `prefers-reduced-motion` | Toda animación dentro de `@media (prefers-reduced-motion: no-preference)` (patrón `originalGameAnimations.css`, WCAG 2.3.3) |
 
 ## 7. Reglas de aplicación (H4.2 → H4.5)
 
@@ -123,4 +171,5 @@ conector de fórmulas, separador `·` en kickers.
 ## 9. Notas de ejecución
 
 - Tokens (`--k-*`) ya están en el repo y aplicados globalmente (`main.jsx`), sin cambios visuales hasta H4.2. Build + App.test OK (commit `d42bcd1`).
+- H4.3/H4.4 (2026-09-07): tokens aplicados al flujo candidato (landing interna, guard, setup, stage, reporte — `postulationDemo.css` + `PostulationReportScreen.jsx`) y a `/reclutador` (`postulationHrDashboard.css`: topbar espresso, cards crema, métricas oro). El guard de invitación pasó de sin estilos a pantalla espresso con texto crema. `report-status-card` es navy (dato frío sobre cálido) y gana modificador `--blocked` cuando la integridad no verifica. Extensión de tokens en §3.1. La sección de juegos de `postulationDemo.css` (UI de tasks, ~líneas 792–1547 y 2165 en adelante) conserva la paleta anterior hasta H4.5 (t_5d775c9a).
 - Browser remoto compartido (también lo usa el worker de C1): si queda 401, el worker lo re-autentica en su sesión; no forzar uso en paralelo.
