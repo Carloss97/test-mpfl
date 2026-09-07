@@ -71,9 +71,9 @@ function TalentDimensionCard({ dimension, t }) {
 
 function WorkbookTalentCard({ construct, t }) {
   return (
-    <article className="postulation-demo__talent-card">
+    <article className="postulation-demo__talent-card postulation-demo__talent-card--provisional">
+      <span className="postulation-demo__provisional-tag postulation-demo__provisional-tag--solid">{t('Score provisional', 'Provisional score')}</span>
       <div className={`postulation-demo__talent-score postulation-demo__talent-score--provisional`} aria-label={`${construct.scoreLabel} ${t('de', 'of')} 100, ${t('score provisional', 'provisional score')}`}>
-        <span className="postulation-demo__provisional-tag postulation-demo__provisional-tag--solid">{t('Score provisional', 'Provisional score')}</span>
         <strong>{construct.scoreLabel}</strong>
         <small className="postulation-demo__score-sub">{t('Sin baremos · no comparable', 'No norms · not comparable')}</small>
       </div>

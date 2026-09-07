@@ -1805,6 +1805,23 @@
   overflow-wrap: anywhere;
 }
 
+.postulation-demo__talent-card--provisional {
+  grid-template-columns: 64px minmax(0, 1fr);
+  padding-top: 40px;
+  position: relative;
+}
+
+.postulation-demo__talent-card--provisional > .postulation-demo__provisional-tag {
+  position: absolute;
+  top: 10px;
+  left: 18px;
+  margin-bottom: 0;
+  white-space: nowrap;
+  max-width: calc(100% - 36px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .postulation-demo__talent-score {
   width: 64px;
   height: 64px;

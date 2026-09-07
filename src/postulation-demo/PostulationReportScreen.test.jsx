@@ -182,12 +182,19 @@ describe('PostulationReportScreen', () => {
     expect(screen.getByText(/Validar antes de comparar candidatos/i)).toBeInTheDocument();
 
     // W5 / G1-L07: the provisional caveat stays on par with the number (not after it).
+    // R1 (t_9e3506b6): the tag lives OUTSIDE the 64px score box, at the top of the
+    // provisional card, so it can never overlap the construct title or the score.
     const scoreBoxes = [...document.querySelectorAll('.postulation-demo__talent-score--provisional')];
     expect(scoreBoxes).toHaveLength(8);
-    scoreBoxes.forEach((box) => {
-      const tag = box.querySelector('.postulation-demo__provisional-tag--solid');
+    const provisionalCards = [...document.querySelectorAll('.postulation-demo__talent-card--provisional')];
+    expect(provisionalCards).toHaveLength(8);
+    provisionalCards.forEach((card) => {
+      const tag = card.querySelector('.postulation-demo__provisional-tag--solid');
       expect(tag).not.toBeNull();
       expect(tag.textContent).toMatch(/Score provisional/i);
+    });
+    scoreBoxes.forEach((box) => {
+      expect(box.querySelector('.postulation-demo__provisional-tag--solid')).toBeNull();
       const sub = box.querySelector('.postulation-demo__score-sub');
       expect(sub).not.toBeNull();
       expect(sub.textContent).toMatch(/Sin baremos/i);
