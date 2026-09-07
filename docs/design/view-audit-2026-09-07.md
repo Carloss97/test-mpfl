@@ -98,6 +98,13 @@ de preloads de módulos en la primera carga (benigno, Vite dev).
 - **Fix:** card `t_9e3506b6` (ya creada, `ready`) — mover el tag fuera del grid del score o
   `white-space:nowrap` + posición relativa; validar ES/EN (EN "Provisional score" es más corto).
 - **Evidencia:** `r1-construct-card.png` (crop de la card), `report-fixture-evidence-map.png`.
+- **Contramedición independiente (run paralelo en krumm.cl producción, 2026-09-07 02:05 -03):**
+  en Chromium cloud a 1280×720 y 390×844, las 8 tags `.postulation-demo__provisional-tag--solid`
+  miden 129×22 px dentro del contenedor de 64 px, con **0 solapes** con hermanos (gap mínimo
+  3 px; evidencia: `r1-badge-bug.png`). El badge de 145 px + solape medido en el run dev local
+  indica dependencia de métricas de fuente/render del entorno: el solape se manifiesta en
+  algunos renders (incluida la incidencia reportada 2026-09-06 23:27) y no en otros.
+  Clasificación invariable; el fix defensivo `t_9e3506b6` sigue siendo válido.
 
 ### R2 — NUEVO (copy): Team muestra interpolación literal en el status del footer
 - **En vivo (4/4 escenarios):** el footer `[role=status]` muestra literalmente:
@@ -156,6 +163,47 @@ para garantizar match de formas; (b) limpiar `levelOutcome` al entrar a evaluaci
 re-guardar el efecto de avance); (c) `finishLevel('timeout')` al llegar a 0;
 (d) `moveLimit ≥ pieceCount`; (e) tests de componente de la fase evaluativa.
 
+**FIX APLICADO (t_58def568, 2026-09-07):** los 3 defectos + R4 corregidos en
+`src/tasks/original-games/` (tangramTelemetry.js, tangramStages.js,
+TangramPostulationTask.jsx). Cambios de diseño documentados (el payload
+`stimulus_shown.pieceCount` no cambia: pieceCount por nivel intacto):
+
+- **Composición por nivel nueva** (bandeja = espejo de slots activos; dificultad vía
+  rotación requerida + pieceCount + límites):
+  | Nivel | Composición (forma×cnt) | moveLimit | optimalMoves |
+  |---|---|---|---|
+  | L0 | tri_large×2 (sin cambio) | — | — |
+  | L1 | tri_large×2, square, tri_medium | 0 | 4 |
+  | L2 | tri_large×2, square, tri_medium, tri_small | 3 → **5** | 1 → **5** |
+  | L3 | tri_large×2, square, tri_medium, tri_small×2 | 0 | 6 |
+  | L4 | tri_large×2, square, tri_medium, tri_small×2, rhombus | 4 → **7** | 1 → **7** |
+  - `TANGRAM_LEVEL_COMPOSITION` (tangramTelemetry.js) reemplaza la selección por
+    cola rotada (`buildTangramLevelShapes`); invariante multiset(bandeja) ===
+    multiset(slots) por nivel con test en tangramStages.test.js.
+  - `optimalMoves` = pieceCount en todos los niveles evaluativos (antes L2/L4 = 1,
+    lo que inflaba `move_overhead_count` incluso en solución perfecta).
+  - `slotId` ahora determinista (`TANGRAM_<level>_<i>`) — antes un contador global
+    lo hacía inestable entre reconstrucciones de slots.
+- **R3.2 (skip L1):** el CTA de transición borra `levelOutcome` + `outcomeLevelRef`;
+  el efecto de avance además re-guarda (`outcomeLevelRef.current === level`) y ahora
+  limpia su timeout de 1400ms en cleanup (antes `return () => undefined` dejaba
+  timeouts huérfanos → también corregido para StrictMode dev).
+- **R3.3 (timeout):** el tick del intervalo que lleva el conteo a 0 (espejo
+  `secondsLeftRef`) dispara `finishLevel('timeout')` vía `finishLevelRef`
+  (cobertura actual). El disparo NO está en un efecto observando `secondsLeft===0`:
+  al entrar a un nivel nuevo hay un render transitorio con `secondsLeft=0` stale del
+  nivel previo que provocaría un timeout instantáneo.
+- **R4 (a11y, junto al fix):** Enter por teclado ahora encaja en el **primer slot
+  libre compatible** con la forma de la pieza seleccionada (antes: primer slot libre
+  cualquiera, con denegación + consumo de movimiento).
+- **Hygiene:** el efecto de `stimulus_shown` limpia su timeout de 50ms en cleanup
+  (evita doble emit bajo StrictMode dev).
+- **Tests:** 5 tests de componente nuevos de la fase evaluativa (no-skip L1,
+  timeout → outcome+avance, moveLimit → outcome+avance, nivel resoluble por botones
+  y teclado, payload privacy-safe) + invariante bandeja/slots + slotId determinista.
+  Verificación completa (suite, oxlint, build, recorrido vivo hasta el reporte):
+  ver cierre de t_58def568.
+
 ### R4 — Menor (a11y): Tangram, `Enter` por teclado encaja en el primer slot libre sin importar la forma
 - `TangramPostulationTask.jsx:360-366`: la acción `snap` toma el primer slot no ocupado; si la
   pieza no matchea, es denied **y consume un movimiento**. En el tutorial (una sola forma)
@@ -203,26 +251,32 @@ móvil 390×844: `mobile-landing-public.png` · `mobile-internal-landing.png` ·
 `mobile-laser.png` · `mobile-balloon.png` · `mobile-guard-invalid.png` ·
 `mobile-report-fixture-evidence.png` · `mobile-reclutador.png`.
 
-> Nota: en el mismo directorio quedaron 6 PNGs ajenos a este run (`landing.png`,
-> `landing-en.png`, `postulation-landing.png`, `setup.png`, `guard-invalid.png` ~04:09 UTC y
-> `tangram-transition.png` ~04:26 UTC, mtimes; 1280×720, nombres distintos a este run).
-> Provenencia no identificada (sin proceso activo al momento de la auditoría; posible script
-> huérfano de un intento previo o QA manual). **No están incluidos en el commit de este
-> entregable** (quedan untracked) — el orquestador debe verificarlos.
+> Nota: en el mismo directorio quedaron PNGs de un **run de audit paralelo** (sesión de la
+> misma noche sobre **krumm.cl producción**, 01:08–02:05 -03; la provenencia quedó pendiente
+> de identificar en el cierre): `landing.png`, `landing-en.png`, `postulation-landing.png`,
+> `setup.png`, `guard-invalid.png`, `tangram-transition.png`, `tangram-l2-moves-exhausted.png`,
+> `game-flow-en.png`, `report-fixture.png`, `r1-badge-bug.png` y `mobile-{landing,post-landing,
+> guard,setup,game,report}.png`. Mismas vistas que este run, con render de producción (sin
+> Vite dev); `r1-badge-bug.png` respalda la contramedición R1 citada arriba. Tres archivos
+> con nombre commiteado (`reclutador.png`, `mobile-setup.png`, `mobile-reclutador.png`) fueron
+> sobreescritos durante el run y se restauraron al estado de `f280a28`. **No están incluidos
+> en el commit** (untracked) — el orquestador/usuario decide si se incorporan o se descartan.
 
-## Estado para sign-off
+## Sign-off — RESUELTO (usuario, 2026-09-07 02:20 -03)
 
 - **H1 COMPLETO:** todas las vistas cubiertas con evidencia en vivo (overflow 0 en desktop y
   móvil, consola limpia, privacidad OK) + capturas + mediciones DOM. Sin cambios de código
   (solo este doc + capturas).
 - **Hallazgos:** R1 (fix card `t_9e3506b6` ya existe) · **R2** (copy Team, nuevo) · **R3**
-  (Tangram P0, nuevo — bloquea completar la batería en vivo; tarjeta de fix creada en este
-  run) · R4 (a11y teclado Tangram, menor) · G1-P01 cerrado · pérdida de foco PASS (re-check
-  manual en dispositivo real recomendado) · LanguageToggle verificado (corrección aplicada).
-- **Decisiones para el usuario (sign-off):**
-  1. Aprobar el baseline (tabla de veredictos) → desbloquea **H2 + H3**.
-  2. **R3 Tangram P0**: priorizar la tarjeta de fix antes de cualquier demo que juegue la
-     batería de punta a punta (no interfiere con H2/H3).
-  3. R1 → ventana H2/H3 (card existente); R2 → pasada de copy H2/H3; R4 → junto al fix de R3.
-  4. Re-check manual de 10 s de pérdida de foco en dispositivo real (opcional pero recomendado
-     antes de sign-off final).
+  (Tangram P0, nuevo — bloquea completar la batería en vivo; tarjeta de fix `t_58def568`) ·
+  R4 (a11y teclado Tangram, menor) · G1-P01 cerrado · pérdida de foco PASS (re-check manual
+  en dispositivo real recomendado) · LanguageToggle verificado (corrección aplicada).
+- **Decisión del usuario (sign-off aprobado):**
+  1. **Baseline APROBADO** → H2 (`t_ab493add`) + H3 (`t_61613539`) desbloqueados a `ready`.
+  2. **R3 Tangram P0 priorizado** → `t_58def568` en ejecución; al completar, verificar gates
+     (vitest focal + full, oxlint, build) y commit/push.
+  3. R1 → ventana H2/H3 (card `t_9e3506b6`); R2 → pasada de copy H2/H3; R4 → junto al fix R3.
+  4. Re-check manual de 10 s de pérdida de foco en dispositivo real: pendiente (opcional,
+     no bloqueante).
+- **Handoff:** `docs/plans/2026-09-07-handoff-h2-h3-tangram-p0.md` (estado completo para quien
+  retoma: tarjetas, entorno, artefactos, siguiente).
