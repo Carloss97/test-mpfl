@@ -152,33 +152,36 @@ export const TANGRAM_LEVEL_PARAMS = Object.freeze([
   // Nivel 0 — Tutorial (is_tutorial, sin puntaje)
   Object.freeze({ level: 0, pieceCount: 2, timeLimitS: 0, moveLimit: 0, isTutorial: true, purpose: 'tutorial' }),
   // Nivel 1 — Calibración
-  Object.freeze({ level: 1, pieceCount: 4, timeLimitS: 60, moveLimit: 0, isTutorial: false, purpose: 'calibration' }),
-  // Nivel 2 — Planificación
-  Object.freeze({ level: 2, pieceCount: 5, timeLimitS: 45, moveLimit: 3, optimalMoves: 1, isTutorial: false, purpose: 'planning' }),
+  Object.freeze({ level: 1, pieceCount: 4, timeLimitS: 60, moveLimit: 0, optimalMoves: 4, isTutorial: false, purpose: 'calibration' }),
+  // Nivel 2 — Planificación (R3: moveLimit >= pieceCount; óptimo = 1 snap exitoso por pieza)
+  Object.freeze({ level: 2, pieceCount: 5, timeLimitS: 45, moveLimit: 5, optimalMoves: 5, isTutorial: false, purpose: 'planning' }),
   // Nivel 3 — Presión de tiempo
-  Object.freeze({ level: 3, pieceCount: 6, timeLimitS: 30, moveLimit: 0, isTutorial: false, purpose: 'stress' }),
-  // Nivel 4 — Carga crítica (tangram completo)
-  Object.freeze({ level: 4, pieceCount: 7, timeLimitS: 35, moveLimit: 4, optimalMoves: 1, isTutorial: false, purpose: 'dual_constraint' }),
+  Object.freeze({ level: 3, pieceCount: 6, timeLimitS: 30, moveLimit: 0, optimalMoves: 6, isTutorial: false, purpose: 'stress' }),
+  // Nivel 4 — Carga crítica (tangram completo) (R3: moveLimit >= pieceCount)
+  Object.freeze({ level: 4, pieceCount: 7, timeLimitS: 35, moveLimit: 7, optimalMoves: 7, isTutorial: false, purpose: 'dual_constraint' }),
 ]);
 
 export function getTangramLevelParams(level) {
   return TANGRAM_LEVEL_PARAMS.find((p) => p.level === level) ?? null;
 }
 
-// Builds the piece stack for a level. Deterministic selection of shapes.
+// Composición de piezas por nivel (fix R3.1): espejo exacto de los slots activos
+// (los primeros pieceCount de SLOT_LAYOUT en tangramStages.js). Cada slot recibe
+// exactamente una pieza de su forma, por lo que la cobertura 100% es alcanzable en
+// todo nivel. La dificultad se mantiene vía rotación requerida (slot.rotationDeg),
+// pieceCount y límites de tiempo/movimientos. Invariante multiset(composición) ===
+// multiset(slots) garantizada por test en tangramStages.test.js.
+export const TANGRAM_LEVEL_COMPOSITION = Object.freeze({
+  0: Object.freeze(['tri_large', 'tri_large']),
+  1: Object.freeze(['tri_large', 'tri_large', 'square', 'tri_medium']),
+  2: Object.freeze(['tri_large', 'tri_large', 'square', 'tri_medium', 'tri_small']),
+  3: Object.freeze(['tri_large', 'tri_large', 'square', 'tri_medium', 'tri_small', 'tri_small']),
+  4: Object.freeze(['tri_large', 'tri_large', 'square', 'tri_medium', 'tri_small', 'tri_small', 'rhombus']),
+});
+
+// Piezas de la bandeja del nivel. Determinista y coherente con los slots activos.
 export function buildTangramLevelShapes(level) {
-  const params = getTangramLevelParams(level);
-  const count = params?.pieceCount ?? 4;
-  const queue = ['tri_large', 'tri_large', 'tri_medium', 'tri_small', 'tri_small', 'square', 'rhombus'];
-  // rotate queue deterministically by level so higher levels get distinct compositions
-  const rotated = [...queue.slice(level % queue.length), ...queue.slice(0, level % queue.length)];
-  const selected = rotated.slice(0, count);
-  // ensure uniqueness by picking unique first, then fill if count > distinct
-  const uniq = [...new Set(selected)];
-  while (uniq.length < count) {
-    uniq.push(queue[(uniq.length + level * 3) % queue.length]);
-  }
-  return uniq;
+  return TANGRAM_LEVEL_COMPOSITION[level] ?? Object.freeze([]);
 }
 
 // Métricas conductuales derivadas (agregadas, nunca crudas)

@@ -81,6 +81,9 @@ function TangramInner({ emit, onComplete, practice = false }) {
   const timeoutsRef = useRef([]);
   const jitterWindowRef = useRef([]); // [t, x, y] últimos 10s
   const moveLimitRef = useRef(0);
+  const outcomeLevelRef = useRef(null); // nivel en el que se produjo levelOutcome (R3.2)
+  const secondsLeftRef = useRef(0); // espejo síncrono de secondsLeft para el tick del temporizador (R3.3)
+  const finishLevelRef = useRef(null); // última finishLevel (cobertura actual) para el tick (R3.3)
 
   const pushTimeout = (fn, ms) => {
     const id = window.setTimeout(fn, ms);
@@ -109,7 +112,9 @@ function TangramInner({ emit, onComplete, practice = false }) {
     hesitationRef.current = 0;
     jitterWindowRef.current = [];
     moveLimitRef.current = p.moveLimit ?? 0;
+    outcomeLevelRef.current = null;
     levelStartRef.current = now();
+    secondsLeftRef.current = p.timeLimitS ?? 0;
     setSecondsLeft(p.timeLimitS ?? 0);
   }, []);
 
@@ -122,7 +127,7 @@ function TangramInner({ emit, onComplete, practice = false }) {
     }
     if (phase === 'play') {
       initLevel(level);
-      pushTimeout(() => {
+      const stimulusId = pushTimeout(() => {
         if (introDone && level > 0) {
           const shownSlots = buildTangramSlots(level);
           emitRef.current({
@@ -138,21 +143,26 @@ function TangramInner({ emit, onComplete, practice = false }) {
           });
         }
       }, 50);
+      return () => window.clearTimeout(stimulusId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, level, introDone]);
 
   // temporizador (solo niveles evaluativos con tiempo)
+  // R3.3: el tick que lleva el conteo a 0 dispara finishLevel('timeout'). El
+  // disparo vive DENTRO del intervalo (no en un efecto que observe secondsLeft):
+  // al entrar a un nivel nuevo hay un render transitorio con secondsLeft=0 stale
+  // (el del nivel anterior) antes de que initLevel aplique el timeLimitS; un
+  // efecto observando secondsLeft===0 daría un timeout instantáneo en ese render.
   useEffect(() => {
     if (phase !== 'play' || !introDone || !allowTimed || finished || levelOutcome) return undefined;
     const tick = window.setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s <= 1) {
-          window.clearInterval(tick);
-          return 0;
-        }
-        return s - 1;
-      });
+      secondsLeftRef.current = Math.max(0, secondsLeftRef.current - 1);
+      setSecondsLeft(secondsLeftRef.current);
+      if (secondsLeftRef.current === 0) {
+        window.clearInterval(tick);
+        finishLevelRef.current?.('timeout');
+      }
     }, 1000);
     return () => window.clearInterval(tick);
   }, [phase, introDone, allowTimed, finished, level, levelOutcome]);
@@ -163,6 +173,7 @@ function TangramInner({ emit, onComplete, practice = false }) {
   // terminar nivel
   const finishLevel = useCallback((outcome, extraMetrics = {}) => {
     if (levelOutcome) return;
+    outcomeLevelRef.current = level;
     setLevelOutcome(outcome);
     const p = getTangramLevelParams(level);
     const levelTimeMs = now() - levelStartRef.current;
@@ -216,11 +227,19 @@ function TangramInner({ emit, onComplete, practice = false }) {
     });
   }, [coverage, level, levelOutcome]);
 
+  // La última finishLevel (con la cobertura actual) debe estar disponible para el
+  // tick del temporizador (R3.3) sin que el intervalo capture una versión stale.
+  useEffect(() => { finishLevelRef.current = finishLevel; }, [finishLevel]);
+
   // transición a siguiente nivel o fin (el tutorial/level 0 también debe poder
   // avanzar; antes el gate de 'play' dejaba atorado el modo práctica)
   useEffect(() => {
     if (!levelOutcome || (phase !== 'play' && phase !== 'tutorial')) return undefined;
-    pushTimeout(() => {
+    // R3.2: solo avanza si el outcome se produjo en el nivel actual. Evita el
+    // auto-skip cuando un levelOutcome stale (p.ej. el del tutorial) sobrevive
+    // a la transición tutorial -> evaluación.
+    if (outcomeLevelRef.current !== level) return undefined;
+    const advanceId = pushTimeout(() => {
       if (level >= 4 || practice) {
         // fin del módulo
         setFinished(true);
@@ -253,7 +272,7 @@ function TangramInner({ emit, onComplete, practice = false }) {
       setLevel((lv) => lv + 1);
       setLevelOutcome(null);
     }, 1400);
-    return () => undefined;
+    return () => window.clearTimeout(advanceId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [levelOutcome, phase]);
 
@@ -358,10 +377,13 @@ function TangramInner({ emit, onComplete, practice = false }) {
     } else if (action.action === 'rotate') {
       rotateSelected();
     } else if (action.action === 'snap') {
-      // snap to first free slot
+      // R4: Enter encaja en el primer slot libre COMPATIBLE con la forma de la
+      // pieza seleccionada (antes: primer slot libre sin importar forma, lo que
+      // podía negar el snap y consumir un movimiento a la suerte).
       const sel = pieces.find((p) => p.pieceId === selectedPieceId);
       if (sel) {
-        const freeSlot = slots.find((s) => !pieces.some((p) => p.snappedSlotId === s.slotId));
+        const taken = new Set(pieces.filter((p) => p.snappedSlotId).map((p) => p.snappedSlotId));
+        const freeSlot = slots.find((s) => s.shapeId === sel.shapeId && !taken.has(s.slotId));
         if (freeSlot) attemptSnapToSlot(freeSlot);
       }
     } else if (action.action === 'return') {
@@ -409,7 +431,15 @@ function TangramInner({ emit, onComplete, practice = false }) {
       <div className="tangram-task tangram-task--transition" data-testid="tangram-transition" onPointerMove={handlePointerMove}>
         <h3 className="task-title">{transition.title}</h3>
         <p>{transition.message}</p>
-        <button type="button" className="primary" data-testid="tangram-start-eval" onClick={() => { setIntroDone(true); setPhase('play'); setLevel(1); }}>
+        <button type="button" className="primary" data-testid="tangram-start-eval" onClick={() => {
+          // R3.2: borrar el outcome del tutorial (stale) antes de entrar a L1,
+          // para que el efecto de avance no se re-dispare y salte el nivel.
+          setIntroDone(true);
+          setLevelOutcome(null);
+          outcomeLevelRef.current = null;
+          setPhase('play');
+          setLevel(1);
+        }}>
           {transition.cta}
         </button>
       </div>

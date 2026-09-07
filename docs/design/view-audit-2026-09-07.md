@@ -201,8 +201,19 @@ TangramPostulationTask.jsx). Cambios de diseño documentados (el payload
 - **Tests:** 5 tests de componente nuevos de la fase evaluativa (no-skip L1,
   timeout → outcome+avance, moveLimit → outcome+avance, nivel resoluble por botones
   y teclado, payload privacy-safe) + invariante bandeja/slots + slotId determinista.
-  Verificación completa (suite, oxlint, build, recorrido vivo hasta el reporte):
-  ver cierre de t_58def568.
+  **Verificación (t_58def568 cerrada):** suite completa 117 archivos / 621 tests
+  verde · oxlint limpio · build OK · git diff --check OK. Recorrido vivo
+  (Vite 127.0.0.1:5173 + Chromium real, 2 runs): batería original de punta a punta
+  hasta el reporte real ("Reporte de sesión listo para revisión humana", 5/5 juegos,
+  0 console errors / 0 pageerrors / 0 request failures) — Run A: L1 estable sin
+  skip (1.8s) + L1-L4 resueltos 4/4, 5/5, 6/6, 7/7 (L2/L4 con moveLimit exacto);
+  Run B: timeout real en L1 → overlay "¡Tiempo Agotado!" + transición a L2 sin
+  hang (antes: HUD congelado 17-27s) y resto de la batería hasta el reporte.
+  Capturas: `docs/qa/r3-tangram-fix-shots/`. **Observación (preexistente, fuera de
+  scope):** `.tangram-task__overlay` no tiene CSS (se pinta en flujo, bajo el fold
+  del stage scrollable): el outcome es funcional (DOM + role=status + transición)
+  pero la card de resultado no queda visible sin scroll — candidato a la ventana
+  H2 (toca UI de los 5 juegos).
 
 ### R4 — Menor (a11y): Tangram, `Enter` por teclado encaja en el primer slot libre sin importar la forma
 - `TangramPostulationTask.jsx:360-366`: la acción `snap` toma el primer slot no ocupado; si la

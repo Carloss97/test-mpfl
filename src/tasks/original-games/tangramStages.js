@@ -29,25 +29,22 @@ export const TANGRAM_SILHOUETTE = Object.freeze([
   [0.10, 0.10], [0.85, 0.10], [0.85, 0.80], [0.10, 0.80],
 ]);
 
-let slotUid = 0;
-
+// slotId determinista (nivel + índice): estable entre reconstrucciones, para que
+// pieces.snappedSlotId siga referenciando el mismo slot tras cualquier re-render.
 export function buildTangramSlots(level) {
   const params = getTangramLevelParams(level);
   const count = params?.pieceCount ?? 4;
   const slots = [];
-  const usedShapes = [];
   for (let i = 0; i < count && i < SLOT_LAYOUT.length; i += 1) {
     const def = SLOT_LAYOUT[i];
-    slotUid += 1;
     slots.push(Object.freeze({
-      slotId: `TANGRAM_${level}_${i}_${slotUid}`,
+      slotId: `TANGRAM_${level}_${i}`,
       shapeId: def.shapeId,
       rotationDeg: def.rotationDeg,
       position: Object.freeze([def.x, def.y]),
       scale: 1,
       slotIndex: i,
     }));
-    usedShapes.push(def.shapeId);
   }
   return Object.freeze(slots);
 }

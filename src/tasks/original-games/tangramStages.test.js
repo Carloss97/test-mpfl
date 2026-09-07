@@ -72,6 +72,30 @@ describe('tangramStages — bandeja y drawing', () => {
   });
 });
 
+describe('tangramStages — invariante R3 (bandeja <-> slots)', () => {
+  const shapeCounts = (shapes) => shapes.reduce((acc, s) => {
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, {});
+
+  it('cada nivel: la bandeja trae exactamente 1 pieza por forma de cada slot activo (cobertura 100% alcanzable)', () => {
+    [0, 1, 2, 3, 4].forEach((level) => {
+      const slots = buildTangramSlots(level);
+      const tray = buildTangramTray(level, 600, 400);
+      expect(tray).toHaveLength(slots.length);
+      expect(shapeCounts(tray.map((p) => p.shapeId)))
+        .toEqual(shapeCounts(slots.map((s) => s.shapeId)));
+    });
+  });
+
+  it('slotId determinista: estable entre reconstrucciones del mismo nivel', () => {
+    const a = buildTangramSlots(2).map((s) => s.slotId);
+    const b = buildTangramSlots(2).map((s) => s.slotId);
+    expect(a).toEqual(b);
+    expect(new Set(a).size).toBe(a.length);
+  });
+});
+
 describe('tangramStages — cobertura', () => {
   it('0% sin piezas encajadas', () => {
     const slots = buildTangramSlots(2);

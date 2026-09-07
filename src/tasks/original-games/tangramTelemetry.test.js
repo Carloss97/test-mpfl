@@ -93,18 +93,31 @@ describe('tangramTelemetry — overlap', () => {
 });
 
 describe('tangramTelemetry — niveles', () => {
-  it('expone la configuracion de los 5 niveles (0-4) con la matriz de dificultad', () => {
+  it('expone la configuracion de los 5 niveles (0-4) con la matriz de dificultad (R3: moveLimit >= pieceCount)', () => {
     expect(PARAMS).toHaveLength(5);
     expect(getTangramLevelParams(0).isTutorial).toBe(true);
-    expect(getTangramLevelParams(1)).toMatchObject({ pieceCount: 4, timeLimitS: 60, moveLimit: 0, purpose: 'calibration' });
-    expect(getTangramLevelParams(2)).toMatchObject({ pieceCount: 5, timeLimitS: 45, moveLimit: 3, purpose: 'planning' });
-    expect(getTangramLevelParams(3)).toMatchObject({ pieceCount: 6, timeLimitS: 30, moveLimit: 0, purpose: 'stress' });
-    expect(getTangramLevelParams(4)).toMatchObject({ pieceCount: 7, timeLimitS: 35, moveLimit: 4, purpose: 'dual_constraint' });
+    expect(getTangramLevelParams(1)).toMatchObject({ pieceCount: 4, timeLimitS: 60, moveLimit: 0, optimalMoves: 4, purpose: 'calibration' });
+    expect(getTangramLevelParams(2)).toMatchObject({ pieceCount: 5, timeLimitS: 45, moveLimit: 5, optimalMoves: 5, purpose: 'planning' });
+    expect(getTangramLevelParams(3)).toMatchObject({ pieceCount: 6, timeLimitS: 30, moveLimit: 0, optimalMoves: 6, purpose: 'stress' });
+    expect(getTangramLevelParams(4)).toMatchObject({ pieceCount: 7, timeLimitS: 35, moveLimit: 7, optimalMoves: 7, purpose: 'dual_constraint' });
+    // invariante R3.1: un limite de movimientos nunca puede ser menor que el minimo de
+    // movimientos necesarios para resolver el nivel (1 snap exitoso por pieza)
+    PARAMS.filter((p) => p.moveLimit > 0).forEach((p) => {
+      expect(p.moveLimit).toBeGreaterThanOrEqual(p.pieceCount);
+    });
   });
 
   it('genera piezas en cantidad correcta por nivel', () => {
     expect(buildTangramLevelShapes(1)).toHaveLength(4);
     expect(buildTangramLevelShapes(4)).toHaveLength(7);
+  });
+
+  it('R3: la composicion por nivel es el espejo de los slots activos (1 pieza por slot, resolvable 100%)', () => {
+    expect(buildTangramLevelShapes(0)).toEqual(['tri_large', 'tri_large']);
+    expect(buildTangramLevelShapes(1)).toEqual(['tri_large', 'tri_large', 'square', 'tri_medium']);
+    expect(buildTangramLevelShapes(2)).toEqual(['tri_large', 'tri_large', 'square', 'tri_medium', 'tri_small']);
+    expect(buildTangramLevelShapes(3)).toEqual(['tri_large', 'tri_large', 'square', 'tri_medium', 'tri_small', 'tri_small']);
+    expect(buildTangramLevelShapes(4)).toEqual(['tri_large', 'tri_large', 'square', 'tri_medium', 'tri_small', 'tri_small', 'rhombus']);
   });
 });
 
