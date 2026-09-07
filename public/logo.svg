@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="KRUMM">
+  <!-- Logo KRUMM (H4.2): cabeza-árbol con nodos — glifo de referencia docs/design/landing-refs/.
+       Trazos oro = espalda de la cabeza; crema = cuello + nodos; marrón = cara + ramificación frontal. -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Cuello (crema) -->
+    <g stroke="#f1e7db" stroke-width="2.6">
+      <path d="M37 97 C37 86 40 80 42 72 L42 60"/>
+      <path d="M43 97 L43 60"/>
+      <path d="M49 97 C49 88 47 82 45 74 L44 62"/>
+    </g>
+    <!-- Rama central (crema) -->
+    <path stroke="#f1e7db" stroke-width="2.2" d="M42.5 60 L43 44"/>
+    <!-- Espalda de la cabeza: circuitos oro -->
+    <g stroke="#d4b483" stroke-width="2.2">
+      <path d="M42 44 L42 30 L38 26 L38 16"/>
+      <path d="M42 48 L36 42 L36 30 L30 24"/>
+      <path d="M42 52 L34 44 L34 34 L26 26"/>
+      <path d="M42 56 L32 46 L32 38 L24 30"/>
+      <path d="M42 60 L30 48 L30 42 L22 34"/>
+      <path d="M42 44 L36 38 L36 24 L30 18"/>
+    </g>
+    <!-- Corona: circuitos marrones -->
+    <g stroke="#6b5844" stroke-width="2.2">
+      <path d="M44 44 L48 32 L48 22 L52 14"/>
+      <path d="M44 44 L50 38 L50 26 L56 20"/>
+      <path d="M44 48 L54 38 L54 30 L62 22"/>
+      <path d="M44 52 L56 40 L56 34 L66 26"/>
+      <path d="M44 56 L58 44 L58 38 L68 30"/>
+      <path d="M44 60 L58 48 L58 44 L68 36"/>
+      <path d="M44 64 L56 52 L56 48 L64 42"/>
+    </g>
+    <!-- Perfil de la cara (marrón) -->
+    <path stroke="#6b5844" stroke-width="2.6" d="M50 14 C57 16 61 24 61 32 C61 38 65 42 65 46 C65 50 61 52 61 55 C61 58 64 60 63 63 C62 67 57 68 56 72 L55 80"/>
+  </g>
+  <!-- Nodos (crema) -->
+  <g fill="#f1e7db">
+    <circle cx="52" cy="14" r="1.6"/>
+    <circle cx="56" cy="20" r="1.6"/>
+    <circle cx="62" cy="22" r="1.6"/>
+    <circle cx="66" cy="26" r="1.6"/>
+    <circle cx="68" cy="30" r="1.6"/>
+    <circle cx="68" cy="36" r="1.6"/>
+    <circle cx="64" cy="42" r="1.6"/>
+    <circle cx="58" cy="30" r="1.6"/>
+    <circle cx="60" cy="38" r="1.6"/>
+    <circle cx="38" cy="16" r="1.4"/>
+    <circle cx="30" cy="24" r="1.4"/>
+    <circle cx="26" cy="26" r="1.4"/>
+    <circle cx="24" cy="30" r="1.4"/>
+    <circle cx="22" cy="34" r="1.4"/>
+    <circle cx="30" cy="18" r="1.4"/>
+  </g>
+</svg>
