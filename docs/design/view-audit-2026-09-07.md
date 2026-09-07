@@ -85,7 +85,7 @@ de preloads de módulos en la primera carga (benigno, Vite dev).
 
 ## Hallazgos
 
-### R1 — BUG de layout: badge "Score provisional" solapa el texto de las cards de constructos (CONFIRMADO EN VIVO)
+### R1 — BUG de layout: badge "Score provisional" solapa el texto de las cards de constructos (CONFIRMADO EN VIVO · CERRADO ✅ 2026-09-07)
 - **Repro:** `/postulaciones?fixture=1&battery=original` → sección "Mapa de evidencia KRUMM".
 - **Medición en vivo (DOM, desktop):** el badge `SCORE PROVISIONAL` mide **145×22 px** dentro
   de un contenedor de score de **64 px** (`.postulation-demo__talent-score--provisional`,
@@ -105,6 +105,11 @@ de preloads de módulos en la primera carga (benigno, Vite dev).
   indica dependencia de métricas de fuente/render del entorno: el solape se manifiesta en
   algunos renders (incluida la incidencia reportada 2026-09-06 23:27) y no en otros.
   Clasificación invariable; el fix defensivo `t_9e3506b6` sigue siendo válido.
+- **RESUELTO (2026-09-07, cron orquestador):** fix estructural en `t_9e3506b6` — el tag ya no
+  vive dentro del grid del score-box; pasa a cabecera de la card `--provisional` (posición
+  absoluta, `nowrap` + ellipsis defensivo, `padding-top` reservado). El fix garantiza 0
+  solapes por construcción (no por métrica de fuente). Commit `af98499` (3 archivos,
+  src/postulation-demo), pushed a main. Suite 660/660 verde + vite build OK.
 
 ### R2 — NUEVO (copy): Team muestra interpolación literal en el status del footer
 - **En vivo (4/4 escenarios):** el footer `[role=status]` muestra literalmente:
