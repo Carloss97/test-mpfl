@@ -104,17 +104,17 @@ Tras cambios con tests y build, entregar resumen de archivos/comandos/resultados
 
 - **NO usar `~/bin/gpu.sh` ni `switch_model.py`** — el guardian los bloquea (mencionan reinicio de gateway). Flujo vigente:
   1. Lanza: `python3 /home/sarlock/krumm/test-mpfl/scripts/launch_lambda.py` (2x H100 SXM5, us-southeast-1, fs `qwen-storage`, modelo `/lambda/nfs/qwen-storage/models/Qwen3.8-27B-FP8`; evita doble instancia; escribe `~/.hermes/gpu_state.json` con instance_id + ip).
-  2. Túnel: `ssh -i ~/.ssh/lambda_key -o IdentitiesOnly=yes -fNL 18000:localhost:8000 ubuntu@<ip>` (antes: `pkill -f "ubuntu@"` para matar túneles stale).
+  2. Túnel: `ssh -i ~/.ssh/lambda_key -o IdentitiesOnly=yes -fNL 18000:localhost:8000 ubuntu@<ip>`. Auto-saneado: `~/.hermes/scripts/gpu_tunnel_check.sh` (crontab */5) reconecta si la instancia sigue activa en Lambda y limpia `gpu_state.json` si la instancia ya no existe (fix 2026-09-07: la versión previa validaba la IP pública:8000 — inalcanzable — y nunca reconectaba).
   3. Salud (2-5 min): `curl -sf http://127.0.0.1:18000/health`.
   4. Config: `~/.hermes/config.yaml` → default `qwen-model` (custom, `http://127.0.0.1:18000/v1`). El agente **NO** puede editar config.yaml (guard de seguridad): se edita a mano o con `hermes config`. Aplica con `/reset` (CLI) o `hermes gateway restart` (Discord).
 - Apagar: terminar instancia por API Lambda (`LAMBDA_API_KEY` en `~/.hermes/.env`, header `User-Agent: curl/8.0`) + `pkill -f "ubuntu@"`. GPU-toggle solo por instrucción explícita del usuario; avisar costo vivo.
-- Watchdog crontab (`~/.hermes/scripts/lambda_idle_watchdog.sh`, cada 5 min) apaga tras **40 min vLLM idle** o **6 h encendida** (red de seguridad, no el mecanismo principal).
-- Costo: 2xH100 ≈ $6.38/h facturado al segundo (la API Lambda reporta `price_cents_per_hour` $8.38 en us-southeast-1 — verificar contra la API, no contra la memoria).
+- Watchdog crontab (`~/.hermes/scripts/lambda_idle_watchdog.sh`, cada 5 min) monitorea idle/age; **desde 2026-09-07 en modo manual** (el usuario apaga la instancia): cruza umbral (idle >40min / age >6h) → log en `cost-watchdog.log` sin terminar. `GPU_AUTO_OFF=1` en el crontab restaura el auto-apagado. Fix 2026-09-07: la API Lambda usa `file_system_names` (no `file_systems`) y no expone `launched_at` (edad vía stamp `~/.hermes/lambda_age_since`); con el esquema viejo el watchdog era no-op.
+- Costo real verificado contra la API (2026-09-07): **$8.38/h** (`price_cents_per_hour`=838, us-southeast-1), facturado al segundo.
 - Solo encender cuando la tarea lo justifique (tests multi-archivo, builds, análisis pesado, porting).
 
 ## Automatización GPU / modelo — orquestador (2026-09-03)
 
-- **Orquestador**: `python3 ~/bin/model_orchestrate.py`. Cada 5 min (systemd timer `gpu-orchestrate.timer`); escribe en `~/.hermes/logs/gpu_orchestrate.log`.
+- **Orquestador**: `python3 ~/bin/model_orchestrate.py`. Cada 5 min (systemd timer `gpu-orchestrate.timer`); escribe en `~/.hermes/logs/gpu_orchestrate.log`. Salud GPU **solo por túnel 127.0.0.1:18000** (la IP pública:8000 es inalcanzable — fix 2026-09-07: antes daba DOWN falso permanente y reintentaba `gpu.sh up` cada tick).
 - **Policy**:
   - GPU qwen (Tier-1) es el modelo default SOLO cuando está la instancia viva + hay trabajo heavy pendiente.
   - `switch_model.py auto` decide final: si GPU DOWN y sin iam, apunta a NIM kimi-k3 (tier-2 gratis).
@@ -122,8 +122,8 @@ Tras cambios con tests y build, entregar resumen de archivos/comandos/resultados
   - `NEVER_HEAVY`: tareas de cámara / hardware físico (e.g. T.3 sanity empírico) — no van a GPU.
 
 - **Triggers automáticos**:
-  - **Subida** (condición): gpu down + al menos 1 tarea heavy ready + `GPU_AUTO_UP=1` → `gpu.sh up` (tuyo `scripts/launch_lambda.py` con guardian-off) + health check + config → GPU/NIM vía switch_model + aviso Discord + comenta cards.
-  - **Apagado** (watchdog): vLLM idle > 40 min o instancia > 6h → termina instancia, borra state, comenta cards y `switch_model.py nvidia`. `$6.38/h`.
+  - **Subida** (condición): gpu down (health por túnel) + al menos 1 tarea heavy ready + `GPU_AUTO_UP=1` → `gpu.sh up` (tuyo `scripts/launch_lambda.py` con guardian-off) + polling health/túnel (boot 4-10 min) → GPU/NIM vía switch_model (idempotente) + aviso Discord + comenta cards.
+  - **Apagado**: manual por el usuario (desde 2026-09-07); el watchdog solo loguea el umbral. `GPU_AUTO_OFF=1` restaura el auto-apagado.
   - **Aviso AWS SSO** (cada 30 min, `aws-sso-renew.timer`): si el token AWS SSO local expira en <60 min, manda a Discord el enlace de refresh.
 
 - **Channels**: Discord webhook (usa `DISCORD_WEBHOOK_URL` de `~/.hermes/.env`). En card kanban queda bitácora (comentarios automáticos).
