@@ -1,0 +1,215 @@
+{
+  "baseUrl": "http://127.0.0.1:5173",
+  "baseline": "d1adc74 (marca v2)",
+  "views": 21,
+  "failures": [],
+  "warnings": [
+    "[D-int-es] contraste bajo documentado \"eyebrow/kicker interna\": ratio=3.72 (texto rgb(154, 115, 85) sobre rgb(247, 239, 230)) — decisión abierta design-system §10"
+  ],
+  "consoleErrors": [],
+  "contrast": [
+    {
+      "tag": "D-int-es",
+      "label": "eyebrow/kicker interna",
+      "sel": ".postulation-demo__eyebrow",
+      "found": true,
+      "ratio": 3.72,
+      "color": "rgb(154, 115, 85)",
+      "bg": "rgb(247, 239, 230)"
+    },
+    {
+      "tag": "D-int-es",
+      "label": "h1 interna",
+      "sel": "h1",
+      "found": true,
+      "ratio": 11.79,
+      "color": "rgb(61, 43, 32)",
+      "bg": "rgb(247, 239, 230)"
+    },
+    {
+      "tag": "D-int-es",
+      "label": "pill-focus-outline",
+      "note": "outline=3px solid rgb(154, 115, 85) (esperado rgb(154, 115, 85))"
+    },
+    {
+      "tag": "D-guard-es",
+      "label": "texto guard",
+      "sel": "main.postulation-demo__invite-guard",
+      "found": true,
+      "ratio": 14.19,
+      "color": "rgb(247, 239, 230)",
+      "bg": "rgb(43, 30, 22)"
+    },
+    {
+      "tag": "D-guard-es",
+      "label": "pill-focus-outline",
+      "note": "outline=3px solid rgb(216, 179, 140) (esperado rgb(216, 179, 140))"
+    },
+    {
+      "tag": "D-setup-es",
+      "label": "setup panel",
+      "sel": ".postulation-demo__setup-panel h1, .postulation-demo__setup-panel",
+      "found": true,
+      "ratio": 11.79,
+      "color": "rgb(61, 43, 32)",
+      "bg": "rgb(247, 239, 230)"
+    },
+    {
+      "tag": "D-setup-es",
+      "label": "pill-focus-outline",
+      "note": "outline=3px solid rgb(154, 115, 85) (esperado rgb(154, 115, 85))"
+    },
+    {
+      "tag": "D-walk-laser",
+      "label": "laser-footer-clip-check",
+      "note": "OK hint dentro del stage (right 974/1262)"
+    },
+    {
+      "tag": "D-report-flujo",
+      "label": "status card strong",
+      "sel": ".postulation-demo__report-status-card strong",
+      "found": true,
+      "ratio": 14.7,
+      "color": "rgb(247, 239, 230)",
+      "bg": "rgb(22, 30, 43)"
+    },
+    {
+      "tag": "D-report-flujo",
+      "label": "status card kicker",
+      "sel": ".postulation-demo__report-status-card span",
+      "found": true,
+      "ratio": 8.56,
+      "color": "rgb(216, 179, 140)",
+      "bg": "rgb(22, 30, 43)"
+    },
+    {
+      "tag": "D-report-fx-es",
+      "label": "status card strong (crema sobre navy)",
+      "sel": ".postulation-demo__report-status-card strong",
+      "found": true,
+      "ratio": 14.7,
+      "color": "rgb(247, 239, 230)",
+      "bg": "rgb(22, 30, 43)"
+    },
+    {
+      "tag": "D-report-fx-es",
+      "label": "status card kicker (arena sobre navy)",
+      "sel": ".postulation-demo__report-status-card span",
+      "found": true,
+      "ratio": 8.56,
+      "color": "rgb(216, 179, 140)",
+      "bg": "rgb(22, 30, 43)"
+    },
+    {
+      "tag": "D-hr-es",
+      "label": "brand topbar",
+      "sel": ".hr-dashboard__brand",
+      "found": true,
+      "ratio": 14.19,
+      "color": "rgb(247, 239, 230)",
+      "bg": "rgb(43, 30, 22)"
+    },
+    {
+      "tag": "D-hr-es",
+      "label": "h1 HR",
+      "sel": ".hr-dashboard__hero h1",
+      "found": true,
+      "ratio": 11.79,
+      "color": "rgb(61, 43, 32)",
+      "bg": "rgb(247, 239, 230)"
+    }
+  ],
+  "brand": {
+    "D-int-es": {
+      "body": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "h1": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    },
+    "D-int-es::bg landing": {
+      "actual": "rgb(247, 239, 230)",
+      "expect": [
+        "rgb(247, 239, 230)",
+        "rgb(242, 232, 220)"
+      ],
+      "mode": "oneof",
+      "ok": true
+    },
+    "D-guard-es": {
+      "body": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "h1": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    },
+    "D-guard-es::bg guard": {
+      "actual": "rgb(43, 30, 22)",
+      "expect": "rgb(43, 30, 22)",
+      "mode": "eq",
+      "ok": true
+    },
+    "D-setup-es": {
+      "body": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "h1": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    },
+    "D-walk-laser::borde mundo cian": {
+      "actual": "rgba(34, 211, 238, 0.22)",
+      "expect": "rgba(34, 211, 238",
+      "mode": "contains",
+      "ok": true
+    },
+    "D-walk-laser::sfx-toggle cream v2": {
+      "actual": "rgb(242, 232, 220)",
+      "expect": "rgb(242, 232, 220)",
+      "mode": "eq",
+      "ok": true
+    },
+    "D-walk-balloon::arena celeste mundo": {
+      "actual": "linear-gradient(rgb(191, 219, 254) 0%, rgb(219, 234, 254) 34%, rgb(239, 246, 255) 80%, rgb(240, 249, 255) 100%)",
+      "expect": "rgb(191, 219, 254)",
+      "mode": "contains",
+      "ok": true
+    },
+    "D-report-flujo": {
+      "body": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "h1": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    },
+    "D-hr-es": {
+      "body": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "h1": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    },
+    "D-hr-es::topbar HR dark-deep v2": {
+      "actual": "rgb(43, 30, 22)",
+      "expect": "rgb(43, 30, 22)",
+      "mode": "eq",
+      "ok": true
+    },
+    "D-int-en": {
+      "body": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "h1": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    },
+    "M-int-es": {
+      "body": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "h1": "Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+    }
+  },
+  "screenshots": [
+    "docs/qa/h46b-visual-audit/d01-landing-interna-es.png",
+    "docs/qa/h46b-visual-audit/d02-guard-es.png",
+    "docs/qa/h46b-visual-audit/d03-setup-es.png",
+    "docs/qa/h46b-visual-audit/d04-stage-1-laser-es.png",
+    "docs/qa/h46b-visual-audit/d05-stage-2-balloon-es.png",
+    "docs/qa/h46b-visual-audit/d06-stage-3-passenger-es.png",
+    "docs/qa/h46b-visual-audit/d07-stage-4-team-es.png",
+    "docs/qa/h46b-visual-audit/d08-stage-5-tangram-es.png",
+    "docs/qa/h46b-visual-audit/d09-report-flujo-es.png",
+    "docs/qa/h46b-visual-audit/d10-report-fixture-es.png",
+    "docs/qa/h46b-visual-audit/d14-hr-es.png",
+    "docs/qa/h46b-visual-audit/d11-landing-interna-en.png",
+    "docs/qa/h46b-visual-audit/d12-stage-laser-en.png",
+    "docs/qa/h46b-visual-audit/d13-report-fixture-en.png",
+    "docs/qa/h46b-visual-audit/d15-hr-en.png",
+    "docs/qa/h46b-visual-audit/m01-landing-interna-es.png",
+    "docs/qa/h46b-visual-audit/m02-guard-es.png",
+    "docs/qa/h46b-visual-audit/m03-setup-es.png",
+    "docs/qa/h46b-visual-audit/m04-stage-laser-es.png",
+    "docs/qa/h46b-visual-audit/m05-report-fixture-es.png",
+    "docs/qa/h46b-visual-audit/m06-hr-es.png",
+    "docs/qa/h46b-visual-audit/m07-hr-en.png"
+  ]
+}

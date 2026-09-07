@@ -100,17 +100,27 @@ Resources:
     Type: AWS::CloudFront::ResponseHeadersPolicy
     Properties:
       ResponseHeadersPolicyConfig:
-        Name: krumm-staging-rhp-m2
-        Comment: KRUMM staging - security headers (CSP con API backend B1, HSTS, XFO, referrer)
+        Name: krumm-staging-rhp-m3
+        Comment: KRUMM staging - security headers v3 (CSP + Google Fonts marca v2, HSTS, XFO, referrer)
         SecurityHeadersConfig:
           # CSP: same-origin + modelos MediaPipe (storage.googleapis.com) +
           # API backend KRUMM (B1, 2026-09-06): rwm08ik23m.execute-api.us-east-1
           # (invitaciones M3 + sesiones/reportes M4). Las policies de CloudFront
-          # son inmutables: por eso se renombra a -m2 en cada cambio de CSP.
+          # son inmutables: se renombra a -m3 en cada cambio de CSP.
           # style-src 'unsafe-inline': React usa atributos style=""; auditar en
           # iteración posterior para eliminarlo.
+          # m3 (2026-09-07, t_be89dafb): + https://fonts.googleapis.com en
+          # style-src y + https://fonts.gstatic.com en font-src (fuentes
+          # Archivo/Manrope de la marca v2 — la m2 los bloqueaba y krumm.cl
+          # renderizaba con fallback de sistema); wasm-src retirado (directive
+          # no reconocida → error de consola por página). CREADA VÍA API
+          # (ID aaac7f10-372b-461e-b387-1ed1f2eeadd6) y la distribución
+          # EDQ39PDNI931R apunta a ella; m2 eliminada. ATTENCIÓN CFN: el
+          # próximo update del stack m1 intentará crear m3 (AlreadyExists si
+          # sigue en live) — antes de ese deploy, reconciliar: ver
+          # docs/plans/2026-09-07-handoff-h46b-audit-marca-v2.md §CFN.
           ContentSecurityPolicy:
-            ContentSecurityPolicy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://storage.googleapis.com https://rwm08ik23m.execute-api.us-east-1.amazonaws.com; worker-src 'self' blob:; wasm-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+            ContentSecurityPolicy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://storage.googleapis.com https://rwm08ik23m.execute-api.us-east-1.amazonaws.com; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
             Override: true
           # X-Frame-Options: DENY (anti clickjacking)
           FrameOptions:

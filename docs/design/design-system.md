@@ -209,7 +209,9 @@ Sustituye a las 8 capturas de §2 como fuente de verdad visual. Plan de port:
 | `--k-gold-dark` (nuevo) | — | `#b9906b` |
 
 **Tipografía oficial**: `Archivo` (display, H1/H2, peso 900) + `Manrope` (body).
-Se cargan vía Google Fonts en `index.html`. Tokens: `--k-font-display`,
+Se cargan vía Google Fonts en `index.html` (CSP CloudFront: RHP `krumm-staging-rhp-m3`
+desde 2026-09-07 permite `fonts.googleapis.com`/`fonts.gstatic.com`; la m2 los
+bloqueaba — fix documentado en `docs/qa/h46b-visual-audit/` F1). Tokens: `--k-font-display`,
 `--k-font-sans` (pasó de Inter a Manrope — aplica a todo el frontend),
 `--k-size-hero-brand` `clamp(60px, 6.1vw, 104px)`, `--k-size-section-brand`
 `clamp(42px, 5vw, 76px)`, tracking hero `-4px` / sección `-2px`.
