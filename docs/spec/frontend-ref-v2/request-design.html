@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="request_designTitle">New request · Design with KRUMM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="company.css">
+    <link rel="stylesheet" href="new-request.css">
+</head>
+<body class="company-app">
+    <a class="co-skip" href="#new-request" data-i18n="company_skipContent">Skip to content</a>
+    <aside class="co-sidebar" id="company-sidebar">
+        <a href="portal.html" class="co-brand"><img src="assets/krumm-logo-borderless-no-text.png" data-i18n-alt="logoAlt" alt="KRUMM — Tech for talent assessment"></a>
+        <p class="co-workspace"><span data-i18n="company_workspace">Company workspace</span></p>
+        <nav class="co-navigation" data-i18n-aria-label="company_portalNavigation" aria-label="Company navigation">
+            <a class="co-nav-item" href="company.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span data-i18n="company_dashboard">Dashboard</span></a>
+            <a  class="co-nav-item is-active" href="new-request.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="company_newRequest">New request</span></a>
+            <a class="co-nav-item" href="processes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5h7l2 3h9v12H3Z"/></svg><span data-i18n="company_processes">Processes</span></a>
+            <div class="co-nav-divider"></div>
+            <button type="button" class="co-nav-item" data-preview="pending"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></svg><span data-i18n="company_settings">Settings</span></button>
+            <button type="button" class="co-nav-item" data-preview="pending"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 5m0 3h.01"/></svg><span data-i18n="company_help">Help</span></button>
+        </nav>
+        <div class="co-sidebar-bottom">
+            <div class="co-user"><span class="co-avatar" aria-hidden="true">AM</span><div><strong>Alex Morgan</strong><small>Andes Industries</small></div></div>
+            <button type="button" class="co-account" data-preview="account"><span data-i18n="company_account">Account</span> <span aria-hidden="true">↗</span></button>
+        </div>
+    </aside>
+    <div class="co-layout">
+        <header class="co-header">
+            <button type="button" class="co-icon-button co-menu" aria-expanded="false" aria-controls="company-sidebar" data-i18n-aria-label="company_openNavigation" aria-label="Toggle navigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+            <div class="co-breadcrumb"><span>KRUMM</span><span aria-hidden="true">/</span><span data-i18n="company_newRequest">New request</span></div>
+            <div class="co-header-actions">
+                <div class="language-switcher" role="group" data-i18n-aria-label="languageSelector" aria-label="Language">
+                    <button type="button" data-language="en" data-i18n-aria-label="switchEn" aria-label="Switch to English" aria-pressed="true">EN</button>
+                    <span aria-hidden="true">|</span>
+                    <button type="button" data-language="es" data-i18n-aria-label="switchEs" aria-label="Switch to Spanish" aria-pressed="false">ES</button>
+                </div>
+                <button type="button" class="co-icon-button" data-preview="notifications" data-i18n-aria-label="company_notifications" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5ZM10 21h4"/></svg></button>
+                <div class="co-profile-menu"><button type="button" class="co-avatar co-profile" aria-expanded="false" aria-controls="profile-dropdown" data-i18n-aria-label="company_account" aria-label="Account">AM</button><div class="co-profile-dropdown" id="profile-dropdown" hidden><a href="index.html" data-i18n="company_signOut">Sign out</a></div></div>
+            </div>
+        </header>
+        <main class="co-main nr-main" id="new-request" tabindex="-1"><a class="co-text-button" href="new-request.html"><span aria-hidden="true">←</span><span data-i18n="request_back">Back to new request</span></a><section class="nr-placeholder"><span class="nr-badge"><span data-i18n="request_soon">Coming soon</span></span><h1><span data-i18n="request_designTitle">New request · Design with KRUMM</span></h1><p><span data-i18n="request_placeholder">This experience will be designed in the next stage.</span></p></section><div class="co-footer"><span>© 2026 KRUMM</span><span data-i18n="tagline">Tech for Talent Assessment</span></div></main>
+    </div>
+    <dialog class="co-dialog" aria-labelledby="preview-heading" aria-describedby="preview-description">
+        <span class="co-demo-badge"><span data-i18n="company_demoBadge">Demo workspace</span></span>
+        <h2 id="preview-heading" data-i18n="company_previewTitle">Next in the preview</h2>
+        <p id="preview-description" data-i18n="company_previewText">This screen will be designed in the next stage. For now, you can explore the dashboard.</p>
+        <form method="dialog"><button class="co-primary" data-i18n="request_back">Back to new request</button></form>
+    </dialog>
+    <script src="script.js"></script>
+    <script src="company.js"></script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="companyPortal">Company Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="portal.css">
+</head>
+<body class="portal-page">
+    <header class="portal-header">
+        <a href="index.html" class="brand">
+            <img class="brand-logo" src="assets/krumm-logo-borderless-no-text.png" data-i18n-alt="logoAlt" alt="KRUMM — Tech for talent assessment">
+        </a>
+        <div class="language-switcher" role="group" data-i18n-aria-label="languageSelector" aria-label="Language">
+            <button type="button" data-language="en" data-i18n-aria-label="switchEn" aria-label="Switch to English" aria-pressed="true">EN</button>
+            <span aria-hidden="true">|</span>
+            <button type="button" data-language="es" data-i18n-aria-label="switchEs" aria-label="Switch to Spanish" aria-pressed="false">ES</button>
+        </div>
+    </header>
+    <main class="portal-main portal-pending">
+        <div class="portal-intro">
+            <span class="portal-label" data-i18n="comingSoon">Coming soon</span>
+            <h1 data-i18n="companyPortal">Company Portal</h1>
+            <p data-i18n="loginPreview">This portal is being prepared. Sign-in will be available here soon.</p>
+        </div>
+        <a class="button button-gold" href="company.html" data-i18n="company_enterDemo">Explore company demo →</a>
+        <a class="portal-back" href="portal.html" data-i18n="backPortals">← Choose another portal</a>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

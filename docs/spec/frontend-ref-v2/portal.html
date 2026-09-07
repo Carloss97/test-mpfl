@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="portalPageTitle">Choose your portal — KRUMM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="portal.css">
+</head>
+<body class="portal-page">
+    <header class="portal-header">
+        <a href="index.html" class="brand">
+            <img class="brand-logo" src="assets/krumm-logo-borderless-no-text.png" data-i18n-alt="logoAlt" alt="KRUMM — Tech for talent assessment">
+        </a>
+        <div class="language-switcher" role="group" data-i18n-aria-label="languageSelector" aria-label="Language">
+            <button type="button" data-language="en" data-i18n-aria-label="switchEn" aria-label="Switch to English" aria-pressed="true">EN</button>
+            <span aria-hidden="true">|</span>
+            <button type="button" data-language="es" data-i18n-aria-label="switchEs" aria-label="Switch to Spanish" aria-pressed="false">ES</button>
+        </div>
+    </header>
+    <main class="portal-main">
+        <div class="portal-intro">
+            <h1 data-i18n="portalTitle">Where would you like to sign in?</h1>
+            <p data-i18n="portalSubtitle">Access your KRUMM workspace.</p>
+        </div>
+        <div class="portal-grid">
+            <a class="portal-card portal-card-company" href="login-company.html" aria-labelledby="company-label company-title" aria-describedby="company-description company-cta">
+                <span class="portal-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 27V5h14v22M21 13h5v14M4 27h25M12 27v-6h4v6M11 10h2m3 0h1m-6 5h2m3 0h1"/></svg></span>
+                <span class="portal-label" id="company-label" data-i18n="companies">Companies</span>
+                <h2 id="company-title" data-i18n="companyPortal">Company Portal</h2>
+                <p id="company-description" data-i18n="companyDescription">Manage assessments, candidates, results and teams.</p>
+                <span class="portal-cta" id="company-cta" data-i18n="companyCta">Sign in as a company →</span>
+            </a>
+            <a class="portal-card portal-card-candidate" href="candidate.html" aria-labelledby="candidate-label candidate-title" aria-describedby="candidate-description candidate-cta">
+                <span class="portal-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="10" r="5"/><path d="M6 27v-3a10 10 0 0 1 20 0v3M11 27h10"/></svg></span>
+                <span class="portal-label" id="candidate-label" data-i18n="candidates">Candidates</span>
+                <h2 id="candidate-title" data-i18n="candidatePortal">Candidate Portal</h2>
+                <p id="candidate-description" data-i18n="candidateDescription">Access your assessments and KRUMM experiences.</p>
+                <span class="portal-cta" id="candidate-cta" data-i18n="cp_enter">Explore candidate portal →</span>
+            </a>
+        </div>
+        <a class="portal-back" href="index.html" data-i18n="backHome">← Back to KRUMM</a>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+# Plan — Fase v3: port completo de la referencia `krumm_frontend.zip` v2 (2026-09-07)
+
+**Repo:** `/home/sarlock/krumm/test-mpfl` · **Referencia:** zip v2 recibido 2026-09-07
+(extraída en `/tmp/krumm-frontend-v2/Landing pge Krumm/`; archivar en
+`~/krumm/design_ref/v2-completo/` al crear las cards)
+**Decisión del usuario (2026-09-07):** "implementes las vistas, páginas, escenas que
+se ven ahí al flujo actual, deprecando o bien borrando las versiones actuales y
+anteriores (HR, login, report, todo lo demás), con funcionalidad acorde al
+propósito de cada una".
+
+## 1. Inventario de la referencia (15 páginas + 6 JS)
+
+| Página | Rol | Funcionalidad en la referencia | Estado ref. |
+|---|---|---|---|
+| index.html | Landing pública | i18n EN/ES (script.js: diccionario + setLanguage), menú hamburguesa | Real (YA portada v2) |
+| portal.html | Selección de portal | 2 cards: Company Portal / Candidate Portal + EN\|ES | Real (estática) |
+| login-candidate.html | Acceso candidato | Placeholder "next iteration" + Help dialog | Placeholder |
+| login-company.html | Acceso empresa | "Coming soon" + CTA "Explore company demo" | Placeholder |
+| candidate.html | Home candidato | "Find your next opportunity" + 2 cards: Explore opportunities / I already have an invitation (Sign in) + Help | Real (estática) |
+| jobs.html | Job board | Placeholder "next iteration" | Placeholder |
+| candidate-report.html | Reporte (vista en workspace) | Placeholder "next iteration" (breadcrumb Processes → Back to process) | Placeholder |
+| company.html | Dashboard empresa | KPIs (Active processes 12, Evaluated 184, Avg 78%, Recommended 24) + tabla Active processes + banner "Demo workspace" | Real (estática) |
+| processes.html | Lista de procesos | **Búsqueda + filtros (department/location/sort) + 3 cards de proceso** — interacción real (processes.js: filter/sort live) | Real (interactiva) |
+| process-detail.html | Detalle proceso (Plant Supervisor) | Header (estado, días, acciones Edit/View candidates/Pause), stats, Process configuration, Process statistics, Recommended candidates, Process actions | Real (estática + menú acciones) |
+| process-operator.html | Detalle (Plant Operator) | Ídem, datos del rol operator | Real (estática) |
+| process-technician.html | Detalle (Maintenance Technician) | Ídem, datos del rol technician | Real (estática) |
+| new-request.html | Nueva solicitud | 2 cards: QUICK Upload profile (PDF/DOCX/TXT) / RECOMMENDED Design with KRUMM (mock de chat) | Real (estática) |
+| request-upload.html | Upload de perfil | Placeholder "coming soon" | Placeholder |
+| request-design.html | Diseño con KRUMM | Placeholder "coming soon" | Placeholder |
+
+**Chrome compartido:** (a) *Candidate* — topbar: logo KRUMM + breadcrumb + EN\|ES +
+Help (dialog) + "Skip to content"; footer © 2026 KRUMM + Privacy/Terms/Help.
+(b) *Company* — sidebar: "Company workspace" (Dashboard / New request / Processes /
+Settings / Help) + user chip (Alex Morgan · Andes Industries · Account↗) + mobile
+menu (company.js); breadcrumb KRUMM / {sección}; banner "Demo workspace — All names,
+processes and results shown here are fictional".
+
+## 2. Arquitectura objetivo (SPA React actual, marca v2, tokens `--k-*`)
+
+**Rutas nuevas** (router actual en `src/main.jsx` / `postulationDemoRoute.js`):
+
+| Ruta | Vista | Reemplaza/deprecia |
+|---|---|---|
+| `/portal` | Selección de portal (2 cards) | — (nueva; el landing público ya enlaza a ella) |
+| `/candidato` | Home candidato (2 cards: empleos / invitación) | **landing interna H4.3** (`/postulaciones` sin invite) |
+| `/candidato/acceso` | Login candidato = flujo de invitación (pegar link/token → sesión) | **guard de invitación H4.3** (se integra aquí, no desaparece: sigue siendo la validación) |
+| `/empleos` | Job board (honesto "próxima iteración", como la ref) | — (nueva; sin datos reales de empleo aún) |
+| `/empresa/acceso` | Login empresa (demo: acceso simulado "Alex Morgan · Andes Industries", como ref "coming soon") | — (nueva; gate del portal empresa en demo) |
+| `/empresa` | Dashboard (KPIs + tabla de procesos activos) | **`/reclutador` H4.4 (v1)** — redirigir |
+| `/empresa/procesos` | Lista + búsqueda/filtros/sort (funcional real, patrón processes.js) | — (nueva) |
+| `/empresa/proceso/:id` | Detalle (config, stats, recomendados, acciones) — 3 perfiles demo (supervisor/operator/technician) | — (nueva) |
+| `/empresa/proceso/:id/candidatos/:sessionId` | Reporte de candidato dentro del proceso | **reporte H4.3 embebido** (mismo motor, nuevo shell) |
+| `/empresa/nueva-solicitud` | New request (upload vs design) | — (nueva) |
+| `/empresa/nueva-solicitud/diseño` | Design with KRUMM (formulario guiado conversacional; la ref es mock → implementar el flujo real mínimo: preguntas → perfil de proceso) | — (nueva) |
+| `/empresa/nueva-solicitud/subida` | Upload de perfil (PDF/DOCX/TXT → crea proceso; sin NLP: metadatos + confirmación) | — (nueva) |
+| `/postulaciones` | Flujo de evaluación (setup → 5 juegos → reporte) | **SE MANTIENE** (núcleo producto; la ref no lo reemplaza: es el "assessment" al que llevan las invitaciones) |
+
+**Shells nuevos (V0):** `CandidateShell` (topbar logo+breadcrumb+EN|ES+Help dialog+
+footer) y `CompanyShell` (sidebar+user chip+breadcrumb+banner demo workspace).
+Copys de la referencia EN + diccionario ES (regla `t(es,en)`); la referencia es EN,
+el producto es bilingüe desde H3 → todo texto pasa por i18n.
+
+**Datos (política vigente: demo + API opcional):**
+- Side empresa: **modo demo** (sin `VITE_KRUMM_API_BASE`): datos sintéticos
+  consistentes con la ref (Andes Industries, Alex Morgan, 3 procesos con
+  candidatos/escores) + banner "Demo workspace" + `humanReviewOnly`.
+  Con API staging: `/empresa` consume `GET /sessions` (KPIs reales: completadas,
+  constructs, caveats — pitfall B1.6 del skill: mapping completo obligatorio).
+- `/postulaciones` sin cambios de datos (invitaciones + sesiones staging ya wireadas).
+- **Sin autenticación real** (no existe backend de auth): login empresa = acceso demo
+  simulado (la ref lo declara "coming soon" → honesto); login candidato = flujo de
+  invitación existente (token → sesión; es la "autenticación" real del producto).
+- Procesos = nuevo dominio demo-local (sin tabla en staging aún); la card de API
+  de procesos queda como follow-up explícito (fuera de esta fase).
+
+**Deprecaciones (borrar tras cutover V5, no antes):**
+- `src/postulation-demo/hr-dashboard/` (HR dashboard v1) → reemplazado por `/empresa*`
+  (se conserva temporalmente el reporte que se embebe en el detalle de proceso).
+- Vista de landing interna H4.3 (PostulationLanding) → reemplazada por `/candidato`
+  (el guard se mueve a `/candidato/acceso`).
+- Rutas viejas: `/reclutador` → 301 a `/empresa`; `/postulaciones` (sin invite) →
+  redirige a `/candidato` (con invite sigue al flujo).
+
+**Privacidad (no negociable):** solo agregados allowlist en reportes/recomendados;
+`humanReviewOnly`, `noAutomatedDecision`; banner demo workspace; sin datos biométricos
+crudos en ninguna vista nueva.
+
+## 3. Cards (kanban) y secuencia
+
+| Card | Scope | Criterio de aceptación (resumen) |
+|---|---|---|
+| **V0 — Shells + rutas + i18n base** | `CandidateShell`/`CompanyShell`, tablas de nav, footer, Help dialog, user chip, banner demo, registro de rutas (placeholders), copy EN+ES | Shells renderizan en 2 viewports con 0 overflow/0 errors; tokens `--k-*` (sin hex en vistas); spec de declaración |
+| **V1 — Lado candidato** | `/portal`, `/candidato` (2 cards), `/candidato/acceso` (integración del guard de invitación), `/empleos` (honesto next-iteration) | Recorrido: portal → home → acceso → (invitación válida) → `/postulaciones` (flujo intacto); ES/EN; smoke |
+| **V2 — Empresa: dashboard + procesos** | `/empresa/acceso` (demo), `/empresa` (KPIs + tabla), `/empresa/procesos` (búsqueda/filtros/sort funcionales, patrón processes.js), datos demo consistentes | Filtros/sort operativos (tests de lógica + smoke); KPIs coherentes con la lista; demo banner |
+| **V3 — Empresa: detalle + reporte** | `/empresa/proceso/:id` (3 perfiles demo), reporte de candidato embebido (motor H4.3), acciones (edit/pause/view candidates — UI + estado local) | Reporte embebido = mismo data-model (8 constructs, caveats); navegación back; ES/EN |
+| **V4 — Empresa: new request** | `/empresa/nueva-solicitud` + `/diseño` (flujo guiado mínimo) + `/subida` (upload → metadatos) | Diseño crea un "proceso" en el estado demo (aparece en /procesos); upload valida tipo/archivo y confirma; sin promesas de NLP |
+| **V5 — Cutover + limpieza + audit final** | Redirecciones, borrado de vistas deprecadas (hr-dashboard v1, landing interna), audit visual h46c (todas las rutas nuevas, 2 viewports, ES/EN), deploy AWS + verificación prod | Suite 100%, build, audit 0 fallos, krumm.cl sirve las rutas nuevas y las viejas redirigen |
+
+**Orden:** V0 → V1 → V2 → V3 → V4 → V5 (cadenas kanban parent/child).
+Paralelismo: la fase V es 1-worker-per-tree (política vigente); los fixes de juegos
+(t_f40921bf, t_42978412) corren ANTES de V0 (área de juegos, archivos disjuntos).
+
+## 4. Riesgos / decisiones documentadas
+1. **Job board sin datos** → pantalla honesta "próxima iteración" (como la ref); no
+   inventar roles.
+2. **"Design with KRUMM"** → la ref es un mock de chat; implementar formulario
+   guiado real mínimo (no un chat LLM): preguntas estructuradas → perfil.
+3. **Auth empresa** → demo simulada (la ref lo declara coming soon); no inventar
+   credenciales de producción.
+4. **Procesos sin backend** → estado demo local; follow-up: API de procesos (fuera de fase).
+5. **Referencia en inglés** → port bilingüe (ES primera, como el producto vigente);
+   los textos de la ref se traducen y versionan en el diccionario i18n.
+6. Cada card termina con milestone-sync (kanban/Linear/repo/handoff) y la fase V5
+   cierra con audit h46c + deploy + sign-off del usuario.
+
+**Estimación:** V0–V5 ≈ 6 tarjetas heavy (GPU) + 1 audit; la fase completa es la
+mayor desde B1.

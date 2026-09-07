@@ -1,0 +1,217 @@
+/* Scoped to the portal pages; the landing keeps its existing appearance. */
+.portal-page {
+    min-height: 100vh;
+    min-height: 100svh;
+    background: var(--card);
+}
+
+.portal-header {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 12px clamp(24px, 5vw, 72px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+/* Keep the existing language control intact on a contrasting warm surface. */
+.portal-header .language-switcher {
+    background: var(--text);
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.portal-main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(24px, 5vh, 64px) 32px 56px;
+}
+
+.portal-intro {
+    text-align: center;
+    margin: 0 auto 48px;
+    max-width: 800px;
+}
+
+.portal-intro h1 {
+    color: #f7efe6;
+    font-size: clamp(34px, 4.2vw, 56px);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -1.8px;
+    text-wrap: balance;
+}
+
+.portal-intro > p {
+    margin: 20px 0 0;
+    font-size: 17px;
+    line-height: 1.7;
+    color: #d8c3ae;
+}
+
+.portal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.portal-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    min-height: 380px;
+    padding: clamp(28px, 3.4vw, 44px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(111, 80, 58, 0.035);
+    transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.portal-card-company {
+    background: var(--bg-2);
+}
+
+.portal-card-candidate {
+    background: #f7efe6;
+}
+
+.portal-symbol {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: 28px;
+    border: 1px solid var(--gold-dark);
+    border-radius: 12px;
+    color: #6f503a;
+}
+
+.portal-symbol svg {
+    width: 32px;
+    height: 32px;
+}
+
+.portal-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: #6f503a;
+}
+
+.portal-card h2 {
+    margin: 12px 0;
+    font: 600 clamp(25px, 2.5vw, 32px)/1.2 "Archivo", sans-serif;
+    letter-spacing: -0.8px;
+}
+
+.portal-card p {
+    margin: 0 0 32px;
+    max-width: 350px;
+    color: #6f503a;
+    font-size: 15px;
+    line-height: 1.75;
+}
+
+.portal-cta {
+    width: 100%;
+    margin-top: auto;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.6;
+    transition: border-color 180ms ease;
+}
+
+.portal-back {
+    display: table;
+    margin: 32px auto 0;
+    padding: 12px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #d8c3ae;
+    text-underline-offset: 5px;
+}
+
+.portal-back:hover {
+    text-decoration: underline;
+}
+
+.portal-page a:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 5px;
+    border-radius: var(--radius);
+}
+
+.portal-card:focus-visible,
+.portal-card:hover {
+    border-color: var(--gold-dark);
+    box-shadow: 0 14px 30px rgba(111, 80, 58, 0.09);
+}
+
+.portal-card:hover .portal-cta,
+.portal-card:focus-visible .portal-cta {
+    border-color: var(--gold-dark);
+}
+
+@media (hover: hover) {
+    .portal-card:hover {
+        transform: translateY(-3px);
+    }
+}
+
+.portal-pending {
+    padding-top: clamp(56px, 12vh, 140px);
+}
+
+.portal-pending h1 {
+    margin-top: 20px;
+}
+
+.portal-pending .portal-label {
+    color: var(--gold);
+}
+
+@media (max-width: 680px) {
+    .portal-header .brand-logo {
+        width: 104px;
+        height: 104px;
+    }
+
+    .portal-main {
+        padding: 28px 20px 36px;
+    }
+
+    .portal-intro {
+        margin-bottom: 32px;
+    }
+
+    .portal-intro h1 {
+        letter-spacing: -1px;
+    }
+
+    .portal-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .portal-card {
+        min-height: 330px;
+        padding: 28px;
+    }
+
+    .portal-symbol {
+        margin-bottom: 22px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .portal-card,
+    .portal-cta {
+        transition: none;
+        transform: none;
+    }
+}
