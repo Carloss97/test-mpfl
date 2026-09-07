@@ -203,8 +203,7 @@
 
 .postulation-demo__primary:focus-visible,
 .postulation-demo__secondary:focus-visible,
-.postulation-demo__secondary-button:focus-visible,
-.postulation-demo__hud-toggle:focus-visible {
+.postulation-demo__secondary-button:focus-visible {
   outline: 3px solid var(--postulation-game-focus-ring);
   outline-offset: 3px;
 }
@@ -265,7 +264,6 @@
 .postulation-demo__setup-panel p,
 .postulation-demo__setup-list,
 .postulation-demo__camera-card p,
-.postulation-demo__hud-note,
 .postulation-demo__game-header p {
   color: var(--postulation-muted);
 }
@@ -287,7 +285,6 @@
 .postulation-demo__setup-preview,
 .postulation-demo__setup-panel,
 .postulation-demo__setup-side,
-.postulation-demo__hud,
 .postulation-demo__camera-card,
 .postulation-demo__game-header,
 .postulation-demo__game-stage {
@@ -486,161 +483,6 @@
   top: 24px;
 }
 
-.postulation-demo__hud {
-  border-radius: 26px;
-  padding: 18px;
-  display: grid;
-  gap: 12px;
-}
-
-.postulation-demo__hud-topline,
-.postulation-demo__hud-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.postulation-demo__hud-badge {
-  display: inline-flex;
-  width: max-content;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(16, 185, 129, 0.1);
-  color: #047857;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.postulation-demo__hud-grid {
-  display: grid;
-  gap: 8px;
-}
-
-.postulation-demo__hud-row {
-  padding: 10px;
-  border-radius: 14px;
-  background: rgba(248, 250, 252, 0.8);
-  font-size: 0.86rem;
-}
-
-.postulation-demo__hud-row span {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #334155;
-}
-
-.postulation-demo__hud-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 999px;
-  background: #94a3b8;
-}
-
-.postulation-demo__hud-dot--ok { background: var(--postulation-success); }
-.postulation-demo__hud-dot--warning { background: var(--postulation-warning); }
-.postulation-demo__hud-dot--pending { background: var(--postulation-accent); }
-.postulation-demo__hud-dot--error { background: var(--postulation-danger); }
-.postulation-demo__hud-dot--idle { background: #94a3b8; }
-
-.postulation-demo__hud-caveats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.postulation-demo__hud-caveats span {
-  padding: 6px 8px;
-  border-radius: 999px;
-  background: rgba(245, 158, 11, 0.12);
-  color: #92400e;
-  font-size: 0.74rem;
-  font-weight: 800;
-}
-
-.postulation-demo__hud-note {
-  margin: 0;
-  font-size: 0.76rem;
-  line-height: 1.45;
-}
-
-.postulation-demo__hud-toggle {
-  min-height: 44px;
-  border: 1px solid rgba(79, 70, 229, 0.18);
-  border-radius: 14px;
-  background: rgba(79, 70, 229, 0.08);
-  color: var(--postulation-primary-strong);
-  cursor: pointer;
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.postulation-demo__hud-drawer {
-  display: grid;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid rgba(79, 70, 229, 0.16);
-  border-radius: 18px;
-  background: rgba(248, 250, 252, 0.92);
-}
-
-.postulation-demo__hud-drawer-head {
-  display: grid;
-  gap: 4px;
-}
-
-.postulation-demo__hud-drawer-head strong {
-  color: #1e293b;
-}
-
-.postulation-demo__hud-drawer-head span,
-.postulation-demo__hud-pipeline-step p {
-  color: var(--postulation-muted);
-  font-size: 0.74rem;
-  line-height: 1.4;
-}
-
-.postulation-demo__hud-pipeline {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.postulation-demo__hud-pipeline-step {
-  padding: 10px;
-  border-radius: 14px;
-  border-left: 4px solid #cbd5e1;
-  background: rgba(255, 255, 255, 0.76);
-}
-
-.postulation-demo__hud-pipeline-step--ok { border-left-color: var(--postulation-success); }
-.postulation-demo__hud-pipeline-step--warning { border-left-color: var(--postulation-warning); }
-.postulation-demo__hud-pipeline-step--pending { border-left-color: var(--postulation-accent); }
-
-.postulation-demo__hud-pipeline-step span {
-  display: block;
-  color: var(--postulation-primary-strong);
-  font-size: 0.66rem;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.postulation-demo__hud-pipeline-step strong {
-  display: block;
-  margin-top: 4px;
-  color: #1e293b;
-  font-size: 0.84rem;
-}
-
-.postulation-demo__hud-pipeline-step p {
-  margin: 6px 0 0;
-}
 
 .postulation-demo__signal-orchestrator {
   display: grid;
@@ -1554,11 +1396,124 @@
   pointer-events: none;
 }
 
-.postulation-demo__game-hud-corner .postulation-demo__hud {
-  background: rgba(255, 255, 255, 0.9);
-  max-height: min(78dvh, 720px);
-  overflow: auto;
+/* H2 (2026-09-07): indicador discreto de error de señal. Reemplaza al HUD
+   "qué pasa detrás" (BehindTheScenesMiniHud/Drawer). Visible solo con
+   error/warning; auto-ocultable; persistente cuando bloquea. */
+.postulation-demo__game-hud-corner .postulation-demo__signal-hint-anchor {
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.postulation-demo__setup-side .postulation-demo__signal-hint-anchor {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Ancla vacía (sin chip): se oculta; va después de las reglas de display para
+   ganar por orden a la misma especificidad. */
+.postulation-demo__signal-hint-anchor:empty {
+  display: none;
+}
+
+.postulation-demo__signal-hint {
   pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: min(360px, calc(100vw - 48px));
+  padding: 8px 12px;
+  border-radius: 18px;
+  background: rgba(255, 251, 235, 0.97);
+  border: 1px solid rgba(180, 83, 9, 0.35);
+  color: #78350f;
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.3;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+}
+
+.postulation-demo__signal-hint-message {
+  display: inline-block;
+}
+
+.postulation-demo__signal-hint-message strong {
+  font-weight: 950;
+}
+
+.postulation-demo__signal-hint--blocking {
+  background: rgba(254, 242, 242, 0.98);
+  border-color: rgba(185, 28, 28, 0.4);
+  color: #7f1d1d;
+}
+
+.postulation-demo__signal-hint-stop {
+  flex: none;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 28, 28, 0.5);
+  background: #ffffff;
+  color: #b91c1c;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.postulation-demo__signal-hint-stop:hover {
+  background: #fee2e2;
+}
+
+.postulation-demo__signal-hint-stop:focus-visible {
+  outline: 3px solid var(--postulation-game-focus-ring);
+  outline-offset: 2px;
+}
+
+/* H2 (2026-09-07): overlay de resultado Tangram (observación R3 preexistente):
+   antes .tangram-task__overlay no tenía CSS y se pintaba en flujo, bajo el fold
+   del stage scrollable. Ahora cubre el canvas con la card centrada. */
+.tangram-task__canvas-wrap {
+  position: relative;
+}
+
+.tangram-task__overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 3;
+}
+
+.tangram-task__overlay-card {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  max-width: min(88%, 420px);
+  padding: 18px 22px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.25);
+  text-align: center;
+}
+
+.tangram-task__overlay-card strong {
+  color: #111827;
+  font-size: 1.05rem;
+}
+
+.tangram-task__overlay-card span {
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.tangram-task__overlay-card--success strong {
+  color: #047857;
+}
+
+.tangram-task__overlay-card--fail strong {
+  color: #b91c1c;
 }
 
 .postulation-demo__report-screen {
@@ -2119,47 +2074,9 @@
   font-weight: 750;
 }
 
-.postulation-demo__hud-topline strong {
-  color: var(--postulation-primary-strong);
-  font-size: 0.8rem;
-  line-height: 1.25;
-  text-align: right;
-}
-
-.postulation-demo__hud-row strong {
-  color: #1e293b;
-  font-size: 0.82rem;
-  text-align: right;
-}
-
-.postulation-demo__hud-toggle:focus-visible,
 .color-interference-task__option:focus-visible {
   outline: 3px solid rgba(79, 70, 229, 0.72);
   outline-offset: 3px;
-}
-
-.postulation-demo__hud-drawer {
-  max-height: min(52dvh, 430px);
-  overflow: auto;
-}
-
-.postulation-demo__hud-technical-details {
-  padding: 10px;
-  border-radius: 14px;
-  background: rgba(79, 70, 229, 0.06);
-  color: #334155;
-  font-size: 0.76rem;
-}
-
-.postulation-demo__hud-technical-details summary {
-  cursor: pointer;
-  color: var(--postulation-primary-strong);
-  font-weight: 900;
-}
-
-.postulation-demo__hud-technical-details ul {
-  margin: 8px 0;
-  padding-left: 18px;
 }
 
 .postulation-demo .color-interference-task .caption {
@@ -2530,7 +2447,7 @@
 
 .team-coordination-task__workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(190px, 0.65fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   min-width: 0;
 }
@@ -2740,7 +2657,6 @@
 }
 
 .team-coordination-task__scenario,
-.team-coordination-task__behind,
 .team-coordination-task__footer,
 .team-coordination-task--finished {
   border: 1px solid rgba(79, 70, 229, 0.18);
@@ -2769,9 +2685,7 @@
 }
 
 .team-coordination-task__scenario p,
-.team-coordination-task__footer p,
-.team-coordination-task__behind p,
-.team-coordination-task__behind small {
+.team-coordination-task__footer p {
   margin: 0;
   color: #334155;
   font-size: 0.82rem;
@@ -2844,42 +2758,6 @@
   line-height: 1.35;
 }
 
-.team-coordination-task__behind {
-  min-width: 0;
-  padding: 12px;
-  display: grid;
-  align-content: start;
-  gap: 8px;
-}
-
-.team-coordination-task__behind > strong {
-  color: #111827;
-}
-
-.team-coordination-task__behind-label {
-  color: #0e7490;
-  font-size: 0.64rem;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.team-coordination-task__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.team-coordination-task__chips span {
-  padding: 4px 7px;
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #3730a3;
-  font-size: 0.68rem;
-  font-weight: 900;
-}
-
-.team-coordination-task__behind dl,
 .team-coordination-task--finished dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2887,7 +2765,6 @@
   margin: 0;
 }
 
-.team-coordination-task__behind dl div,
 .team-coordination-task--finished dl div {
   min-width: 0;
   padding: 7px;
@@ -2895,7 +2772,6 @@
   background: #f8fafc;
 }
 
-.team-coordination-task__behind dt,
 .team-coordination-task--finished dt {
   color: #64748b;
   font-size: 0.66rem;
@@ -2903,18 +2779,11 @@
   text-transform: uppercase;
 }
 
-.team-coordination-task__behind dd,
 .team-coordination-task--finished dd {
   margin: 2px 0 0;
   color: #111827;
   font-size: 0.9rem;
   font-weight: 950;
-}
-
-.team-coordination-task__explain {
-  padding: 8px;
-  border-radius: 12px;
-  background: #ecfeff;
 }
 
 .team-coordination-task__footer {
@@ -2973,8 +2842,7 @@
     justify-items: stretch;
   }
 
-  .team-coordination-task__scenario,
-  .team-coordination-task__behind {
+  .team-coordination-task__scenario {
     padding: 10px;
   }
 
@@ -2984,9 +2852,7 @@
   }
 
   .team-coordination-task__scenario p,
-  .team-coordination-task__footer p,
-  .team-coordination-task__behind p,
-  .team-coordination-task__behind small {
+  .team-coordination-task__footer p {
     font-size: 0.76rem;
   }
 }
@@ -3107,24 +2973,16 @@
   }
 
   .postulation-demo__game-hud-corner {
-    position: static;
+    /* relative (no static): el sfx-toggle (absolute, anclado al corner) debe
+       quedar visible junto al chip de señal; con static se anclaba al
+       game-body y salía del viewport (bug preexistente, verificado 1280x720). */
+    position: relative;
     width: min(100%, 760px);
     justify-self: center;
     align-self: end;
     order: 2;
   }
 
-  .postulation-demo__game-hud-corner .postulation-demo__hud {
-    max-height: 42dvh;
-  }
-
-  .postulation-demo__game-hud-corner .postulation-demo__hud-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .postulation-demo__game-hud-corner .postulation-demo__hud-row {
-    padding: 8px 10px;
-  }
 }
 
 @media (max-height: 800px) {

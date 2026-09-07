@@ -56,31 +56,6 @@ function buildResponseEntry(option) {
   };
 }
 
-function BehindPanel({ scenario, selectedOption, aggregate, t }) {
-  const hasDecisions = Number(aggregate.completedScenarioCount) > 0;
-  const displayMetric = (value) => (hasDecisions ? pct(value) : '—');
-  return (
-    <aside className="team-coordination-task__behind" aria-label={t('Trabajo por detrás', 'Behind-the-scenes work')}>
-      <strong>{t('Bitácora táctica', 'Tactical logbook')}</strong>
-      <span className="team-coordination-task__behind-label">{t('Trabajo por detrás', 'Behind-the-scenes work')}</span>
-      <p>{t('KRUMM observa elecciones estructuradas; no guarda texto libre ni conversación real.', 'KRUMM observes structured choices; it stores no free text or real conversation.')}</p>
-      <div className="team-coordination-task__chips" aria-label={t('Métricas activas', 'Active metrics')}>
-        {(scenario?.measuredConstructs ?? []).map((construct) => <span key={construct}>{construct}</span>)}
-      </div>
-      <dl>
-        <div><dt>{t('Liderazgo (estructurado)', 'Structured leadership')}</dt><dd>{displayMetric(aggregate.leadershipScore)}</dd></div>
-        <div><dt>{t('Comunicación (estructurada)', 'Structured communication')}</dt><dd>{displayMetric(aggregate.communicationScore)}</dd></div>
-        <div><dt>{t('Adaptabilidad (contexto)', 'Adaptability (context)')}</dt><dd>{displayMetric(aggregate.adaptabilityScore)}</dd></div>
-        <div><dt>{t('Decisión (descriptiva)', 'Decision (descriptive)')}</dt><dd>{displayMetric(aggregate.decisionQualityScore)}</dd></div>
-      </dl>
-      {selectedOption && (
-        <p className="team-coordination-task__explain"><strong>{t('Señal registrada:', 'Signal recorded:')}</strong> {selectedOption.why}</p>
-      )}
-      <small>{t('Se persisten solo scores agregados y conteos; no se guarda la opción ni su categoría.', 'Only aggregated scores and counts persist; the option and its category are not stored.')}</small>
-    </aside>
-  );
-}
-
 function RpgScene({ scenario, currentIndex, scenarioCount, selectedOption, onSelect, introDone, onIntroDone, t }) {
   const scene = scenario?.scene ?? {};
   const memberEffects = {
@@ -245,7 +220,7 @@ function TeamCoordinationInner({ emit, trialCount, onComplete, practice = false 
     responsesRef.current = nextResponses;
     setResponses(nextResponses);
     setSelectedOption(option);
-    setStatus(t('Señal registrada: coordinación ${pct(interimAggregate.score)}. Revisa el panel lateral para ver qué se calculó por detrás.', 'Signal recorded: coordination ${pct(interimAggregate.score)}. Check the side panel to see what was computed behind.'));
+    setStatus(t(`Señal registrada: coordinación ${pct(interimAggregate.score)}.`, `Signal recorded: coordination ${pct(interimAggregate.score)}.`));
     emitRef.current({
       eventType: 'response',
       trialId: scenario.id,
@@ -345,7 +320,6 @@ function TeamCoordinationInner({ emit, trialCount, onComplete, practice = false 
           onIntroDone={handleIntroDone}
           t={t}
         />
-        <BehindPanel scenario={scenario} selectedOption={selectedOption} aggregate={aggregate} t={t} />
       </div>
       <div className="team-coordination-task__footer">
         <p role="status">{status}</p>

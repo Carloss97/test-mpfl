@@ -117,6 +117,14 @@ de preloads de módulos en la primera carga (benigno, Vite dev).
 - **Severidad:** copy (menor). Fix: template literal o concatenación — en la pasada de copy
   de H2/H3 o tarjeta micro.
 
+**FIX APLICADO (t_ab493add / H2, 2026-09-07):** `TeamCoordinationPostulationTask.jsx` — el
+status del footer ahora es template literal (`Señal registrada: coordinación NN%.`) y la
+referencia a "panel lateral" se eliminó junto con el BehindPanel (decisión H2 del usuario:
+quitar la sección "¿qué pasa detrás?" en setup + 5 juegos; el BehindPanel del juego team
+también se retiró, `H2.2`). Verificado en vivo en el smoke H2/E2E (captura
+`docs/qa/h2-shots/` + `scripts/smoke-original-games-playability.mjs`): el footer interpola
+el % y no contiene `${pct` ni "panel lateral".
+
 ### R3 — NUEVO (P0): Tangram — el módulo evaluativo no se puede completar (3 defectos independientes)
 Verificado por **código + ejecución de los módulos reales en node + recorrido en vivo** (2 runs independientes).
 

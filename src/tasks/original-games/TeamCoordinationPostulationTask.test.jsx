@@ -49,7 +49,7 @@ describe('TeamCoordinationPostulationTask', () => {
     expect(screen.getByText(/Consecuencia de turno/i)).toBeInTheDocument();
   });
 
-  it('renders a structured team brief with behind-the-scenes metrics and no free-text input', () => {
+  it('renders a structured team brief without behind-panel (H2) and no free-text input', () => {
     const onGameEvent = vi.fn();
     render(<TeamCoordinationPostulationTask active onGameEvent={onGameEvent} />);
 
@@ -66,13 +66,18 @@ describe('TeamCoordinationPostulationTask', () => {
     expect(screen.getByText(/Misión en curso/i)).toBeInTheDocument();
     expect(screen.getByText(/Coordinación —/i)).toBeInTheDocument();
     expect(screen.getByText(/Meta 75%/i)).toBeInTheDocument();
-    expect(screen.getByText(/Trabajo por detrás/i)).toBeInTheDocument();
-    expect(screen.getByText(/no guarda texto libre/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/liderazgo/i).length).toBeGreaterThan(0);
+    // H2: BehindPanel "Trabajo por detrás" eliminado del juego team.
+    expect(screen.queryByText(/Trabajo por detrás/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Bitácora táctica/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no guarda texto libre/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Selecciona un comando/i })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: /Alinear objetivo/i }));
     expect(screen.getByText(/Consecuencia de turno/i)).toBeInTheDocument();
+    // R2: el status del footer interpola el % (antes mostraba ${pct(...)} literal).
+    expect(screen.getByText(/Señal registrada: coordinación \d+%/i)).toBeInTheDocument();
+    expect(screen.queryByText(/\$\{pct/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/panel lateral/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/Mara, Operaciones, Rumbo alineado/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Continuar aventura/i })).toBeEnabled();
     expect(onGameEvent).toHaveBeenCalledWith(expect.objectContaining({ eventType: 'game_start', gameId: 'team_coordination' }));

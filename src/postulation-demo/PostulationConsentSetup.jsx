@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import BehindTheScenesMiniHud from './BehindTheScenesMiniHud.jsx';
+import SignalErrorHint from './SignalErrorHint.jsx';
 import { usePostulationDemoCopy } from './postulationDemoCopy.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 
@@ -73,7 +73,7 @@ export default function PostulationConsentSetup({
       </section>
 
       <section className="postulation-demo__setup-side" aria-label={t('Estado de procesamiento', 'Processing status')}>
-        <BehindTheScenesMiniHud snapshot={signalSnapshot} />
+        <SignalErrorHint snapshot={signalSnapshot} onStop={onBack} />
         {children}
       </section>
     </main>

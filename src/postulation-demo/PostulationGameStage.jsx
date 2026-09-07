@@ -9,7 +9,7 @@ import BalloonRiskPostulationTask from '../tasks/original-games/BalloonRiskPostu
 import PassengerRouteOptimizationTask from '../tasks/original-games/PassengerRouteOptimizationTask.jsx';
 import TeamCoordinationPostulationTask from '../tasks/original-games/TeamCoordinationPostulationTask.jsx';
 import TangramPostulationTask from '../tasks/original-games/TangramPostulationTask.jsx';
-import BehindTheScenesMiniHud from './BehindTheScenesMiniHud.jsx';
+import SignalErrorHint from './SignalErrorHint.jsx';
 import { POSTULATION_DEMO_BATTERY, listVisiblePostulationBlocks } from './postulationDemoConfig.js';
 import PostulationProgressHeader from './PostulationProgressHeader.jsx';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
@@ -73,6 +73,7 @@ export default function PostulationGameStage({
   signalSnapshot = null,
   onGameEvent,
   onCompleteDemo,
+  onAbortDemo,
 } = {}) {
   const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -139,7 +140,7 @@ export default function PostulationGameStage({
           />
         </div>
         <div className="postulation-demo__game-hud-corner">
-          <BehindTheScenesMiniHud snapshot={signalSnapshot} />
+          <SignalErrorHint snapshot={signalSnapshot} onStop={onAbortDemo} />
           <button
             type="button"
             className="postulation-demo__sfx-toggle"

@@ -205,6 +205,7 @@ export default function PostulationDemoApp({ gameComponents, batteryMode: reques
           signalSnapshot={signalSnapshot}
           onGameEvent={handleGameEvent}
           onCompleteDemo={finishDemo}
+          onAbortDemo={goLanding}
         />
       </div>
     );

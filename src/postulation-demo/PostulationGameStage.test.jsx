@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import PostulationGameStage, { getPostulationGameViewport } from './PostulationGameStage.jsx';
 import { buildOriginalGamePostulationBlocks } from './originalGameBlueprints.js';
@@ -125,8 +125,73 @@ describe('PostulationGameStage', () => {
     render(<PostulationGameStage blocks={[{ ...teamBlock, visible: true, trialCount: 1 }]} onGameEvent={vi.fn()} />);
 
     expect(screen.getAllByRole('heading', { name: /Operación Faro/i })).toHaveLength(2);
-    expect(screen.getByText(/Trabajo por detrás/i)).toBeInTheDocument();
+    // H2: BehindPanel eliminado del juego team.
+    expect(screen.queryByText(/Trabajo por detrás/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no guarda texto libre/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
+  describe('H2: indicador discreto de error de señal por juego (batería original, 5 juegos)', () => {
+    const ORIGINAL_GAMES = ['laser_puzzle', 'balloon_risk', 'passenger_routes', 'team_coordination', 'tangram_exp001'];
+    const OK_SNAPSHOT = Object.freeze({ camera: 'ok', face: 'ok', signal: 'ok', events: 3, report: 'pending' });
+    const ERROR_SNAPSHOT = Object.freeze({ camera: 'error', face: 'idle', signal: 'idle', events: 3, report: 'pending' });
+    const WARNING_SNAPSHOT = Object.freeze({ camera: 'ok', face: 'warning', signal: 'warning', events: 3, report: 'pending' });
+
+    for (const gameId of ORIGINAL_GAMES) {
+      it(`${gameId}: sin HUD "detrás" en modo ok; hint con error inyectado; auto-hide al resolverse`, () => {
+        const block = buildOriginalGamePostulationBlocks().find((b) => b.gameId === gameId);
+        const { rerender } = render(
+          <PostulationGameStage blocks={[{ ...block, visible: true, trialCount: 1 }]} signalSnapshot={OK_SNAPSHOT} onGameEvent={vi.fn()} />,
+        );
+
+        // Modo ok (95% del tiempo): nada de "detrás".
+        expect(screen.queryByText(/Procesando en segundo plano/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Ver qué pasa detrás/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/de 5 listos/i)).not.toBeInTheDocument();
+        expect(screen.queryByTestId('signal-error-hint-chip')).not.toBeInTheDocument();
+        expect(screen.getByTestId('sfx-toggle')).toBeInTheDocument();
+
+        // Error inyectado (cámara sostenida): hint bloqueante inmediata con acción.
+        rerender(
+          <PostulationGameStage blocks={[{ ...block, visible: true, trialCount: 1 }]} signalSnapshot={ERROR_SNAPSHOT} onGameEvent={vi.fn()} onAbortDemo={vi.fn()} />,
+        );
+        const chip = screen.getByTestId('signal-error-hint-chip');
+        expect(chip).toHaveTextContent(/Puedes continuar sin cámara/i);
+        expect(screen.getByTestId('signal-hint-stop')).toHaveTextContent(/Detener evaluación/i);
+
+        // Warning inyectado (rostro/señal): no bloqueante → sin botón de detener
+        // (el delay de 5 s se cubre en el test de warning persistente y en SignalErrorHint.test).
+        rerender(
+          <PostulationGameStage blocks={[{ ...block, visible: true, trialCount: 1 }]} signalSnapshot={WARNING_SNAPSHOT} onGameEvent={vi.fn()} />,
+        );
+        expect(screen.queryByTestId('signal-hint-stop')).not.toBeInTheDocument();
+
+        // Resuelto: de vuelta a ok → sin chip (auto-hide).
+        rerender(
+          <PostulationGameStage blocks={[{ ...block, visible: true, trialCount: 1 }]} signalSnapshot={OK_SNAPSHOT} onGameEvent={vi.fn()} />,
+        );
+        expect(screen.queryByTestId('signal-error-hint-chip')).not.toBeInTheDocument();
+      });
+    }
+
+    it('warning persistente: aparece tras 5 s y desaparece de inmediato al resolverse (tangram, fase welcome sin timers propios)', () => {
+      vi.useFakeTimers();
+      try {
+        const block = buildOriginalGamePostulationBlocks().find((b) => b.gameId === 'tangram_exp001');
+        const { rerender } = render(
+          <PostulationGameStage blocks={[{ ...block, visible: true, trialCount: 1 }]} signalSnapshot={WARNING_SNAPSHOT} onGameEvent={vi.fn()} />,
+        );
+        expect(screen.queryByTestId('signal-error-hint-chip')).not.toBeInTheDocument();
+        act(() => { vi.advanceTimersByTime(5000); });
+        expect(screen.getByTestId('signal-error-hint-chip')).toHaveTextContent(/Señal en pausa: mejora la iluminación/i);
+        rerender(
+          <PostulationGameStage blocks={[{ ...block, visible: true, trialCount: 1 }]} signalSnapshot={OK_SNAPSHOT} onGameEvent={vi.fn()} />,
+        );
+        expect(screen.queryByTestId('signal-error-hint-chip')).not.toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 
   it('toggles game sound effects without emitting any telemetry (W2)', () => {

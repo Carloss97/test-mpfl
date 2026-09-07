@@ -87,6 +87,9 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(retry).toBeEnabled();
     expect(retry).toHaveClass('postulation-demo__secondary-button');
     expect(screen.getByRole('button', { name: /Continuar a juegos/i })).toHaveClass('postulation-demo__primary');
+    // H2: con error de cámara sostenido aparece el indicador discreto con acción.
+    expect(screen.getByTestId('signal-error-hint-chip')).toHaveTextContent(/Puedes continuar sin cámara/i);
+    expect(screen.getByTestId('signal-hint-stop')).toHaveTextContent(/Detener evaluación/i);
     fireEvent.click(retry);
     expect(onEnableCamera).toHaveBeenCalledTimes(1);
   });
@@ -124,7 +127,9 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(screen.getByText(/no se usan por sí solas para inferir talento/i)).toBeInTheDocument();
     expect(screen.queryByText(/FaceMesh|AUs\/FACS|MoveNet/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Activar cámara local/i })).toBeInTheDocument();
-    expect(screen.getByRole('complementary', { name: /Procesamiento en segundo plano/i })).toBeInTheDocument();
+    // H2: sin HUD "proceso en segundo plano" en modo ok (snapshot nulo).
+    expect(screen.queryByText(/Procesamiento en segundo plano/i)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('signal-error-hint-chip')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Volver al inicio/i })).toBeInTheDocument();
   });
 
@@ -135,7 +140,10 @@ describe('PostulationDemoApp shell and flow', () => {
 
     expect(screen.getByRole('heading', { name: /Ruta de precisión adaptativa/i })).toBeInTheDocument();
     expect(screen.getByText(/Juego 1 de 4/i)).toBeInTheDocument();
-    expect(screen.getByRole('complementary', { name: /Procesamiento en segundo plano/i })).toBeInTheDocument();
+    // H2: sin HUD "qué pasa detrás" en el stage en modo ok.
+    expect(screen.queryByText(/Ver qué pasa detrás/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Procesando en segundo plano/i)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('signal-error-hint-chip')).not.toBeInTheDocument();
     expect(screen.queryByText(/KRUMM Edge Fusion PoC/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Dashboard/i)).not.toBeInTheDocument();
   });
