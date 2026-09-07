@@ -50,7 +50,7 @@ const V2 = {
   sand: 'rgb(228, 205, 181)',    // --k-bg-light-sand #e4cdb5
   espresso: 'rgb(61, 43, 32)',   // --k-ink-espresso #3d2b20
   gold: 'rgb(216, 179, 140)',    // --k-gold / --k-accent-sand #d8b38c
-  terra: 'rgb(154, 115, 85)',    // --k-ink-terracotta #9a7355
+  terra: 'rgb(112, 79, 57)',    // --k-ink-terracotta #704f39 (AA 2026-09-07; marca #9a7355 en dark = --k-ink-terracotta-brand)
   cardDark: 'rgb(56, 39, 29)',   // --k-bg-dark #38271d
   deepDark: 'rgb(43, 30, 22)',   // --k-bg-dark-deep #2b1e16
   navy: 'rgb(22, 30, 43)',       // --k-card-navy #161e2b
@@ -176,13 +176,13 @@ async function checkBrandFont(page, tag, { expectH1 = null } = {}) {
 // Pill de idioma: foco por teclado → outline :focus-visible. Vistas claras:
 // 3px terracota (v2 #9a7355); guard: override arena (v2 #d8b38c).
 async function checkPillFocus(page, tag, expectColor) {
-  const r = await page.evaluate(() => {
+  const r = await page.evaluate((exp) => {
     const btn = document.querySelector('.krumm-lang-toggle__btn');
     if (!btn) return { found: false };
     btn.focus();
     const cs = getComputedStyle(btn);
-    return { found: true, outlineWidth: cs.outlineWidth, outlineStyle: cs.outlineStyle, outlineColor: cs.outlineColor, expected: expectColor };
-  });
+    return { found: true, outlineWidth: cs.outlineWidth, outlineStyle: cs.outlineStyle, outlineColor: cs.outlineColor, expected: exp };
+  }, expectColor);
   if (!r.found) {
     warnings.push(`[${tag}] pill de idioma no presente en la vista (sin check de focus)`);
     return;
@@ -190,12 +190,12 @@ async function checkPillFocus(page, tag, expectColor) {
   if (r.outlineStyle === 'none') {
     // :focus-visible no aplica con focus script en algunos casos; reintentar con Tab real.
     await page.keyboard.press('Tab');
-    const r2 = await page.evaluate((exp) => {
+    const r2 = await page.evaluate(() => {
       const el = document.activeElement;
       if (!el || !el.className?.includes('krumm-lang-toggle__btn')) return null;
       const cs = getComputedStyle(el);
       return { outlineWidth: cs.outlineWidth, outlineStyle: cs.outlineStyle, outlineColor: cs.outlineColor };
-    }, expectColor);
+    });
     if (!r2) {
       warnings.push(`[${tag}] pill focus no verificable (focus-visible inaplicable en headless)`);
       return;

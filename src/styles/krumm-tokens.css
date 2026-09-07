@@ -44,7 +44,14 @@
   /* ── Texto sobre claro ───────────────────────────────────────── */
   --k-ink-espresso: #3d2b20;   /* titulares sobre crema */
   --k-ink-medium: #6f503a;     /* cuerpo sobre crema */
-  --k-ink-terracotta: #9a7355; /* kickers numerados (valor marca v2) */
+  --k-ink-terracotta: #704f39;     /* kickers — AA ≥4.5:1 sobre crema/beige/arena
+                                       (decisión 2026-09-07, usuario: "la que genere
+                                       menos errores"). 6.4:1 crema · 6.0:1 beige ·
+                                       4.8:1 arena. La marca v2 oficial usa #9a7355
+                                       (3.72:1 sobre crema, <AA) — se conserva como
+                                       --k-ink-terracotta-brand para superficies
+                                       oscuras (landing __accesos). */
+  --k-ink-terracotta-brand: #9a7355; /* valor oficial referencia (dark surfaces) */
   --k-ink-card: #3a2c20;       /* títulos dentro de cards claras */
 
   /* ── Componentes ─────────────────────────────────────────────── */

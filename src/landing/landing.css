@@ -513,6 +513,9 @@
   background: var(--k-bg-dark);
   color: var(--k-text-cream);
   text-align: center;
+  /* Superficie oscura: conserva el terracotta de marca v2 (el valor AA global
+     no rinde sobre oscuro — design-system.md §10, decisión 2026-09-07). */
+  --k-ink-terracotta: var(--k-ink-terracotta-brand);
 }
 
 .landing__accesos-title {

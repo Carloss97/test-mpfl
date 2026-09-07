@@ -230,7 +230,15 @@ con glow difuminado (mock de reporte y stat cards eliminados); secciones 01/02/0
 fondos crema/arena/beige y H2 Archivo 900; accesos oscuro 2 cards; cierre HABLEMOS
 oscuro + CTA gold; footer arena. Assets: `public/assets/` (logo borderless, foto hero).
 
-**Abierto (decisión de usuario)**: contraste del kicker `#9a7355` (~3.2:1 sobre
-crema; la referencia oficial lo usa a 13px/800). Si se exige AA estricto, oscurecer
-`--k-ink-terracotta` de vuelta.
+**Abierto (decisión de usuario) → RESUELTO 2026-09-07:** el contraste del kicker
+`#9a7355` (~3.7:1 sobre crema; la referencia oficial lo usa a 13px/800) quedó
+resuelto por el usuario ("cualquiera está bien, la que genere menos errores"):
+**AA estricto gana** — `--k-ink-terracotta` oscurecido a **`#704f39`**
+(6.4:1 sobre crema `#f7efe6`, 6.0:1 sobre beige, 4.8:1 sobre arena — ≥4.5 en
+todas las superficies claras donde aparece un kicker). El valor oficial de
+referencia se conserva como **`--k-ink-terracotta-brand: #9a7355`** y se aplica
+vía override de scope en la única superficie oscura que lo usa (sección
+`__accesos` de la landing: kicker + CTA hover), donde el oscuro AA no rinde.
+Afecta también el focus outline del pill de idioma en vistas claras (mejora:
+~6:1). Ver audit H4.6b F3 (resuelto) en `docs/qa/h46b-visual-audit/`.
 

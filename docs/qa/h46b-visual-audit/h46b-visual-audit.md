@@ -98,13 +98,17 @@ arena (override oscuro) ✓.
 Chromium la reportaba como error de consola en cada página. Retirada en m3 (el
 bundle no usa wasm). ConsoleErrors: 2/página → 0.
 
-### F3 — Kicker terracota #9a7355 sobre crema: 3.72:1 (DOCUMENTADO, decisión abierta)
+### F3 — Kicker terracota #9a7355 sobre crema: 3.72:1 (DOCUMENTADO → RESUELTO 2026-09-07)
 Medido en landing interna (eyebrow): `rgb(154,115,85)` sobre `rgb(247,239,230)` =
-3.72:1 (< AA 4.5). Es el valor oficial de marca (la referencia lo usa a 13px/800);
-quedó abierto en design-system.md §10 a decisión del usuario (AA estricto =
-oscurecer `--k-ink-terracotta`). Reportado aquí como exige el scope; no se "corrige"
-sin esa decisión. Aparece en: landing interna (eyebrow), y en cualquier kicker de
-vistas claras que use `--k-ink-terracotta`.
+3.72:1 (< AA 4.5). El valor era el oficial de la referencia (la usa a 13px/800);
+quedó abierto en design-system.md §10 a decisión del usuario.
+**Decisión del usuario (2026-09-07): "cualquiera está bien, la que genere menos
+errores" → AA estricto.** Fix aplicado: `--k-ink-terracotta` oscurecido a
+**`#704f39`** (6.4:1 crema · 6.0:1 beige · 4.8:1 arena); el valor de marca se
+conserva como `--k-ink-terracotta-brand: #9a7355` con override de scope solo en
+la sección `__accesos` de la landing (superficie oscura, donde el AA no rinde).
+Re-audit post-fix: ver adenda al pie de este doc. Afecta también el focus del
+pill en vistas claras (mejora ~6:1).
 
 ### F4 — Copy "Revisar caveats" (inglés en UI ES) → card existente
 Dashboard HR, card 3 de métricas. Es scope de la card ready `t_24a0e428`
@@ -145,3 +149,16 @@ el dev server sirve los tokens del disco antes de ejecutar el smoke.
   m1 `24c8a9d6-…` (orphan época B1) intacta.
 - Handoff con secuencia y advertencia CFN:
   `docs/plans/2026-09-07-handoff-h46b-audit-marca-v2.md`.
+
+## Adenda — Re-audit post-fix AA (2026-09-07 17:15–17:30)
+
+Decisión del usuario (F3): AA estricto → `--k-ink-terracotta: #704f39`
+(6.4:1 crema · 6.0:1 beige · 4.8:1 arena) + `--k-ink-terracotta-brand: #9a7355`
+con override de scope en `.landing__section--accesos` (superficie oscura).
+- Re-ejecución del smoke completo (`h46b-run-aa.json`, 17:15): **0 failures,
+  0 warnings (eyebrow ahora 6.43:1), 0 console errors, 22 shots**; focus del pill
+  verificado con el nuevo valor `rgb(112,79,57)` en vistas claras y `rgb(216,179,140)`
+  en guard.
+- Suite completa **705/705** (123 archivos); build OK; oxlint del smoke 0 errores.
+- Deploy AWS 17:26 (bundle `index-BpguQVqX.js`) + verificación prod 17:29:
+  `eyebrow = rgb(112,79,57)` en vivo, Manrope cargada, 0 errors, 0 overflow.
