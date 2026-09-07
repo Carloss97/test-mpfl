@@ -1,16 +1,16 @@
 # Plan corto plazo — Flujo candidato, flujo reclutador y normalización de documentación de experiencias
 
-**Fecha:** 2026-09-06 · **Repo:** `/home/sarlock/krumm/test-mpfl` (main `6337582`)
-**Estado:** production `krumm.cl` operativo con UI v2 desplegada y verificada.
+**Fecha:** 2026-09-06 · **Repo:** `/home/sarlock/krumm/test-mpfl` (main `6bb347b`)
+**Estado:** production `krumm.cl` operativo con UI v2 + **backend AWS en staging** (B1 done 2026-09-06: API de sesiones/invitaciones, /reclutador con datos reales).
 
 ## 0. Estado actual (evidencia 2026-09-06)
 
 | Área | Estado | Fuente |
 |---|---|---|
-| Producción | krumm.cl: `/`, `/postulaciones`, `/reclutador` 200; bundle `index-C9fmzBqN.js` (UI v2 + copy sin "demo") | smoke browser hoy |
-| Batería original | 5 juegos (Laser, Balloon, Passenger, Faro, Tangram); G.2 práctica y G.5 teclado/breakpoints done; 3 bugs críticos de Tangram fijados + test componente | kanban + tests 601/601 |
-| `/reclutador` | **100% datos sintéticos** — `hr-dashboard` no hace fetch/API | grep hoy |
-| Backend M2-M6 | Código done en repo (DynamoDB+Lambdas aggregate-only, invitaciones, dashboard real, hardening) — **deploy AWS no autorizado/ejecutado** (regla vigente) | kanban t_bb757100…t_3b00a223 |
+| Producción | krumm.cl: `/`, `/postulaciones`, `/reclutador` 200; bundle `index-lLiyJyHC.js` (UI v2 + copy sin "demo" + API wireada) | smoke browser 2026-09-06 |
+| Batería original | 5 juegos (Laser, Balloon, Passenger, Faro, Tangram); G.2 práctica y G.5 teclado/breakpoints done; 3 bugs críticos de Tangram fijados + test componente | kanban + tests 613/613 |
+| `/reclutador` | **Sesiones REALES** (GET /sessions) con fallback sintético etiquetado; 8 constructos + completion + caveats en texto | verificado en browser 2026-09-06 |
+| Backend M2-M6 | **DEPLOYADO en AWS staging** (stack `krumm-m2-backend-staging`, us-east-1): API `https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/staging`; tablas krumm-staging-{sessions,audit-log,invitations}; E2E 7/7 | commits b648deb + 6bb347b |
 | Docs de módulos | **2 de 5 juegos** documentados (`balloon_risk.md`, `caminos.md`); template v1 existe; **tangram sin doc de módulo** (aun con plan + PDFs) | docs/design/modulos/ |
 | Audit G.1 (08-27) | **Obsoleto**: lista G.2/G.5 como pendientes (ya done); G1-P01 teclado cerrado vía G.5; G1-P05 (hueco breakpoint 760/768) sin re-verificar | docs/design/game-experience-audit.md |
 | R-7 validación | R-7A QA técnica ejecutable hoy; **R-7B pendiente hasta nuevo aviso (decisión usuario 2026-09-06)**; R-7C = 3 entrevistas (KRU-65 en curso) | plan R-7 + Linear |
