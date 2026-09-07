@@ -167,4 +167,18 @@ describe('H4.5 — chrome de juegos sobre design system', () => {
     expect(blockOf(themes, '.postulation-demo__score-sub')).toContain('color: var(--k-ink-medium);');
     expect(themes).not.toContain('#4338ca');
   });
+
+  it('H4.6: footer laser — actions reducible (hint derecho no se recorta en stage)', () => {
+    // La fila del footer es: p status + small keyboard-hint + div actions.
+    // actions era `flex: 0 0 auto` → la caja se dimensionaba a max-content
+    // (2 botones + el check-hint completo en una sola línea), la fila
+    // desbordaba la tarjeta de 720px y el texto derecho se recortaba con
+    // overflow-x:hidden del stage (hallazgo H4.5, shot C1 a 1280×720,
+    // preexistente pre-H4). Con `flex: 0 1 auto` + `min-width: 0` la caja
+    // puede reducirse y el check-hint envuelve a su propia línea dentro de
+    // la caja (flex-basis: 100% en originalGameAnimations.css).
+    const actions = blockOf(css, '.laser-puzzle-task__actions');
+    expect(actions).toContain('flex: 0 1 auto');
+    expect(actions).toContain('min-width: 0');
+  });
 });

@@ -1,0 +1,122 @@
+{
+  "baseUrl": "http://localhost:5173",
+  "views": 19,
+  "failures": [],
+  "consoleErrors": [],
+  "contrast": [
+    {
+      "tag": "D-landing-es",
+      "label": "h1 landing",
+      "sel": ".landing-hero__title, h1",
+      "found": true,
+      "ratio": 11.98,
+      "color": "rgb(241, 231, 219)",
+      "bg": "rgb(51, 38, 29)"
+    },
+    {
+      "tag": "D-int-es",
+      "label": "eyebrow interna",
+      "sel": ".postulation-demo__eyebrow",
+      "found": true,
+      "ratio": 5.7,
+      "color": "rgb(116, 84, 62)",
+      "bg": "rgb(243, 233, 225)"
+    },
+    {
+      "tag": "D-guard-es",
+      "label": "texto guard",
+      "sel": "main.postulation-demo__invite-guard",
+      "found": true,
+      "ratio": 13.16,
+      "color": "rgb(241, 231, 219)",
+      "bg": "rgb(42, 31, 23)"
+    },
+    {
+      "tag": "D-stage-es",
+      "label": "setup panel",
+      "sel": ".postulation-demo__setup-panel h1, .postulation-demo__setup-panel",
+      "found": true,
+      "ratio": 12.45,
+      "color": "rgb(51, 36, 28)",
+      "bg": "rgb(243, 233, 225)"
+    },
+    {
+      "tag": "D-stage-es",
+      "label": "laser-footer-clip-check",
+      "note": "OK hint dentro del stage (right 974/1262), sin overflow de tarjeta/footer"
+    },
+    {
+      "tag": "D-stage-es",
+      "label": "progress stage",
+      "sel": ".postulation-demo__progress-dots",
+      "found": true,
+      "ratio": 12.45,
+      "color": "rgb(51, 36, 28)",
+      "bg": "rgb(243, 233, 225)"
+    },
+    {
+      "tag": "D-stage-en",
+      "label": "laser-footer-clip-check",
+      "note": "OK hint dentro del stage (right 974/1262), sin overflow de tarjeta/footer"
+    },
+    {
+      "tag": "D-report-es",
+      "label": "status card strong (crema sobre navy)",
+      "sel": ".postulation-demo__report-status-card strong",
+      "found": true,
+      "ratio": 13.7,
+      "color": "rgb(241, 231, 219)",
+      "bg": "rgb(22, 30, 43)"
+    },
+    {
+      "tag": "D-report-es",
+      "label": "status card kicker (arena sobre navy)",
+      "sel": ".postulation-demo__report-status-card span",
+      "found": true,
+      "ratio": 8.49,
+      "color": "rgb(212, 180, 131)",
+      "bg": "rgb(22, 30, 43)"
+    },
+    {
+      "tag": "D-hr-es",
+      "label": "brand topbar",
+      "sel": ".hr-dashboard__brand",
+      "found": true,
+      "ratio": 13.16,
+      "color": "rgb(241, 231, 219)",
+      "bg": "rgb(42, 31, 23)"
+    },
+    {
+      "tag": "D-hr-es",
+      "label": "h1 HR",
+      "sel": ".hr-dashboard__hero h1",
+      "found": true,
+      "ratio": 12.45,
+      "color": "rgb(51, 36, 28)",
+      "bg": "rgb(243, 233, 225)"
+    }
+  ],
+  "screenshots": [
+    "docs/qa/h46-visual-audit/d01-landing-es.png",
+    "docs/qa/h46-visual-audit/d02-landing-en.png",
+    "docs/qa/h46-visual-audit/d03-landing-interna-es.png",
+    "docs/qa/h46-visual-audit/d04-landing-interna-en.png",
+    "docs/qa/h46-visual-audit/d05-guard-es.png",
+    "docs/qa/h46-visual-audit/d06-guard-en.png",
+    "docs/qa/h46-visual-audit/d07-setup-es.png",
+    "docs/qa/h46-visual-audit/d08-stage-laser-es.png",
+    "docs/qa/h46-visual-audit/d09-stage-laser-en.png",
+    "docs/qa/h46-visual-audit/d10-report-es.png",
+    "docs/qa/h46-visual-audit/d11-report-en.png",
+    "docs/qa/h46-visual-audit/d12-hr-es.png",
+    "docs/qa/h46-visual-audit/d13-hr-en.png",
+    "docs/qa/h46-visual-audit/m01-landing-es.png",
+    "docs/qa/h46-visual-audit/m02-landing-interna-es.png",
+    "docs/qa/h46-visual-audit/m03-guard-es.png",
+    "docs/qa/h46-visual-audit/m04-setup-es.png",
+    "docs/qa/h46-visual-audit/m05-stage-laser-es.png",
+    "docs/qa/h46-visual-audit/m06-report-es.png",
+    "docs/qa/h46-visual-audit/m07-hr-es.png",
+    "docs/qa/h46-visual-audit/m08-hr-en.png"
+  ]
+}
