@@ -84,6 +84,17 @@ sin overflow horizontal en desktop ni móvil; 0 errores de consola en el recorri
    pantalla (oculto por `overflow-x:hidden`) → blancos del lado derecho inalcanzables.
    Preexistente (no introducido por H3; el audit H1 midió overflow por `scrollWidth`, que este
    clip oculta). Afecta a toda la batería en móvil.
+   - **RESUELTO (t_f40921bf, 2026-09-07):** `getPostulationGameViewport` (PostulationGameStage.jsx)
+     ya no clampa el canvas a piso 500px: en compacto usa `min(anchoDeseado, contenidoStage-32)`
+     con tope 620, piso jugable 240 y tope = ancho real del contenedor (helper
+     `getStageContentWidth`, chrome-aware: shell 18/10px por el breakpoint @520, border 1px,
+     stage padding `clamp(12px,2vw,22px)`). El walk-through vivo (`scripts/smoke-t_f40921bf-stage-mobile.mjs`,
+     390×844 y 320×700) midió bounding boxes reales (no `scrollWidth`): 4 juegos stable_dg + 5
+     original sin recorte, blancos de precisión alcanzables. Hallazgo extra del smoke: go_nogo y
+     color_interference hardcodeaban `width:520` en `.task-area` (no usaban el prop del stage) →
+     ambos ahora reciben `width` (test de regresión en goNoGo/colorInterference). Evidencia:
+     `docs/qa/h3-language-toggle/t_f40921bf-*.png` (16 capturas). Gates: suite 711 tests,
+     build, oxlint, git diff --check — todo verde.
 2. **Copy EN faltante en datos sintéticos HR:** `hrDashboardData.js` — `summary`,
    `interviewPrompts`, `caveats` y `games[].metric` de los 5 candidates son ES-only (los campos
    de identidad/rol/constructos/juegos sí traen `labelEn`). En la vista EN del Evidence Profile

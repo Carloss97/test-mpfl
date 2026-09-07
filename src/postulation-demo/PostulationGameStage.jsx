@@ -40,13 +40,36 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+// Ancho interior (content box) del stage de juego a partir del ancho de
+// ventana. Refleja el chrome real de postulationDemo.css (border-box):
+//  - .postulation-demo__game-shell: padding 18px (>520) / 10px (<=520)
+//  - .postulation-demo__game-stage: border 1px + padding clamp(12px, 2vw, 22px)
+//  - .postulation-demo__game-body: sin padding ni border
+// Con esto el canvas nunca excede el contenedor visible (sin recorte por
+// overflow-x:hidden) en pantallas pequeñas.
+function getStageContentWidth(viewportWidth) {
+  const w = Math.max(320, Number(viewportWidth) || 1440);
+  const shellPadding = w <= 520 ? 10 : 18;
+  const stageBorder = 1;
+  const stagePadding = Math.max(12, Math.min(22, w * 0.02));
+  return w - 2 * shellPadding - 2 * stageBorder - 2 * stagePadding;
+}
+
 export function getPostulationGameViewport(viewport = getCurrentViewport()) {
   const width = Math.max(320, Number(viewport.width) || 1440);
   const height = Math.max(320, Number(viewport.height) || 900);
   const compact = width <= 1366 || height <= 820;
   if (!compact) return { width: 720, height: 460, compact: false };
+  // Ancho deseado en pantallas normales (crece con la ventana, tope 620):
+  // mismo criterio que antes, pero ya SIN piso de 500 que desbordaba en móvil.
+  const targetWidth = clamp(Math.floor(width - 760), 500, 620);
+  // En móvil el canvas sigue el ancho real del contenedor (margen 32px) en
+  // vez de un piso fijo de 500 que dejaba el ~27% derecho recortado. Piso
+  // jugable ~240 (mínimo de precisión visomotora) y tope = contenedor.
+  const contentWidth = Math.floor(getStageContentWidth(width));
+  const canvasWidth = Math.min(targetWidth, contentWidth - 32);
   return {
-    width: clamp(Math.floor(width - 760), 500, 620),
+    width: clamp(canvasWidth, 240, contentWidth),
     height: clamp(Math.floor(height - 430), 280, 340),
     compact: true,
   };

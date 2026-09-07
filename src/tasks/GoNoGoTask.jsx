@@ -128,7 +128,7 @@ export function summarizeGoNoGoResults(results = []) {
   };
 }
 
-function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, onComplete }) {
+function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, width = 520, onComplete }) {
   const trials = useMemo(() => buildGoNoGoTrials({ count: trialCount, noGoEvery: 2 }), [trialCount]);
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
@@ -228,7 +228,7 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, onComplete }) {
         <span className="task-title">🚦 {presentation.heading}</span>
         <span className="task-progress">Señal {current + 1} de {trials.length}</span>
       </div>
-      <div className="task-area" data-testid="gonogo-task-area" style={{ width: 520, height: 300, display: 'grid', placeItems: 'center' }}>
+      <div className="task-area" data-testid="gonogo-task-area" style={{ width, height: 300, display: 'grid', placeItems: 'center' }}>
         <div className="go-nogo-task__cue-card">
           <div
             data-testid="gonogo-cue"
@@ -260,7 +260,7 @@ function GoNoGoInner({ emit, trialCount, stimulusMs, itiMs, onComplete }) {
   );
 }
 
-export default function GoNoGoTask({ active = false, trialCount = DEFAULT_TRIAL_COUNT, stimulusMs = DEFAULT_STIMULUS_MS, itiMs = DEFAULT_ITI_MS, onGameEvent, onComplete }) {
+export default function GoNoGoTask({ active = false, trialCount = DEFAULT_TRIAL_COUNT, stimulusMs = DEFAULT_STIMULUS_MS, itiMs = DEFAULT_ITI_MS, width = 520, onGameEvent, onComplete }) {
   return (
     <GameRuntime
       active={active}
@@ -273,6 +273,7 @@ export default function GoNoGoTask({ active = false, trialCount = DEFAULT_TRIAL_
           trialCount={trialCount}
           stimulusMs={stimulusMs}
           itiMs={itiMs}
+          width={width}
           onComplete={onComplete}
         />
       )}

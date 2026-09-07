@@ -167,4 +167,9 @@ describe('GoNoGoTask', () => {
     const responses = onGameEvent.mock.calls.map(([event]) => event).filter((event) => event.eventType === 'response');
     expect(responses.at(-1).response).toMatchObject({ correct: false, outcome: 'commission_error', score: 0 });
   });
+
+  it('adapta el ancho de .task-area al prop width (t_f40921bf: sin 520px hardcodeado en móvil)', () => {
+    render(<GoNoGoTask active trialCount={1} stimulusMs={300} itiMs={20} width={312} onGameEvent={vi.fn()} onComplete={vi.fn()} />);
+    expect(screen.getByTestId('gonogo-task-area')).toHaveStyle({ width: '312px', height: '300px' });
+  });
 });

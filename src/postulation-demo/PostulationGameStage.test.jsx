@@ -81,6 +81,42 @@ describe('PostulationGameStage', () => {
     }
   });
 
+  describe('Stage móvil: el canvas se adapta al ancho real del contenedor (t_f40921bf)', () => {
+    // Ancho visible (content box) del stage por ancho de ventana — chrome real
+    // de postulationDemo.css (border-box): shell 18px (>520)/10px (<=520),
+    // border 1px, stage padding clamp(12px, 2vw, 22px).
+    const CONTENT = { 320: 274, 390: 344, 768: 699, 1280: 1198 };
+
+    it('390x844 (móvil): el canvas sigue el contenedor, no el piso de 500', () => {
+      const vp = getPostulationGameViewport({ width: 390, height: 844 });
+      expect(vp.compact).toBe(true);
+      expect(vp.width).toBeLessThan(500);                 // ya no forzado a 500
+      expect(vp.width).toBeLessThanOrEqual(CONTENT[390]); // no desborda el stage
+      expect(vp.width).toBeGreaterThanOrEqual(240);       // piso jugable
+    });
+
+    it('320x700 (móvil mínimo): el canvas cabe en el contenedor', () => {
+      const vp = getPostulationGameViewport({ width: 320, height: 700 });
+      expect(vp.compact).toBe(true);
+      expect(vp.width).toBeLessThanOrEqual(CONTENT[320]);
+      expect(vp.width).toBeGreaterThanOrEqual(240);
+    });
+
+    it('768x1024 (tablet): el canvas cabe en el contenedor', () => {
+      const vp = getPostulationGameViewport({ width: 768, height: 1024 });
+      expect(vp.compact).toBe(true);
+      expect(vp.width).toBeLessThanOrEqual(CONTENT[768]);
+      expect(vp.width).toBeGreaterThanOrEqual(240);
+    });
+
+    it('1280x800 (desktop compacto): mantiene el ancho anterior (sin regresión)', () => {
+      const vp = getPostulationGameViewport({ width: 1280, height: 800 });
+      expect(vp.compact).toBe(true);
+      expect(vp.width).toBeLessThanOrEqual(580); // como antes
+      expect(vp.width).toBeLessThanOrEqual(CONTENT[1280]);
+    });
+  });
+
   it('renders a fullscreen game stage with progress and advances through blocks', () => {
     const onCompleteDemo = vi.fn();
     const onGameEvent = vi.fn();

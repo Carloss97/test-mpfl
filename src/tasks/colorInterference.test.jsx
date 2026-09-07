@@ -171,4 +171,9 @@ describe('ColorInterferenceTask', () => {
     expect(responseEvent.response).toMatchObject({ correct: false, outcome: 'timeout', score: 0 });
     expect(responseEvent.response.interference).toMatchObject({ timedOut: true, trialDurationMs: 1000 });
   });
+
+  it('adapta el ancho de .task-area al prop width (t_f40921bf: sin 520px hardcodeado en móvil)', () => {
+    render(<ColorInterferenceTask active trialCount={1} itiMs={20} width={312} onGameEvent={vi.fn()} onComplete={vi.fn()} />);
+    expect(screen.getByTestId('color-task-area')).toHaveStyle({ width: '312px' });
+  });
 });

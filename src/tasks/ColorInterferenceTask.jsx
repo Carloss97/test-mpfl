@@ -145,7 +145,7 @@ export function summarizeColorInterferenceResults(results = []) {
   };
 }
 
-function ColorInterferenceInner({ emit, trialCount, itiMs, trialDurationMs, onComplete }) {
+function ColorInterferenceInner({ emit, trialCount, itiMs, trialDurationMs, width = 520, onComplete }) {
   const trials = useMemo(() => buildColorInterferenceTrials({ count: trialCount }), [trialCount]);
   const emitRef = useRef(emit);
   const onCompleteRef = useRef(onComplete);
@@ -273,7 +273,7 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, trialDurationMs, onCo
         <span className="task-progress">Tipo: {trial.congruent ? 'congruente' : 'incongruente'}</span>
         <span className="task-progress color-interference-task__timer" role="timer" aria-label="Tiempo restante">{timing.label}</span>
       </div>
-      <div className="task-area" data-testid="color-task-area" style={{ width: 520, minHeight: 260, display: 'grid', placeItems: 'center' }}>
+      <div className="task-area" data-testid="color-task-area" style={{ width, minHeight: 260, display: 'grid', placeItems: 'center' }}>
         <div className="color-interference-task__card-stage">
           <div className="color-interference-task__timebar" data-testid="color-timebar" data-urgency={timing.urgency}>
             <span style={{ width: `${timing.percentRemaining}%` }} />
@@ -313,7 +313,7 @@ function ColorInterferenceInner({ emit, trialCount, itiMs, trialDurationMs, onCo
   );
 }
 
-export default function ColorInterferenceTask({ active = false, trialCount = 8, itiMs = 250, trialDurationMs = DEFAULT_TRIAL_DURATION_MS, onGameEvent, onComplete }) {
+export default function ColorInterferenceTask({ active = false, trialCount = 8, itiMs = 250, trialDurationMs = DEFAULT_TRIAL_DURATION_MS, width = 520, onGameEvent, onComplete }) {
   return (
     <GameRuntime
       active={active}
@@ -326,6 +326,7 @@ export default function ColorInterferenceTask({ active = false, trialCount = 8, 
           trialCount={trialCount}
           itiMs={itiMs}
           trialDurationMs={trialDurationMs}
+          width={width}
           onComplete={onComplete}
         />
       )}
