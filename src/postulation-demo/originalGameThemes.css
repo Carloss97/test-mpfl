@@ -17,25 +17,25 @@
 .postulation-demo .primary {
   min-height: 48px;
   border: 0;
-  border-radius: 16px;
+  border-radius: var(--k-radius-btn);
   padding: 0 22px;
-  background: linear-gradient(135deg, #6366f1, #4338ca);
-  color: #ffffff;
+  background: var(--k-cta-bg);
+  color: var(--k-cta-ink);
   font-size: 0.95rem;
-  font-weight: 950;
+  font-weight: var(--k-weight-bold);
   cursor: pointer;
-  box-shadow: 0 12px 26px rgba(79, 70, 229, 0.3);
+  box-shadow: var(--k-shadow-cta);
   transition: transform 140ms ease, box-shadow 140ms ease;
 }
 
 .postulation-demo .primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 16px 32px rgba(79, 70, 229, 0.38);
+  box-shadow: var(--k-shadow-cta);
 }
 
 .postulation-demo .primary:active:not(:disabled) {
   transform: translateY(0) scale(0.985);
-  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.28);
+  box-shadow: var(--k-shadow-cta);
 }
 
 .postulation-demo .primary:focus-visible {
@@ -61,17 +61,17 @@
 .game-pips__dot {
   width: 9px;
   height: 9px;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.4);
+  border-radius: var(--k-radius-pill);
+  background: var(--k-divider);
 }
 
 .game-pips__dot--done {
-  background: var(--game-pip-done, #10b981);
+  background: var(--game-pip-done, var(--k-ink-espresso));
 }
 
 .game-pips__dot--current {
-  background: var(--game-pip-current, #4f46e5);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16);
+  background: var(--game-pip-current, var(--k-accent-sand));
+  box-shadow: 0 0 0 3px var(--k-tint-gold-strong);
 }
 
 .game-pips--compact .game-pips__dot {
@@ -86,7 +86,7 @@
   --game-pip-current: #22d3ee;
   padding: 14px;
   border: 1px solid rgba(34, 211, 238, 0.22);
-  border-radius: 28px;
+  border-radius: var(--k-radius-card);
   background:
     radial-gradient(circle at 18% 8%, rgba(34, 211, 238, 0.1), transparent 14rem),
     linear-gradient(150deg, #0b1220 0%, #0f1b33 55%, #17204a 100%);
@@ -109,7 +109,12 @@
   box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
 }
 
-.laser-puzzle-task__caption {
+/* Especificidad: el elemento trae también la clase genérica .caption
+   (.postulation-demo .caption, misma especificidad; este archivo carga
+   después → manda). Sin el prefijo, el color world #94a3b8 nunca se
+   aplicaba y el caption salía con tinta oscura sobre el fondo oscuro
+   (bug de especificidad preexistente, detectado en smoke H4.5). */
+.postulation-demo .laser-puzzle-task__caption {
   color: #94a3b8;
 }
 
@@ -234,6 +239,7 @@
 
 .laser-puzzle-task .primary {
   background: linear-gradient(135deg, #22d3ee, #0891b2);
+  color: #ffffff; /* CTA de mundo: el .primary compartido hereda --k-cta-ink (espresso); sobre el gradiente cian el texto debe ser blanco (estado pre-H4.5, restaurado). */
   box-shadow: 0 12px 26px rgba(8, 145, 178, 0.35);
 }
 
@@ -248,7 +254,7 @@
   --game-pip-current: #3b82f6;
   padding: 14px;
   border: 1px solid rgba(59, 130, 246, 0.24);
-  border-radius: 28px;
+  border-radius: var(--k-radius-card);
   background: linear-gradient(160deg, #f0f9ff 0%, #eef2ff 100%);
   box-shadow: 0 18px 44px rgba(30, 64, 175, 0.1);
 }
@@ -271,6 +277,7 @@
 
 .balloon-risk-task__controls .primary {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff; /* CTA de mundo "Cielo": mismo caso que el .primary de laser (ver comentario allí). */
   box-shadow: 0 12px 26px rgba(37, 99, 235, 0.32);
 }
 
@@ -322,7 +329,7 @@
 .team-coordination-task__option:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
-  border-color: rgba(79, 70, 229, 0.5);
+  border-color: var(--k-accent-sand);
 }
 
 .team-coordination-task__option:active:not(:disabled) {
@@ -352,16 +359,16 @@
   margin-bottom: 0;
   border-color: var(--postulation-primary);
   background: var(--postulation-primary);
-  color: #ffffff;
+  color: var(--k-cta-ink);
 }
 
 .postulation-demo__talent-score--provisional strong {
-  color: #4338ca;
+  color: var(--k-ink-espresso);
   font-size: 0.95rem;
 }
 
 .postulation-demo__score-sub {
-  color: #64748b;
+  color: var(--k-ink-medium);
   font-size: 0.58rem;
   font-weight: 800;
   letter-spacing: 0.02em;

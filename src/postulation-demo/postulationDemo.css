@@ -16,13 +16,14 @@
   --postulation-warning: var(--k-status-warn);
   --postulation-danger: var(--k-status-error);
   --postulation-surface: rgba(255, 255, 255, 0.86);
-  /* Superficies de juego: scope H4.5 (t_5d775c9a) — se conservan hasta ese rebuild. */
-  --postulation-game-surface: #ffffff;
-  --postulation-game-control-bg: #f8fafc;
-  --postulation-game-control-text: #0f172a;
-  --postulation-game-control-border: rgba(49, 46, 129, 0.42);
-  --postulation-game-target: #0f766e;
-  --postulation-game-distractor: #334155;
+  /* H4.5 (t_5d775c9a): superficies de juego -> tokens del design system
+     (mismo patron que el mapa H4.3 de arriba; krumm-tokens.css es fuente unica). */
+  --postulation-game-surface: var(--k-card-cream);
+  --postulation-game-control-bg: var(--k-card-cream);
+  --postulation-game-control-text: var(--k-ink-card);
+  --postulation-game-control-border: var(--k-divider);
+  --postulation-game-target: var(--k-status-ok);
+  --postulation-game-distractor: var(--k-ink-medium);
   /* Focus ring: terracota AA (#74543e a 0.9; ≥3:1 sobre crema — §6.1). */
   --postulation-game-focus-ring: rgba(116, 84, 62, 0.9);
 }
@@ -676,7 +677,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: var(--k-radius-pill);
   border: 1px solid var(--postulation-game-control-border);
   background: var(--postulation-game-control-bg);
   color: var(--postulation-game-control-text);
@@ -696,7 +697,7 @@
 }
 
 .postulation-demo .caption {
-  color: #334155;
+  color: var(--k-ink-medium);
   font-weight: 750;
   line-height: 1.45;
 }
@@ -704,11 +705,9 @@
 .postulation-demo .task-area {
   max-width: 100%;
   overflow: hidden;
-  border: 1px solid rgba(49, 46, 129, 0.16);
-  border-radius: 26px;
-  background:
-    radial-gradient(circle at 50% 18%, rgba(20, 184, 166, 0.08), transparent 18rem),
-    var(--postulation-game-surface);
+  border: 1px solid var(--k-divider);
+  border-radius: var(--k-radius-card);
+  background: var(--k-card-cream);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9), 0 18px 42px rgba(15, 23, 42, 0.08);
 }
 
@@ -717,7 +716,7 @@
 .color-interference-task__option {
   min-height: 48px;
   border: 1.5px solid var(--postulation-game-control-border);
-  border-radius: 16px;
+  border-radius: var(--k-radius-btn);
   background: var(--postulation-game-control-bg);
   color: var(--postulation-game-control-text);
   font-weight: 950;
@@ -729,7 +728,7 @@
 .color-interference-task__option:hover,
 .visual-search-task__item:hover,
 .precision-targeting-task__start-pad:hover {
-  border-color: rgba(79, 70, 229, 0.65);
+  border-color: var(--k-accent-sand);
   transform: translateY(-1px);
 }
 
@@ -776,7 +775,7 @@
   display: grid;
   place-items: center;
   padding: 16px 24px;
-  border-radius: 30px;
+  border-radius: var(--k-radius-card);
   border: 2px solid var(--postulation-game-control-border);
   background: var(--postulation-game-control-bg);
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
@@ -799,7 +798,7 @@
 .go-nogo-task__instruction {
   max-width: 360px;
   margin: 0;
-  color: #334155;
+  color: var(--k-ink-medium);
   font-size: 0.92rem;
   font-weight: 850;
   line-height: 1.35;
@@ -814,7 +813,7 @@
 
 .visual-search-task__item {
   border: 1.5px solid var(--postulation-game-control-border);
-  border-radius: 12px;
+  border-radius: var(--k-radius-iconbox);
   background: #ffffff;
   color: var(--postulation-game-distractor);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
@@ -853,9 +852,9 @@
   align-items: center;
   margin: 0 auto 10px;
   padding: 10px;
-  border: 1px solid rgba(49, 46, 129, 0.16);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--k-divider);
+  border-radius: var(--k-radius-card);
+  background: var(--k-card-cream);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 }
 
@@ -873,8 +872,8 @@
 }
 
 .precision-targeting-task__route-card strong {
-  background: rgba(79, 70, 229, 0.12);
-  color: var(--postulation-primary-strong);
+  background: var(--k-tint-gold);
+  color: var(--k-ink-card);
 }
 
 .precision-targeting-task__route-card span {
@@ -1167,9 +1166,9 @@
   display: grid;
   gap: 6px;
   padding: 9px;
-  border: 1px solid rgba(99, 102, 241, 0.22);
+  border: 1px solid var(--k-divider);
   border-radius: 14px;
-  background: #f8fafc;
+  background: var(--k-bg-light);
 }
 
 .passenger-route-task__budget > div:first-child {
@@ -1180,15 +1179,15 @@
 }
 
 .passenger-route-task__budget strong {
-  color: #111827;
+  color: var(--k-ink-espresso);
   font-size: 0.92rem;
 }
 
 .passenger-route-task__budget-bar {
   height: 10px;
   overflow: hidden;
-  border-radius: 999px;
-  background: #e2e8f0;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-bg-light-sand);
 }
 
 .passenger-route-task__budget-bar i {
@@ -1218,7 +1217,7 @@
   gap: 7px;
   padding: 5px 6px;
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--k-bg-light);
 }
 
 .passenger-route-task__passenger-row b {
@@ -1254,9 +1253,9 @@
   align-content: center;
   gap: 7px;
   padding: 12px;
-  border: 1px solid rgba(49, 46, 129, 0.2);
-  border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  border: 1px solid var(--k-divider);
+  border-radius: var(--k-radius-card);
+  background: var(--k-card-cream);
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
 }
 
@@ -1266,7 +1265,7 @@
 }
 
 .passenger-route-task__side-panel span {
-  color: #334155;
+  color: var(--k-ink-medium);
   font-size: 0.76rem;
   font-weight: 800;
   line-height: 1.3;
@@ -1288,7 +1287,7 @@
 .passenger-route-task__footer p {
   width: min(100%, 360px);
   margin: 0;
-  color: #334155;
+  color: var(--k-ink-medium);
   font-size: 0.82rem;
   font-weight: 800;
   line-height: 1.35;
@@ -1301,7 +1300,7 @@
 }
 
 .passenger-route-task__controls > strong {
-  color: #312e81;
+  color: var(--k-ink-terracotta);
   font-size: 0.7rem;
   text-transform: uppercase;
 }
@@ -1315,18 +1314,18 @@
   display: grid;
   place-items: center;
   padding: 0;
-  border: 1.5px solid rgba(49, 46, 129, 0.48);
-  border-radius: 12px;
-  background: #ffffff;
-  color: #312e81;
+  border: 1.5px solid var(--k-divider);
+  border-radius: var(--k-radius-iconbox);
+  background: var(--k-card-cream);
+  color: var(--k-ink-card);
   font-size: 1.15rem;
   font-weight: 950;
   box-shadow: 0 7px 16px rgba(15, 23, 42, 0.12);
 }
 
 .passenger-route-task__controls button:hover {
-  border-color: #4f46e5;
-  background: #eef2ff;
+  border-color: var(--k-accent-sand);
+  background: var(--k-bg-light);
 }
 
 .passenger-route-task__controls button:focus-visible {
@@ -1521,19 +1520,19 @@
   justify-items: center;
   max-width: min(88%, 420px);
   padding: 18px 22px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.97);
+  border-radius: var(--k-radius-card);
+  background: var(--k-card-cream);
   box-shadow: 0 14px 34px rgba(15, 23, 42, 0.25);
   text-align: center;
 }
 
 .tangram-task__overlay-card strong {
-  color: #111827;
+  color: var(--k-ink-espresso);
   font-size: 1.05rem;
 }
 
 .tangram-task__overlay-card span {
-  color: #475569;
+  color: var(--k-ink-medium);
   font-size: 0.85rem;
 }
 
@@ -2147,19 +2146,19 @@
 }
 
 .postulation-demo .color-interference-task .caption {
-  color: #334155;
+  color: var(--k-ink-medium);
   font-weight: 750;
 }
 
 .postulation-demo .color-interference-task .task-title {
-  color: #1e293b;
+  color: var(--k-ink-espresso);
   font-weight: 900;
 }
 
 .postulation-demo .color-interference-task .task-progress {
-  border: 1px solid rgba(49, 46, 129, 0.2);
-  background: rgba(79, 70, 229, 0.08);
-  color: var(--postulation-primary-strong);
+  border: 1px solid var(--k-divider);
+  background: var(--k-bg-light);
+  color: var(--k-ink-card);
   font-weight: 900;
 }
 
@@ -2174,7 +2173,7 @@
 
 .color-interference-task__prompt {
   margin: 0;
-  color: var(--postulation-primary-strong);
+  color: var(--k-ink-terracotta);
   font-size: 0.88rem;
   font-weight: 950;
   letter-spacing: 0.02em;
@@ -2183,9 +2182,9 @@
 .color-interference-task__stimulus-card {
   min-width: min(100%, 240px);
   padding: 18px 22px;
-  border: 1.5px solid rgba(49, 46, 129, 0.18);
-  border-radius: 28px;
-  background: #ffffff;
+  border: 1.5px solid var(--k-divider);
+  border-radius: var(--k-radius-card);
+  background: var(--k-card-cream);
   box-shadow: 0 16px 38px rgba(15, 23, 42, 0.12);
 }
 
@@ -2206,8 +2205,8 @@
   width: min(100%, 420px);
   height: 9px;
   overflow: hidden;
-  border-radius: 999px;
-  background: #e2e8f0;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-bg-light-sand);
   box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.24);
 }
 
@@ -2230,9 +2229,9 @@
 
 .color-interference-task__option {
   min-height: 46px;
-  border: 1.5px solid rgba(49, 46, 129, 0.28);
-  background: rgba(255, 255, 255, 0.96);
-  color: #1e293b;
+  border: 1.5px solid var(--k-divider);
+  background: var(--k-card-cream);
+  color: var(--k-ink-card);
   font-weight: 900;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 }
@@ -2243,7 +2242,7 @@
 .color-interference-task__choice-card--yellow { border-color: rgba(180, 83, 9, 0.52); }
 
 .color-interference-task__option:hover {
-  border-color: rgba(79, 70, 229, 0.55);
+  border-color: var(--k-accent-sand);
   background: #ffffff;
 }
 
@@ -2289,15 +2288,15 @@
   min-height: 30px;
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  border-radius: var(--k-radius-pill);
   padding: 6px 10px;
   font-size: 0.82rem;
   font-weight: 900;
 }
 
 .visual-search-task__panel-brief strong {
-  background: rgba(79, 70, 229, 0.1);
-  color: var(--postulation-primary-strong);
+  background: var(--k-tint-gold);
+  color: var(--k-ink-card);
 }
 
 .visual-search-task__panel-brief span {
@@ -2321,7 +2320,7 @@
   width: min(100%, 720px);
   display: grid;
   gap: 10px;
-  color: var(--postulation-game-control-text);
+  color: var(--k-text-cream-dim);
 }
 
 .laser-puzzle-task__header {
@@ -2504,7 +2503,7 @@
   width: min(100%, 760px);
   display: grid;
   gap: 10px;
-  color: var(--postulation-game-control-text);
+  color: var(--k-ink-espresso);
 }
 
 .team-coordination-task__header {
@@ -2666,11 +2665,9 @@
   gap: 12px;
   align-items: center;
   padding: 12px 14px;
-  border: 1px solid rgba(79, 70, 229, 0.18);
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at top left, rgba(79, 70, 229, 0.12), transparent 14rem),
-    rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--k-divider);
+  border-radius: var(--k-radius-card);
+  background: var(--k-card-cream);
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
@@ -2682,13 +2679,13 @@
 
 .team-coordination-task__mission strong {
   display: block;
-  color: #111827;
+  color: var(--k-ink-espresso);
   font-size: 1rem;
 }
 
 .team-coordination-task__mission p,
 .team-coordination-task__mission small {
-  color: #475569;
+  color: var(--k-ink-medium);
   font-size: 0.8rem;
   line-height: 1.4;
 }
@@ -2697,13 +2694,13 @@
   display: grid;
   gap: 4px;
   justify-items: end;
-  color: #334155;
+  color: var(--k-ink-medium);
   font-size: 0.78rem;
   font-weight: 850;
 }
 
 .team-coordination-task__scoreboard strong {
-  color: var(--postulation-primary-strong);
+  color: var(--k-ink-espresso);
   font-size: 1.5rem;
   line-height: 1;
 }
@@ -2712,23 +2709,23 @@
   width: 100%;
   height: 8px;
   overflow: hidden;
-  border-radius: 999px;
-  background: #e2e8f0;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-bg-light-sand);
 }
 
 .team-coordination-task__meter i {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--postulation-accent), var(--postulation-primary));
+  background: linear-gradient(90deg, var(--k-accent-sand), var(--k-ink-terracotta));
 }
 
 .team-coordination-task__scenario,
 .team-coordination-task__footer,
 .team-coordination-task--finished {
-  border: 1px solid rgba(79, 70, 229, 0.18);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--k-divider);
+  border-radius: var(--k-radius-card);
+  background: var(--k-card-cream);
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
@@ -2738,7 +2735,7 @@
 }
 
 .team-coordination-task__eyebrow {
-  color: var(--postulation-primary-strong);
+  color: var(--k-ink-terracotta);
   font-size: 0.72rem;
   font-weight: 950;
   letter-spacing: 0.08em;
@@ -2747,14 +2744,14 @@
 
 .team-coordination-task__scenario h4 {
   margin: 6px 0 6px;
-  color: #111827;
+  color: var(--k-ink-espresso);
   font-size: 1rem;
 }
 
 .team-coordination-task__scenario p,
 .team-coordination-task__footer p {
   margin: 0;
-  color: #334155;
+  color: var(--k-ink-medium);
   font-size: 0.82rem;
   line-height: 1.4;
 }
@@ -2770,10 +2767,10 @@
   gap: 4px;
   min-height: 54px;
   padding: 10px 12px;
-  border: 1px solid rgba(99, 102, 241, 0.22);
-  border-radius: 16px;
-  background: #f8fafc;
-  color: #1e293b;
+  border: 1px solid var(--k-divider);
+  border-radius: var(--k-radius-btn);
+  background: var(--k-card-cream);
+  color: var(--k-ink-card);
   text-align: left;
   cursor: pointer;
 }
@@ -2784,7 +2781,7 @@
 }
 
 .team-coordination-task__option span {
-  color: #64748b;
+  color: var(--k-ink-terracotta);
   font-size: 0.72rem;
   font-weight: 850;
   text-transform: uppercase;
@@ -2792,12 +2789,12 @@
 
 .team-coordination-task__option:hover:not(:disabled),
 .team-coordination-task__option--selected {
-  border-color: rgba(79, 70, 229, 0.58);
-  background: #eef2ff;
+  border-color: var(--k-accent-sand);
+  background: var(--k-bg-light);
 }
 
 .team-coordination-task__option--selected {
-  box-shadow: inset 4px 0 0 #4f46e5, 0 8px 18px rgba(79, 70, 229, 0.12);
+  box-shadow: inset 4px 0 0 var(--k-accent-sand), 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 .team-coordination-task__option:disabled {
@@ -2835,12 +2832,12 @@
 .team-coordination-task--finished dl div {
   min-width: 0;
   padding: 7px;
-  border-radius: 12px;
-  background: #f8fafc;
+  border-radius: var(--k-radius-iconbox);
+  background: var(--k-bg-light);
 }
 
 .team-coordination-task--finished dt {
-  color: #64748b;
+  color: var(--k-ink-terracotta);
   font-size: 0.66rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -2848,7 +2845,7 @@
 
 .team-coordination-task--finished dd {
   margin: 2px 0 0;
-  color: #111827;
+  color: var(--k-ink-espresso);
   font-size: 0.9rem;
   font-weight: 950;
 }
@@ -2946,8 +2943,8 @@
   width: min(100%, 620px);
   display: grid;
   gap: 10px;
-  border-radius: 28px;
-  color: var(--postulation-game-control-text);
+  border-radius: var(--k-radius-card);
+  color: var(--k-ink-espresso);
 }
 
 .balloon-risk-task__header .task-title {
@@ -3007,7 +3004,7 @@
 
 .balloon-risk-task__stats small,
 .balloon-risk-task__status {
-  color: #64748b;
+  color: var(--k-ink-medium);
   font-size: 0.78rem;
 }
 
@@ -3024,9 +3021,9 @@
 
 .balloon-risk-task--finished {
   padding: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--k-divider);
+  border-radius: var(--k-radius-card);
+  background: var(--k-card-cream);
   text-align: center;
 }
 

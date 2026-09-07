@@ -58,7 +58,7 @@ Objetivo: inventario y veredicto por sección antes de tocar UI (el usuario quie
 - H4.2 Rebuild de `LandingPage` según referencias (conservar: nav, i18n, anclas, SEO, accesibilidad).
 - H4.3 Aplicar tokens al flujo candidato (landing interna, guard, setup, stage, reporte).
 - H4.4 Aplicar tokens al portal `/reclutador`.
-- H4.5 Juegos: solo tokens visuales (fondos, tipografía, paleta) — **no** cambiar mecánicas ni layout de gameplay (separar H4 de C2 para no mezclar).
+- H4.5 Juegos: solo tokens visuales (fondos, tipografía, paleta) — **no** cambiar mecánicas ni layout de gameplay (separar H4 de C2 para no mezclar). **COMPLETADO (t_5d775c9a, 2026-09-07)**: chrome de juegos (task-area, pills, botones .primary/.secondary, pips, panels, sfx-toggle, micro-intro, overlay Tangram) sobre tokens `--k-*` + mapa `:root` de variables de juego tokenizado (rebuild reservado en H4.3). Se conservan los mundos visuales de cada juego (laser "Órbita", balloon "Cielo", passenger "Urbano", team "Faro" RPG) y los colores de estado funcional de tarea (go/no-go, correct/incorrect, urgencia, presupuesto, delivered/popped). Fix AA en report W5 (blanco sobre oro → `--k-cta-ink`; indigo `#4338ca` fuera del sistema → espresso). Evidencia: spec `PostulationGamesDesignSystem.test.jsx` (10 tests) + suite completa + build + oxlint + smoke browser vivo (setup → laser 3 niveles resueltos → balloon; 1280×720 + 390×844) — `docs/qa/h45-games-design-system/`.
 - H4.6 Audit visual unificado (desktop + móvil, ES/EN, overflow 0, contraste) + deploy + verificación browser.
 - Aceptación: consistencia visual verificable sección a sección (checklist del design-system), tests + build + smoke.
 

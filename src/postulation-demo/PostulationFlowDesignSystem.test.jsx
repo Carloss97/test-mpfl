@@ -3,9 +3,10 @@
 // (H4.2). Criterio de aceptación: consistencia visual verificable sección a
 // sección — el chrome del flujo (landing interna, guard, setup, stage,
 // reporte) y el portal HR usan tokens del sistema, sin hex/rgba indigo
-// duplicados en vistas de flujo. Las secciones de UI de juegos conservan su
-// paleta anterior hasta H4.5 (t_5d775c9a): las variables
-// --postulation-game-* se mantienen intactas en :root.
+// duplicados en vistas de flujo. H4.5 (t_5d775c9a) aplicó tokens al chrome de
+// juegos: ver PostulationGamesDesignSystem.test.jsx — las superficies de
+// juego de :root quedaron tokenizadas; los mundos de cada juego y los
+// colores de estado funcional de tarea se conservan.
 import fs from 'node:fs';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
@@ -104,12 +105,14 @@ describe('H4.3/H4.4 — flujo candidato y /reclutador sobre design system', () =
     }
   });
 
-  it(':root — superficies de juego conservadas para H4.5 (sin cambios)', () => {
+  it(':root — superficies de juego tokenizadas en H4.5 (t_5d775c9a)', () => {
     for (const line of [
-      '--postulation-game-surface: #ffffff;',
-      '--postulation-game-control-bg: #f8fafc;',
-      '--postulation-game-control-text: #0f172a;',
-      '--postulation-game-control-border: rgba(49, 46, 129, 0.42);',
+      '--postulation-game-surface: var(--k-card-cream);',
+      '--postulation-game-control-bg: var(--k-card-cream);',
+      '--postulation-game-control-text: var(--k-ink-card);',
+      '--postulation-game-control-border: var(--k-divider);',
+      '--postulation-game-target: var(--k-status-ok);',
+      '--postulation-game-distractor: var(--k-ink-medium);',
     ]) {
       expect(css).toContain(line);
     }
