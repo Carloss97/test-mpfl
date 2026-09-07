@@ -26,7 +26,7 @@
   /* ── Texto sobre claro ───────────────────────────────────────── */
   --k-ink-espresso: #33241c;   /* titulares sobre crema */
   --k-ink-medium: #6e584b;     /* cuerpo sobre crema */
-  --k-ink-terracotta: #9c7b66; /* kickers numerados sobre crema */
+  --k-ink-terracotta: #74543e; /* kickers numerados sobre claro (H4.2: oscurecido #9c7b66→#74543e para WCAG AA ≥4.5:1 sobre --k-bg-light/-sand) */
   --k-ink-card: #3a2c20;       /* títulos dentro de cards claras */
 
   /* ── Componentes ─────────────────────────────────────────────── */
@@ -60,4 +60,40 @@
   --k-space-section: 96px;     /* padding vertical de sección */
   --k-space-block: 40px;       /* entre bloques dentro de sección */
   --k-space-item: 16px;        /* ítem a ítem */
+
+  /* ── Estado semántico (H4.3/H4.4) — estados funcionales, no paleta de marca ──
+   * Texto AA (≥4.5:1) sobre crema --k-bg-light / --k-card-cream. */
+  --k-status-ok: #0f766e;              /* verde profundo: badges/pills ok */
+  --k-status-ok-soft: rgba(15, 118, 110, 0.12);
+  --k-status-warn: #92400e;            /* ámbar profundo: caveats, fixtures */
+  --k-status-warn-soft: rgba(146, 64, 14, 0.12);
+  --k-status-error: #b42318;           /* rojo profundo: errores, bloqueado */
+  --k-status-error-soft: rgba(180, 35, 24, 0.10);
+
+  /* ── Tintes cálidos (chips, iconos, selección sobre claro) ── */
+  --k-tint-gold: rgba(212, 180, 131, 0.16);
+  --k-tint-gold-strong: rgba(212, 180, 131, 0.34);
+  --k-hover-soft: rgba(107, 88, 68, 0.06);
+
+  /* ── Sombras adicionales ── */
+  --k-shadow-soft: 0 8px 24px rgba(51, 38, 29, 0.08);   /* cards sobre claro */
+  --k-shadow-cta: 0 14px 30px rgba(107, 88, 68, 0.28);  /* CTA primario */
+
+  /* ── Radios adicionales ── */
+  --k-radius-panel: 22px;              /* paneles grandes de flujo (setup, reporte, stage) */
+  --k-radius-pill: 999px;              /* pills / badges */
+
+  /* ── H4.2 (rebuild landing) — extension layout/tipografia ──── */
+  --k-gutter-mobile: 24px;             /* margen lateral <900px (design-system §5.1) */
+  --k-space-section-mobile: 64px;      /* padding de sección <900px (§5.1) */
+  --k-icon-shield: #2e4a6b;            /* squircle del escudo en cards navy (hero) */
+  --k-grid-cell: 110px;                /* celda de la retícula del hero oscuro (§5) */
+  --k-arc-line: rgba(241, 231, 219, 0.28); /* curva decorativa superior del hero */
+  --k-meter-track: rgba(107, 88, 68, 0.18); /* track de barras del mock de reporte */
+  --k-size-lead: 1.1875rem;            /* subhero / lead de sección */
+  --k-size-card-title: 1.5rem;         /* títulos de card (design-system §4) */
+  --k-size-stat: 1.375rem;             /* valor bold en cards flotantes navy */
+  --k-size-micro: 0.8rem;              /* footer, chips, labels de stat */
+  --k-weight-semibold: 600;            /* CTA (design-system §6: texto 600) */
+  --k-tracking-wordmark: 0.14em;       /* wordmark KRUMM (tracking amplio, §6 logo) */
 }
