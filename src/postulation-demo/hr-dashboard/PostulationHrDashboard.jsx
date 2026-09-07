@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
+import LanguageToggle from '../../i18n/LanguageToggle.jsx';
 import {
   HR_DASHBOARD_CANDIDATES,
   HR_DASHBOARD_STATUS,
@@ -140,7 +141,9 @@ function CandidateDetail({ candidate, t, lang }) {
         </div>
         <div>
           <span>{t('Estado', 'Status')}</span>
-          <strong>{status?.label ?? t('Sin estado', 'No status')}</strong>
+          {/* H3.3 (2026-09-07): usar t(label, labelEn) como StatusPill — el
+              detail mostraba el label ES fijo ("Listo para revisión") en EN. */}
+          <strong>{status ? t(status.label, status.labelEn ?? status.label) : t('Sin estado', 'No status')}</strong>
         </div>
       </div>
 
@@ -244,6 +247,7 @@ export default function PostulationHrDashboard({ candidates = HR_DASHBOARD_CANDI
         <div className="hr-dashboard__user">
           <span aria-hidden="true">HR</span>
           <div><strong>{t('Equipo Personas', 'People Team')}</strong><small>{dataSource === 'real' ? t('Sesiones reales (staging)', 'Live sessions (staging)') : dataSource === 'checking' ? t('Cargando sesiones…', 'Loading sessions…') : t('Entorno demo', 'Demo environment')}</small></div>
+          <LanguageToggle />
         </div>
       </header>
 

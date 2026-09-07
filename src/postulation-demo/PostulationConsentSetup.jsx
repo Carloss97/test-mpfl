@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import SignalErrorHint from './SignalErrorHint.jsx';
 import { usePostulationDemoCopy } from './postulationDemoCopy.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
+import LanguageToggle from '../i18n/LanguageToggle.jsx';
 
 export default function PostulationConsentSetup({
   backgroundActive = false,
@@ -19,6 +20,9 @@ export default function PostulationConsentSetup({
   const consentGated = requireExplicitConsent && !consentAccepted;
   return (
     <main className="postulation-demo__setup" aria-labelledby="postulation-setup-title">
+      <div className="postulation-demo__setup-topbar">
+        <LanguageToggle />
+      </div>
       <section className="postulation-demo__setup-panel">
         <span className="postulation-demo__eyebrow">{t('Cámara local opcional', 'Optional local camera')}</span>
         <h1 id="postulation-setup-title">{t('Preparación de la sesión', 'Session preparation')}</h1>

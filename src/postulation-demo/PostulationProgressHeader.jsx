@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
+import LanguageToggle from '../i18n/LanguageToggle.jsx';
 
 export default function PostulationProgressHeader({ currentBlock, currentIndex = 0, total = 0, completed = [] }) {
   const { t } = useLanguage();
@@ -12,18 +13,23 @@ export default function PostulationProgressHeader({ currentBlock, currentIndex =
         <h1>{currentBlock?.label ?? t('Actividad', 'Activity')}</h1>
         <p>{currentBlock?.description ?? t('Juego breve de la prueba de postulación.', 'Short game from the application assessment.')}</p>
       </div>
-      <div className="postulation-demo__game-progress" aria-label={t('Progreso de juegos', 'Game progress')}>
-        <strong>{t('Juego {current} de {total}', 'Game {current} of {total}', { current: safeTotal ? safeIndex + 1 : 0, total: safeTotal })}</strong>
-        <span>{currentBlock?.durationLabel ?? '—'}</span>
-        <div className="postulation-demo__progress-dots">
-          {Array.from({ length: safeTotal }, (_, index) => (
-            <span
-              key={`dot-${index}`}
-              className={index < completed.length ? 'complete' : index === safeIndex ? 'current' : ''}
-              aria-label={index < completed.length ? t('Juego {n} completado', 'Game {n} completed', { n: index + 1 }) : t('Juego {n}', 'Game {n}', { n: index + 1 })}
-            />
-          ))}
+      {/* H3.2 (2026-09-07): toggle de idioma en la esquina superior derecha del
+          stage (chrome de la demo, fuera del área jugable) junto al progreso. */}
+      <div className="postulation-demo__game-header-right">
+        <div className="postulation-demo__game-progress" aria-label={t('Progreso de juegos', 'Game progress')}>
+          <strong>{t('Juego {current} de {total}', 'Game {current} of {total}', { current: safeTotal ? safeIndex + 1 : 0, total: safeTotal })}</strong>
+          <span>{currentBlock?.durationLabel ?? '—'}</span>
+          <div className="postulation-demo__progress-dots">
+            {Array.from({ length: safeTotal }, (_, index) => (
+              <span
+                key={`dot-${index}`}
+                className={index < completed.length ? 'complete' : index === safeIndex ? 'current' : ''}
+                aria-label={index < completed.length ? t('Juego {n} completado', 'Game {n} completed', { n: index + 1 }) : t('Juego {n}', 'Game {n}', { n: index + 1 })}
+              />
+            ))}
+          </div>
         </div>
+        <LanguageToggle />
       </div>
     </header>
   );

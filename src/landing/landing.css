@@ -407,3 +407,15 @@
   }
   .landing__topbar { padding: 0.9rem 1.25rem; }
 }
+
+/* H3.2 (2026-09-07): pill de idioma sobre el tema oscuro de la landing
+   (base y variables en src/styles/krumm-tokens.css; antes no tenía estilos). */
+.landing .krumm-lang-toggle {
+  --k-lang-bg: rgba(13, 25, 42, 0.6);
+  --k-lang-border: rgba(116, 167, 255, 0.22);
+  --k-lang-ink: rgba(238, 246, 255, 0.65);
+  --k-lang-ink-strong: #eef6ff;
+  --k-lang-sep: rgba(238, 246, 255, 0.4);
+  --k-lang-active-bg: #4dd4ac;
+  --k-lang-active-ink: #06121f;
+}

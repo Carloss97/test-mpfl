@@ -4,6 +4,20 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import PostulationDemoApp from './PostulationDemoApp.jsx';
 import PostulationConsentSetup from './PostulationConsentSetup.jsx';
 import { isPostulationDemoPath } from './postulationDemoRoute.js';
+import { LanguageProvider } from '../i18n/LanguageContext.jsx';
+
+// jsdom corre con URL about:blank (sin origin) → window.localStorage es undefined.
+// Mock de módulo (patrón LanguageContext.test.jsx): cada archivo de test recibe su propio jsdom.
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => (key in store ? store[key] : null),
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 function MockGame({ block, onComplete, onGameEvent }) {
   React.useEffect(() => {
@@ -227,5 +241,25 @@ describe('PostulationDemoApp shell and flow', () => {
       expect(screen.getByRole('heading', { name: /Preparación de la sesión/i })).toBeInTheDocument();
     });
     expect(screen.queryByRole('heading', { name: /Invitación no válida/i })).not.toBeInTheDocument();
+  });
+
+  it('invite guard (H3.2): toggle ES/EN disponible en el guard y cambia el copy con persistencia', async () => {
+    window.localStorage.clear();
+    window.history.pushState({}, '', '/postulaciones?invite=tok-expired-abc123');
+    render(
+      <LanguageProvider>
+        <PostulationDemoApp gameComponents={MOCK_GAMES} />
+      </LanguageProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Invitación no válida/i })).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('group', { name: /Idioma \/ Language/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'EN' }));
+    expect(window.localStorage.getItem('krumm-lang')).toBe('en');
+    expect(screen.getByRole('heading', { name: /Invalid invitation/i })).toBeInTheDocument();
+    expect(screen.getByText(/This invitation link has expired/i)).toBeInTheDocument();
   });
 });

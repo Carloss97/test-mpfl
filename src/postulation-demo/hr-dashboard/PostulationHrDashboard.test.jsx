@@ -1,7 +1,21 @@
 import React from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import PostulationHrDashboard from './PostulationHrDashboard.jsx';
+import { LanguageProvider } from '../../i18n/LanguageContext.jsx';
+
+// jsdom corre con URL about:blank (sin origin) → window.localStorage es undefined.
+// Mock de módulo (patrón LanguageContext.test.jsx): cada archivo de test recibe su propio jsdom.
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => (key in store ? store[key] : null),
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 describe('PostulationHrDashboard', () => {
   it('renders a clean HR overview with synthetic-data and human-review safeguards', () => {
@@ -91,5 +105,34 @@ describe('PostulationHrDashboard', () => {
     expect(within(detail).getAllByText('Pendiente').length).toBeGreaterThan(0);
     expect(within(detail).getAllByText(/Sin evidencia aún/i)).toHaveLength(4);
     expect(within(detail).queryByLabelText(/Adaptabilidad: 0 de 100/i)).not.toBeInTheDocument();
+  });
+
+  describe('H3.2 — LanguageToggle en /reclutador', () => {
+    beforeEach(() => {
+      window.localStorage.clear();
+    });
+
+    it('muestra el toggle en el topbar, cambia el copy a inglés y persiste', () => {
+      render(
+        <LanguageProvider>
+          <PostulationHrDashboard />
+        </LanguageProvider>,
+      );
+
+      const toggle = screen.getByRole('group', { name: /Idioma \/ Language/i });
+      expect(toggle).toBeInTheDocument();
+      expect(toggle.closest('.hr-dashboard__topbar')).not.toBeNull();
+      expect(screen.getByRole('heading', { name: /Panel de evaluaciones/i })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'EN' }));
+      expect(window.localStorage.getItem('krumm-lang')).toBe('en');
+      expect(screen.getByRole('heading', { name: /Evaluation panel/i })).toBeInTheDocument();
+      expect(screen.getByText(/Human review only/i)).toBeInTheDocument();
+      expect(screen.getByText(/Review queue/i)).toBeInTheDocument();
+      // H3.3 (2026-09-07): el detail usaba status?.label (ES fijo). En EN el
+      // label ES no debe aparecer en ninguna parte; el status del detail muestra labelEn.
+      expect(screen.queryByText('Listo para revisión')).not.toBeInTheDocument();
+      expect(screen.getAllByText('Ready for review').length).toBeGreaterThanOrEqual(1);
+    });
   });
 });

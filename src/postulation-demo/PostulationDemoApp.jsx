@@ -9,6 +9,7 @@ import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.j
 import { getPostulationDemoBattery, getPostulationDemoBatteryId, KRUMM_API_BASE, listVisiblePostulationBlocks, normalizePostulationDemoBatteryMode, resolvePostulationDemoBatteryMode } from './postulationDemoConfig.js';
 import { parseInviteToken, runIdForInvitation, INVITATION_STATUS, INVITATION_GUARD_MESSAGES, validateInvitationToken } from './postulationDemoInvite.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
+import LanguageToggle from '../i18n/LanguageToggle.jsx';
 import './postulationDemo.css';
 import './originalGameThemes.css';
 import './originalGameAnimations.css';
@@ -165,6 +166,7 @@ export default function PostulationDemoApp({ gameComponents, batteryMode: reques
       <main className="postulation-demo__invite-guard" aria-busy="true">
         <h1>{t('Verificando tu invitación', 'Checking your invitation')}</h1>
         <p role="status">{t('Un momento, estamos validando tu enlace.', 'One moment, we are validating your link.')}</p>
+        <LanguageToggle />
       </main>
     );
   }
@@ -175,6 +177,7 @@ export default function PostulationDemoApp({ gameComponents, batteryMode: reques
       <main className="postulation-demo__invite-guard postulation-demo__invite-guard--invalid">
         <h1>{t('Invitación no válida', 'Invalid invitation')}</h1>
         <p>{guardMessage ? t(guardMessage.es, guardMessage.en) : t('No pudimos validar tu enlace.', 'We could not validate your link.')}</p>
+        <LanguageToggle />
       </main>
     );
   }

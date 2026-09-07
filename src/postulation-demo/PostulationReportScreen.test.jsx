@@ -1,11 +1,25 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PostulationReportScreen from './PostulationReportScreen.jsx';
 import { getPostulationGameCards } from './PostulationReportSummary.js';
 import { POSTULATION_DEMO_BATTERY_MODES } from './postulationDemoConfig.js';
 import { buildPostulationDemoFixture } from './postulationDemoFixture.js';
 import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.js';
+import { LanguageProvider } from '../i18n/LanguageContext.jsx';
+
+// jsdom corre con URL about:blank (sin origin) → window.localStorage es undefined.
+// Mock de módulo (patrón LanguageContext.test.jsx): cada archivo de test recibe su propio jsdom.
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => (key in store ? store[key] : null),
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 const tEs = (es, _en) => es;
 
@@ -282,5 +296,41 @@ describe('PostulationReportScreen', () => {
     const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
     render(<PostulationReportScreen artifacts={fixture.artifacts} completedDemo={fixture.summary} />);
     expect(screen.queryByTestId('session-status-note')).not.toBeInTheDocument();
+  });
+
+  describe('H3.2 — LanguageToggle en el reporte', () => {
+    beforeEach(() => {
+      window.localStorage.clear();
+    });
+
+    it('muestra el toggle en el reporte real, cambia el copy a inglés y persiste', () => {
+      const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
+      render(
+        <LanguageProvider>
+          <PostulationReportScreen artifacts={fixture.artifacts} completedDemo={fixture.summary} onRestart={() => {}} />
+        </LanguageProvider>,
+      );
+
+      expect(screen.getByRole('group', { name: /Idioma \/ Language/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Reporte de muestra listo para revisión humana/i })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'EN' }));
+      expect(window.localStorage.getItem('krumm-lang')).toBe('en');
+      expect(screen.getByRole('heading', { name: /Sample report ready for human review/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Download local report/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Repeat assessment/i })).toBeInTheDocument();
+    });
+
+    it('también muestra el toggle en el estado de error de reporte', () => {
+      render(
+        <LanguageProvider>
+          <PostulationReportScreen artifacts={null} completedDemo={null} reportError="boom" onRestart={() => {}} />
+        </LanguageProvider>,
+      );
+
+      expect(screen.getByRole('group', { name: /Idioma \/ Language/i })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'EN' }));
+      expect(screen.getByRole('heading', { name: /The report could not be generated/i })).toBeInTheDocument();
+    });
   });
 });

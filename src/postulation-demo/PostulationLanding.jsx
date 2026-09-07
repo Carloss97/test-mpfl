@@ -2,6 +2,7 @@ import React from 'react';
 import { usePostulationDemoCopy } from './postulationDemoCopy.js';
 import { POSTULATION_DEMO_BATTERY_MODES } from './postulationDemoConfig.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
+import LanguageToggle from '../i18n/LanguageToggle.jsx';
 
 export default function PostulationLanding({ onStart, batteryMode }) {
   const copy = usePostulationDemoCopy();
@@ -9,6 +10,9 @@ export default function PostulationLanding({ onStart, batteryMode }) {
   const isOriginalMode = batteryMode === POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES;
   return (
     <main className="postulation-demo__landing" aria-labelledby="postulation-demo-title">
+      <div className="postulation-demo__landing-topbar">
+        <LanguageToggle />
+      </div>
       <section className="postulation-demo__hero">
         <div className="postulation-demo__hero-copy">
           <span className="postulation-demo__eyebrow">

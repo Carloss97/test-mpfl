@@ -97,3 +97,55 @@
   --k-weight-semibold: 600;            /* CTA (design-system §6: texto 600) */
   --k-tracking-wordmark: 0.14em;       /* wordmark KRUMM (tracking amplio, §6 logo) */
 }
+
+/* ── H3.2 (2026-09-07): language toggle compartido (todas las rutas) ──
+ * Fuente única del pill ES/EN (componente: src/i18n/LanguageToggle.jsx).
+ * Default = tema light (flujo candidato /postulaciones y portal /reclutador).
+ * El tema oscuro (landing pública) hace override de las variables --k-lang-*
+ * en src/landing/landing.css. La posición la decide cada vista (topbar,
+ * corner del stage, topbar HR); este bloque solo da el aspecto del pill. */
+:root {
+  --k-lang-bg: rgba(15, 23, 42, 0.05);
+  --k-lang-border: rgba(15, 23, 42, 0.16);
+  --k-lang-ink: rgba(15, 23, 42, 0.62);
+  --k-lang-ink-strong: #0f172a;
+  --k-lang-sep: rgba(15, 23, 42, 0.28);
+  --k-lang-active-bg: #4f46e5;         /* indigo: --postulation-primary / --hr-indigo */
+  --k-lang-active-ink: #ffffff;
+}
+
+.krumm-lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: var(--k-lang-bg);
+  border: 1px solid var(--k-lang-border);
+  font: 600 0.75rem/1 var(--k-font-sans, Inter, ui-sans-serif, system-ui, sans-serif);
+}
+
+.krumm-lang-toggle__btn {
+  border: 0;
+  background: transparent;
+  color: var(--k-lang-ink);
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.krumm-lang-toggle__btn:hover { color: var(--k-lang-ink-strong); }
+
+.krumm-lang-toggle__btn:focus-visible {
+  outline: 2px solid var(--k-lang-active-bg);
+  outline-offset: 1px;
+}
+
+.krumm-lang-toggle__btn.is-active {
+  background: var(--k-lang-active-bg);
+  color: var(--k-lang-active-ink);
+}
+
+.krumm-lang-toggle__sep { color: var(--k-lang-sep); }

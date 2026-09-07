@@ -1,8 +1,22 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PostulationGameStage, { getPostulationGameViewport } from './PostulationGameStage.jsx';
 import { buildOriginalGamePostulationBlocks } from './originalGameBlueprints.js';
+import { LanguageProvider } from '../i18n/LanguageContext.jsx';
+
+// jsdom corre con URL about:blank (sin origin) → window.localStorage es undefined.
+// Mock de módulo (patrón LanguageContext.test.jsx): cada archivo de test recibe su propio jsdom.
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: (key) => (key in store ? store[key] : null),
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 function MockGame({ active, block, onComplete, onGameEvent }) {
   React.useEffect(() => {
@@ -219,6 +233,41 @@ describe('PostulationGameStage', () => {
 
     // The toggle must never generate game events.
     expect(onGameEvent.mock.calls.length).toBe(eventsBefore);
+  });
+
+  describe('H3.2 — LanguageToggle en el stage (esquina, no interfiere)', () => {
+    beforeEach(() => {
+      window.localStorage.clear();
+    });
+
+    it('muestra el toggle en el header (junto al progreso), cambia el copy a inglés y no emite telemetría', () => {
+      const onGameEvent = vi.fn();
+      render(
+        <LanguageProvider>
+          <PostulationGameStage
+            blocks={BLOCKS}
+            gameComponents={{ precision_targeting: MockGame, go_nogo: MockGame }}
+            onGameEvent={onGameEvent}
+          />
+        </LanguageProvider>,
+      );
+
+      const toggle = screen.getByRole('group', { name: /Idioma \/ Language/i });
+      expect(toggle).toBeInTheDocument();
+      expect(toggle.closest('.postulation-demo__game-header')).not.toBeNull();
+      expect(screen.getByText(/Juego 1 de 2/i)).toBeInTheDocument();
+
+      const eventsBefore = onGameEvent.mock.calls.length;
+      fireEvent.click(screen.getByRole('button', { name: 'EN' }));
+      expect(window.localStorage.getItem('krumm-lang')).toBe('en');
+      expect(screen.getByText(/Game 1 of 2/i)).toBeInTheDocument();
+      expect(screen.getByTestId('sfx-toggle')).toHaveAttribute('aria-label', 'Sound effects: off');
+      expect(onGameEvent.mock.calls.length).toBe(eventsBefore);
+
+      fireEvent.click(screen.getByRole('button', { name: 'ES' }));
+      expect(window.localStorage.getItem('krumm-lang')).toBe('es');
+      expect(screen.getByText(/Juego 1 de 2/i)).toBeInTheDocument();
+    });
   });
 
   it('passes the practice flag from the block to the game component (G.2)', () => {

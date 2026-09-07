@@ -80,7 +80,10 @@
 }
 
 .hr-dashboard__brand div,
-.hr-dashboard__user div {
+/* H3 (2026-09-07): :not(.krumm-lang-toggle) — el pill de idioma también es un div
+   dentro de .hr-dashboard__user; sin la exclusión quedaba display:grid y sus
+   botones ES/EN se apilaban en vertical (verificado 390x844, 2026-09-07). */
+.hr-dashboard__user div:not(.krumm-lang-toggle) {
   display: grid;
   gap: 1px;
   min-width: 0;
@@ -844,7 +847,9 @@
     padding-inline: 14px;
   }
 
-  .hr-dashboard__user div,
+  /* H3 (2026-09-07): :not(.krumm-lang-toggle) — el LanguageToggle también es un
+     div directo y no puede ocultarse en móvil (toggle visible en las 6 vistas). */
+  .hr-dashboard__user > div:not(.krumm-lang-toggle),
   .hr-dashboard__brand small {
     display: none;
   }

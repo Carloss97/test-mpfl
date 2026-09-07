@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
+import LanguageToggle from '../i18n/LanguageToggle.jsx';
 import {
   formatPostulationScore,
   getPostulationExecutiveSummary,
@@ -146,7 +147,7 @@ export default function PostulationReportScreen({
   const completedCount = completedDemo?.completedCount ?? artifacts?.assessmentSession?.blocks?.filter((block) => block.status === 'completed').length ?? 0;
   const totalCount = completedDemo?.totalCount ?? artifacts?.assessmentSession?.blocks?.length ?? 0;
   const isFixture = artifacts?.fixture?.synthetic === true;
-  const reportFormats = (artifacts.bundle?.manifest?.reportFormats ?? [])
+  const reportFormats = (artifacts?.bundle?.manifest?.reportFormats ?? [])
     .map((format) => ({ markdown: t('Markdown', 'Markdown'), html: t('HTML', 'HTML'), json: t('JSON', 'JSON') })[String(format).toLowerCase()] ?? String(format))
     .join(' · ');
 
@@ -163,6 +164,9 @@ export default function PostulationReportScreen({
   if (reportError) {
     return (
       <section className="postulation-demo__report-screen" aria-labelledby="postulation-report-title">
+        <div className="postulation-demo__report-topbar">
+          <LanguageToggle />
+        </div>
         <span className="postulation-demo__eyebrow">{t('Reporte', 'Report')}</span>
         <h1 id="postulation-report-title">{t('No se pudo generar el reporte', 'The report could not be generated')}</h1>
         <p className="postulation-demo__report-error">{reportError}</p>
@@ -174,6 +178,9 @@ export default function PostulationReportScreen({
   if (!artifacts) {
     return (
       <section className="postulation-demo__report-screen" aria-labelledby="postulation-report-title">
+        <div className="postulation-demo__report-topbar">
+          <LanguageToggle />
+        </div>
         <span className="postulation-demo__eyebrow">{t('Reporte', 'Report')}</span>
         <h1 id="postulation-report-title">{t('Reporte en preparación', 'Report in preparation')}</h1>
         <p>{t('KRUMM todavía no tiene artefactos finales para mostrar.', 'KRUMM does not have final artifacts to show yet.')}</p>
@@ -184,6 +191,9 @@ export default function PostulationReportScreen({
 
   return (
     <section className="postulation-demo__report-screen" aria-labelledby="postulation-report-title">
+      <div className="postulation-demo__report-topbar">
+        <LanguageToggle />
+      </div>
       <div className="postulation-demo__report-hero">
         <div>
           <span className="postulation-demo__eyebrow">{isFixture ? t('Reporte de muestra', 'Sample report') : t('Reporte de sesión', 'Session report')}</span>
