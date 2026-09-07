@@ -1,0 +1,63 @@
+/* krumm-tokens.css — Design tokens KRUMM (H4.1, 2026-09-07).
+ * Extraídos del set de referencia (8 capturas 2026-09-05, docs/design/landing-refs/).
+ * Documento completo: docs/design/design-system.md.
+ * Uso: H4.2 (landing) primero; luego H4.3 (flujo candidato), H4.4 (/reclutador),
+ * H4.5 (juegos: solo tokens visuales, sin tocar mecánicas).
+ * NOTA: no se aplica nada aquí a vistas existentes — solo define variables. */
+
+:root {
+  /* ── Superficies ─────────────────────────────────────────────── */
+  --k-bg-dark: #33261d;        /* espresso — secciones oscuras base (hero) */
+  --k-bg-dark-deep: #2a1f17;   /* espresso profundo — nav, sección accesos, CTA final */
+  --k-bg-light: #f3e9e1;       /* crema — secciones claras (01 · Cómo funciona) */
+  --k-bg-light-sand: #e6d3b9;  /* crema arena — secciones claras alternadas (02 · Tecnología) */
+  --k-bg-footer: #e2cfb9;      /* crema — barra footer */
+  --k-card-sand: #d8c2a6;      /* card "Portal para empresas" */
+  --k-card-cream: #f2ece3;     /* card "Portal para candidatos" */
+  --k-card-navy: #161e2b;      /* cards flotantes de stats (hero) */
+  --k-grid-line: rgba(255, 240, 220, 0.06); /* retícula sutil sobre espresso */
+
+  /* ── Texto sobre oscuro ──────────────────────────────────────── */
+  --k-text-cream: #f1e7db;     /* titulares crema */
+  --k-text-cream-dim: #c4b2a0; /* cuerpo sobre oscuro */
+  --k-text-card-navy: #9fb0c4; /* etiquetas dentro de cards navy */
+  --k-accent-sand: #d4b483;    /* acento oro/arena: palabra destacada del H1, kickers, CTA relleno, iconos */
+
+  /* ── Texto sobre claro ───────────────────────────────────────── */
+  --k-ink-espresso: #33241c;   /* titulares sobre crema */
+  --k-ink-medium: #6e584b;     /* cuerpo sobre crema */
+  --k-ink-terracotta: #9c7b66; /* kickers numerados sobre crema */
+  --k-ink-card: #3a2c20;       /* títulos dentro de cards claras */
+
+  /* ── Componentes ─────────────────────────────────────────────── */
+  --k-cta-bg: #e4d3b9;         /* CTA primario (pill arena) */
+  --k-cta-ink: #33261d;        /* texto sobre CTA primario */
+  --k-border-ghost: rgba(241, 231, 219, 0.3); /* borde CTA ghost / pill idioma sobre oscuro */
+  --k-divider: rgba(107, 88, 68, 0.35);       /* divisores finos dentro de cards claras */
+
+  /* ── Radio / elevación ───────────────────────────────────────── */
+  --k-radius-btn: 10px;
+  --k-radius-card: 18px;
+  --k-radius-iconbox: 12px;
+  --k-shadow-float: 0 12px 32px rgba(0, 0, 0, 0.35); /* cards flotantes sobre foto */
+
+  /* ── Tipografía (familia existente: Inter) ───────────────────── */
+  --k-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --k-weight-display: 800;     /* H1/H2 sección */
+  --k-weight-bold: 700;        /* títulos de card, CTA */
+  --k-weight-medium: 500;      /* nav, kickers */
+  --k-weight-regular: 400;     /* cuerpo */
+  --k-tracking-display: -0.02em; /* titulares grandes */
+  --k-tracking-kicker: 0.12em;   /* kickers uppercase */
+  --k-size-hero: clamp(3rem, 6vw, 5rem);
+  --k-size-section: clamp(2rem, 4vw, 3rem);
+  --k-size-body: 1.0625rem;
+  --k-size-kicker: 0.8125rem;
+
+  /* ── Layout ──────────────────────────────────────────────────── */
+  --k-container: 1200px;
+  --k-gutter: 64px;            /* margen lateral desktop */
+  --k-space-section: 96px;     /* padding vertical de sección */
+  --k-space-block: 40px;       /* entre bloques dentro de sección */
+  --k-space-item: 16px;        /* ítem a ítem */
+}

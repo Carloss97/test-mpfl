@@ -70,7 +70,7 @@ Por defecto: **C1 → C2 → H1 → (sign-off) → H2+H3 → H4 (lleguen las im�
 1. **/tecnico**: se mantiene con sus panels técnicos (uso interno). Scope H2 = solo flujo candidato.
 2. **Severidad que detiene**: solo el **error de cámara sostenido** ofrece "Detener evaluación"; resto = hint + continuar.
 3. **Orden**: C2 antes de H2/H3 (confirmado).
-4. **Imágenes de referencia**: RECIBIDAS (8 capturas del usuario, 2026-09-05) — en tránsito al repo vía scp a `docs/design/landing-refs/`. Al llegar: H4.1 (extraer design system) queda liberado; H4.2+ sigue esperando a H2/H3.
+4. **Imágenes de referencia**: RECIBIDAS (8 capturas, `docs/design/landing-refs/`). **H4.1 COMPLETADO (2026-09-07)**: `docs/design/design-system.md` + `src/styles/krumm-tokens.css`. H4.2 (rebuild landing) desbloqueado y sin conflictos de archivos con el resto de la cola.
 
 ### H4.1 spin-off (desbloqueado al recibir imágenes, no necesita browser)
 Extraer de las 8 capturas: paleta, tipografía, espaciado, bordes/sombras, componentes → `docs/design/design-system.md` + CSS tokens. Puede correr paralelo a C1/C2.
