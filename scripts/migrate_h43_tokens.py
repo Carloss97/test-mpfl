@@ -57,12 +57,14 @@ PAIRS = [
   --postulation-game-control-border: rgba(49, 46, 129, 0.42);
   --postulation-game-target: #0f766e;
   --postulation-game-distractor: #334155;
-  --postulation-game-focus-ring: rgba(156, 123, 102, 0.9);
+  /* Focus ring: terracota AA (#74543e a 0.9; ≥3:1 sobre crema — §6.1). */
+  --postulation-game-focus-ring: rgba(116, 84, 62, 0.9);
 }
 
 /* Guard de invitacion (invite-check / invite-invalid): estado de transicion —
    pantalla espresso con texto crema (design-system §3, patron de accesos). */
 .postulation-demo__invite-guard {
+  position: relative;
   min-height: 100dvh;
   display: grid;
   place-content: center;
@@ -93,9 +95,37 @@ PAIRS = [
   color: var(--k-text-cream);
 }
 
+/* H4.3: pill de idioma sobre el fondo espresso del guard — override oscuro
+   (mismo esquema que .landing, design-system §6 pill de idioma). */
+.postulation-demo__invite-guard .krumm-lang-toggle {
+  border: 1px solid var(--k-border-ghost);
+  background: transparent;
+}
+
+.postulation-demo__invite-guard .krumm-lang-toggle__btn {
+  color: var(--k-text-cream-dim);
+}
+
+.postulation-demo__invite-guard .krumm-lang-toggle__btn:hover,
+.postulation-demo__invite-guard .krumm-lang-toggle__btn:focus-visible {
+  color: var(--k-text-cream);
+  outline-color: var(--k-accent-sand);
+}
+
+.postulation-demo__invite-guard .krumm-lang-toggle__btn.is-active {
+  background: transparent;
+  color: var(--k-text-cream);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.postulation-demo__invite-guard .krumm-lang-toggle__sep {
+  color: var(--k-border-ghost);
+}
+
 .postulation-demo {""",
 ),
-# P2 shell background (font-family ya tokenizeado por H4.5)
+# P2 shell background (font-family: P76)
 (
 """  background:
     radial-gradient(circle at top left, rgba(79, 70, 229, 0.18), transparent 36rem),
@@ -420,163 +450,9 @@ PAIRS = [
   font-size: var(--k-size-hero);
 }""",
 ),
-# P27 hud radius
-(
-""".postulation-demo__hud {
-  border-radius: 26px;""",
-""".postulation-demo__hud {
-  border-radius: var(--k-radius-panel);""",
-),
-# P28 hud badge
-(
-"""  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(16, 185, 129, 0.1);
-  color: #047857;""",
-"""  padding: 6px 10px;
-  border-radius: var(--k-radius-pill);
-  background: var(--k-status-ok-soft);
-  color: var(--k-status-ok);""",
-),
-# P29 hud row
-(
-""".postulation-demo__hud-row {
-  padding: 10px;
-  border-radius: 14px;
-  background: rgba(248, 250, 252, 0.8);""",
-""".postulation-demo__hud-row {
-  padding: 10px;
-  border-radius: var(--k-radius-iconbox);
-  background: rgba(255, 255, 255, 0.6);""",
-),
-# P30 hud row span
-(
-""".postulation-demo__hud-row span {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #334155;
-}""",
-""".postulation-demo__hud-row span {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--k-ink-medium);
-}""",
-),
-# P31 hud dot
-(
-""".postulation-demo__hud-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 999px;
-  background: #94a3b8;
-}""",
-""".postulation-demo__hud-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: var(--k-radius-pill);
-  background: var(--k-divider);
-}""",
-),
-# P32 hud dot idle
-(
-""".postulation-demo__hud-dot--idle { background: #94a3b8; }""",
-""".postulation-demo__hud-dot--idle { background: var(--k-divider); }""",
-),
-# P33 hud caveats
-(
-""".postulation-demo__hud-caveats span {
-  padding: 6px 8px;
-  border-radius: 999px;
-  background: rgba(245, 158, 11, 0.12);
-  color: #92400e;""",
-""".postulation-demo__hud-caveats span {
-  padding: 6px 8px;
-  border-radius: var(--k-radius-pill);
-  background: var(--k-status-warn-soft);
-  color: var(--k-status-warn);""",
-),
-# P34 hud toggle
-(
-""".postulation-demo__hud-toggle {
-  min-height: 44px;
-  border: 1px solid rgba(79, 70, 229, 0.18);
-  border-radius: 14px;
-  background: rgba(79, 70, 229, 0.08);
-  color: var(--postulation-primary-strong);""",
-""".postulation-demo__hud-toggle {
-  min-height: 44px;
-  border: 1px solid var(--k-tint-gold-strong);
-  border-radius: var(--k-radius-btn);
-  background: var(--k-tint-gold);
-  color: var(--k-ink-espresso);""",
-),
-# P35 hud drawer
-(
-""".postulation-demo__hud-drawer {
-  display: grid;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid rgba(79, 70, 229, 0.16);
-  border-radius: 18px;
-  background: rgba(248, 250, 252, 0.92);
-}""",
-""".postulation-demo__hud-drawer {
-  display: grid;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--k-tint-gold-strong);
-  border-radius: var(--k-radius-card);
-  background: rgba(255, 255, 255, 0.85);
-}""",
-),
-# P36 hud drawer head strong
-(
-""".postulation-demo__hud-drawer-head strong {
-  color: #1e293b;
-}""",
-""".postulation-demo__hud-drawer-head strong {
-  color: var(--k-ink-espresso);
-}""",
-),
-# P37 hud pipeline step
-(
-""".postulation-demo__hud-pipeline-step {
-  padding: 10px;
-  border-radius: 14px;
-  border-left: 4px solid #cbd5e1;
-  background: rgba(255, 255, 255, 0.76);
-}""",
-""".postulation-demo__hud-pipeline-step {
-  padding: 10px;
-  border-radius: var(--k-radius-iconbox);
-  border-left: 4px solid var(--k-divider);
-  background: rgba(255, 255, 255, 0.76);
-}""",
-),
-# P38 hud pipeline step span
-(
-""".postulation-demo__hud-pipeline-step span {
-  display: block;
-  color: var(--postulation-primary-strong);
-  font-size: 0.66rem;""",
-""".postulation-demo__hud-pipeline-step span {
-  display: block;
-  color: var(--k-ink-terracotta);
-  font-size: 0.66rem;""",
-),
-# P39 hud pipeline step strong
-(
-""".postulation-demo__hud-pipeline-step strong {
-  display: block;
-  margin-top: 4px;
-  color: #1e293b;""",
-""".postulation-demo__hud-pipeline-step strong {
-  display: block;
-  margin-top: 4px;
-  color: var(--k-ink-espresso);""",
-),
+# P27–P39: eliminadas (2026-09-07, post-H2) — las reglas
+# .postulation-demo__hud* fueron retiradas por H2 (BehindTheScenesMiniHud);
+# el feedback de señal ahora vive en .postulation-demo__signal-hint* (P78–P81).
 # P40 camera card
 (
 """  border-radius: 22px;
@@ -1110,34 +986,97 @@ PAIRS = [
 """.postulation-demo__game-progress span {
   color: var(--k-ink-medium);""",
 ),
-# P76 hud row strong
+# P76 shell font-family (fuente del sistema)
 (
-""".postulation-demo__hud-row strong {
-  color: #1e293b;""",
-""".postulation-demo__hud-row strong {
-  color: var(--k-ink-espresso);""",
+"""  color: var(--postulation-ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}""",
+"""  color: var(--postulation-ink);
+  font-family: var(--k-font-sans);
+}""",
 ),
-# P77 hud toggle + game option focus
+# P77 fusion del anclaje H3 del guard: la regla base de pantalla espresso vive
+#    arriba (P1); aqui solo queda el anclaje absoluto del toggle.
 (
-""".postulation-demo__hud-toggle:focus-visible,
-.color-interference-task__option:focus-visible {
-  outline: 3px solid rgba(79, 70, 229, 0.72);""",
-""".postulation-demo__hud-toggle:focus-visible,
-.color-interference-task__option:focus-visible {
-  outline: 3px solid var(--k-ink-terracotta);""",
+"""/* Guard de invitación (check/invalid): pill en la esquina superior derecha. */
+.postulation-demo__invite-guard {
+  position: relative;
+  min-height: 100dvh;
+}
+
+.postulation-demo__invite-guard .krumm-lang-toggle {""",
+"""/* Guard de invitación (check/invalid): pill en la esquina superior derecha.
+   (El estilo base de la pantalla espresso vive arriba, junto al mapa :root
+   H4.3; aquí solo el anclaje absoluto del toggle.) */
+.postulation-demo__invite-guard .krumm-lang-toggle {""",
 ),
-# P78 hud technical details
+# P78 SignalErrorHint base (H2) — feedback sobre tokens de estado
 (
-""".postulation-demo__hud-technical-details {
-  padding: 10px;
-  border-radius: 14px;
-  background: rgba(79, 70, 229, 0.06);
-  color: #334155;""",
-""".postulation-demo__hud-technical-details {
-  padding: 10px;
-  border-radius: var(--k-radius-iconbox);
-  background: var(--k-tint-gold);
-  color: var(--k-ink-medium);""",
+""".postulation-demo__signal-hint {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: min(360px, calc(100vw - 48px));
+  padding: 8px 12px;
+  border-radius: 18px;
+  background: rgba(255, 251, 235, 0.97);
+  border: 1px solid rgba(180, 83, 9, 0.35);
+  color: #78350f;""",
+""".postulation-demo__signal-hint {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: min(360px, calc(100vw - 48px));
+  padding: 8px 12px;
+  border-radius: var(--k-radius-card);
+  background: color-mix(in srgb, var(--k-card-cream) 96%, white);
+  border: 1px solid color-mix(in srgb, var(--k-status-warn) 35%, transparent);
+  color: var(--k-status-warn);""",
+),
+# P79 SignalErrorHint variante bloqueante
+(
+""".postulation-demo__signal-hint--blocking {
+  background: rgba(254, 242, 242, 0.98);
+  border-color: rgba(185, 28, 28, 0.4);
+  color: #7f1d1d;
+}""",
+""".postulation-demo__signal-hint--blocking {
+  background: color-mix(in srgb, var(--k-status-error) 7%, white);
+  border-color: color-mix(in srgb, var(--k-status-error) 40%, transparent);
+  color: var(--k-status-error);
+}""",
+),
+# P80 botón "Detener evaluación"
+(
+""".postulation-demo__signal-hint-stop {
+  flex: none;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 28, 28, 0.5);
+  background: #ffffff;
+  color: #b91c1c;""",
+""".postulation-demo__signal-hint-stop {
+  flex: none;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: var(--k-radius-pill);
+  border: 1px solid color-mix(in srgb, var(--k-status-error) 50%, transparent);
+  background: #ffffff;
+  color: var(--k-status-error);""",
+),
+# P81 hover del botón de detener
+(
+""".postulation-demo__signal-hint-stop:hover {
+  background: #fee2e2;
+}""",
+""".postulation-demo__signal-hint-stop:hover {
+  background: var(--k-status-error-soft);
+}""",
 ),
 ]
 

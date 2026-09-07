@@ -50,7 +50,7 @@ generados por IA." · "Datos en tu dispositivo" · "Tiempo de evaluación −60%
 | **Acento oro/arena** | `--k-accent-sand` | `#d4b483` | Palabra destacada H1, kickers, CTA, iconos |
 | Tinta espresso | `--k-ink-espresso` | `#33241c` | Titulares sobre claro |
 | Tinta media | `--k-ink-medium` | `#6e584b` | Cuerpo sobre claro |
-| Terracota (kicker claro) | `--k-ink-terracotta` | `#9c7b66` | "01 · X" sobre crema |
+| Terracota (kicker claro) | `--k-ink-terracotta` | `#74543e` | "01 · X" sobre crema (H4.2: oscurecido desde `#9c7b66` para AA ≥4.5:1) |
 | CTA primario | `--k-cta-bg` / `--k-cta-ink` | `#e4d3b9` / `#33261d` | Pill arena con texto espresso |
 
 Regla: acento oro ÚNICO por vista (una palabra del H1 o un CTA — nunca ambos saturando).
@@ -128,7 +128,7 @@ Objetivos de smoke (plan H1.2): desktop 1280×720 y móvil 390×844 — cero ove
 | **Badge de confianza** | Check en círculo arena + texto MAYÚSCULAS pequeño (fila wrap) |
 | **Card flotante (stat)** | Navy `--k-card-navy`, radio 18px, sombra `--k-shadow-float`, icono en squircle (escudo azul `#2e4a6b` / rayo arena) + etiqueta pequeña + valor bold blanco |
 | **Card de acceso** | Radio 18px, fondo arena (empresa) o crema (candidato); icono lineal en recuadro redondeado con borde fino; kicker MAYÚSCULAS; título bold espresso; párrafo; divisor fino; CTA texto + flecha "→" |
-| **Pill de idioma** | EN \| ES, borde fino translúcido, activo subrayado (patrón existente en landing — mantener) |
+| **Pill de idioma** | EN \| ES, borde fino translúcido, activo subrayado (patrón existente en landing — mantener). Tema light (flujo candidato): base espresso cálida, activo espresso subrayado, focus terracota 3px (H4.3). Superficies oscuras (landing pública, guard, topbar HR): override por reglas — borde ghost, texto crema, activo subrayado, focus arena |
 | **Kicker numerado** | "01 · CÓMO FUNCIONA" terracota sobre claro / arena sobre oscuro |
 | **Footer** | Barra crema full-width: © izq, tagline der |
 | **Logo** | Glifo cabeza-árbol con nodos (marca existente) + wordmark MAYÚSCULAS tracking amplio |
@@ -181,4 +181,5 @@ Objetivos de smoke (plan H1.2): desktop 1280×720 y móvil 390×844 — cero ove
   commitearon en `86e71e1` (H4.2). Push pendiente (H4.6 + doble verificación
   del rebase, main ahead 1 de origin).
 - H4.3/H4.4 (2026-09-07): tokens aplicados al flujo candidato (landing interna, guard, setup, stage, reporte — `postulationDemo.css` + `PostulationReportScreen.jsx`) y a `/reclutador` (`postulationHrDashboard.css`: topbar espresso, cards crema, métricas oro). El guard de invitación pasó de sin estilos a pantalla espresso con texto crema. `report-status-card` es navy (dato frío sobre cálido) y gana modificador `--blocked` cuando la integridad no verifica. Extensión de tokens en §3.1. La sección de juegos de `postulationDemo.css` (UI de tasks, ~líneas 792–1547 y 2165 en adelante) conserva la paleta anterior hasta H4.5 (t_5d775c9a).
+- H4.3 (2026-09-07, cierre t_36dd7011): pill de idioma en vistas claras alineado a §6 (activo subrayado espresso, sin relleno indigo `#4f46e5` — color frío fuera del sistema detectado en smoke); focus-visible terracota 3px AA (base) y arena (superficies oscuras, paridad guard/HR/landing). Evidencia: spec `PostulationFlowDesignSystem.test.jsx` (16 tests) + suite 689/689 + build + smoke browser 12 vistas (1280×720 + 390×844, 0 fallos, 0 console errors) — `docs/qa/h43-flow-design-system/`.
 - Browser remoto compartido (también lo usa el worker de C1): si queda 401, el worker lo re-autentica en su sesión; no forzar uso en paralelo.

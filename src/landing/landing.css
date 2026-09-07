@@ -156,9 +156,14 @@
   color: var(--k-text-cream-dim);
 }
 
-.landing .krumm-lang-toggle__btn:hover,
+.landing .krumm-lang-toggle__btn:hover {
+  color: var(--k-text-cream);
+}
+
 .landing .krumm-lang-toggle__btn:focus-visible {
   color: var(--k-text-cream);
+  /* §6.1: focus ≥3:1 sobre oscuro (arena ≈8:1) — paridad con guard/HR (H4.3). */
+  outline-color: var(--k-accent-sand);
 }
 
 .landing .krumm-lang-toggle__btn.is-active {

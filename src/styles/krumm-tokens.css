@@ -100,18 +100,18 @@
 
 /* ── H3.2 (2026-09-07): language toggle compartido (todas las rutas) ──
  * Fuente única del pill ES/EN (componente: src/i18n/LanguageToggle.jsx).
- * Default = tema light (flujo candidato /postulaciones y portal /reclutador).
- * El tema oscuro (landing pública) hace override de las variables --k-lang-*
- * en src/landing/landing.css. La posición la decide cada vista (topbar,
- * corner del stage, topbar HR); este bloque solo da el aspecto del pill. */
+ * Default = tema light (flujo candidato /postulaciones): base espresso
+ * cálida (H4.3, design-system §3/§6) con activo subrayado y sin relleno.
+ * Las superficies oscuras (landing pública, guard de invitación, topbar HR)
+ * hacen override por reglas en su CSS propio (borde ghost + texto crema +
+ * activo subrayado + focus arena). La posición la decide cada vista
+ * (topbar, corner del stage, topbar HR); este bloque solo da el aspecto. */
 :root {
-  --k-lang-bg: rgba(15, 23, 42, 0.05);
-  --k-lang-border: rgba(15, 23, 42, 0.16);
-  --k-lang-ink: rgba(15, 23, 42, 0.62);
-  --k-lang-ink-strong: #0f172a;
-  --k-lang-sep: rgba(15, 23, 42, 0.28);
-  --k-lang-active-bg: #4f46e5;         /* indigo: --postulation-primary / --hr-indigo */
-  --k-lang-active-ink: #ffffff;
+  --k-lang-bg: rgba(51, 38, 29, 0.05);
+  --k-lang-border: rgba(51, 38, 29, 0.16);
+  --k-lang-ink: rgba(51, 38, 29, 0.72);
+  --k-lang-ink-strong: var(--k-ink-espresso);
+  --k-lang-sep: rgba(51, 38, 29, 0.28);
 }
 
 .krumm-lang-toggle {
@@ -139,13 +139,18 @@
 .krumm-lang-toggle__btn:hover { color: var(--k-lang-ink-strong); }
 
 .krumm-lang-toggle__btn:focus-visible {
-  outline: 2px solid var(--k-lang-active-bg);
+  /* §6.1: outline 3px; terracota ≥3:1 sobre claro (5.7:1). Las superficies
+     oscuras sobrescriben outline-color con --k-accent-sand en su override. */
+  outline: 3px solid var(--k-ink-terracotta);
   outline-offset: 1px;
 }
 
+/* §6: activo subrayado (patrón de landing), sin relleno. */
 .krumm-lang-toggle__btn.is-active {
-  background: var(--k-lang-active-bg);
-  color: var(--k-lang-active-ink);
+  background: transparent;
+  color: var(--k-ink-espresso);
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .krumm-lang-toggle__sep { color: var(--k-lang-sep); }

@@ -202,7 +202,7 @@ export default function PostulationReportScreen({
             {t('Completaste {completed} de {total} juegos. KRUMM generó una lectura observacional con indicadores de prueba, límites explícitos y artefactos locales verificados, sin decisión automatizada.', 'You completed {completed} of {total} games. KRUMM generated an observational reading with assessment indicators, explicit limits, and verified local artifacts, with no automated decision.', { completed: completedCount, total: totalCount })}
           </p>
         </div>
-        <div className="postulation-demo__report-status-card">
+        <div className={`postulation-demo__report-status-card${validationOk ? '' : ' postulation-demo__report-status-card--blocked'}`}>
           <span>{validationOk ? t('Integridad de archivos verificada · no implica validez psicométrica', 'File integrity verified · does not imply psychometric validity') : t('Integridad técnica bloqueada', 'Technical integrity blocked')}</span>
           <strong>{validationOk ? t('Reporte local listo', 'Local report ready') : t('Descargas no disponibles', 'Downloads unavailable')}</strong>
           <p>{reportFormats || t('Formatos no disponibles', 'Formats unavailable')}</p>

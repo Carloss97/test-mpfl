@@ -48,9 +48,9 @@ describe('Postulation QA visual fixes', () => {
     const css = fs.readFileSync('src/postulation-demo/postulationDemo.css', 'utf8');
 
     expect(css).toContain('.postulation-demo__device-label select');
-    expect(css).toContain('border: 1.5px solid rgba(49, 46, 129, 0.45);');
+    expect(css).toContain('border: 1.5px solid var(--k-divider);');
     expect(css).toContain('color: var(--postulation-ink);');
-    expect(css).toContain('box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);');
+    expect(css).toContain('box-shadow: 0 0 0 4px var(--k-tint-gold);');
     expect(css).toContain('@media (max-width: 1180px), (max-height: 820px)');
     expect(css).toContain('position: static;');
     expect(css).toContain('.postulation-demo__primary:focus-visible');
