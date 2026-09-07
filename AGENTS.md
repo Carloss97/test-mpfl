@@ -8,7 +8,7 @@
 - Batería predeterminada/fallback: `stable_dg`.
 - Batería interna controlada: `?battery=original`.
 - Fixtures: `?fixture=1` y `?fixture=1&battery=original`.
-- R-0 a R-6 completados técnicamente (R-6d: cobertura completa de demo, 8 constructos con señal provisional, reporte sin `No medido`). Foco actual (2026-09-06): **B1 backend en AWS COMPLETADO** (API staging operativa, E2E 7/7, frontend wireado) — siguiente: **C1 re-audit G.1 + C2 práctica en 5 juegos** (plan corto plazo: `docs/plans/2026-09-06-plan-corto-plazo-flujos-y-documentacion.md`). Exp 6 (Tangram) done; **Exp 7/8 fuera de scope por ahora** (reactivación requiere spec, plantilla v2).
+- R-0 a R-6 completados técnicamente (R-6d: cobertura completa de demo, 8 constructos con señal provisional, reporte sin `No medido`). Exp 6 (Tangram) done; Exp 7/8 fuera de scope (reactivación requiere spec, plantilla v2). **Estado 2026-09-07:** UX H1–H4.6 completados (audit por vista, `SignalErrorHint` en lugar de "¿qué pasa detrás?", toggle ES/EN en 6 vistas, design system unificado sobre tokens `--k-*`) y **port de marca v2 de la landing pública** (referencia oficial `krumm_frontend.zip` → `~/krumm/design_ref/`: paleta beige/crema/arena/marrón/dorado, Archivo + Manrope, hero con foto) — ver `docs/design/design-system.md` §10. Desplegado en AWS CloudFront. Pendientes: T.3b (sensibilidades MoveNet/FaceMesh), audit visual post-marca de flujo candidato + /reclutador (t_be89dafb bloqueada hasta ese deploy), copy EN de HR/juegos, push a GitHub.
 
 ## Skills obligatorias según tarea
 
@@ -44,6 +44,15 @@ Toolsets necesarios para sesiones completas: `terminal,file,code_execution,skill
 - No inventar archivos, APIs, imports, resultados, referencias ni salidas.
 - Mantener documentación, plan maestro y handoff sincronizados con cada fase.
 - Verificar afirmaciones científicas contra título, autores, año, DOI/URL y abstract o texto primario. Clasificar evidencia como directa, adyacente, ambigua/no resuelta o interna.
+
+## Design system — reglas de UI (H5, v2 marca 2026-09-07)
+
+- Fuente de verdad UI: `docs/design/design-system.md` + tokens `--k-*` en `src/styles/krumm-tokens.css` (import global en `main.jsx`). **Marca v2 oficial**: la referencia de marca es `krumm_frontend.zip` (archivada en `~/krumm/design_ref/Landing pge Krumm/`) — paleta beige `#f2e8dc` / crema `#f7efe6` / arena `#e4cdb5` / marrón `#3d2b20` / dorado `#d8b38c` (`#b9906b` dark) / card `#38271d`; tipografía **Archivo** (display, 900) + **Manrope** (body) vía Google Fonts en `index.html`. Ver `design-system.md` §10.
+- Antes de UI nueva o rebuild de vista: leer design-system.md + tokens y usar `--k-*`; **sin hex ni medidas hardcodeadas en vistas** (regimen verificado por test en `src/landing/LandingPage.test.jsx`). Los valores de marca v2 son los del §10.
+- Estados obligatorios en todo interactivo: `:hover`, `:focus-visible`, `:disabled` (con `:hover:not(:disabled)`); animaciones solo bajo `prefers-reduced-motion: no-preference`.
+- Breakpoints canónicos: ≥900px desktop (splits 2 columnas), <900px 1 columna, <560px móvil compacto; landing marca v2 usa ≤1150px (nav→hamburger) y ≤800px (móvil). Smoke en 1280×720 y 390×844 sin overflow horizontal.
+- Todo texto nuevo pasa por `t(es, en)`. Contraste WCAG AA en pares texto/fondo (nota: el kicker terracota `#9a7355` ~3.2:1 sobre crema es el valor oficial de marca — AA estricto pendiente de decisión del usuario, ver design-system.md §10).
+- Assets de marca: `public/assets/` (logo borderless, foto hero). La landing pública (`/`) es `src/landing/LandingPage.jsx` + `landing.css`.
 
 ## Privacidad y gobernanza no negociables
 

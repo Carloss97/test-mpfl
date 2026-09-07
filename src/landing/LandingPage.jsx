@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
 import './landing.css';
@@ -17,44 +17,9 @@ const iconProps = {
   focusable: 'false',
 };
 
-function IconPlay() {
-  return (
-    <svg {...iconProps} width={20} height={20}>
-      <circle cx="12" cy="12" r="9.25" />
-      <path d="M10.2 8.8 L15 12 L10.2 15.2 Z" />
-    </svg>
-  );
-}
-
-function IconCheck() {
-  return (
-    <svg {...iconProps} width={18} height={18}>
-      <circle cx="12" cy="12" r="9.25" />
-      <path d="M8.2 12.3 L10.8 14.8 L15.8 9.4" />
-    </svg>
-  );
-}
-
-function IconShield() {
-  return (
-    <svg {...iconProps} width={22} height={22}>
-      <path d="M12 3 L19 5.8 V11 C19 15.8 16.1 19.3 12 20.8 C7.9 19.3 5 15.8 5 11 V5.8 Z" />
-      <path d="M9.2 11.6 L11.2 13.6 L15 9.6" />
-    </svg>
-  );
-}
-
-function IconBolt() {
-  return (
-    <svg {...iconProps} width={22} height={22}>
-      <path d="M13 3 L5.5 13.5 H11 L9.5 21 L18.5 9.5 H12.8 Z" />
-    </svg>
-  );
-}
-
 function IconBuilding() {
   return (
-    <svg {...iconProps} width={24} height={24}>
+    <svg {...iconProps}>
       <path d="M4 21 V7.5 L10 4 V21" />
       <path d="M10 21 V10.5 H20 V21" />
       <path d="M3 21 H21" />
@@ -66,7 +31,7 @@ function IconBuilding() {
 
 function IconUser() {
   return (
-    <svg {...iconProps} width={24} height={24}>
+    <svg {...iconProps}>
       <circle cx="12" cy="8" r="3.6" />
       <path d="M5.4 20 C5.4 15.9 8.4 14.3 12 14.3 C15.6 14.3 18.6 15.9 18.6 20" />
     </svg>
@@ -75,7 +40,7 @@ function IconUser() {
 
 function IconGamepad() {
   return (
-    <svg {...iconProps} width={24} height={24}>
+    <svg {...iconProps}>
       <rect x="2.5" y="8" width="19" height="10.5" rx="5.25" />
       <path d="M7 11.4 V15 M5.3 13.2 H8.7" />
       <circle cx="15.4" cy="12" r="0.4" />
@@ -84,9 +49,18 @@ function IconGamepad() {
   );
 }
 
+function IconShield() {
+  return (
+    <svg {...iconProps}>
+      <path d="M12 3 L19 5.8 V11 C19 15.8 16.1 19.3 12 20.8 C7.9 19.3 5 15.8 5 11 V5.8 Z" />
+      <path d="M9.2 11.6 L11.2 13.6 L15 9.6" />
+    </svg>
+  );
+}
+
 function IconEye() {
   return (
-    <svg {...iconProps} width={24} height={24}>
+    <svg {...iconProps}>
       <path d="M2.8 12 C5.2 7.6 8.4 5.6 12 5.6 C15.6 5.6 18.8 7.6 21.2 12 C18.8 16.4 15.6 18.4 12 18.4 C8.4 18.4 5.2 16.4 2.8 12 Z" />
       <circle cx="12" cy="12" r="3.1" />
     </svg>
@@ -95,7 +69,7 @@ function IconEye() {
 
 function IconClipboard() {
   return (
-    <svg {...iconProps} width={24} height={24}>
+    <svg {...iconProps}>
       <rect x="5.5" y="5" width="13" height="16.5" rx="2" />
       <path d="M9 5 V3.4 H15 V5" />
       <path d="M9 13.4 L11 15.4 L15 11.4" />
@@ -104,16 +78,18 @@ function IconClipboard() {
 }
 
 /**
- * Landing pública KRUMM — visible en la raíz (krumm.cl).
- * Rebuild H4.2 sobre el design system (docs/design/design-system.md, tokens --k-*):
- * paleta espresso/crema/oro, jerarquía editorial según las 8 referencias
- * (docs/design/landing-refs/), alternancia clara/oscuro por sección.
- * Se conservan: anclas actuales, i18n (t()), CTAs (/postulaciones, /reclutador,
- * emails de contacto), accesibilidad y SEO (h1 único, nav/main/footer etiquetados).
+ * Landing pública KRUMM — port del diseño de marca v2 (2026-09-07).
+ * Referencia: ~/krumm/design_ref/Landing pge Krumm/ (krumm_frontend.zip).
+ * Tokens: src/styles/krumm-tokens.css (paleta beige/crema/arena/marrón/dorado,
+ * Archivo display + Manrope body). Se conservan: anclas, i18n (t()), CTAs
+ * (/postulaciones, /reclutador, emails), accesibilidad (h1 único, nav/main/
+ * footer etiquelados, skip link) y menú móvil.
  */
 export default function LandingPage() {
   const { t } = useLanguage();
+  const [menuOpen, setMenuOpen] = useState(false);
   const year = new Date().getFullYear();
+  const closeMenu = () => setMenuOpen(false);
 
   return (
     <div className="landing">
@@ -121,112 +97,99 @@ export default function LandingPage() {
         {t('Saltar al contenido', 'Skip to content')}
       </a>
 
+      {/* ── Header (referencia: brand grande + nav centrada + actions + EN|ES) ── */}
       <header className="landing__topbar">
-        <a className="landing__logo" href="/" aria-label={t('KRUMM - Inicio', 'KRUMM - Home')}>
-          <img src="/logo.svg" alt="" width="30" height="30" />
-          <span className="landing__logo-word">KRUMM</span>
+        <a className="landing__brand" href="/" aria-label={t('KRUMM - Inicio', 'KRUMM - Home')} onClick={closeMenu}>
+          <img
+            className="landing__brand-logo"
+            src="/assets/krumm-logo-borderless-no-text.png"
+            alt=""
+            width="152"
+            height="152"
+          />
         </a>
-        <nav className="landing__nav" aria-label={t('Navegación principal', 'Main navigation')}>
-          <a href="#producto">{t('Producto', 'Product')}</a>
-          <a href="#como-funciona">{t('Cómo funciona', 'How it works')}</a>
-          <a href="#tecnologia">{t('Tecnología', 'Technology')}</a>
-          <a href="#contacto">{t('Contacto', 'Contact')}</a>
-          <a className="landing__nav-login" href="#accesos">{t('Iniciar sesión', 'Log in')}</a>
-          <a className="landing__nav-cta" href="mailto:carlossaldivia@krumm.cl">{t('Solicitar demo', 'Request a demo')}</a>
-          <LanguageToggle />
+
+        <nav
+          id="main-nav"
+          className={`landing__nav${menuOpen ? ' landing__nav--open' : ''}`}
+          aria-label={t('Navegación principal', 'Main navigation')}
+        >
+          <a href="#producto" onClick={closeMenu}>{t('Producto', 'Product')}</a>
+          <a href="#como-funciona" onClick={closeMenu}>{t('Cómo funciona', 'How it works')}</a>
+          <a href="#tecnologia" onClick={closeMenu}>{t('Tecnología', 'Technology')}</a>
+          <a href="#contacto" onClick={closeMenu}>{t('Contacto', 'Contact')}</a>
+          <a className="landing__nav-login" href="#accesos" onClick={closeMenu}>{t('Iniciar sesión', 'Log in')}</a>
         </nav>
+
+        <div className="landing__header-actions">
+          <a className="landing__cta landing__cta--gold landing__cta--sm" href="mailto:carlossaldivia@krumm.cl">
+            {t('Solicitar demo', 'Request a demo')}
+          </a>
+        </div>
+
+        <LanguageToggle />
+
+        <button
+          type="button"
+          className="landing__menu-button"
+          aria-label={menuOpen ? t('Cerrar menú', 'Close menu') : t('Abrir menú', 'Open menu')}
+          aria-expanded={menuOpen}
+          aria-controls="main-nav"
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          ☰
+        </button>
       </header>
 
       <main id="contenido" className="landing__main">
-        {/* ── Hero (referencia: split 45/55, retícula, curva, 2 cards navy) ── */}
+        {/* ── Hero (referencia: grid lines + glow dorado + H1 Archivo 900 + foto) ── */}
         <section className="landing__hero" aria-labelledby="landing-hero-title">
-          <svg
-            className="landing__hero-arc"
-            viewBox="0 0 640 90"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path d="M0 8 C140 74, 420 74, 640 6" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          </svg>
-          <div className="landing__container landing__hero-grid">
-            <div className="landing__hero-copy">
-              <span className="landing__hero-badge">
-                <i className="landing__hero-badge-dot" aria-hidden="true" />
-                {t('EDGE-AI · GAMIFICACIÓN · PRIVACY BY DESIGN', 'EDGE-AI · GAMIFICATION · PRIVACY BY DESIGN')}
-              </span>
-              <h1 id="landing-hero-title">
-                {t('El talento no se declara.', 'Talent is not declared.')}{' '}
-                <span className="landing__accent">{t('Se demuestra.', 'It is demonstrated.')}</span>
-              </h1>
-              <p className="landing__hero-sub">
-                {t(
-                  'KRUMM revela la capacidad real de cada candidato mediante simulaciones gamificadas y telemetría conductual procesada con Edge-AI directamente en el navegador — sin datos biométricos en la nube, sin sesgos, sin CVs generados por IA.',
-                  "KRUMM reveals each candidate's true capability through gamified simulations and behavioral telemetry processed with Edge-AI directly in the browser — no biometric data in the cloud, no bias, no AI-generated CVs.",
-                )}
-              </p>
-              <div className="landing__cta-row">
-                <a className="landing__cta" href="/postulaciones">{t('Acceso candidatos', 'Candidate access')}</a>
-                <a className="landing__cta landing__cta--ghost" href="#como-funciona">
-                  <IconPlay />
-                  {t('Ver cómo funciona', 'See how it works')}
-                </a>
-              </div>
-              <ul className="landing__trust">
-                <li><IconCheck />{t('EDGE-AI EN EL NAVEGADOR', 'EDGE-AI IN YOUR BROWSER')}</li>
-                <li><IconCheck />{t('PRIVACY BY DESIGN', 'PRIVACY BY DESIGN')}</li>
-                <li><IconCheck />{t('EVALUACIÓN CONDUCTUAL INMERSIVA', 'IMMERSIVE BEHAVIORAL ASSESSMENT')}</li>
-              </ul>
+          <div className="landing__hero-grid" aria-hidden="true" />
+          <div className="landing__hero-content">
+            <span className="landing__eyebrow">
+              <i className="landing__eyebrow-dot" aria-hidden="true" />
+              {t('EDGE-AI · GAMIFICACIÓN · PRIVACY BY DESIGN', 'EDGE-AI · GAMIFICATION · PRIVACY BY DESIGN')}
+            </span>
+            <h1 id="landing-hero-title">
+              <span>{t('El talento', 'Talent')}{' '}</span>
+              <br />
+              <span>{t('no se declara.', "isn't claimed.")}{' '}</span>
+              <br />
+              <em className="landing__accent">{t('Se demuestra.', "It's proven.")}</em>
+            </h1>
+            <p className="landing__hero-copy">
+              {t(
+                'KRUMM revela la capacidad real de cada candidato mediante simulaciones gamificadas y telemetría conductual procesada con Edge-AI directamente en el navegador — sin datos biométricos en la nube, sin sesgos, sin CVs generados por IA.',
+                "KRUMM reveals each candidate's true capability through gamified simulations and behavioral telemetry processed with Edge-AI directly in the browser — no biometric data in the cloud, no bias, no AI-generated CVs.",
+              )}
+            </p>
+            <div className="landing__hero-buttons">
+              <a className="landing__cta landing__cta--gold" href="/postulaciones">
+                {t('Acceso candidatos', 'Candidate access')}
+              </a>
+              <a className="landing__cta landing__cta--outline" href="#como-funciona">
+                <span className="landing__play" aria-hidden="true">▶</span>
+                {t('Ver cómo funciona', 'See how it works')}
+              </a>
             </div>
+            <ul className="landing__proof-row">
+              <li><b aria-hidden="true">✓</b>{t('EDGE-AI EN EL NAVEGADOR', 'EDGE-AI IN YOUR BROWSER')}</li>
+              <li><b aria-hidden="true">✓</b>{t('PRIVACY BY DESIGN', 'PRIVACY BY DESIGN')}</li>
+              <li><b aria-hidden="true">✓</b>{t('EVALUACIÓN CONDUCTUAL INMERSIVA', 'IMMERSIVE BEHAVIORAL ASSESSMENT')}</li>
+            </ul>
+          </div>
 
-            {/* Visual: mock de reporte (fallback §8.2 — capturas C1 aún no disponibles) + cards flotantes */}
-            <div className="landing__hero-visual">
-              <div className="landing__mock" aria-hidden="true">
-                <div className="landing__mock-head">
-                  <span className="landing__mock-title">{t('Perfil de talento', 'Talent profile')}</span>
-                  <span className="landing__mock-chip">{t('SCORE PROVISIONAL', 'PROVISIONAL SCORE')}</span>
-                </div>
-                <div className="landing__mock-row">
-                  <span className="landing__mock-label">{t('Atención sostenida', 'Sustained attention')}</span>
-                  <span className="landing__mock-meter"><span className="landing__mock-fill" style={{ width: '72%' }} /></span>
-                  <span className="landing__mock-value">72</span>
-                </div>
-                <div className="landing__mock-row">
-                  <span className="landing__mock-label">{t('Control inhibitorio', 'Inhibitory control')}</span>
-                  <span className="landing__mock-meter"><span className="landing__mock-fill" style={{ width: '58%' }} /></span>
-                  <span className="landing__mock-value">58</span>
-                </div>
-                <div className="landing__mock-row">
-                  <span className="landing__mock-label">{t('Velocidad de procesamiento', 'Processing speed')}</span>
-                  <span className="landing__mock-meter"><span className="landing__mock-fill" style={{ width: '81%' }} /></span>
-                  <span className="landing__mock-value">81</span>
-                </div>
-                <p className="landing__mock-note">
-                  {t(
-                    'Reporte para revisión humana · datos procesados en tu dispositivo',
-                    'Human-reviewed report · data processed on your device',
-                  )}
-                </p>
-              </div>
-              <div className="landing__stat landing__stat--top">
-                <span className="landing__stat-icon landing__stat-icon--shield"><IconShield /></span>
-                <span className="landing__stat-text">
-                  <small>{t('Privacidad por diseño', 'Privacy by design')}</small>
-                  <strong>{t('Datos en tu dispositivo', 'Data on your device')}</strong>
-                </span>
-              </div>
-              <div className="landing__stat landing__stat--bottom">
-                <span className="landing__stat-icon landing__stat-icon--bolt"><IconBolt /></span>
-                <span className="landing__stat-text">
-                  <small>{t('Tiempo de evaluación', 'Evaluation time')}</small>
-                  <strong>−60%</strong>
-                </span>
-              </div>
-            </div>
+          {/* Visual: foto de marca (referencia) con glow difuminado */}
+          <div className="landing__hero-visual">
+            <img
+              className="landing__hero-photo"
+              src="/assets/hero-photo.jpg"
+              alt={t('Equipo utilizando la tecnología KRUMM', 'Team using KRUMM technology')}
+            />
           </div>
         </section>
 
-        {/* ── 01 · Cómo funciona (claro, editorial: texto izq, negativo der) ── */}
+        {/* ── 01 · Cómo funciona (crema) ── */}
         <section
           id="como-funciona"
           className="landing__section landing__section--light"
@@ -252,7 +215,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── 02 · Tecnología (claro arena) ── */}
+        {/* ── 02 · Tecnología (arena) ── */}
         <section
           id="tecnologia"
           className="landing__section landing__section--sand"
@@ -272,10 +235,10 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── 03 · Producto: "Qué hacemos" (contenido actual, cards outline) ── */}
+        {/* ── 03 · Producto: "Qué hacemos" (beige, cards) ── */}
         <section
           id="producto"
-          className="landing__section landing__section--light"
+          className="landing__section landing__section--beige"
           aria-label={t('Producto', 'Product')}
         >
           <div className="landing__container">
@@ -344,7 +307,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── Cierre HABLEMOS + contacto (oscuro) ── */}
+        {/* ── Cierre HABLEMOS + contacto (oscuro, CTA gold) ── */}
         <section id="contacto" className="landing__section landing__section--cierre" aria-labelledby="contacto-title">
           <div className="landing__container landing__cierre-grid">
             <div className="landing__cierre-copy">
@@ -368,7 +331,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="landing__cierre-cta">
-              <a className="landing__cta" href="mailto:carlossaldivia@krumm.cl">{t('Solicitar demo', 'Request a demo')}</a>
+              <a className="landing__cta landing__cta--gold" href="mailto:carlossaldivia@krumm.cl">{t('Solicitar demo', 'Request a demo')}</a>
             </div>
           </div>
         </section>

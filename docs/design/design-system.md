@@ -185,3 +185,50 @@ Objetivos de smoke (plan H1.2): desktop 1280×720 y móvil 390×844 — cero ove
 - H4.5 (2026-09-07, cierre t_5d775c9a): tokens aplicados al chrome de juegos (design-system §7.4: solo tokens visuales; el mundo visual de cada juego se conserva). Mapa `:root` de superficies de juego tokenizado (`--postulation-game-*` → crema/ink-card/divider/status-ok/ink-medium — el rebuild que H4.3 reservó); `.primary` compartido ahora CTA pill arena (`--k-cta-bg`/`--k-cta-ink`/`--k-shadow-cta`, paridad H4.3); pips (base `--k-divider`, fallbacks espresso/arena), sfx-toggle, micro-intro, task-area, panels/option/kickers (crema, divider, terracotta, tint oro), overlay Tangram. Conservados: mundos Órbita/Cielo/Urbano/Faro y colores de estado funcional de tarea (go/no-go, correct/incorrect, urgencia, presupuesto, delivered/popped). Tres fixes en `originalGameThemes.css` detectados por el smoke vivo: (1) los CTAs de mundo (laser cian, balloon azul) declaran `color: #ffffff` — el `.primary` compartido hereda `--k-cta-ink` (espresso) y sobre el gradiente de mundo salía ilegible; (2) la regla del caption de laser ganó prefijo `.postulation-demo` (paridad de especificidad con `.postulation-demo .caption`; sin él el color world `#94a3b8` NUNCA se aplicaba y el caption salía tinta oscura sobre fondo oscuro — bug de especificidad preexistente, verificado contra captura C1); (3) report W5 (vive en ese archivo): tag provisional blanco-sobre-oro (fallaba AA desde el mapa H4.3) → `--k-cta-ink`, indigo `#4338ca` (color frío fuera del sistema) → espresso. HALLAZGO PARA H4.6 (preexistente, verificado contra shot C1 1280×720): el texto derecho del footer de laser ("Comprueba cuando quieras…") se recorta con `overflow-x: hidden` del stage en 1280×720 — es layout, fuera del scope de H4.5. Evidencia: spec `PostulationGamesDesignSystem.test.jsx` (10 tests) + suite completa + build + oxlint + smoke browser vivo (setup → 3 niveles de laser resueltos con soluciones embebidas → balloon; 1280×720 + 390×844, 0 fallos, 0 console errors) — `docs/qa/h45-games-design-system/`.
 - Browser remoto compartido (también lo usa el worker de C1): si queda 401, el worker lo re-autentica en su sesión; no forzar uso en paralelo.
 - H4.6 (2026-09-07, cierre t_be89dafb): audit visual unificado (19 vistas ES/EN, 1280×720 + 390×844; 0 overflow, 0 console errors, contraste AA ≥5.7:1 en chrome) — `docs/qa/h46-visual-audit/h46-visual-audit.md`. Dos findings: (1) footer laser — recorte preexistente del check-hint (hallazgo H4.5) corregido con `.laser-puzzle-task__actions { flex: 0 1 auto; min-width: 0 }` + spec guardián + verificación live en stage ES/EN; (2) hero landing — las stat cards flotantes ocultaban el chip "SCORE PROVISIONAL" (100%) y la nota del mock (~37-70%); fix por overhang (top:-52/bottom:-62, max-width 400) + stacked <900px, **superado por el port de marca v2** (2026-09-07: tokens oficiales Archivo/Manrope, mock eliminado). El port documenta `--k-ink-terracotta` → `#9a7355` (~3.2:1 sobre crema; AA estricto pendiente de decisión del usuario).
+
+## 10. Marca v2 — referencia oficial (2026-09-07)
+
+El usuario entregó la referencia de marca definitiva: `krumm_frontend.zip`
+(HTML/CSS completo de la landing, archivado en `~/krumm/design_ref/Landing pge Krumm/`).
+Sustituye a las 8 capturas de §2 como fuente de verdad visual. Plan de port:
+`docs/plans/2026-09-07-landing-brand-port-plan.md`.
+
+**Paleta oficial** (actualizada en `src/styles/krumm-tokens.css`):
+
+| Token | v1 | v2 (oficial) |
+|---|---|---|
+| `--k-bg-dark` (card/hero) | `#33261d` | `#38271d` |
+| `--k-bg-dark-deep` | `#2a1f17` | `#2b1e16` |
+| `--k-bg-beige` (nuevo, fondo base) | — | `#f2e8dc` |
+| `--k-bg-light` (crema) | `#f3e9e1` | `#f7efe6` |
+| `--k-bg-light-sand` (arena) | `#e6d3b9` | `#e4cdb5` |
+| `--k-ink-espresso` | `#33241c` | `#3d2b20` |
+| `--k-ink-medium` | `#6e584b` | `#6f503a` |
+| `--k-ink-terracotta` (kickers) | `#74543e` | `#9a7355` ⚠ ~3.2:1 sobre crema |
+| `--k-accent-sand` / `--k-gold` | `#d4b483` | `#d8b38c` |
+| `--k-gold-dark` (nuevo) | — | `#b9906b` |
+
+**Tipografía oficial**: `Archivo` (display, H1/H2, peso 900) + `Manrope` (body).
+Se cargan vía Google Fonts en `index.html`. Tokens: `--k-font-display`,
+`--k-font-sans` (pasó de Inter a Manrope — aplica a todo el frontend),
+`--k-size-hero-brand` `clamp(60px, 6.1vw, 104px)`, `--k-size-section-brand`
+`clamp(42px, 5vw, 76px)`, tracking hero `-4px` / sección `-2px`.
+Los tokens compartidos de los flujos demo/HR (`--k-size-hero`, `--k-size-section`,
+`--k-tracking-display`) se mantuvieron con los valores v1 para no regredir layouts.
+
+**Botones**: CTA gold = `linear-gradient(115deg, --k-btn-gold-from, --k-btn-gold-to)`
+(`#b9906b → #e4cdb5`, texto `--k-btn-gold-ink`), sombra `--k-shadow-gold`;
+CTA secondary = outline ghost (`--k-border-ghost` + `--k-btn-ghost-bg`).
+
+**Landing (estructura portada 1:1)**: header absoluto con logo de marca 152px
+(`/assets/krumm-logo-borderless-no-text.png`) + nav centrada + CTA gold + switch EN|ES
++ hamburger ≤1150px; hero split con retícula 74px + glow radial dorado + H1 de 3
+líneas (accent oro) + proof row (chips ✓) + **foto de marca** `/assets/hero-photo.jpg`
+con glow difuminado (mock de reporte y stat cards eliminados); secciones 01/02/03 con
+fondos crema/arena/beige y H2 Archivo 900; accesos oscuro 2 cards; cierre HABLEMOS
+oscuro + CTA gold; footer arena. Assets: `public/assets/` (logo borderless, foto hero).
+
+**Abierto (decisión de usuario)**: contraste del kicker `#9a7355` (~3.2:1 sobre
+crema; la referencia oficial lo usa a 13px/800). Si se exige AA estricto, oscurecer
+`--k-ink-terracotta` de vuelta.
+

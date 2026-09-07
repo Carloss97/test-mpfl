@@ -228,14 +228,15 @@ describe('H4.3/H4.4 — flujo candidato y /reclutador sobre design system', () =
     // Tema light (flujo candidato): base espresso cálida, sin relleno indigo
     // (antes --k-lang-active-bg #4f46e5 — color frío fuera del sistema, H4.3).
     expect(tokens).not.toContain('#4f46e5');
-    expect(tokens).toContain('--k-lang-ink: rgba(51, 38, 29, 0.72);');
+    expect(tokens).toContain('--k-lang-ink: rgba(61, 43, 32, 0.72);');
     expect(tokens).toContain('--k-lang-ink-strong: var(--k-ink-espresso);');
     expect(blockOf(tokens, '.krumm-lang-toggle__btn.is-active')).toContain('background: transparent;');
     expect(blockOf(tokens, '.krumm-lang-toggle__btn.is-active')).toContain('text-decoration: underline;');
     expect(blockOf(tokens, '.krumm-lang-toggle__btn:focus-visible')).toContain('3px solid var(--k-ink-terracotta)');
-    // Superficie oscura (landing pública): focus arena ≥3:1 sobre espresso —
-    // paridad con los overrides de guard/HR.
-    expect(blockOf(landing, '.landing .krumm-lang-toggle__btn:focus-visible')).toContain('outline-color: var(--k-accent-sand);');
+    // Superficie oscura (landing pública): focus dorado 2px + offset 3px (ref
+    // marca v2, krumm_frontend.zip: .language-switcher button:focus-visible),
+    // --k-gold == --k-accent-sand (#d8b38c) ≥3:1 sobre espresso.
+    expect(blockOf(landing, '.landing .krumm-lang-toggle__btn:focus-visible')).toContain('outline: 2px solid var(--k-gold);');
   });
 
   it('H4.4 — métricas y selección con acento oro/arena del sistema', () => {

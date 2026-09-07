@@ -14,9 +14,9 @@ function renderLanding() {
   );
 }
 
-describe('LandingPage (H4.2 rebuild con design system)', () => {
+describe('LandingPage (design de marca v2, 2026-09-07)', () => {
   describe('Hero de referencia', () => {
-    it('muestra H1 bicolor, subheadline y badges de la referencia (working copy §8)', () => {
+    it('muestra H1 de 3 líneas con accent dorado, subheadline y eyebrow (working copy §8)', () => {
       renderLanding();
       const h1 = screen.getByRole('heading', { level: 1 });
       expect(h1).toHaveTextContent('El talento no se declara.');
@@ -32,22 +32,32 @@ describe('LandingPage (H4.2 rebuild con design system)', () => {
       expect(screen.getByRole('link', { name: /Ver cómo funciona/i })).toHaveAttribute('href', '#como-funciona');
     });
 
-    it('muestra los 3 trust badges y las 2 cards flotantes navy', () => {
+    it('muestra la proof row con los 3 chips de valor', () => {
       renderLanding();
       expect(screen.getByText('EDGE-AI EN EL NAVEGADOR')).toBeInTheDocument();
       expect(screen.getByText('PRIVACY BY DESIGN')).toBeInTheDocument();
       expect(screen.getByText('EVALUACIÓN CONDUCTUAL INMERSIVA')).toBeInTheDocument();
-      expect(screen.getByText('Datos en tu dispositivo')).toBeInTheDocument();
-      expect(screen.getByText('−60%')).toBeInTheDocument();
+    });
+
+    it('usa la foto de marca del hero (no mock de reporte)', () => {
+      renderLanding();
+      const photo = document.querySelector('.landing__hero-photo');
+      expect(photo).not.toBeNull();
+      expect(photo).toHaveAttribute('src', '/assets/hero-photo.jpg');
+      // El mock de reporte y las stat cards flotantes fueron retirados en la referencia v2
+      // (docs/plans/2026-09-07-landing-brand-port-plan.md); el hallazgo H4.6 de oclusión
+      // queda superado por este port (ver commit 9062ccf y docs/qa/h46-visual-audit/).
+      expect(document.querySelector('.landing__mock')).toBeNull();
+      expect(document.querySelector('.landing__stat')).toBeNull();
     });
   });
 
-  describe('Nav (jerarquía de referencia)', () => {
-    it('logo, 4 links de sección, Iniciar sesión → accesos, CTA demo y toggle', () => {
+  describe('Nav (jerarquía de referencia: brand grande + nav + actions + idioma)', () => {
+    it('logo de marca, links de sección, Iniciar sesión → accesos, CTA demo gold y toggle', () => {
       renderLanding();
       const logo = screen.getByRole('link', { name: /KRUMM - Inicio/i });
       expect(logo).toHaveAttribute('href', '/');
-      expect(logo.querySelector('img')).toHaveAttribute('src', '/logo.svg');
+      expect(logo.querySelector('img')).toHaveAttribute('src', '/assets/krumm-logo-borderless-no-text.png');
       expect(screen.getByRole('link', { name: 'Producto' })).toHaveAttribute('href', '#producto');
       expect(screen.getByRole('link', { name: 'Cómo funciona' })).toHaveAttribute('href', '#como-funciona');
       expect(screen.getByRole('link', { name: 'Tecnología' })).toHaveAttribute('href', '#tecnologia');
@@ -59,6 +69,23 @@ describe('LandingPage (H4.2 rebuild con design system)', () => {
         expect(link).toHaveAttribute('href', 'mailto:carlossaldivia@krumm.cl');
       }
       expect(screen.getByRole('group', { name: /Idioma/i })).toBeInTheDocument();
+    });
+
+    it('menú móvil: botón con aria-expanded y toggle de .landing__nav--open', () => {
+      // La referencia oculta el hamburger en desktop (display:none, se muestra
+      // ≤1150px). Nota de entorno: jsdom + dom-accessibility-api devuelven nombre
+      // vacío para este botón (quirk con aria-label aquí; en navegadores reales el
+      // nombre accesible es "Abrir menú"). Se consulta por selector estable y se
+      // aserta el aria-label directamente.
+      const { container } = renderLanding();
+      const button = container.querySelector('.landing__menu-button');
+      expect(button).not.toBeNull();
+      expect(button).toHaveAttribute('aria-label', 'Abrir menú');
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+      expect(button).toHaveAttribute('aria-controls', 'main-nav');
+      fireEvent.click(button);
+      expect(button).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('navigation', { name: /Navegación principal/i })).toHaveClass('landing__nav--open');
     });
   });
 
@@ -120,7 +147,7 @@ describe('LandingPage (H4.2 rebuild con design system)', () => {
       expect(screen.getByText(/La cámara y las señales biométricas son opcionales y no se utilizan para decisiones finales/i)).toBeInTheDocument();
     });
 
-    it('Footer crema: © KRUMM + tagline de referencia', () => {
+    it('Footer arena: © KRUMM + tagline de referencia', () => {
       renderLanding();
       const footer = screen.getByRole('contentinfo');
       expect(footer).toHaveTextContent(/© \d{4} KRUMM/);
@@ -129,12 +156,12 @@ describe('LandingPage (H4.2 rebuild con design system)', () => {
   });
 
   describe('i18n EN', () => {
-    it('cambia el idioma a EN sin romper estructura', () => {
+    it('cambia el idioma a EN sin romper estructura (copy de la referencia)', () => {
       renderLanding();
       fireEvent.click(screen.getByRole('button', { name: 'EN' }));
       const h1 = screen.getByRole('heading', { level: 1 });
-      expect(h1).toHaveTextContent('Talent is not declared.');
-      expect(h1.querySelector('.landing__accent')).toHaveTextContent('It is demonstrated.');
+      expect(h1).toHaveTextContent("Talent isn't claimed.");
+      expect(h1.querySelector('.landing__accent')).toHaveTextContent("It's proven.");
       expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '#accesos');
       expect(screen.getByRole('heading', { name: 'Where do you want to sign in?' })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Discover what KRUMM can measure in your organization.' })).toBeInTheDocument();
@@ -144,7 +171,7 @@ describe('LandingPage (H4.2 rebuild con design system)', () => {
   });
 
   describe('Accesibilidad', () => {
-    it('un solo h1, nav etiquetada y skip link', () => {
+    it('un solo h1, nav etiquelada y skip link', () => {
       renderLanding();
       expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
       expect(screen.getByRole('navigation', { name: /Navegación principal/i })).toBeInTheDocument();
@@ -162,6 +189,30 @@ describe('LandingPage (H4.2 rebuild con design system)', () => {
       expect(css).not.toMatch(/\b(rgb|rgba|hsl|hsla)\s*\(/);
       const tokenUses = (css.match(/var\(--k-[a-z0-9-]+\)/gi) ?? []).length;
       expect(tokenUses).toBeGreaterThanOrEqual(40);
+    });
+  });
+
+  describe('Estilo de marca v2 (tokens + estructura CSS)', () => {
+    const css = readFileSync(path.resolve(process.cwd(), 'src/landing/landing.css'), 'utf8');
+
+    it('hero con grid lines, gradiente espresso + glow dorado y foto con shadow de marca', () => {
+      expect(css).toContain('.landing__hero-grid');
+      expect(css).toContain('var(--k-hero-glow-gold)');
+      expect(css).toContain('var(--k-shadow-hero-photo)');
+      expect(css).toContain('var(--k-grid-cell)');
+    });
+
+    it('H1 Archivo 900 con tracking hero y accent dorado', () => {
+      expect(css).toContain('var(--k-font-display)');
+      expect(css).toContain('var(--k-tracking-hero)');
+      expect(css).toContain('var(--k-size-hero-brand)');
+      expect(css).toMatch(/\.landing__accent\s*{[^}]*var\(--k-gold\)/);
+    });
+
+    it('botones gold gradient + outline ghost (referencia)', () => {
+      expect(css).toMatch(/\.landing__cta--gold\s*{[^}]*var\(--k-btn-gold-from\)/);
+      expect(css).toContain('var(--k-btn-gold-to)');
+      expect(css).toContain('var(--k-btn-ghost-bg)');
     });
   });
 });

@@ -4,6 +4,10 @@ const { chromium } = require('@playwright/test');
   const browser = await chromium.launch();
   const results = [];
   const cases = [
+    // Frontpage pública (landing de marca v2, 2026-09-07): verificar foto/logo
+    // /assets, fuentes Google, 0 errores y sin overflow horizontal.
+    { name: 'frontpage-desktop', url: 'http://127.0.0.1:5173/', viewport: { width: 1280, height: 800 } },
+    { name: 'frontpage-mobile', url: 'http://127.0.0.1:5173/', viewport: { width: 390, height: 844 } },
     { name: 'stable-fixture-desktop', url: 'http://127.0.0.1:5173/postulaciones-demo?fixture=1', viewport: { width: 1280, height: 800 } },
     { name: 'original-fixture-desktop', url: 'http://127.0.0.1:5173/postulaciones-demo?fixture=1&battery=original', viewport: { width: 1280, height: 800 } },
     { name: 'landing-mobile', url: 'http://127.0.0.1:5173/postulaciones-demo', viewport: { width: 390, height: 844 } },
