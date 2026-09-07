@@ -36,10 +36,11 @@
 | `t_9e3506b6` | Fix: badge 'SCORE PROVISIONAL' (R1) | READY — ventana H2/H3 |
 | `t_c1892485` | T.3b: Ajuste de sensibilidades pipeline biométrico | READY (NEVER_HEAVY: cámara/hardware) |
 
-**Secuenciación:** H2 tras el merge de `t_58def568` (H2 toca los 5 juegos; evitar
-contención del working tree). H3 es independiente en archivos (headers/i18n) pero
-comparte el tree: **un worker a la vez en este repo** (lección del stash-incident
-23:42/00:20 de 2026-09-07: 3 workers en paralelo → WIP en 2 stashes).
+**Secuenciación:** H2 y H3 quedaron **enlazadas como hijas de `t_58def568`** (kanban link,
+02:25 -03): pasan a `ready` al completar el P0 — evita contención del working tree
+(un solo worker a la vez en este repo; lección del stash-incident 23:42/00:20 de
+2026-09-07: 3 workers en paralelo → WIP en 2 stashes). H2 toca los 5 juegos; H3 es
+independiente en archivos (headers/i18n) pero comparte el tree.
 
 ## 3. Entorno
 
