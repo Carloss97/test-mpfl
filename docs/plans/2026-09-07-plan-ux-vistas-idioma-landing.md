@@ -65,12 +65,15 @@ C2 (ready) ───────▶ (independiente de H1-H3; antes de H4.5 para 
 
 Por defecto: **C1 → C2 → H1 → (sign-off) → H2+H3 → H4 (lleguen las imágenes) → T.3b → B3.**
 
-## 3. Decisiones pendientes del usuario
+## 3. Decisiones del usuario (RESUELTAS 2026-09-07)
 
-1. **/tecnico** (vía interna QA con ConsentCalibrationScreen/SignalReadinessPanel): ¿se mantiene con sus panels técnicos o también se simplifica? (Default: mantener — es herramienta interna, el pedido fue "todos los juegos" del flujo candidato.)
-2. **Severidad que detiene**: ¿qué error debe ofrecer "Detener evaluación" (p. ej. error de rostro sostenido >30 s con cámara activa)? Default en H2.1: solo el error de cámara sostenido muestra detener; el resto, hint + seguir.
-3. **Prioridad H2/H3 vs C2**: default es C2 primero (QA de práctica completatable) y luego H2/H3. Si el usuario prefiere la UX antes, reordenar.
-4. **Imágenes de referencia para H4** (bloqueante; sin fecha).
+1. **/tecnico**: se mantiene con sus panels técnicos (uso interno). Scope H2 = solo flujo candidato.
+2. **Severidad que detiene**: solo el **error de cámara sostenido** ofrece "Detener evaluación"; resto = hint + continuar.
+3. **Orden**: C2 antes de H2/H3 (confirmado).
+4. **Imágenes de referencia**: RECIBIDAS (8 capturas del usuario, 2026-09-05) — en tránsito al repo vía scp a `docs/design/landing-refs/`. Al llegar: H4.1 (extraer design system) queda liberado; H4.2+ sigue esperando a H2/H3.
+
+### H4.1 spin-off (desbloqueado al recibir imágenes, no necesita browser)
+Extraer de las 8 capturas: paleta, tipografía, espaciado, bordes/sombras, componentes → `docs/design/design-system.md` + CSS tokens. Puede correr paralelo a C1/C2.
 
 ## 4. Riesgos
 

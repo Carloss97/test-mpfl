@@ -1,6 +1,6 @@
 # G.1 — Audit de experiencia de candidata y de juegos
 
-Estado: [x] **Recorrido vivo completado** (oleada 2, 2026-08-27) sobre Chrome 151 host (CDP) + Vite dev WSL. Pre-audit de código (oleada 1, 2026-08-26) + recorrido end-to-end real sin cámara (4 juegos completos) + móvil 390×844 + fixture + HR. **Oleada de calidad W1–W3/W5 (2026-08-27)**: G.3/G.6 cerrados, G.2/G.4 parciales (micro-intros, temas, animaciones, SFX, jerarquía de reporte); decisiones de producto L02/L06/P08 tomadas por el usuario. Pendientes: G1-P01 teclado, G1-P05 breakpoints, pérdida de foco (G.5), práctica sin puntaje (G.2).
+Estado: [x] **Recorrido vivo completado** (oleada 2, 2026-08-27) sobre Chrome 151 host (CDP) + Vite dev WSL. Pre-audit de código (oleada 1, 2026-08-26) + recorrido end-to-end real sin cámara (4 juegos completos) + móvil 390×844 + fixture + HR. **Oleada de calidad W1–W3/W5 (2026-08-27)**: G.3/G.6 cerrados, G.2/G.4 parciales (micro-intros, temas, animaciones, SFX, jerarquía de reporte); decisiones de producto L02/L06/P08 tomadas por el usuario. **Re-audit código+tests (2026-09-06, card C1 t_19e75e78)**: ver §4.6 — breakpoint 760/768 cerrado (JS ahora usa `compact = width<=1366 || height<=820`, test dedicado 760–768), copy G1-L01/L02/L04 verificadas en código, práctica sin puntaje cubierta por tests en 5 juegos, batería original 5 juegos `activationStatus:'controlled_active'`. Pendiente vía UI real: G1-P01 teclado manual, práctica completatable en vivo.
 
 ## 1. Alcance
 
@@ -96,12 +96,28 @@ Feedback entre niveles/juegos (pregunta del checklist): siempre claro (resumen p
 
 - En la primera extracción del mount de Láser se leyó el haz en fila 0 (celdas 1,0/3,0/6,0) en vez de columna 0. Dos repros controlados posteriores (lectura inmediata t0 y a t+2,5 s tras entrar a juegos) muestran el haz correcto desde el mount (columna 0, `dir: down`, aria y clases coherentes con `laserPuzzleTelemetry.js` L95). Tratado como artefacto de extracción; sin cambio de código. Si reaparece en QA manual: revisar `compactGrid`/primer paint de `traceLaserBeam` (L90 `useMemo`).
 
+## 4.6 Re-audit código+tests post-cambios (2026-09-06, card C1 t_19e75e78)
+
+Re-verificación de los hallazgos abiertos tras los fixes de G.2/G.5 (batería original 5 juegos `activationStatus:'controlled_active'`). Evidencia: suites `NODE_ENV=test ./node_modules/.bin/vitest run src/tasks/original-games` (25 files / 162 tests) + `src/postulation-demo` (20 files / 122 tests), verdes.
+
+| ID | Superficie | Estado 2026-09-06 | Evidencia |
+|---|---|---|---|
+| G1-P05 | Breakpoints 760/768 | **CERRADO** | El hueco 761–767 px desapareció: JS usa `compact = width<=1366 \|\| height<=820` (PostulationGameStage.jsx getPostulationGameViewport, ya no `isMobile<768`), CSS @media flips a 768px (postulationDemo.css:1500). Test dedicado `never overflows available width across the 760–768 breakpoint band` iterando width 760..768 (PostulationGameStage.test.jsx:61). |
+| G1-L01 | Passenger "RESERVA AL FINALIZAR" | **CERRADO** | Label clarifica: `Reserva de la ruta óptima` + `<dd>{authoredSolution.remainingBudget} de energía` (PassengerRouteOptimizationTask.jsx:513). Test asertúa "Reserva de la ruta óptima" + "4 de energía" (PassengerRouteOptimizationTask.test.jsx:87-88). |
+| G1-L02 | Láser "Comprobar ruta" siempre activo | **CERRADO** | Mantiene decisión copy: hint `Comprueba cuando quieras: el resultado definitivo se registra al completar el nivel` bajo el botón (LaserPuzzlePostulationTask.jsx:463). Botón `Comprobar ruta` enabled (solo disabled si 0 movimientos) — sin cambio de telemetría, consistente con decisión 2026-08-27. |
+| G1-L04 | HUD "Procesos listos" | **CERRADO** | Copy `{ready} de {total} listos` (BehindTheScenesMiniHud.jsx:54,82) — título role status en vivo. |
+| G1-P01 | Teclado en juegos | Abierto (manual) | `gameKeyboard.js` presente (a11y teclado — G5/G1-P01). Verificación manual UI pendiente. |
+
+Tangram live post-fixes: práctica (2/2 piezas) avanza a transición evaluativa y emite response agregado privacy-safe cubierto por tests (TangramPostulationTask.test.jsx:72,93). Práctica sin puntaje (G.2, markPracticeSummary) cubierta por tests en Balloon/Laser/Passenger/Team + Tangram (5 juegos).
+
+**Alcance de esta pasada:** re-audit de código + tests (evidencia reproducible en cron sin cámara). El recorrido vivo interactivo 5-juegos (clic a clic, móvil 390×844, consola/overflow) y la pérdida de foco requieren sesión manual del usuario — sigue como pendiente G.5.
+
 ## 5. Siguientes pasos
 
 Cola de G.2–G.6 ordenada por severidad × frecuencia (hallazgos P0X del pre-audit + L0X del recorrido vivo):
 
 1. **G.2 (copy/claridad):** G1-L01 (cerrado 2026-08-27) y G1-L04 (cerrado 2026-08-27) — copy de HUD y label de Passenger. **Oleada W3 (2026-08-27):** micro-instrucciones animadas ≤15s completas en los 4 juegos (`GameMicroIntro`, skippable, 0 telemetría antes del dismiss); barra de progreso consistente (`GamePips` W1). **Pendiente: práctica previa sin puntaje** (backlog).
-2. **G.5 (accesibilidad/robustez):** targets táctiles — G1-P04 cerrado (flags del pre-audit eran display; "Registrar replanteo" 40→44 px fix + verificado en vivo) y G1-L03 cerrado como AA-conforme (grid 8×8 a 390 px). Quedan: G1-P01 (teclado en los 4 juegos), G1-P05 (alineación breakpoints 760/768), pérdida de foco (depende de la semántica T).
+2. **G.5 (accesibilidad/robustez):** targets táctiles — G1-P04 cerrado (flags del pre-audit eran display; "Registrar replanteo" 40→44 px fix + verificado en vivo) y G1-L03 cerrado como AA-conforme (grid 8×8 a 390 px). G1-P05 (alineación breakpoints 760/768) **CERRADO 2026-09-06** (ver §4.6). Quedan: G1-P01 (teclado en los 4 juegos — verificación manual), pérdida de foco (depende de la semántica T), recorrido vivo interactivo 5-juegos post-cambios (C1 §4.6).
 3. **G.2/G.6 (decisiones de producto) — CERRADAS 2026-08-27 (usuario):** G1-L02 (copy only, implementado W2), G1-L06 (2 pasos, sin cambio), G1-L07 (W5: jerarquía score-vs-caveat implementada).
 4. **G.4 (pacing):** G1-L05 parcial (W2: overlays/intersticios de Láser; mecánicas intactas) — re-medir en beta M6.
 5. **Contrato R-6 (cruce con T):** G1-L08 — registrado en la matriz T.1 §10.4 como "ambigua/no resuelta — pendiente T.4" (2026-08-27); resolver en T.4, no en UX.
