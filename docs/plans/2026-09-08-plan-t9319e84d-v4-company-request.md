@@ -202,3 +202,37 @@ AA, patrón de scripts QA existentes).
    deriva `mergeDemoProcesses(drafts)`, D2) y `V3CompanyReport.test.jsx` K
    (new request pasaba de placeholder a página real V4); nombre de test
    desactualizado en `V3Shells.test.jsx`.
+
+## 8. Sign-off / handoff (worker, 2026-09-08 05:15 -03)
+
+- **Veredicto:** DONE — aceptación de la card cumplida y verificada en
+  navegador real (recorrido de carga completa, no solo jsdom).
+- **Commits:** `e9ccef6` (feat: 38 archivos, +2318/−24) pushed; HEAD ==
+  upstream (`Carloss97/test-mpfl` main).
+- **Gates:** suite **950/950** (132 archivos; +31 tests V4) · build OK
+  (NODE_ENV=production) · oxlint 0 errores en diff (1 warning preexistente
+  fuera de scope) · npm audit 0 high · git diff --check limpio.
+- **Smoke:** `scripts/smoke-t_9319e84d-v4-company-request.mjs` sobre `vite
+  preview` (build prod): 16 screenshots (`docs/qa/v4-company-request/`),
+  0 fallos, 0 console errors. Cobertura: ES desktop recorrido completo
+  (diseño 3 pasos → crear → "Ver procesos" real → 4 cards → detalle coherente
+  → dashboard KPI 4 → upload txt metadatos/9 B sin leak de contenido → png
+  rechazado → recarga persiste 4 cards) + contexto nuevo 3 cards (sin
+  backend) + EN (hub 2 cards + validaciones paso 1) + móvil 390×844 (3 rutas,
+  0 overflow, apilado 1 col). Vision checks: hub ES (2 cards/badges/paleta ✓),
+  detalle draft (0/0/0/—, config, fecha ✓), upload confirmación
+  (metadatos+nota ✓).
+- **Contraste:** `scripts/contrast_v4_check.py` — 12 pares, todos ≥3:1
+  (peores: 4.75:1 ink-medium/card-featured, 5.08:1 icon).
+- **Linear:** KRU-90 (epic fase v3) comentado; epic sigue In Progress hasta
+  el cierre de V5.
+- **Pendiente de consentimiento del usuario:** actualizar AGENTS.md ("fase v3
+  de vistas: V0–V4 done, pendiente V5") — protegido en headless (mismo
+  estado que tras V3).
+- **Siguiente:** V5 (t_0184d2e6) ready para despacho — cutover:
+  redirecciones `/reclutador`→`/empresa` y `/postulaciones` sin invite→
+  `/candidato`, borrado de vistas deprecadas, audit h46c (las 3 rutas V4
+  entran en la matriz), deploy AWS + verificación prod.
+- **Follow-ups documentados (§4):** backend de procesos (persistir drafts),
+  NLP del documento subido (futuro; hoy metadatos + revisión humana),
+  vínculo upload→proceso en modo real.
