@@ -38,6 +38,10 @@ import {
   listVisiblePostulationBlocks,
 } from '../postulation-demo/postulationDemoConfig.js';
 import {
+  buildBombBlockSummary,
+  generateBombSyntheticSessionPayload,
+} from '../tasks/original-games/bomb/bombTelemetry.js';
+import {
   WORKBOOK_TALENT_CONSTRUCT_ORDER,
   buildOriginalGameTalentFramework,
   getConstructDefinition,
@@ -337,6 +341,19 @@ function scaledSummary(gameId, f) {
       totalMoveOverhead: 3, timingPressureHighLatency: false, aggregateOnly: true,
     };
   }
+  if (gameId === 'bomb_defusal') {
+    // B6: agregado GENUINO del motor (payload §19, seed 42, 1 error TYPE_INTERFERENCE
+    // real en L4) con las métricas de calidad escaladas por el factor del candidato
+    // demo (mismo patrón que los otros juegos). Sin score compuesto (spec §12.1).
+    const summary = buildBombBlockSummary(generateBombSyntheticSessionPayload({ seed: 42 }), { state: 'SESSION_COMPLETE' });
+    const qualityScale = 0.5 + 0.5 * f; // f=1 → valores reales del guion; f=0 → la mitad
+    return {
+      ...summary,
+      retentionAccuracyRate: summary.retentionAccuracyRate == null ? null : round4(summary.retentionAccuracyRate * qualityScale),
+      serialPositionAccuracy: summary.serialPositionAccuracy == null ? null : round4(summary.serialPositionAccuracy * qualityScale),
+      timeoutRate: summary.timeoutRate == null ? null : round4(summary.timeoutRate * (2 - qualityScale)),
+    };
+  }
   return { gameId, completedTrialCount: 1, trialCount: 1, accuracy: round4(f), score: round4(f), meanReactionTimeMs: 600 };
 }
 
@@ -353,6 +370,7 @@ function demoGameEvents(blocks) {
     else if (block.gameId === 'passenger_routes') response = { correct: true, outcome: 'route_completed', reactionTimeMs: 420 + (index * 35), score: summary.score, passengerRoutes: summary };
     else if (block.gameId === 'team_coordination') response = { correct: true, outcome: 'structured_choice', reactionTimeMs: 420 + (index * 35), score: summary.score, teamCoordination: summary };
     else if (block.gameId === 'tangram_exp001') response = { correct: true, outcome: 'assembly_completed', reactionTimeMs: 420 + (index * 35), score: summary.score, tangram: summary };
+    else if (block.gameId === 'bomb_defusal') response = { correct: true, outcome: 'sequence_completed', reactionTimeMs: 420 + (index * 35), score: summary.score, bombDefusal: summary };
     else response = { correct: true, outcome: 'completed', reactionTimeMs: 420 + (index * 35), score: summary.score };
     return [
       {

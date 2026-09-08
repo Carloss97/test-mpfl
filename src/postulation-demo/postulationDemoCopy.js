@@ -10,11 +10,11 @@ export function usePostulationDemoCopy() {
       'Short games, on-device processing, and a report for human review.',
     ),
     description: t(
-      'Una experiencia gamificada donde cada actividad aporta métricas agregadas y KRUMM prepara un reporte de 8 constructos con señal de prueba para revisión humana.',
-      'A gamified experience where each activity contributes aggregated metrics and KRUMM prepares an 8-construct assessment-signal report for human review.',
+      'Una experiencia gamificada donde cada actividad aporta métricas agregadas y KRUMM prepara un reporte de 9 constructos con señal de prueba para revisión humana.',
+      'A gamified experience where each activity contributes aggregated metrics and KRUMM prepares a 9-construct assessment-signal report for human review.',
     ),
     timeEstimate: t('6-8 min', '6-8 min'),
-    originalTimeEstimate: t('14–16 min', '14–16 min'),
+    originalTimeEstimate: t('18–23 min', '18–23 min'),
     cta: t('Comenzar prueba de postulación', 'Start application assessment'),
     secondaryCta: t('Ver qué procesa KRUMM', 'See what KRUMM processes'),
     principles: [

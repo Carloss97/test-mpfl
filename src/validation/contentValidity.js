@@ -34,6 +34,9 @@ export const CONSTRUCT_AVAILABILITY = Object.freeze({
   analyticalThinking: 'provisional_score',
   leadership: 'provisional_score',
   communication: 'provisional_score',
+  // B6 (EXP-BOMB-001): constructo 9° — módulo experimental, descriptive_only
+  // (score null; sin score compuesto hasta pilotaje, spec §12.1/§17).
+  proceduralWorkingMemory: 'descriptive_only',
 });
 
 const row = (r) =>
@@ -244,6 +247,33 @@ export const PROVISIONAL_MATRIX = Object.freeze([
     evidencia: 'interna', relevancia: 3, claridad: 2, contaminacion: 'media',
     omisiones: 'parcial', severidad: 'media', veredicto: 'revisar',
     comentario: 'Reutilizado por varios constructos; claridad de constructo baja, revisar co-uso.',
+  }),
+
+  // ── Memoria de trabajo procedimental (descriptive_only — EXP-BOMB-001
+  // experimental; rows de borrador B6, pending panel R-7B §5) ────────────────
+  row({
+    construct: 'proceduralWorkingMemory', feature: 'bomb.retentionAccuracyRate', task: 'Bomb Defusal',
+    demanda: 'Retener el protocolo de desactivación durante el intervalo ciego y ejecutarlo.',
+    evidencia: 'adyacente', relevancia: 3, claridad: 3, contaminacion: 'media',
+    omisiones: 'parcial', severidad: 'media', veredicto: 'revisar',
+    origin: 'exp7_bomb_draft',
+    comentario: 'Módulo experimental (EXP-BOMB-001): descriptive_only, sin score compuesto hasta pilotaje (spec §12.1/§17). Lectura del manual y ejecución motora también afectan la retención (§3.3) → contaminación media.',
+  }),
+  row({
+    construct: 'proceduralWorkingMemory', feature: 'bomb.serialPositionAccuracy', task: 'Bomb Defusal',
+    demanda: 'Mantener el orden serial exacto del protocolo (distinguir pérdida de contenido de pérdida de orden).',
+    evidencia: 'adyacente', relevancia: 3, claridad: 3, contaminacion: 'media',
+    omisiones: 'parcial', severidad: 'media', veredicto: 'revisar',
+    origin: 'exp7_bomb_draft',
+    comentario: 'Componente de orden serial (spec §3.1); solo 4 niveles (L1–L4) — la fase C (piloto) estima floor/ceiling antes de cualquier interpretación.',
+  }),
+  row({
+    construct: 'proceduralWorkingMemory', feature: 'bomb.interferenceErrorCount', task: 'Bomb Defusal',
+    demanda: 'Inhibir la regla Type-A aprendida cuando el contexto Type-B (L4, MODELO B) exige la transformada.',
+    evidencia: 'adyacente', relevancia: 2, claridad: 3, contaminacion: 'alta',
+    omisiones: 'amplia', severidad: 'media', veredicto: 'revisar',
+    origin: 'exp7_bomb_draft',
+    comentario: 'Señal secundaria (inhibición/set shifting, spec §3.2): contexto único (L4) y conteo escaso — mantener contextual hasta la fase D (convergencia/discriminación).',
   }),
 ]);
 

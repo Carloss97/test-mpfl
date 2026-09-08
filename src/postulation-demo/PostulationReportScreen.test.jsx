@@ -199,24 +199,26 @@ describe('PostulationReportScreen', () => {
     expect(screen.getByText(/Muestras simuladas/i)).toBeInTheDocument();
     expect(screen.getByText(/Estado del entorno de demostración/i)).toBeInTheDocument();
     expect(screen.getByText(/No son métricas de una persona real/i)).toBeInTheDocument();
-    expect(document.querySelectorAll('.postulation-demo__provisional-tag--solid')).toHaveLength(8);
-    expect(screen.getAllByText(/Ver alcance y validación/i)).toHaveLength(8);
+    expect(document.querySelectorAll('.postulation-demo__provisional-tag--solid')).toHaveLength(9);
+    expect(screen.getAllByText(/Ver alcance y validación/i)).toHaveLength(9);
     expect(screen.queryByText(/Framework R-6 del workbook/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Batería original: lectura preliminar controlada/i)).toBeInTheDocument();
-    expect(screen.getByText(/8 constructos con señal de prueba/i)).toBeInTheDocument();
+    expect(screen.getByText(/9 constructos con señal de prueba/i)).toBeInTheDocument();
     expect(screen.getByText(/Cobertura y límites/i)).toBeInTheDocument();
     expect(screen.getByText(/Scores provisionales no validados, sin baremos y no aptos para comparar personas/i)).toBeInTheDocument();
-    expect(screen.getByText(/ocho constructos tienen señal de juego/i)).toBeInTheDocument();
-    expect(screen.getByText(/8 constructos con señal de prueba/i)).toBeInTheDocument();
+    expect(screen.getByText(/nueve constructos tienen señal de juego/i)).toBeInTheDocument();
+    expect(screen.getByText(/9 constructos con señal de prueba/i)).toBeInTheDocument();
     expect(screen.getByText(/Validar antes de comparar candidatos/i)).toBeInTheDocument();
+    // 9° constructo (B6): memoria de trabajo procedimental, experimental.
+    expect(screen.getAllByText(/Memoria de trabajo procedimental/i).length).toBeGreaterThan(0);
 
     // W5 / G1-L07: the provisional caveat stays on par with the number (not after it).
     // R1 (t_9e3506b6): the tag lives OUTSIDE the 64px score box, at the top of the
     // provisional card, so it can never overlap the construct title or the score.
     const scoreBoxes = [...document.querySelectorAll('.postulation-demo__talent-score--provisional')];
-    expect(scoreBoxes).toHaveLength(8);
+    expect(scoreBoxes).toHaveLength(9);
     const provisionalCards = [...document.querySelectorAll('.postulation-demo__talent-card--provisional')];
-    expect(provisionalCards).toHaveLength(8);
+    expect(provisionalCards).toHaveLength(9);
     provisionalCards.forEach((card) => {
       const tag = card.querySelector('.postulation-demo__provisional-tag--solid');
       expect(tag).not.toBeNull();
@@ -237,7 +239,7 @@ describe('PostulationReportScreen', () => {
     expect(screen.getAllByText(/sin guardar texto libre/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Liderazgo/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Comunicación/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Operación Faro aportan señales agregadas/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tangram y Desactivación aportan señales agregadas/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Coordinación estructurada/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Completaste una ruta eficiente/i)).toBeInTheDocument();
     expect(screen.getByText(/no equivale a liderazgo logístico/i)).toBeInTheDocument();

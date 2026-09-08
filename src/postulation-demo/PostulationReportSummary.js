@@ -202,6 +202,10 @@ const CONSTRUCT_DEMO_EXPLANATIONS = Object.freeze({
     reason: { es: 'El brief de equipo mide claridad estructurada: contexto, siguiente paso y uso de feedback sin guardar texto libre.', en: 'The team brief measures structured clarity: context, next step, and feedback use without storing free text.' },
     nextStep: { es: 'Agregar evaluación de mensaje escrito/oral con rúbrica y consentimiento si se requiere comunicación expresiva real.', en: 'Add written/oral message assessment with rubric and consent if real expressive communication is required.' },
   }),
+  proceduralWorkingMemory: Object.freeze({
+    reason: { es: 'El módulo de desactivación (EXP-BOMB-001) es experimental: retiene y ejecuta un protocolo bajo retención ciega, pero aún no hay validación psicométrica (fases A–G) ni pesos de score compuesto (spec §12.1); la lectura es descriptiva y los errores no se interpretan como déficit de memoria (spec §3.3).', en: 'The defusal module (EXP-BOMB-001) is experimental: it retains and executes a protocol under blind delay, but there is no psychometric validation yet (phases A–G) and no composite-score weights (spec §12.1); the reading is descriptive and errors are not interpreted as a memory deficit (spec §3.3).' },
+    nextStep: { es: 'Ejecutar las fases A–G de la spec §17.1 (contenido, usabilidad técnica, piloto psicométrico, convergencia/discriminación, confiabilidad, validez de criterio, fairness) antes de usarlo para comparar personas.', en: 'Run spec §17.1 phases A–G (content, technical usability, psychometric pilot, convergence/discriminant, reliability, criterion validity, fairness) before using it to compare people.' },
+  }),
 });
 
 function getScoreLabel(t, construct = {}) {
@@ -358,7 +362,7 @@ export function getPostulationExecutiveSummary(t, artifacts = null, completedDem
         label: t('Qué se observó', 'What was observed'),
         title: `${completedCount}/${totalCount} ${t('juegos completados', 'games completed')}`,
         body: isOriginalBattery
-          ? t('Laser, Balloon, Passenger y Operación Faro aportan señales agregadas: reglas, riesgo/recompensa, rutas y coordinación estructurada.', 'Laser, Balloon, Passenger, and Operación Faro provide aggregated signals: rules, risk/reward, routes, and structured coordination.')
+          ? t('Laser, Balloon, Rutas, Operación Faro, Tangram y Desactivación aportan señales agregadas: reglas, riesgo/recompensa, planificación, ensamblaje y memoria de trabajo procedimental.', 'Laser, Balloon, Routes, Operation Faro, Tangram, and Defusal provide aggregated signals: rules, risk/reward, planning, assembly, and procedural working memory.')
           : t('La batería estable aporta señales agregadas de desempeño en tareas cortas de atención, control e interferencia.', 'The stable battery provides aggregated performance signals from short attention, control, and interference tasks.'),
       },
       {
@@ -368,7 +372,7 @@ export function getPostulationExecutiveSummary(t, artifacts = null, completedDem
       },
       {
         label: isOriginalBattery ? t('Cobertura y límites', 'Coverage and limits') : t('Qué no mide', 'What it does not measure'),
-        title: isOriginalBattery && notMeasured === 0 ? t('8 constructos con señal de prueba', '8 constructs with assessment signal') : isOriginalBattery ? t('No medido explícito', 'Explicit not measured') : t('Caveats visibles', 'Visible caveats'),
+        title: isOriginalBattery && notMeasured === 0 ? t(`${workbookCards.length} constructos con señal de prueba`, `${workbookCards.length} constructs with assessment signal`) : isOriginalBattery ? t('No medido explícito', 'Explicit not measured') : t('Caveats visibles', 'Visible caveats'),
         body: isOriginalBattery
           ? notMeasured === 0
             ? descriptive === 0

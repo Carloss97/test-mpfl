@@ -101,8 +101,18 @@ describe('krumm_workbook_talent_framework_v1', () => {
       classification: { strengths: null, watchAreas: null, availability: 'not_available_without_norms' },
     });
     expect(framework.constructOrder).toEqual(WORKBOOK_TALENT_CONSTRUCT_ORDER);
+    expect(WORKBOOK_TALENT_CONSTRUCT_ORDER).toHaveLength(9);
+    expect(WORKBOOK_TALENT_CONSTRUCT_ORDER.at(-1)).toBe('proceduralWorkingMemory');
     const descriptiveOnly = new Set(['decisionMaking', 'adaptability']);
     for (const id of WORKBOOK_TALENT_CONSTRUCT_ORDER) {
+      // B6: sin BOMB en la sesión, el 9° constructo queda not_measured
+      // (señal ausente ≠ bajo desempeño; la batería original lo administra).
+      if (id === 'proceduralWorkingMemory') {
+        expect(framework.constructs[id].availability).toBe('not_measured');
+        expect(framework.constructs[id].score).toBeNull();
+        expect(framework.constructs[id].caveats).toContain('experimental_module_not_administered');
+        continue;
+      }
       if (descriptiveOnly.has(id)) {
         expect(framework.constructs[id].availability).toBe('descriptive_only');
         expect(framework.constructs[id].score).toBeNull();
@@ -174,5 +184,127 @@ describe('krumm_workbook_talent_framework_v1', () => {
     expect(withCamera.constructs.problemSolving.score).toBe(withoutCamera.constructs.problemSolving.score);
     expect(withCamera.constructs.problemSolving.confidence).toBe(withoutCamera.constructs.problemSolving.confidence);
     expect(withoutCamera.constructs.problemSolving.caveats).toContain('camera_signal_context_not_used_for_talent_mapping');
+  });
+});
+
+// ── B6 (EXP-BOMB-001): 9° constructo proceduralWorkingMemory ────────────────
+
+const VALID_BOMB_RESULT = Object.freeze({
+  aggregateSchemaVersion: 'bomb_defusal_aggregate_v1',
+  completed: true,
+  aggregateOnly: true,
+  reachedLevelCount: 4,
+  levelsCompleted: 4,
+  levelsFailed: 0,
+  totalErrorCount: 1,
+  retentionAccuracyRate: 0.9,
+  serialPositionAccuracy: 0.95,
+  firstActionLatencyMs: 820,
+  interStepLatencyMedianMs: 610,
+  interferenceErrorCount: 1,
+  switchCostMs: 1344,
+  holdDurationErrorMs: 0,
+  memoryDecaySlope: -0.02,
+  timeoutRate: 0,
+  errorRecoveryLatencyMs: 900,
+  timeMs: 55100,
+  seed: 42,
+});
+
+function vectorWithBomb(bombResult = VALID_BOMB_RESULT) {
+  return buildOriginalGameFeatureVector({
+    blocks: [{ gameId: 'bomb_defusal', status: 'completed', result: bombResult }],
+  });
+}
+
+describe('proceduralWorkingMemory (9° constructo, EXP-BOMB-001 — experimental)', () => {
+  it('is descriptive_only with the §12 metrics as evidence and NO composite score (spec §12.1)', () => {
+    const framework = buildOriginalGameTalentFramework({ originalGameFeatureVector: vectorWithBomb() });
+    const construct = framework.constructs.proceduralWorkingMemory;
+    expect(construct.availability).toBe('descriptive_only');
+    expect(construct.score).toBeNull();
+    expect(construct.confidence).toBeLessThanOrEqual(0.2);
+    expect(construct.confidenceCeiling).toBe(0.2);
+    expect(construct.caveats).toEqual(expect.arrayContaining([
+      'experimental_module_validation_pending',
+      'no_composite_score_weights_unfixed',
+      'errors_not_memory_deficit',
+      'provisional_mapping_requires_validation',
+    ]));
+    expect(construct.evidence).toEqual(expect.arrayContaining([
+      expect.objectContaining({ feature: 'bomb.retentionAccuracyRate', value: 0.9 }),
+      expect.objectContaining({ feature: 'bomb.serialPositionAccuracy', value: 0.95 }),
+      expect.objectContaining({ feature: 'bomb.interferenceErrorCount', value: 1 }),
+      expect.objectContaining({ feature: 'bomb.memoryDecaySlope', value: -0.02 }),
+    ]));
+    // nextStep = fases A–G de validación (spec §17.1).
+    expect(construct.nextStep).toMatch(/17\.1/);
+    expect(construct.nextStep).toMatch(/A–G|fases/i);
+    expect(construct.narrative).toMatch(/experimental/i);
+    expect(construct.narrativeEn).toMatch(/experimental|no composite score/i);
+  });
+
+  it('is not_measured when BOMB is not administered (never low performance)', () => {
+    const framework = buildOriginalGameTalentFramework({
+      originalGameFeatureVector: buildOriginalGameFeatureVector({ blocks: [] }),
+    });
+    expect(framework.constructs.proceduralWorkingMemory).toMatchObject({
+      availability: 'not_measured',
+      score: null,
+    });
+    expect(framework.constructs.proceduralWorkingMemory.caveats).toContain('experimental_module_not_administered');
+  });
+
+  it('keeps a partially completed BOMB session descriptive with an incomplete_session caveat', () => {
+    const framework = buildOriginalGameTalentFramework({
+      originalGameFeatureVector: vectorWithBomb({
+        aggregateSchemaVersion: 'bomb_defusal_aggregate_v1',
+        completed: false,
+        aggregateOnly: true,
+        reachedLevelCount: 2,
+        levelsCompleted: 1,
+        levelsFailed: 1,
+        retentionAccuracyRate: 0.5,
+      }),
+    });
+    const construct = framework.constructs.proceduralWorkingMemory;
+    expect(construct.availability).toBe('descriptive_only');
+    expect(construct.score).toBeNull();
+    expect(construct.caveats).toContain('incomplete_session');
+  });
+
+  it('treats an invalid BOMB aggregate as not_measured (signal ausente ≠ bajo desempeño)', () => {
+    const framework = buildOriginalGameTalentFramework({
+      originalGameFeatureVector: vectorWithBomb({
+        aggregateSchemaVersion: 'bomb_defusal_aggregate_v1',
+        completed: true,
+        aggregateOnly: false,
+        reachedLevelCount: 4,
+        levelsCompleted: 4,
+      }),
+    });
+    expect(framework.constructs.proceduralWorkingMemory.availability).toBe('not_measured');
+  });
+
+  it('does not turn bomb metrics into a composite score that varies with performance (spec §12.1)', () => {
+    const good = buildOriginalGameTalentFramework({ originalGameFeatureVector: vectorWithBomb() });
+    const poor = buildOriginalGameTalentFramework({
+      originalGameFeatureVector: vectorWithBomb({
+        aggregateSchemaVersion: 'bomb_defusal_aggregate_v1',
+        completed: true,
+        aggregateOnly: true,
+        reachedLevelCount: 4,
+        levelsCompleted: 4,
+        retentionAccuracyRate: 0.4,
+        serialPositionAccuracy: 0.5,
+        interferenceErrorCount: 3,
+      }),
+    });
+    // score null en ambos (sin pesos compuestos fijados); la evidencia SÍ cambia.
+    expect(good.constructs.proceduralWorkingMemory.score).toBe(poor.constructs.proceduralWorkingMemory.score);
+    expect(poor.constructs.proceduralWorkingMemory.evidence).toEqual(expect.arrayContaining([
+      expect.objectContaining({ feature: 'bomb.interferenceErrorCount', value: 3 }),
+      expect.objectContaining({ feature: 'bomb.retentionAccuracyRate', value: 0.4 }),
+    ]));
   });
 });

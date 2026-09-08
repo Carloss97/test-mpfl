@@ -121,7 +121,7 @@ describe('original_game_feature_vector_v1', () => {
     expect(vector).toMatchObject({
       type: 'original_game_feature_vector_v1',
       version: '1.0.0',
-      featureDefinitionsVersion: '2.1.0',
+      featureDefinitionsVersion: '2.2.0',
       runId: 'r6-vector-test',
       batteryId: 'krumm_postulation_demo_original_games_v1',
       encoding: { missingValue: 0, requiresObservedMask: true },
@@ -241,5 +241,146 @@ describe('original_game_feature_vector_v1', () => {
     expect(vector.featureMap['passenger.deliveryRate']).toBe(1);
     expect(vector.featureAvailability['passenger.routeEfficiency']).toBe('observed');
     expect(vector.qualityFlags).toContain('passenger_routes_delivery_count_clamped');
+  });
+
+  // ── BOMB (EXP-BOMB-001, B6): delta aditivo en original_game_feature_vector ──
+
+  const validBombResult = Object.freeze({
+    aggregateSchemaVersion: 'bomb_defusal_aggregate_v1',
+    completed: true,
+    aggregateOnly: true,
+    reachedLevelCount: 4,
+    levelsCompleted: 4,
+    levelsFailed: 0,
+    totalErrorCount: 1,
+    retentionAccuracyRate: 0.9,
+    serialPositionAccuracy: 0.95,
+    firstActionLatencyMs: 820,
+    interStepLatencyMedianMs: 610,
+    interferenceErrorCount: 1,
+    switchCostMs: 1344,
+    holdDurationErrorMs: 0,
+    memoryDecaySlope: -0.02,
+    timeoutRate: 0,
+    errorRecoveryLatencyMs: 900,
+    timeMs: 55100,
+    seed: 42,
+  });
+
+  it('adds BOMB as an additive delta: first 41 features keep order, 12 bomb.* appended (no breaking)', () => {
+    const vector = buildOriginalGameFeatureVector({ blocks: originalBlocks, runId: 'b6-no-bomb' });
+    // Sin BOMB: las 12 bomb.* en 0 + mask 0 + not_observed; el resto intacto.
+    expect(vector.featureOrder[40]).toBe('tangram.totalTimeMs');
+    expect(vector.featureOrder.slice(41)).toEqual([
+      'bomb.completion',
+      'bomb.retentionAccuracyRate',
+      'bomb.serialPositionAccuracy',
+      'bomb.firstActionLatencyMs',
+      'bomb.interStepLatencyMedianMs',
+      'bomb.interferenceErrorCount',
+      'bomb.switchCostMs',
+      'bomb.holdDurationErrorMs',
+      'bomb.memoryDecaySlope',
+      'bomb.timeoutRate',
+      'bomb.errorRecoveryLatencyMs',
+      'bomb.timeMs',
+    ]);
+    expect(vector.featureArray).toHaveLength(53);
+    expect(vector.featureArray.every(Number.isFinite)).toBe(true);
+    expect(vector.gameAvailability.bomb_defusal).toBe('not_administered');
+    for (const key of vector.featureOrder.filter((feature) => feature.startsWith('bomb.'))) {
+      expect(vector.featureMap[key]).toBeNull(); // raw map: null = no observado
+      expect(vector.featureArray[vector.featureOrder.indexOf(key)]).toBe(0); // encoding: 0
+      expect(vector.featureAvailability[key]).toBe('not_observed');
+    }
+    // Las features anteriores no cambian con el delta.
+    expect(vector.featureMap['laser.solvedRate']).toBe(1);
+    expect(vector.featureMap['passenger.deliveryRate']).toBe(1);
+  });
+
+  it('observes bomb.* from a valid BOMB aggregate (measured_complete)', () => {
+    const vector = buildOriginalGameFeatureVector({
+      blocks: [{ index: 0, gameId: 'bomb_defusal', status: 'completed', result: validBombResult }],
+      runId: 'b6-bomb-vector',
+    });
+    expect(vector.gameAvailability.bomb_defusal).toBe('measured_complete');
+    expect(vector.featureMap['bomb.completion']).toBe(1);
+    expect(vector.featureMap['bomb.retentionAccuracyRate']).toBe(0.9);
+    expect(vector.featureMap['bomb.serialPositionAccuracy']).toBe(0.95);
+    expect(vector.featureMap['bomb.firstActionLatencyMs']).toBe(820);
+    expect(vector.featureMap['bomb.interferenceErrorCount']).toBe(1);
+    expect(vector.featureMap['bomb.switchCostMs']).toBe(1344);
+    // memory_decay_slope negativo (decaimiento) y timeout_rate 0 observado (no ausente):
+    expect(vector.featureMap['bomb.memoryDecaySlope']).toBe(-0.02);
+    expect(vector.featureAvailability['bomb.memoryDecaySlope']).toBe('observed');
+    expect(vector.featureMap['bomb.timeoutRate']).toBe(0);
+    expect(vector.featureAvailability['bomb.timeoutRate']).toBe('observed');
+    expect(vector.observedMask[vector.featureOrder.indexOf('bomb.completion')]).toBe(1);
+    expect(validateOriginalGameFeatureVectorPrivacy(vector)).toEqual({ ok: true, violations: [] });
+    expect(JSON.stringify(vector)).not.toMatch(/rawGameEvents|pointerSamples|eventLog|trials/i);
+  });
+
+  it('treats a partially completed BOMB session as measured_partial (0 completions is observed, not missing)', () => {
+    const vector = buildOriginalGameFeatureVector({
+      blocks: [{
+        gameId: 'bomb_defusal',
+        status: 'completed',
+        result: {
+          aggregateSchemaVersion: 'bomb_defusal_aggregate_v1',
+          completed: false,
+          aggregateOnly: true,
+          reachedLevelCount: 3,
+          levelsCompleted: 1,
+          levelsFailed: 2,
+          retentionAccuracyRate: 0.5,
+          serialPositionAccuracy: 0.6,
+          timeoutRate: 0.67,
+          timeMs: 40000,
+        },
+      }],
+    });
+    expect(vector.gameAvailability.bomb_defusal).toBe('measured_partial');
+    expect(vector.featureMap['bomb.completion']).toBe(0);
+    expect(vector.featureAvailability['bomb.completion']).toBe('observed');
+    expect(vector.featureMap['bomb.retentionAccuracyRate']).toBe(0.5);
+  });
+
+  it('marks invalid or non-aggregate BOMB results invalid without fabricating features', () => {
+    const invalidAggregate = buildOriginalGameFeatureVector({
+      blocks: [{
+        gameId: 'bomb_defusal',
+        status: 'completed',
+        result: {
+          aggregateSchemaVersion: 'bomb_defusal_aggregate_v1',
+          completed: true,
+          aggregateOnly: false,
+          reachedLevelCount: 4,
+          levelsCompleted: 4,
+          rawGameEvents: [{ event: 'ACTION_SWITCH' }],
+        },
+      }],
+    });
+    expect(invalidAggregate.gameAvailability.bomb_defusal).toBe('invalid');
+    expect(invalidAggregate.qualityFlags).toEqual(expect.arrayContaining([
+      'bomb_defusal_invalid_aggregate',
+      'bomb_defusal_contains_forbidden_raw_keys',
+    ]));
+    expect(invalidAggregate.featureAvailability['bomb.completion']).toBe('invalid');
+
+    const outOfRange = buildOriginalGameFeatureVector({
+      blocks: [{
+        gameId: 'bomb_defusal',
+        status: 'completed',
+        result: {
+          aggregateSchemaVersion: 'bomb_defusal_aggregate_v1',
+          completed: true,
+          aggregateOnly: true,
+          reachedLevelCount: 4,
+          levelsCompleted: 4,
+          retentionAccuracyRate: 1.4,
+        },
+      }],
+    });
+    expect(outOfRange.gameAvailability.bomb_defusal).toBe('invalid');
   });
 });

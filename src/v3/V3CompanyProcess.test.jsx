@@ -176,15 +176,19 @@ describe('B. Motor H4.3 — artifacts demo (builder del flujo, D3)', () => {
     expect(report.completedAt).toBe('2026-08-21T00:00:00.000Z');
   });
 
-  it('talentFramework: 8 constructos — 6 provisional_score + 2 descriptive_only (R-6)', () => {
+  it('talentFramework: 9 constructos — 6 provisional_score + 3 descriptive_only (R-6)', () => {
     const report = getDemoCandidateReport('supervisor', 'maria-gonzalez');
     const framework = report.artifacts.assessmentSession.talentFramework;
-    expect(framework.constructOrder).toHaveLength(8);
+    expect(framework.constructOrder).toHaveLength(9);
     const constructs = framework.constructs;
     expect(constructs.decisionMaking.availability).toBe('descriptive_only');
     expect(constructs.decisionMaking.score).toBeNull();
     expect(constructs.adaptability.availability).toBe('descriptive_only');
     expect(constructs.adaptability.score).toBeNull();
+    // B6: 9° constructo experimental (EXP-BOMB-001) — descriptivo, sin score compuesto.
+    expect(constructs.proceduralWorkingMemory.availability).toBe('descriptive_only');
+    expect(constructs.proceduralWorkingMemory.score).toBeNull();
+    expect(constructs.proceduralWorkingMemory.caveats).toContain('no_composite_score_weights_unfixed');
     const scored = framework.constructOrder
       .map((id) => constructs[id].score)
       .filter((value) => value != null);

@@ -43,6 +43,21 @@ export const ORIGINAL_GAME_FEATURE_ORDER = Object.freeze([
   'tangram.totalMoveOverhead',
   'tangram.totalMoves',
   'tangram.totalTimeMs',
+  // BOMB (EXP-BOMB-001, B6): delta aditivo — métricas §12 → constructo
+  // provisional proceduralWorkingMemory. Sin breaking: las 41 features
+  // anteriores conservan orden/semántica (featureDefinitionsVersion 2.2.0).
+  'bomb.completion',
+  'bomb.retentionAccuracyRate',
+  'bomb.serialPositionAccuracy',
+  'bomb.firstActionLatencyMs',
+  'bomb.interStepLatencyMedianMs',
+  'bomb.interferenceErrorCount',
+  'bomb.switchCostMs',
+  'bomb.holdDurationErrorMs',
+  'bomb.memoryDecaySlope',
+  'bomb.timeoutRate',
+  'bomb.errorRecoveryLatencyMs',
+  'bomb.timeMs',
 ]);
 
 const FEATURE_UNITS = Object.freeze({
@@ -87,6 +102,18 @@ const FEATURE_UNITS = Object.freeze({
   'tangram.totalMoveOverhead': 'count',
   'tangram.totalMoves': 'count',
   'tangram.totalTimeMs': 'ms',
+  'bomb.completion': 'binary',
+  'bomb.retentionAccuracyRate': 'ratio',
+  'bomb.serialPositionAccuracy': 'ratio',
+  'bomb.firstActionLatencyMs': 'ms',
+  'bomb.interStepLatencyMedianMs': 'ms',
+  'bomb.interferenceErrorCount': 'count',
+  'bomb.switchCostMs': 'ms',
+  'bomb.holdDurationErrorMs': 'ms',
+  'bomb.memoryDecaySlope': 'slope',
+  'bomb.timeoutRate': 'ratio',
+  'bomb.errorRecoveryLatencyMs': 'ms',
+  'bomb.timeMs': 'ms',
 });
 
 export const ORIGINAL_GAME_FEATURE_DEFINITIONS = Object.freeze({
@@ -418,6 +445,102 @@ export const ORIGINAL_GAME_FEATURE_DEFINITIONS = Object.freeze({
     constructRelevance: 'Reviewer context and future validation covariate.',
     limitations: Object.freeze(['Device interruptions and reading speed can affect time.', 'Not a speed norm.']),
   }),
+  'bomb.completion': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['completed']),
+    metricFormula: 'completed ? 1 : 0',
+    metricRationale: 'Completion marks whether the candidate finished all four defusal levels (tutorial excluded); it is the availability gate for interpreting the procedural-working-memory metrics, not a performance score.',
+    constructRelevance: 'Availability flag for the experimental proceduralWorkingMemory construct; descriptive only, no composite score (spec §12.1).',
+    limitations: Object.freeze(['Binary completion ignores error and latency quality.', 'A failed level may reflect instruction comprehension, device, or time pressure, not memory (spec §3.3).']),
+  }),
+  'bomb.retentionAccuracyRate': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['retentionAccuracyRate']),
+    metricFormula: 'correct post-delay steps / required steps (spec §12)',
+    metricRationale: 'Global retention after the blind delay: how much of the encoded sequence survived the no-support interval; the primary maintenance signal of the module (spec §3.1).',
+    constructRelevance: 'Primary experimental input for proceduralWorkingMemory (maintenance component).',
+    limitations: Object.freeze(['Not a norm or percentile; no composite score weights fixed (spec §12.1).', 'An error may stem from reading speed or motor execution, not memory (spec §3.3).']),
+  }),
+  'bomb.serialPositionAccuracy': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['serialPositionAccuracy']),
+    metricFormula: 'correct positions / sequence length (spec §12)',
+    metricRationale: 'Serial-order maintenance: correct steps executed in their exact position; distinguishes content loss from order loss in the retained protocol (spec §3.1).',
+    constructRelevance: 'Primary experimental input for proceduralWorkingMemory (serial-order component).',
+    limitations: Object.freeze(['Task-specific; order errors are also classified as ORDER_ERROR (spec §13).', 'Not a norm or percentile.']),
+  }),
+  'bomb.firstActionLatencyMs': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['firstActionLatencyMs']),
+    metricFormula: 'ms from EXECUTION_START to first action (spec §12)',
+    metricRationale: 'Recovery/planning latency once the manual is hidden; slower is not worse by itself — it may reflect planning before the first step (spec §3.1, Recuperación).',
+    constructRelevance: 'Descriptive recovery covariate for proceduralWorkingMemory, for human review.',
+    limitations: Object.freeze(['Reading speed and device affect the value.', 'Not a speed norm.']),
+  }),
+  'bomb.interStepLatencyMedianMs': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['interStepLatencyMedianMs']),
+    metricFormula: 'median ms between consecutive valid actions (spec §12)',
+    metricRationale: 'Fluency of sequential retrieval under time pressure; the median resists single outlier pauses between steps.',
+    constructRelevance: 'Descriptive fluency covariate for proceduralWorkingMemory.',
+    limitations: Object.freeze(['Conflates retrieval speed with motor execution.', 'Task-specific; not a norm.']),
+  }),
+  'bomb.interferenceErrorCount': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['interferenceErrorCount']),
+    metricFormula: 'count of Type-A errors committed in Type-B levels (spec §12/§13 TYPE_INTERFERENCE)',
+    metricRationale: 'Proactive interference: persisting the Model-A rule when Model B required the transformed rule (L4); the inhibition/set-shifting signal (spec §3.2).',
+    constructRelevance: 'Experimental secondary signal for proceduralWorkingMemory updating + inhibition; descriptive only.',
+    limitations: Object.freeze(['Single-session count; context is the L4 switch only.', 'Not a trait score.']),
+  }),
+  'bomb.switchCostMs': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['switchCostMs']),
+    metricFormula: 'adjusted L4 latency minus expected latency by sequence length (spec §12)',
+    metricRationale: 'Cost of the contextual A→B rule switch under pressure; can be negative when L4 was faster than the length-adjusted expectation.',
+    constructRelevance: 'Experimental secondary signal (cognitive flexibility, spec §3.2); descriptive only.',
+    limitations: Object.freeze(['Derived estimate, not a measured switching task.', 'No norm or percentile.']),
+  }),
+  'bomb.holdDurationErrorMs': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['holdDurationErrorMs']),
+    metricFormula: 'abs(hold_ms - 2000) aggregated (spec §12)',
+    metricRationale: 'Temporal-control deviation of the yellow hold (target 2000 ms, window ±200 ms); a motor-timing covariate used as control, not as a central construct (spec §3.2).',
+    constructRelevance: 'Control covariate; keeps motor timing separate from the memory signal.',
+    limitations: Object.freeze(['Motor timing, not memory.', 'Input-device dependent.']),
+  }),
+  'bomb.memoryDecaySlope': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['memoryDecaySlope']),
+    metricFormula: 'accuracy vs delay slope across levels/forms (spec §12)',
+    metricRationale: 'Sensitivity of accuracy to the retention interval across L1–L4; the interval-maintenance signal (spec §3.1, Mantenimiento).',
+    constructRelevance: 'Experimental input for proceduralWorkingMemory (maintenance under delay).',
+    limitations: Object.freeze(['Few delay points (L1–L4); the slope is provisional.', 'Not a norm.']),
+  }),
+  'bomb.timeoutRate': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['timeoutRate']),
+    metricFormula: 'timeout levels / evaluated levels (spec §12)',
+    metricRationale: 'Performance under the authored temporal restriction; a high timeout rate may reflect encoding speed or pressure, not memory alone.',
+    constructRelevance: 'Descriptive context for sustained attention (spec §3.2) within the module; not a standalone score.',
+    limitations: Object.freeze(['Not a sustained-attention construct score.', 'Time limits are authored and fixed in v1 (no staircase, spec §10.1).']),
+  }),
+  'bomb.errorRecoveryLatencyMs': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['errorRecoveryLatencyMs']),
+    metricFormula: 'ms from STEP_ERROR to the next valid action (spec §12)',
+    metricRationale: 'Recovery after feedback: how long until the candidate re-enters the sequence correctly after a classified error.',
+    constructRelevance: 'Descriptive recovery covariate for human review.',
+    limitations: Object.freeze(['Few errors per session; the value can be null when none occurred.', 'Not a frustration-tolerance measure.']),
+  }),
+  'bomb.timeMs': Object.freeze({
+    sourceGame: 'bomb_defusal',
+    aggregateInputs: Object.freeze(['timeMs']),
+    metricFormula: 'elapsed milliseconds for the whole defusal session (raw events, relative timestamps)',
+    metricRationale: 'Elapsed time contextualizes execution under the authored level limits while avoiding event-by-event logs.',
+    constructRelevance: 'Reviewer context and future validation covariate.',
+    limitations: Object.freeze(['Device interruptions and reading speed affect time.', 'Not a speed norm.']),
+  }),
 });
 
 const FORBIDDEN_KEYS = Object.freeze([
@@ -512,6 +635,7 @@ function initializeFeatureState() {
       passenger_routes: 'not_administered',
       team_coordination: 'not_administered',
       tangram_exp001: 'not_administered',
+      bomb_defusal: 'not_administered',
     },
     qualityFlags: [],
   };
@@ -719,6 +843,47 @@ function addTangramFeatures(state, block) {
   setObserved(state, 'tangram.totalTimeMs', Math.max(0, finite(result.totalTimeMs) ?? 0));
 }
 
+function addBombFeatures(state, block) {
+  if (!block) return;
+  const result = block.result ?? {};
+  if (hasForbiddenKeys(result)) state.qualityFlags.push('bomb_defusal_contains_forbidden_raw_keys');
+  const levelsCompleted = nonNegativeInteger(result.levelsCompleted);
+  const reachedLevelCount = nonNegativeInteger(result.reachedLevelCount);
+  const retentionAccuracyRate = finite(result.retentionAccuracyRate);
+  const serialPositionAccuracy = finite(result.serialPositionAccuracy);
+  const timeoutRate = finite(result.timeoutRate);
+  const aggregateOnly = result.aggregateOnly === true;
+  const valid = aggregateOnly
+    && levelsCompleted != null
+    && reachedLevelCount != null
+    && reachedLevelCount > 0
+    && levelsCompleted <= reachedLevelCount
+    && (retentionAccuracyRate == null || validRatio(retentionAccuracyRate))
+    && (serialPositionAccuracy == null || validRatio(serialPositionAccuracy))
+    && (timeoutRate == null || validRatio(timeoutRate))
+    && !hasForbiddenKeys(result);
+  if (!valid) {
+    setInvalidGame(state, 'bomb_defusal', 'bomb', 'invalid_aggregate');
+    return;
+  }
+  state.gameAvailability.bomb_defusal = result.completed === true ? 'measured_complete' : 'measured_partial';
+  setObserved(state, 'bomb.completion', result.completed === true ? 1 : 0);
+  setObserved(state, 'bomb.retentionAccuracyRate', retentionAccuracyRate);
+  setObserved(state, 'bomb.serialPositionAccuracy', serialPositionAccuracy);
+  setObserved(state, 'bomb.firstActionLatencyMs', Math.max(0, finite(result.firstActionLatencyMs) ?? 0));
+  setObserved(state, 'bomb.interStepLatencyMedianMs', Math.max(0, finite(result.interStepLatencyMedianMs) ?? 0));
+  setObserved(state, 'bomb.interferenceErrorCount', nonNegativeInteger(result.interferenceErrorCount ?? 0));
+  // switch_cost_ms puede ser negativo (L4 más rápida que la latencia esperada ajustada
+  // por longitud) — es una diferencia, no una magnitud (spec §12).
+  setObserved(state, 'bomb.switchCostMs', finite(result.switchCostMs));
+  setObserved(state, 'bomb.holdDurationErrorMs', finite(result.holdDurationErrorMs));
+  // memory_decay_slope puede ser negativa (decaimiento con el delay) — pendiente, no ratio.
+  setObserved(state, 'bomb.memoryDecaySlope', finite(result.memoryDecaySlope));
+  setObserved(state, 'bomb.timeoutRate', timeoutRate);
+  setObserved(state, 'bomb.errorRecoveryLatencyMs', finite(result.errorRecoveryLatencyMs));
+  setObserved(state, 'bomb.timeMs', Math.max(0, finite(result.timeMs) ?? 0));
+}
+
 export function validateOriginalGameFeatureVectorPrivacy(value = {}) {
   const violations = [];
   const visit = (node) => {
@@ -744,6 +909,7 @@ export function buildOriginalGameFeatureVector({ blocks = [], runId = null, batt
   addPassengerFeatures(state, blockByGame(blocks, 'passenger_routes'));
   addTeamCoordinationFeatures(state, blockByGame(blocks, 'team_coordination'));
   addTangramFeatures(state, blockByGame(blocks, 'tangram_exp001'));
+  addBombFeatures(state, blockByGame(blocks, 'bomb_defusal'));
 
   const featureArray = ORIGINAL_GAME_FEATURE_ORDER.map((key) => {
     const value = state.featureMap[key];
@@ -753,7 +919,7 @@ export function buildOriginalGameFeatureVector({ blocks = [], runId = null, batt
   const vector = {
     type: ORIGINAL_GAME_FEATURE_VECTOR_TYPE,
     version: ORIGINAL_GAME_FEATURE_VECTOR_VERSION,
-    featureDefinitionsVersion: '2.1.0',
+    featureDefinitionsVersion: '2.2.0',
     runId,
     batteryId,
     featureOrder: [...ORIGINAL_GAME_FEATURE_ORDER],

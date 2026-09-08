@@ -262,7 +262,7 @@ export default function CompanyProcessReportPage({ data, processId, sessionId } 
         <div className="v3-co-section-heading">
           <div>
             <h2>{t('Mapa de evidencia KRUMM', 'KRUMM evidence map')}</h2>
-            <p>{t('Cobertura de tareas: los ocho constructos tienen señal de juego (score provisional o lectura descriptiva) con confianza por constructo.', 'Task coverage: the eight constructs have game signal (provisional score or descriptive reading) with per-construct confidence.')}</p>
+            <p>{t('Cobertura de tareas: los nueve constructos tienen señal de juego (score provisional o lectura descriptiva) con confianza por constructo.', 'Task coverage: the nine constructs have game signal (provisional score or descriptive reading) with per-construct confidence.')}</p>
           </div>
         </div>
         <p className="v3-pr-warning" role="note">{t('Scores provisionales no validados, sin baremos y no aptos para comparar personas.', 'Unvalidated provisional scores, no norms, and not suitable for comparing people.')}</p>

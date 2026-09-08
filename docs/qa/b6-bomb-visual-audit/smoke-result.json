@@ -1,0 +1,55 @@
+{
+  "spec": "docs/spec/EXP-BOMB-001/ (Draft v1.1.0)",
+  "card": "t_32c02f91 (B6, EXP-7)",
+  "date": "2026-09-08T18:15:27.466Z",
+  "baseUrl": "http://127.0.0.1:5173",
+  "viewportDesktop": "1280x720",
+  "viewportMobile": "390x844",
+  "runs": [
+    {
+      "shot": "01-welcome-1280x720"
+    },
+    {
+      "shot": "02-practice-t1-1280x720"
+    },
+    {
+      "shot": "03-l1-execution-1280x720"
+    },
+    {
+      "shot": "04-l4-modelb-intro-1280x720"
+    },
+    {
+      "shot": "05-l4-execution-modelb-1280x720"
+    },
+    {
+      "shot": "06-session-complete-1280x720"
+    },
+    {
+      "run": "A: mundo desktop 1280x720 (welcome → práctica → L1 → L4 MODEL B → sesión completa)",
+      "ok": true
+    },
+    {
+      "shot": "07-report-fixture-1280x720"
+    },
+    {
+      "run": "B: reporte fixture original (9 constructos + card BOMB)",
+      "ok": true
+    },
+    {
+      "shot": "10-welcome-390x844"
+    },
+    {
+      "shot": "11-practice-390x844"
+    },
+    {
+      "shot": "12-report-390x844"
+    },
+    {
+      "run": "C: móvil 390x844 (aviso <1024 + welcome + práctica + reporte)",
+      "ok": true
+    }
+  ],
+  "consoleErrors": [],
+  "failures": [],
+  "ok": true
+}

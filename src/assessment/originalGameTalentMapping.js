@@ -10,6 +10,10 @@ export const WORKBOOK_TALENT_CONSTRUCT_ORDER = Object.freeze([
   'analyticalThinking',
   'leadership',
   'communication',
+  // B6 (EXP-BOMB-001): 9° constructo PROVISIONAL — módulo experimental.
+  // descriptive_only (score null): NO se fija score compuesto (spec §12.1);
+  // nextStep = fases A–G de validación (spec §17.1).
+  'proceduralWorkingMemory',
 ]);
 
 export const CONSTRUCT_DEFINITIONS = Object.freeze({
@@ -69,6 +73,13 @@ export const CONSTRUCT_DEFINITIONS = Object.freeze({
     description: 'Claridad de contexto, pasos accionables y uso de feedback en opciones estructuradas; sin texto libre ni habla en vivo.',
     descriptionEn: 'Context clarity, actionable steps, and use of feedback in structured options; no free text or live speech.',
   }),
+  proceduralWorkingMemory: Object.freeze({
+    label: 'Memoria de trabajo procedimental (experimental)',
+    labelEn: 'Procedural working memory (experimental)',
+    workbookRow: 11,
+    description: 'Retención, actualización y ejecución serial de un protocolo de acciones bajo retención ciega y presión temporal (EXP-BOMB-001). Módulo experimental en validación (fases A–G, spec §17); sin score compuesto (pesos §12.1 no fijados).',
+    descriptionEn: 'Retention, updating and serial execution of an action protocol under blind delay and time pressure (EXP-BOMB-001). Experimental module under validation (phases A–G, spec §17); no composite score (§12.1 weights unfixed).',
+  }),
 });
 
 function roundScore(value) {
@@ -114,6 +125,9 @@ function baseConstruct(id, overrides = {}) {
     availability: overrides.availability ?? 'not_measured',
     evidence: overrides.evidence ?? [],
     caveats: [...new Set(overrides.caveats ?? [])],
+    // nextStep es opcional: solo los constructos con plan de validación
+    // explícito (B6: proceduralWorkingMemory, spec §17.1) lo portan.
+    ...(overrides.nextStep != null ? { nextStep: overrides.nextStep, nextStepEn: overrides.nextStepEn ?? overrides.nextStep } : {}),
     narrative: overrides.narrative ?? 'No hay evidencia suficiente para puntuar este constructo con la batería actual.',
     narrativeEn: overrides.narrativeEn ?? 'There is not enough evidence to score this construct with the current battery.',
   };
@@ -419,6 +433,59 @@ function buildCommunication(T) {
   });
 }
 
+function buildProceduralWorkingMemory(vector) {
+  const availability = vector?.gameAvailability?.bomb_defusal;
+  if (availability !== 'measured_complete' && availability !== 'measured_partial') {
+    // No administrado (batería stable_dg o sesión de 5 juegos) o agregado inválido:
+    // señal ausente = desconocida/caveated, nunca desempeño bajo (R-6).
+    return baseConstruct('proceduralWorkingMemory', {
+      availability: 'not_measured',
+      caveats: ['experimental_module_not_administered', 'provisional_mapping_requires_validation'],
+      nextStep: 'Fases A–G de validación psicométrica (spec §17.1): A contenido, B usabilidad técnica, C piloto, D convergencia/discriminación, E confiabilidad, F validez de criterio, G fairness.',
+      nextStepEn: 'Phases A–G of psychometric validation (spec §17.1): A content, B technical usability, C pilot, D convergence/discriminant, E reliability, F criterion validity, G fairness.',
+      narrative: 'No medido: la sesión no administra el módulo de desactivación (batería original, 6° juego) o su agregado fue inválido. El módulo es experimental (EXP-BOMB-001).',
+      narrativeEn: 'Not measured: the session does not administer the defusal module (original battery, 6th game) or its aggregate was invalid. The module is experimental (EXP-BOMB-001).',
+    });
+  }
+  // Evidencia = las 10 métricas §12 observadas (separadas, SIN score compuesto):
+  // spec §12.1 — "Pesos finales: NO fijar hasta pilotaje y calibración".
+  const evidence = [];
+  for (const key of [
+    'bomb.retentionAccuracyRate',
+    'bomb.serialPositionAccuracy',
+    'bomb.firstActionLatencyMs',
+    'bomb.interStepLatencyMedianMs',
+    'bomb.interferenceErrorCount',
+    'bomb.switchCostMs',
+    'bomb.holdDurationErrorMs',
+    'bomb.memoryDecaySlope',
+    'bomb.timeoutRate',
+    'bomb.errorRecoveryLatencyMs',
+  ]) {
+    const value = getFeature(vector, key);
+    if (value !== null) evidence.push({ feature: key, value });
+  }
+  const caveats = [
+    'experimental_module_validation_pending', // fases A–G, spec §17
+    'no_composite_score_weights_unfixed', // spec §12.1
+    'errors_not_memory_deficit', // spec §3.3
+    'provisional_mapping_requires_validation',
+  ];
+  if (availability === 'measured_partial') caveats.push('incomplete_session');
+  return baseConstruct('proceduralWorkingMemory', {
+    availability: 'descriptive_only',
+    score: null,
+    confidenceCeiling: 0.2,
+    confidence: 0.2,
+    evidence,
+    caveats,
+    nextStep: 'Fases A–G de validación psicométrica (spec §17.1): A contenido, B usabilidad técnica, C piloto psicométrico, D convergencia/discriminación, E confiabilidad, F validez de criterio, G fairness.',
+    nextStepEn: 'Phases A–G of psychometric validation (spec §17.1): A content, B technical usability, C psychometric pilot, D convergence/discriminant, E reliability, F criterion validity, G fairness.',
+    narrative: 'Lectura descriptiva de memoria de trabajo procedimental (EXP-BOMB-001): retención, orden serial, actualización e interferencia bajo retención ciega y presión temporal. Módulo experimental: sin score compuesto ni baremos; los errores no se interpretan como déficit de memoria (spec §3.3).',
+    narrativeEn: 'Descriptive reading of procedural working memory (EXP-BOMB-001): retention, serial order, updating and interference under blind delay and time pressure. Experimental module: no composite score or norms; errors are not interpreted as a memory deficit (spec §3.3).',
+  });
+}
+
 function withCameraCaveat(construct, signalQuality) {
   if (!signalQuality || Number(signalQuality.sampleCount ?? 0) > 0) return construct;
   return {
@@ -446,6 +513,7 @@ export function buildOriginalGameTalentFramework({
     analyticalThinking: buildAnalyticalThinking(vector, L, P),
     leadership: buildLeadership(T),
     communication: buildCommunication(T),
+    proceduralWorkingMemory: buildProceduralWorkingMemory(vector),
   };
 
   const constructsWithCameraCaveats = Object.fromEntries(
