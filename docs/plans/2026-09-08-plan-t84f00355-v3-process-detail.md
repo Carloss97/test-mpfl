@@ -379,3 +379,29 @@ detalle, back→procesos, diálogo pause, advanced expand) + 3 vision checks
   report, móvil detail — 0 defectos).
 - Calibración motor: scratch /tmp/calibrate_v3.mjs (node real, 6 builds = 180ms;
   overalls 89/87/85/82/80/78; no entra al repo).
+
+---
+
+## Sign-off / handoff (worker t_84f00355, 2026-09-08)
+
+- **Estado:** card `t_84f00355` → **done** (completada 2026-09-08, worker
+  default, modelo qwen — GPU vía túnel 18000).
+- **Commit (push 2026-09-08):** `58916e5`
+  `feat(t_84f00355): V3 fase v3 — /empresa/proceso/:id ...` + este docs commit.
+  HEAD == upstream; tree limpio (sin WIP ajeno).
+- **Verificación:** suite 919/919 (131 files, +49 tests), build OK, oxlint 0
+  errores en diff (1 warning preexistente fuera de diff), npm audit 0 high,
+  git diff --check limpio; smoke sobre build prod (vite preview): 14
+  screenshots + 5 interacciones + 3 vision checks (0 fallos/0 console errors).
+- **Bug detectado y corregido en smoke:** overflow móvil 690>390 en el detalle
+  — `.v3-pd-sr-only` (position:absolute) sin ancestro posicionado → su
+  containing block era el document → `position: relative` en
+  `.v3-pd-table-scroll` (documentado en design-system §10 bloque V3).
+- **Deuda pendiente:** AGENTS.md "fase v3 de vistas" → marcar V0+V1+V2+V3
+  done, pendiente V4–V5 (archivo protegido en headless → requiere
+  consentimiento; queda bitácora en kanban/Discord si no se aplica).
+- **Siguiente (secuencia):** `V4` (Empresa — new request:
+  `/empresa/nueva-solicitud` + `/diseño` + `/subida`) está **ready** para
+  despacho. Luego V5 (cutover + deploy + audit h46c).
+- **Linear:** KRU-90 (epic fase-v3 port) queda **In Progress** — V3 es un
+  sub-entregable del port; se comenta el avance, no se cierra hasta V5/Done.
