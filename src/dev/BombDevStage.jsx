@@ -1,10 +1,12 @@
-// BombDevStage.jsx — EXP-7 BOMB (B2, t_2fdada28): surface DEV para smoke del
-// panel + HUD sin registrar el juego en la batería (el registro es B5).
+// BombDevStage.jsx — EXP-7 BOMB (B2/B3): surface DEV para smoke del juego
+// (panel + HUD + fases de niveles) sin registrar el juego en la batería (el registro
+// es B5).
 //
-// Ruta: /dev/bomb (solo laboratory; no hay evaluación ni telemetría enviada:
-// onGameEvent/onCompleteDemo son no-ops). El stage usa PostulationGameStage
-// real (chrome compartido: progress header, sfx-toggle, corner) para que el
-// smoke verifique el mundo dentro de su contexto final.
+// Ruta: /dev/bomb (solo laboratory). ?seed=<int> fija el seed de sesión para
+// verificar determinismo (mismo seed + config => misma forma/secuencia, spec §15).
+// El stage usa PostulationGameStage real (chrome compartido: progress header,
+// sfx-toggle, corner) para que el smoke verifique el mundo dentro de su contexto
+// final; onCompleteDemo/onGameEvent son no-ops en dev.
 import React from 'react';
 import PostulationGameStage from '../postulation-demo/PostulationGameStage.jsx';
 import BombDefusalGame from '../tasks/original-games/bomb/bombGame.jsx';
@@ -12,7 +14,7 @@ import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const BOMB_DEV_BLOCK = Object.freeze({
   gameId: 'bomb_defusal',
-  label: 'Desactivación (EXP-7 B2)',
+  label: 'Desactivación (EXP-7 B3)',
   shortLabel: 'Bomb',
   skill: 'procedural_memory',
   phase: 'dev',
@@ -21,19 +23,31 @@ const BOMB_DEV_BLOCK = Object.freeze({
   visible: true,
 });
 
+function readSeedFromQuery() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const value = new URLSearchParams(window.location.search).get('seed');
+    if (value == null || value === '' || Number.isNaN(Number(value))) return null;
+    return Number(value);
+  } catch {
+    return null;
+  }
+}
+
 export default function BombDevStage() {
   const { t } = useLanguage();
+  const seed = readSeedFromQuery();
   return (
     <div className="postulation-demo postulation-demo--gameplay" data-demo-phase="dev-bomb">
       <p className="bomb-dev-banner" role="note">
         {t(
-          'DEV — laboratorio EXP-7 BOMB B2: sin evaluación, sin telemetría enviada.',
-          'DEV — EXP-7 BOMB B2 lab: no evaluation, no telemetry sent.',
+          'DEV — laboratorio EXP-7 BOMB B3: niveles 1-4 + fases. Sin batería; telemetría solo en memoria.',
+          'DEV — EXP-7 BOMB B3 lab: levels 1-4 + phases. No battery; in-memory telemetry only.',
         )}
       </p>
       <PostulationGameStage
         blocks={[BOMB_DEV_BLOCK]}
-        gameComponents={{ bomb_defusal: BombDefusalGame }}
+        gameComponents={{ bomb_defusal: (props) => <BombDefusalGame {...props} seed={seed} /> }}
         onGameEvent={() => undefined}
         onCompleteDemo={() => undefined}
         onAbortDemo={() => undefined}

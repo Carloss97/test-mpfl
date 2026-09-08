@@ -9,6 +9,7 @@ import {
   effectiveSequenceForLevel,
   buildLevelSpec,
   buildManualText,
+  newRuleForLevel,
   typeAOnlyActions,
 } from './bombRules.js';
 
@@ -189,6 +190,59 @@ describe('bombRules — copy del manual desde el manifest (Doc 2 §9.2)', () => 
     expect(manual.notice).toMatch(/ATENCIÓN - MODELO B/);
     expect(manual.notice).toMatch(/INTERRUPTOR 1.*INTERRUPTOR 3/s);
     expect(manual.notice).toMatch(/CABLE ROJO.*CABLE AZUL/s);
+  });
+});
+
+describe('bombRules — copy exacto de fases B3 (Doc 2 §11 "UX copy completo")', () => {
+  it('transiciones "Antes de L1..L4" con el copy exacto de la spec', () => {
+    expect(BOMB_RULE_MANIFEST.intro.transitionEs[1]).toBe('Primero aprenderás el protocolo base del MODELO A.');
+    expect(BOMB_RULE_MANIFEST.intro.transitionEs[2]).toBe('Se añadirá una nueva instrucción. Las reglas anteriores siguen vigentes.');
+    expect(BOMB_RULE_MANIFEST.intro.transitionEs[3]).toBe('La secuencia será más larga y tendrás menos tiempo para recordarla.');
+    expect(BOMB_RULE_MANIFEST.intro.transitionEs[4]).toBe(
+      'ATENCIÓN: este artefacto es MODELO B. Algunas instrucciones cambian. Revisa el protocolo antes de continuar.',
+    );
+  });
+
+  it('copy de delay/penalty/success/fail/final con el texto exacto de la spec', () => {
+    expect(BOMB_RULE_MANIFEST.intro.delayEs).toBe('Memoriza la secuencia.');
+    expect(BOMB_RULE_MANIFEST.intro.penaltyEs).toBe('Secuencia incorrecta. Tiempo penalizado.');
+    expect(BOMB_RULE_MANIFEST.intro.successEs).toBe('Artefacto neutralizado.');
+    expect(BOMB_RULE_MANIFEST.intro.failTimeoutEs).toBe('Tiempo agotado. Nivel finalizado.');
+    expect(BOMB_RULE_MANIFEST.intro.failErrorsEs).toBe('Se alcanzó el límite de errores. Nivel finalizado.');
+    expect(BOMB_RULE_MANIFEST.intro.sessionCompleteEs).toBe('Simulación finalizada. Tus resultados fueron procesados.');
+  });
+
+  it('el copy de fail/penalty no revela la respuesta correcta (Doc 2 §13.1/§5 "razón general")', () => {
+    for (const text of [
+      BOMB_RULE_MANIFEST.intro.failTimeoutEs,
+      BOMB_RULE_MANIFEST.intro.failErrorsEs,
+      BOMB_RULE_MANIFEST.intro.penaltyEs,
+    ]) {
+      expect(text).not.toMatch(/INTERRUPTOR|CABLE|AZUL|ROJO|VERDE|AMARILLO/i);
+    }
+  });
+});
+
+describe('bombRules — regla nueva por nivel (B3: "regla nueva destacada" en la intro, Doc 2 §5)', () => {
+  it('L1 (primer evaluado) → null (protocolo base, no hay regla nueva)', () => {
+    expect(newRuleForLevel(1)).toBeNull();
+  });
+
+  it('L2 → B1 (hold del botón amarillo)', () => {
+    expect(newRuleForLevel(2)).toBe('B1');
+  });
+
+  it('L3 → C1 (cable verde)', () => {
+    expect(newRuleForLevel(3)).toBe('C1');
+  });
+
+  it('L4 → null (misma base que L3; el cambio es el tipo de bomba → modificador B)', () => {
+    expect(newRuleForLevel(4)).toBeNull();
+  });
+
+  it('tutorial / claves desconocidas → null', () => {
+    expect(newRuleForLevel('tutorial')).toBeNull();
+    expect(newRuleForLevel(99)).toBeNull();
   });
 });
 

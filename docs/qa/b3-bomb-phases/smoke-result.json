@@ -1,0 +1,152 @@
+{
+  "date": "2026-09-08T13:39:41.048Z",
+  "baseUrl": "http://127.0.0.1:5173",
+  "consoleErrors": [],
+  "failures": [],
+  "results": [
+    {
+      "run": "A (1280x720 happy path, seed=42)",
+      "error": null,
+      "overflowBoot": 0,
+      "shoots": [
+        "docs/qa/b3-bomb-phases/02-practice-done-runA.png",
+        "docs/qa/b3-bomb-phases/03-intro-l1-runA.png",
+        "docs/qa/b3-bomb-phases/04-execution-l1-timer-runA.png",
+        "docs/qa/b3-bomb-phases/05-success-l1-runA.png",
+        "docs/qa/b3-bomb-phases/06-encoding-l2-runA.png",
+        "docs/qa/b3-bomb-phases/07-delay-l2-runA.png",
+        "docs/qa/b3-bomb-phases/08-delay-l3-runA.png",
+        "docs/qa/b3-bomb-phases/09-intro-l4-modelb-runA.png",
+        "docs/qa/b3-bomb-phases/10-encoding-l4-runA.png",
+        "docs/qa/b3-bomb-phases/11-success-l4-runA.png",
+        "docs/qa/b3-bomb-phases/12-session-complete-runA.png"
+      ],
+      "introL1": {
+        "transition": true,
+        "level": true,
+        "model": true
+      },
+      "timerDod": {
+        "samples": [
+          {
+            "visual": 19900,
+            "logical": 19922,
+            "t": 13082
+          },
+          {
+            "visual": 17700,
+            "logical": 17742,
+            "t": 15251
+          },
+          {
+            "visual": 15600,
+            "logical": 15638,
+            "t": 17348.100000023842
+          },
+          {
+            "visual": 13500,
+            "logical": 13527,
+            "t": 19466.200000047684
+          }
+        ],
+        "visualVsLogicalMax": 42,
+        "driftMax": 11,
+        "driftTotal": 10.799999952316284
+      },
+      "successL1": {
+        "copy": true,
+        "neutral": true,
+        "summary": true
+      },
+      "introL2": {
+        "transition": true,
+        "newRule": true
+      },
+      "exposureL2": 3010,
+      "delayL2": 2148,
+      "successL2": true,
+      "introL3": {
+        "transition": true,
+        "newRule": true
+      },
+      "exposureL3": 2181,
+      "delayL3": 4109,
+      "successL3": true,
+      "introL4": {
+        "transition": true,
+        "modifier": true,
+        "model": true
+      },
+      "l4manual": {
+        "sw3": true,
+        "blue": true,
+        "notice": true
+      },
+      "exposureL4": 2178,
+      "delayL4": 3109,
+      "successL4": true,
+      "sessionComplete": true,
+      "overflowEnd": 0
+    },
+    {
+      "run": "B (1280x720 failure paths)",
+      "error": null,
+      "shoots": [
+        "docs/qa/b3-bomb-phases/20-fail-timeout-l1-runB.png",
+        "docs/qa/b3-bomb-phases/21-fail-errors-l2-runB.png",
+        "docs/qa/b3-bomb-phases/22-penalty-l3-runB.png",
+        "docs/qa/b3-bomb-phases/23-interference-l4-runB.png",
+        "docs/qa/b3-bomb-phases/24-session-complete-runB.png"
+      ],
+      "qa06ZeroToFailMs": 191,
+      "qa06": {
+        "copy": true,
+        "timerStopped": true
+      },
+      "qa07": true,
+      "qa03penalty": {
+        "status": true,
+        "led": "penalty",
+        "noReveal": true
+      },
+      "l4IntroToExecutionMs": 6369,
+      "qa04": {
+        "penaltyState": true,
+        "led": "penalty",
+        "timerAtInterference": "00:06.6",
+        "noRevealAzul": true
+      },
+      "qa04failTimeout": true,
+      "sessionComplete": true
+    },
+    {
+      "run": "C (390x844 mobile)",
+      "error": null,
+      "warning": true,
+      "overflowIntro": 0,
+      "overflowEncoding": 0,
+      "overflowExecution": 0,
+      "overflowSuccess": 0,
+      "shoots": [
+        "docs/qa/b3-bomb-phases/30-mobile-success-runC-390x844.png",
+        "docs/qa/b3-bomb-phases/31-mobile-delay-runC-390x844.png"
+      ],
+      "overflowDelay": 0
+    },
+    {
+      "run": "D (prefers-reduced-motion: reduce)",
+      "error": null,
+      "countdownAnimation": "none",
+      "successAnimation": "none",
+      "delayStatic": {
+        "animationName": "none",
+        "opacity": "0",
+        "bg": "rgb(5, 8, 11)"
+      },
+      "shoots": [
+        "docs/qa/b3-bomb-phases/40-reduced-motion-delay-runD-reduced.png"
+      ],
+      "logicIntact": true
+    }
+  ]
+}

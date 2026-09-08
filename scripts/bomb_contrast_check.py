@@ -30,6 +30,14 @@ PAIRS = [
     ("CTA ink #241a08 / amber #ffb454", "241a08", "ffb454"),
     ("switch ON state #53d97e / #141b23", "53d97e", "141b23"),
     ("hold ink #3d2f05 / yellow #ffd23f", "3d2f05", "ffd23f"),
+    # B3: pares de las fases (intro/encoding/delay/resultados)
+    ("delay text #9fb0be / delay bg #05080b", "9fb0be", "05080b"),
+    ("intro transición #eaf1f7 / card #141b23", "eaf1f7", "141b23"),
+    ("intro tag NUEVA REGLA #ffb454 / card #141b23", "ffb454", "141b23"),
+    ("intro tag MODELO B #ff6252 / card #141b23", "ff6252", "141b23"),
+    ("fail title #ff6252 / card #141b23", "ff6252", "141b23"),
+    ("countdown text #eaf1f7 / overlay ~#0a0f14", "eaf1f7", "0a0f14"),
+    ("status penalty #ff6252 / statusbar ~#0d1319", "ff6252", "0d1319"),
 ]
 
 for label, fg, bg in PAIRS:

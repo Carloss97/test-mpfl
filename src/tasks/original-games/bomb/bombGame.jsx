@@ -175,6 +175,38 @@ export function parseBombTimerText(text) {
 }
 
 /**
+ * Snapshot de los valores VISUALES que el bucle rAF puede cambiar (decisión de
+ * re-render — degradación controlada, Doc 1 §15: el tick del motor sigue a 60 Hz
+ * con el reloj real; React solo se re-renderiza cuando algo visible cambia):
+ *   tenths  — timer a resolución de 100 ms (10 Hz)
+ *   phase   — fase del timer / estado
+ *   exposure— barra de exposición a pasos de 1 %
+ *   prehide — flag de pre-fade del manual (§16)
+ *   hold    — anillo de práctica a pasos de 1 % (solo TUTORIAL_PLAY)
+ */
+export function bombLoopSnapshot(engine, readNow) {
+  const st = engine.state;
+  const timer = engine.timer;
+  const rem = timer ? timer.remainingMs() : null;
+  const t = readNow();
+  const lvl = engine.level;
+  const encEnd = engine.encodingEndAt;
+  return {
+    tenths: typeof rem === 'number' ? Math.round(rem / 100) : null,
+    phase: st === BOMB_STATES.EXECUTION && timer ? timer.phase() : st,
+    exposure: st === BOMB_STATES.INSTRUCTION_ENCODING && lvl?.exposureMs != null && encEnd != null
+      ? Math.max(0, Math.min(100, Math.round(((encEnd - t) / lvl.exposureMs) * 100)))
+      : null,
+    prehide: st === BOMB_STATES.INSTRUCTION_ENCODING && lvl?.exposureMs != null && encEnd != null
+      ? ((encEnd - t) <= BOMB_MANUAL_PREHIDE_MS && (encEnd - t) > -1000)
+      : null,
+    hold: st === BOMB_STATES.TUTORIAL_PLAY && engine.hold.downAt != null
+      ? Math.min(100, Math.max(0, Math.round(((t - engine.hold.downAt) / BOMB_RULE_MANIFEST.hold.targetMs) * 100)))
+      : null,
+  };
+}
+
+/**
  * Fase de display del timer (separa "no corriendo" de "congelado"):
  *   idle — sin límite (tutorial/BOOT, timeLimitMs null)
  *   ready — límite cargado pero ventana no iniciada (intro/encoding/delay)
@@ -196,7 +228,7 @@ const BOMB_TELEMETRY_META_KEYS = new Set([
   'session_id', 'build_version', 'config_version', 'rule_manifest_version', 'seed',
   'level', 'bomb_type', 'seq_ids', 'evaluated', 'exposure_ms', 'reason', 'duration_ms',
   'time_limit_s', 'id', 'from', 'to', 'op', 'valid', 'hold_ms', 'observed_hold_ms',
-  'step_id', 'serial_pos', 'expected', 'error_class', 'step_position', 'penalizes',
+  'step_id', 'serial_pos', 'expected', 'observed', 'error_class', 'step_position', 'penalizes',
   'pct', 'ms_removed', 'elapsed_ms', 'errors', 'omitted_steps', 'omission_error_class',
   'visible', 'blur_count', 'component_id', 'next_level', 'tutorial',
 ]);
@@ -419,7 +451,11 @@ function BombInner({ emit, nowFn, seed, onComplete }) {
     }
   }, []);
 
-  // ---- Bucle vivo: tick del motor (reloj lógico manda) + beeps + refresco (timer/ring) ----
+  // ---- Bucle vivo: tick del motor (reloj lógico manda) + beeps + refresco.
+  // El tick corre por frame (precisión de las transiciones); el re-render de React
+  // solo cuando cambia un valor visible (snapshot — Doc 1 §15: "60 FPS objetivo;
+  // degradación controlada a 30 FPS sin alterar timers monotónicos").
+  const lastSnapRef = useRef({});
   const loopActive = state === BOMB_STATES.EXECUTION
     || state === BOMB_STATES.BLIND_DELAY
     || state === BOMB_STATES.INSTRUCTION_ENCODING
@@ -434,8 +470,14 @@ function BombInner({ emit, nowFn, seed, onComplete }) {
       if (current) {
         current.tick();
         maybeBeep();
+        const snap = bombLoopSnapshot(current, readNow);
+        const last = lastSnapRef.current;
+        if (snap.tenths !== last.tenths || snap.exposure !== last.exposure
+          || snap.hold !== last.hold || snap.phase !== last.phase || snap.prehide !== last.prehide) {
+          lastSnapRef.current = snap;
+          bump();
+        }
       }
-      bump();
       if (typeof requestAnimationFrame === 'function') rafId = requestAnimationFrame(loop);
     };
     rafId = typeof requestAnimationFrame === 'function' ? requestAnimationFrame(loop) : 0;
@@ -443,7 +485,7 @@ function BombInner({ emit, nowFn, seed, onComplete }) {
       mounted = false;
       if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(rafId);
     };
-  }, [loopActive, bump, maybeBeep]);
+  }, [loopActive, bump, maybeBeep, readNow]);
 
   // Si el hold se suelta fuera del botón (fuera del viewport/elemento), libéralo.
   const holdUpRef = useRef(null);
