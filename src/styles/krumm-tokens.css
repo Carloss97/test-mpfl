@@ -117,6 +117,16 @@
   --k-radius-panel: 22px;              /* paneles grandes de flujo (setup, reporte, stage) */
   --k-radius-pill: 999px;              /* pills / badges */
 
+  /* ── Fase v3 (V0, t_1c27edbf) — chrome candidato/empresa (ref frontend v2) ──
+   * Valores de la referencia krumm_frontend.zip mapeados a la paleta de marca
+   * (docs/spec/frontend-ref-v2/styles.css --line/--muted + candidate.css +
+   * company.css). Solo superficies/bordes que no tenían token equivalente. */
+  --k-line: rgba(111, 80, 58, 0.18);       /* bordes finos sobre claro (ref --line) */
+  --k-surface-dark-hover: #4a372a;         /* hover nav sidebar (sobre --k-bg-dark) */
+  --k-surface-dark-line: #604937;          /* divisores sidebar (sobre --k-bg-dark) */
+  --k-text-muted-sand: #cdb8a4;            /* labels secundarios sobre oscuro (ref --muted) */
+  --k-scrim: rgba(43, 30, 22, 0.45);       /* backdrop de diálogos (ref #38271d66) */
+
   /* ── H4.2 (rebuild landing) — extension layout/tipografia ──── */
   --k-gutter-mobile: 24px;             /* margen lateral <900px (design-system §5.1) */
   --k-space-section-mobile: 64px;      /* padding de sección <900px (§5.1) */

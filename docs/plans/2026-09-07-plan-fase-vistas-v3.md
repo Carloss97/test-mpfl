@@ -89,7 +89,7 @@ crudos en ninguna vista nueva.
 
 | Card | Scope | Criterio de aceptación (resumen) |
 |---|---|---|
-| **V0 — Shells + rutas + i18n base** | `CandidateShell`/`CompanyShell`, tablas de nav, footer, Help dialog, user chip, banner demo, registro de rutas (placeholders), copy EN+ES | Shells renderizan en 2 viewports con 0 overflow/0 errors; tokens `--k-*` (sin hex en vistas); spec de declaración |
+| **V0 — Shells + rutas + i18n base** ✅ done (t_1c27edbf, 2026-09-07) | `CandidateShell`/`CompanyShell`, tablas de nav, footer, Help dialog, user chip, banner demo, registro de rutas (placeholders), copy EN+ES | Shells renderizan en 2 viewports con 0 overflow/0 errors; tokens `--k-*` (sin hex en vistas); spec de declaración |
 | **V1 — Lado candidato** | `/portal`, `/candidato` (2 cards), `/candidato/acceso` (integración del guard de invitación), `/empleos` (honesto next-iteration) | Recorrido: portal → home → acceso → (invitación válida) → `/postulaciones` (flujo intacto); ES/EN; smoke |
 | **V2 — Empresa: dashboard + procesos** | `/empresa/acceso` (demo), `/empresa` (KPIs + tabla), `/empresa/procesos` (búsqueda/filtros/sort funcionales, patrón processes.js), datos demo consistentes | Filtros/sort operativos (tests de lógica + smoke); KPIs coherentes con la lista; demo banner |
 | **V3 — Empresa: detalle + reporte** | `/empresa/proceso/:id` (3 perfiles demo), reporte de candidato embebido (motor H4.3), acciones (edit/pause/view candidates — UI + estado local) | Reporte embebido = mismo data-model (8 constructs, caveats); navegación back; ES/EN |
@@ -99,6 +99,13 @@ crudos en ninguna vista nueva.
 **Orden:** V0 → V1 → V2 → V3 → V4 → V5 (cadenas kanban parent/child).
 Paralelismo: la fase V es 1-worker-per-tree (política vigente); los fixes de juegos
 (t_f40921bf, t_42978412) corren ANTES de V0 (área de juegos, archivos disjuntos).
+
+**Estado (2026-09-07):** V0 done — `src/v3/` (CandidateShell, CompanyShell, V3Dialog,
+V3Placeholder, V3RootApp, v3Routes.js, v3Copy.js, v3Shells.css) + 5 tokens nuevos en
+krumm-tokens.css + registro en main.jsx. Suite 771/771, build OK, smoke vivo
+12 rutas × 2 viewports + EN (0 fallos, 0 console errors) sobre `vite preview`.
+Detalle + desviaciones + hallazgo (leak box-shadow global button → candidate
+follow-up): `docs/plans/2026-09-07-plan-t1c27edbf-v0-shells.md`.
 
 ## 4. Riesgos / decisiones documentadas
 1. **Job board sin datos** → pantalla honesta "próxima iteración" (como la ref); no

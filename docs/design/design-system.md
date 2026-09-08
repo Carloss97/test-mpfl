@@ -242,3 +242,15 @@ vía override de scope en la única superficie oscura que lo usa (sección
 Afecta también el focus outline del pill de idioma en vistas claras (mejora:
 ~6:1). Ver audit H4.6b F3 (resuelto) en `docs/qa/h46b-visual-audit/`.
 
+**Fase v3 (V0, t_1c27edbf, 2026-09-07):** chrome de las vistas nuevas
+(`src/v3/`: CandidateShell, CompanyShell, páginas bare portal/login-empresa)
+sobre esta marca. 5 tokens nuevos en `krumm-tokens.css` (bloque "Fase v3 (V0)"):
+`--k-line` (bordes finos sobre claro, ref `--line`), `--k-surface-dark-hover`
+(hover nav sidebar), `--k-surface-dark-line` (divisores sidebar),
+`--k-text-muted-sand` (labels secundarios sobre oscuro, ref `--muted`),
+`--k-scrim` (backdrop de diálogos). Regla de neutralización: el `button` global
+del app técnico (`src/styles.css`) inyecta box-shadow teal a todo `<button>`;
+los scopes v3 lo anulan con `box-shadow: none` (el CTA gold conserva
+`--k-shadow-gold`). El leak preexistente en LanguageToggle de vistas anteriores
+queda documentado como follow-up (plan t_1c27edbf, desviación 4).
+

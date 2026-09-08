@@ -1,0 +1,578 @@
+/* t_1c27edbf (V0 fase v3): chrome candidato/empresa + páginas bare + diálogo +
+   placeholder. Fuente visual: docs/spec/frontend-ref-v2 (candidate.css,
+   company.css, portal.html, login-company.html) mapeada a la paleta de marca
+   v2. RÉGIMEN: solo var(--k-*) — sin hex/rgb/hsl aquí (test de declaración en
+   V3Shells.test.jsx, patrón LandingPage.test.jsx). Design system:
+   docs/design/design-system.md §5/§6/§6.1/§10. */
+
+/* ── Skip link (común a los 4 shells) ───────────────────────────────────── */
+.v3-skip {
+  position: fixed;
+  top: -100px;
+  left: 20px;
+  z-index: 100;
+  padding: 12px;
+  background: var(--k-bg-light);
+  color: var(--k-ink-espresso);
+  font: 600 0.8125rem/1.2 var(--k-font-sans);
+  text-decoration: none;
+}
+.v3-skip:focus { top: 12px; }
+
+/* ── Raíces de shell (columna full-height) ──────────────────────────────── */
+.v3-candidate,
+.v3-company,
+.v3-bare {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--k-bg-light);
+  color: var(--k-ink-espresso);
+  font-family: var(--k-font-sans);
+}
+.v3-candidate button,
+.v3-company button,
+.v3-bare button { cursor: pointer; }
+/* Nota: sin `font: inherit` (el shorthand resetearía font-size/weight y su
+   especificidad (0,1,1) ganaría a las clases de botón de esta hoja). La
+   tipografía la heredan de .v3-candidate/.v3-company/.v3-bare (font-family
+   var(--k-font-sans)); cada clase declara su font-size/weight propio. */
+.v3-candidate a,
+.v3-candidate button,
+.v3-company a,
+.v3-company button,
+.v3-bare a,
+.v3-bare button {
+  text-decoration: none;
+}
+/* §6.1: focus-visible obligatorio — terracota AA sobre superficies claras */
+.v3-candidate :is(a, button):focus-visible,
+.v3-bare :is(a, button):focus-visible,
+.v3-co-layout :is(a, button):focus-visible {
+  outline: 3px solid var(--k-ink-terracotta);
+  outline-offset: 2px;
+}
+/* sidebar: superficie oscura → focus arena (convención H4.3) */
+.v3-co-sidebar :is(a, button):focus-visible {
+  outline: 3px solid var(--k-accent-sand);
+  outline-offset: 2px;
+}
+
+/* Botón de texto (candidate help/privacy/terms) */
+.v3-text-button {
+  border: 0;
+  padding: 12px 0;
+  background: transparent;
+  color: var(--k-ink-medium);
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-height: 44px;
+}
+.v3-text-button:hover {
+  color: var(--k-ink-espresso);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* El button global del app técnico (src/styles.css, importado en todas las
+   rutas) inyecta box-shadow verde-azulado (teal) y padding/border-radius a
+   todo <button> — los botones del chrome v3 lo neutralizan; solo el CTA gold
+   mantiene sombra (de marca). */
+.v3-candidate button,
+.v3-company button,
+.v3-bare button { box-shadow: none; }
+.v3-bare .v3-cta-gold { box-shadow: var(--k-shadow-gold); }
+
+/* ── Shell candidato (ref candidate.html) ───────────────────────────────── */
+.v3-cp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 12px 40px;
+  gap: 20px;
+}
+.v3-cp-brand { display: block; }
+.v3-cp-brand img { display: block; width: 96px; height: 96px; object-fit: contain; }
+.v3-cp-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--k-ink-medium);
+}
+.v3-cp-breadcrumb [aria-current="page"] { color: var(--k-ink-espresso); }
+.v3-cp-header-actions { display: flex; align-items: center; gap: 28px; }
+.v3-cp-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 34px 32px 64px;
+}
+.v3-cp-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: calc(100% - 80px);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 0;
+  border-top: 1px solid var(--k-line);
+  font-size: 0.6875rem;
+  color: var(--k-ink-medium);
+}
+.v3-cp-footer-links { display: flex; gap: 24px; }
+.v3-cp-footer .v3-text-button { font-size: 0.6875rem; }
+
+/* ── Shell empresa (ref company.html) ───────────────────────────────────── */
+.v3-company { background: var(--k-bg-beige); font-size: 0.875rem; line-height: 1.5; }
+.v3-co-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 228px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px 24px;
+  background: var(--k-bg-dark);
+  color: var(--k-text-cream-dim);
+}
+.v3-co-brand { align-self: flex-start; margin-left: 14px; }
+.v3-co-brand img { display: block; width: 112px; height: 112px; object-fit: contain; }
+.v3-co-workspace {
+  margin: 10px 14px 20px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--k-text-muted-sand);
+}
+.v3-co-navigation { display: grid; gap: 7px; }
+.v3-co-nav-item {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 500; /* el button global (styles.css) fuerza 800; solo is-active usa 800 */
+}
+.v3-co-nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+.v3-co-nav-item:hover { background: var(--k-surface-dark-hover); }
+.v3-co-nav-item.is-active {
+  background: var(--k-bg-light-sand);
+  color: var(--k-ink-espresso);
+  font-weight: 800;
+}
+.v3-co-nav-item.is-active:hover { background: var(--k-bg-light-sand); }
+.v3-co-nav-divider { height: 1px; background: var(--k-surface-dark-line); margin: 22px 12px; }
+.v3-co-sidebar-bottom { margin-top: auto; padding: 24px 10px 0; }
+.v3-co-user { display: flex; align-items: center; gap: 12px; }
+.v3-co-user strong,
+.v3-co-user small { display: block; }
+.v3-co-user strong { font-size: 0.75rem; color: var(--k-text-cream); }
+.v3-co-user small { font-size: 0.6875rem; margin-top: 3px; color: var(--k-text-cream-dim); }
+.v3-co-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--k-bg-light-sand);
+  color: var(--k-ink-espresso);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.v3-co-account {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  border: 0;
+  border-top: 1px solid var(--k-surface-dark-line);
+  padding: 14px 0 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.v3-co-account:hover { color: var(--k-text-cream); }
+.v3-co-layout {
+  margin-left: 228px;
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.v3-co-header {
+  height: 84px;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--k-line);
+  background: var(--k-bg-light);
+}
+.v3-co-breadcrumb { display: flex; gap: 16px; align-items: center; font-size: 0.75rem; }
+.v3-co-breadcrumb [data-testid="v3-breadcrumb-root"] {
+  color: var(--k-ink-medium);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+.v3-co-breadcrumb [aria-current="page"] { color: var(--k-ink-espresso); font-weight: 600; }
+.v3-co-header-actions { display: flex; align-items: center; gap: 18px; }
+.v3-co-icon-button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--k-line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--k-ink-espresso);
+}
+.v3-co-icon-button:hover { background: var(--k-hover-soft); }
+.v3-co-icon-button svg { width: 20px; height: 20px; }
+.v3-co-menu {
+  display: none;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--k-ink-espresso);
+  flex-shrink: 0;
+}
+.v3-co-menu svg { width: 24px; height: 24px; }
+.v3-co-profile-menu { position: relative; flex-shrink: 0; }
+.v3-co-profile {
+  border: 1px solid var(--k-line);
+  width: 44px;
+  height: 44px;
+}
+.v3-co-profile:hover { background: var(--k-hover-soft); }
+.v3-co-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 50;
+  min-width: 170px;
+  padding: 6px;
+  border: 1px solid var(--k-line);
+  border-radius: 10px;
+  background: var(--k-bg-light);
+  box-shadow: var(--k-shadow-soft);
+}
+.v3-co-profile-dropdown a {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 6px;
+  color: var(--k-ink-espresso);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.v3-co-profile-dropdown a:hover { background: var(--k-hover-soft); }
+.v3-co-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1510px;
+  margin: 0 auto;
+  padding: 40px;
+}
+.v3-co-demo-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  color: var(--k-ink-medium);
+  font-size: 0.6875rem;
+}
+.v3-co-demo-badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border: 1px solid var(--k-line);
+  border-radius: 5px;
+  color: var(--k-ink-terracotta);
+  background: var(--k-bg-beige);
+  font-size: 0.625rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ── Páginas bare (ref portal.html / login-company.html) ────────────────── */
+.v3-bare { align-items: center; text-align: center; }
+.v3-bare-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px 40px;
+  gap: 20px;
+}
+.v3-bare-brand img { display: block; width: 112px; height: 112px; object-fit: contain; }
+.v3-bare-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 40px 32px 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.v3-portal-intro { margin-bottom: 40px; }
+.v3-portal-intro h1 {
+  font-family: var(--k-font-display);
+  font-weight: 600;
+  font-size: clamp(34px, 4.5vw, 52px);
+  line-height: 1.12;
+  letter-spacing: -1.8px;
+  margin: 0;
+  text-wrap: balance;
+}
+.v3-portal-intro p {
+  color: var(--k-ink-medium);
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  margin: 14px 0 0;
+}
+.v3-portal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  width: 100%;
+  max-width: 880px;
+  margin-bottom: 32px;
+}
+.v3-portal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 32px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-card);
+  background: var(--k-card-cream);
+  text-align: center;
+}
+.v3-portal-symbol {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--k-bg-light-sand);
+  color: var(--k-ink-terracotta);
+}
+.v3-portal-symbol svg { width: 30px; height: 30px; }
+.v3-portal-label {
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--k-ink-terracotta);
+}
+.v3-portal-card h2 {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+.v3-portal-card > p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.8;
+  color: var(--k-ink-medium);
+}
+.v3-portal-cta { margin-top: 8px; font-size: 0.8125rem; font-weight: 800; color: var(--k-ink-espresso); }
+.v3-portal-cta:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+/* CTA gold (referencia: login-company → demo) */
+.v3-cta-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 28px;
+  margin-bottom: 28px;
+  border-radius: 12px;
+  background: linear-gradient(115deg, var(--k-btn-gold-from), var(--k-btn-gold-to));
+  color: var(--k-btn-gold-ink);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  box-shadow: var(--k-shadow-gold);
+}
+.v3-cta-gold:hover { box-shadow: var(--k-shadow-cta); }
+
+/* ── Placeholder + back link ────────────────────────────────────────────── */
+.v3-placeholder { text-align: center; max-width: 640px; margin: 0 auto; padding-top: 90px; }
+.v3-placeholder__eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  color: var(--k-ink-terracotta);
+  margin: 0 0 20px;
+}
+.v3-placeholder h1 {
+  font-family: var(--k-font-display);
+  font-weight: 600;
+  font-size: clamp(34px, 4.5vw, 52px);
+  line-height: 1.12;
+  letter-spacing: -1.8px;
+  margin: 0;
+  text-wrap: balance;
+}
+.v3-placeholder__note {
+  color: var(--k-ink-medium);
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  margin: 24px 0;
+}
+.v3-back {
+  display: inline-block;
+  padding: 14px;
+  font-size: 0.8125rem;
+  color: var(--k-ink-terracotta);
+}
+.v3-back:hover { text-decoration: underline; text-underline-offset: 4px; }
+.v3-back--bare { margin-top: 8px; }
+
+/* ── Diálogo "próxima etapa" (ref candidate.js / company.js) ────────────── */
+.v3-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: var(--k-scrim);
+}
+.v3-dialog {
+  position: fixed;
+  z-index: 90;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 40px);
+  max-width: 440px;
+  padding: 30px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-card);
+  background: var(--k-bg-light);
+  color: var(--k-ink-espresso);
+  box-shadow: var(--k-shadow-soft);
+  text-align: left;
+}
+.v3-dialog h2 {
+  font-family: var(--k-font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  margin: 0;
+}
+.v3-dialog p {
+  font-size: 0.8125rem;
+  line-height: 1.8;
+  color: var(--k-ink-medium);
+  margin: 14px 0 24px;
+}
+.v3-dialog__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 1px solid var(--k-gold-dark);
+  border-radius: var(--k-radius-btn);
+  background: var(--k-cta-bg);
+  color: var(--k-cta-ink);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.v3-dialog__close:hover { background: var(--k-bg-light-sand); }
+
+/* ── Animaciones (solo si el usuario no pide reduced motion) ────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .v3-portal-card { transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
+  .v3-portal-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--k-gold-dark);
+    box-shadow: var(--k-shadow-soft);
+  }
+  .v3-co-nav-item { transition: background 160ms ease; }
+  .v3-cta-gold { transition: box-shadow 180ms ease; }
+  .v3-cta-gold:hover { transform: translateY(-2px); }
+  .v3-dialog { animation: v3-dialog-in 160ms ease; }
+  @keyframes v3-dialog-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v3-portal-card:hover { transform: none; }
+  .v3-cta-gold:hover { transform: none; }
+}
+
+/* ── Responsive (breakpoints de referencia + smoke 1280×720 / 390×844) ──── */
+@media (max-width: 1200px) {
+  .v3-co-main { padding: 28px 24px; }
+  .v3-co-header { padding: 0 24px; }
+}
+@media (max-width: 760px) {
+  /* sidebar off-canvas (ref company.css ≤760px) */
+  .v3-co-sidebar { display: none; }
+  .v3-co-sidebar.is-open {
+    display: flex;
+    position: fixed;
+    top: 76px;
+    bottom: 0;
+    left: 0;
+    width: min(300px, 100%);
+    overflow-y: auto;
+    box-shadow: var(--k-shadow-soft);
+    z-index: 60;
+  }
+  .v3-co-layout { margin-left: 0; }
+  .v3-co-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    height: 76px;
+    padding: 0 16px;
+    gap: 10px;
+  }
+  .v3-co-menu { display: grid; }
+  .v3-co-breadcrumb { margin-right: auto; font-size: 0.6875rem; }
+  .v3-co-breadcrumb > span:not(:last-child) { display: none; }
+  .v3-co-header-actions { gap: 8px; }
+  .v3-co-main { padding: 28px 20px; }
+}
+@media (max-width: 700px) {
+  .v3-cp-header { padding: 8px 20px; }
+  .v3-cp-brand img { width: 76px; height: 76px; }
+  .v3-cp-header-actions { gap: 18px; }
+  .v3-cp-main { padding: 28px 20px 40px; }
+  .v3-cp-footer { width: calc(100% - 40px); }
+  .v3-placeholder { padding-top: 48px; }
+  .v3-bare-header { padding: 12px 20px; }
+  .v3-bare-brand img { width: 88px; height: 88px; }
+  .v3-portal-grid { grid-template-columns: 1fr; }
+  .v3-bare-main { padding: 28px 20px 56px; }
+}
