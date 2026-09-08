@@ -192,3 +192,10 @@ cards → contexto nuevo 3 cards sin backend) + EN (hub + validaciones) + móvil
 
 **Estimación:** V0–V5 ≈ 6 tarjetas heavy (GPU) + 1 audit; la fase completa es la
 mayor desde B1.
+
+**V5 AUTORIZADO (2026-09-08, sesión interactiva #krumm-auto):** el usuario
+respondió "Autorizo V5 y exp-7 bomb" al hold del orquestador (deploy prod
+requiere autorización explícita). Registro: kanban `t_0184d2e6` comentario
+"AUTORIZADO POR EL USUARIO" + Linear KRU-90. Worker GPU despachado por
+cron fuera de ciclo (05:57). Cierre: audit h46c + deploy AWS + sign-off
+del usuario sobre prod.

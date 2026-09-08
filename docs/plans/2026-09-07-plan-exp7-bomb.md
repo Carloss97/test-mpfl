@@ -98,3 +98,12 @@ antes; BOMB es 2.ª prioridad heavy (área de juegos → secuencial con t_429784
    (task-title, pips, sfx, footer) es tokens `--k-*` — regla H4.5.
 5. **Audio** → desactivable; sin audio la información crítica debe estar en visual
    (spec §10.1/§14).
+
+## 6. Autorización (2026-09-08)
+
+El usuario autorizó la cadena BOMB en la sesión interactiva #krumm-auto
+("Autorizo V5 y exp-7 bomb"). Registro: kanban `t_ee587ad1` (B1) comentario
+"AUTORIZADA POR EL USUARIO", Linear KRU-91 → In Progress. La regla antigua
+"Exp 7/8 fuera de scope (spec inexistente)" queda superada: spec v1.1.0 +
+este plan + autorización explícita. Secuencia: V5 (t_0184d2e6) primero,
+luego B1→B6 encadenadas (1-worker, GPU qwen-model, milestone-sync por card).
