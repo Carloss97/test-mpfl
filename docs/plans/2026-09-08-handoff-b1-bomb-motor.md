@@ -57,10 +57,11 @@
 
 ## Gates (evidencia)
 
-- `NODE_ENV=test vitest run src/tasks/original-games/bomb` → **72/72 pass**
+- `NODE_ENV=test vitest run src/tasks/original-games/bomb` → **72/72 pass** (bombRules 19, bombTimer 13, bombEngine 40)
+- `NODE_ENV=test vitest run --pool=threads` (suite completa) → **130 archivos, 1006/1006 pass**
 - `oxlint src/tasks/original-games/bomb` → **0 warnings**
-- Suite completa: _(ver comentario de cierre de la card)_
-- Build: _(ver comentario de cierre de la card)_
+- `vite build` (NODE_ENV=production) → **✓ built en 10.88 s** (warning de chunk >500 kB preexistente, sin relación: el motor B1 aún no es importado por la UI)
+- `git diff --check` → limpio · commit **61ba1e8** (7 archivos, +2388 líneas)
 
 ## Kanban / Linear
 
