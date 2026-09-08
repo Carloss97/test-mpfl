@@ -63,8 +63,15 @@ describe('v3Copy (fase v3 — i18n base)', () => {
         expect(V3_COPY[lang].pages[page].note).toBeTruthy();
         expect(V3_COPY[lang].pages[page].backLabel).toBeTruthy();
       }
-      for (const page of ['processes', 'processDetail', 'processReport', 'newRequest', 'requestDesign', 'requestUpload']) {
+      for (const page of ['processes', 'processDetail', 'processReport']) {
         expect(V3_COPY[lang].pages[page].note).toBeTruthy();
+        expect(V3_COPY[lang].pages[page].backLabel).toBeTruthy();
+      }
+      // V4 (t_9319e84d): newRequest/requestDesign/requestUpload son páginas
+      // reales → la nota de "próxima etapa" ya no aplica (sin note); backLabel
+      // se conserva (fallback del placeholder, no usado en esas rutas).
+      for (const page of ['newRequest', 'requestDesign', 'requestUpload']) {
+        expect(V3_COPY[lang].pages[page].note, `${lang}.pages.${page}.note`).toBeUndefined();
         expect(V3_COPY[lang].pages[page].backLabel).toBeTruthy();
       }
       // hub: sin note (portal es navegable ya en V0; dashboard es el hub empresa)

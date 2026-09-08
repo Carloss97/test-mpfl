@@ -318,3 +318,29 @@ para no romper el aserto de 0 overflow móvil. Guardián: `V3CompanyProcess.test
 + `V3CompanyReport.test.jsx` + régimen de tokens V0. Detalle:
 `docs/plans/2026-09-08-plan-t84f00355-v3-process-detail.md`.
 
+**Fase v3 (V4, t_9319e84d, 2026-09-08):** lado empresa — new request:
+`/empresa/nueva-solicitud` (hub: 2 cards QUICK upload / RECOMMENDED design,
+copias de new-request.html de la ref), `/empresa/nueva-solicitud/diseño`
+(formulario guiado de 3 pasos, **sin LLM** — plan maestro §4.2: preguntas
+estructuradas → proceso draft en estado demo en memoria de cliente
+(sessionStorage de la pestaña, **sin backend** — `companyProcessStore.js`,
+lectura defensiva schema v1), visible en `/empresa/procesos` + KPIs + detalle
+coherente) y `/empresa/nueva-solicitud/subida` (upload PDF/DOCX/TXT →
+validación de tipo/tamaño → metadatos + confirmación; **sin NLP**: el
+contenido del archivo nunca se lee ni persiste). 22 tokens nuevos (bloque
+"Fase v3 (V4)" en `krumm-tokens.css`, valores 1:1 de new-request.css; pares
+texto/fondo verificados AA con `scripts/contrast_v4_check.py`: peores pares
+4.75:1 `--k-ink-medium`/`--k-req-card-bg-featured` y 5.08:1 icon). Desviación
+documentada (plan V4 D6): la card design de la ref prometía conversación
+("by talking with KRUMM") y su preview era un mock de chat → descripción
+adaptada al flujo real (formulario guiado) y preview de 3 pasos.
+Breakpoints: la banda 761–1100px de la ref plegada al 1150 existente;
+1 columna en ≤760; acciones a ancho completo en ≤480 (orden descendente
+estricto V2). Detalle: el proceso draft reutiliza el shape "real" vacío
+(stats ceros, sin distribution/advanced/tiempo, candidates []) + fila honesta
+`pd_noCandidatesYet` cuando no hay candidatos. **Fix de bug V3 (D7):** la clave
+`company_candidate` (header de la tabla del detalle) no existía en v3Copy.js →
+renderizaba vacía en los 3 perfiles demo; añadida. Guardián:
+`V4CompanyRequest.test.jsx` (30 tests) + régimen de tokens V0. Detalle:
+`docs/plans/2026-09-08-plan-t9319e84d-v4-company-request.md`.
+

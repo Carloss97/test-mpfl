@@ -314,7 +314,9 @@ describe('B. useCompanyData — fuente de datos del workspace empresa', () => {
     const spy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('no debe llamarse'));
     const { result } = renderHook(() => useCompanyData());
     expect(result.current.source).toBe('demo');
-    expect(result.current.processes).toBe(DEMO_PROCESSES);
+    // V4 (t_9319e84d, D2): el demo devuelve mergeDemoProcesses(drafts) — array
+    // derivado (mismo contenido que DEMO_PROCESSES sin drafts), no la ref.
+    expect(result.current.processes).toEqual(DEMO_PROCESSES);
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
@@ -347,7 +349,8 @@ describe('B. useCompanyData — fuente de datos del workspace empresa', () => {
       fetchImpl: vi.fn().mockRejectedValue(new Error('network down')),
     }));
     await waitFor(() => expect(result.current.source).toBe('demo'));
-    expect(result.current.processes).toBe(DEMO_PROCESSES);
+    // V4 (t_9319e84d, D2): demo derivado (array, no la ref de DEMO_PROCESSES)
+    expect(result.current.processes).toEqual(DEMO_PROCESSES);
   });
 });
 

@@ -14,7 +14,10 @@
 // t_84f00355 (V3): /empresa/proceso/:id (CompanyProcessDetailPage: 3 perfiles
 // demo de la referencia + acciones preview) y /empresa/proceso/:id/candidatos/
 // :sessionId (CompanyProcessReportPage: reporte embebido, mismo motor H4.3).
-// New request (V4) sigue placeholder.
+// t_9319e84d (V4): /empresa/nueva-solicitud (CompanyNewRequestPage: 2 cards),
+// /diseño (CompanyRequestDesignPage: formulario guiado → proceso draft en el
+// store solo-memoria) y /subida (CompanyRequestUploadPage: upload validado →
+// metadatos + confirmación, sin NLP).
 //
 // Las páginas bare (/portal y /empresa/acceso) replican el chrome estático de
 // la referencia (portal.html, login-company.html): brand + toggle + main.
@@ -31,6 +34,9 @@ import CompanyDashboardPage from './CompanyDashboardPage.jsx';
 import CompanyProcessesPage from './CompanyProcessesPage.jsx';
 import CompanyProcessDetailPage from './CompanyProcessDetailPage.jsx';
 import CompanyProcessReportPage from './CompanyProcessReportPage.jsx';
+import CompanyNewRequestPage from './CompanyNewRequestPage.jsx';
+import CompanyRequestDesignPage from './CompanyRequestDesignPage.jsx';
+import CompanyRequestUploadPage from './CompanyRequestUploadPage.jsx';
 import { useCompanyData } from './useCompanyData.js';
 import './v3Shells.css';
 
@@ -160,6 +166,17 @@ function CompanyWorkspace({ route, params } = {}) {
         sessionId={params?.sessionId ?? ''}
       />
     );
+  } else if (route.page === 'newRequest') {
+    // V4 (t_9319e84d): hub new request — 2 cards (upload / design). No
+    // consume /sessions (solo navega a las 2 vistas).
+    content = <CompanyNewRequestPage />;
+  } else if (route.page === 'requestDesign') {
+    // V4: formulario guiado → crea proceso draft en el store (solo memoria);
+    // no consume /sessions.
+    content = <CompanyRequestDesignPage />;
+  } else if (route.page === 'requestUpload') {
+    // V4: upload validado → metadatos + confirmación (sin NLP, sin backend).
+    content = <CompanyRequestUploadPage />;
   } else {
     content = (
       <V3Placeholder
@@ -225,9 +242,9 @@ export default function V3RootApp() {
   if (resolved.shell === V3_SHELLS.COMPANY) {
     // t_90a5157c (V2): dashboard y procesos son páginas reales;
     // t_84f00355 (V3): detalle de proceso + reporte de candidato embebido son
-    // páginas reales (motor H4.3); new request sigue placeholder hasta V4
-    // (CompanyWorkspace resuelve el contenido y el banner según la fuente de
-    // datos).
+    // páginas reales (motor H4.3); t_9319e84d (V4): new request (hub + diseño
+    // + upload) son páginas reales (store solo-memoria; CompanyWorkspace
+    // resuelve el contenido y el banner según la fuente de datos).
     return <CompanyWorkspace route={resolved.route} params={resolved.params} />;
   }
 

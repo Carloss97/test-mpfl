@@ -14,6 +14,7 @@ import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { useV3Copy } from './v3Copy.js';
 import V3Dialog from './V3Dialog.jsx';
 import {
+  buildDraftProcessDetail,
   buildRealProcessDetail,
   fitForScore,
   getDemoCandidateOverall,
@@ -96,7 +97,13 @@ export default function CompanyProcessDetailPage({ data, processId } = {}) {
       return buildRealProcessDetail(process, sessionsForProcess(data?.sessions ?? [], processId));
     }
     const profile = getDemoProcessDetail(processId);
-    return profile ?? { kind: 'notFound' };
+    if (profile) return profile;
+    // V4 (t_9319e84d, D4): proceso creado por el flujo de diseño (draft,
+    // source:'design' en data.processes, solo modo demo) → detalle coherente
+    // (stats ceros, sin distribución/avanzadas/candidatos, config del form).
+    const draft = (Array.isArray(data?.processes) ? data.processes : [])
+      .find((entry) => entry.id === processId && entry.source === 'design') ?? null;
+    return draft ? buildDraftProcessDetail(draft) : { kind: 'notFound' };
   }, [checking, isReal, data, processId]);
 
   // Menú ⋯ (ref process-detail.js): click fuera cierra; Escape cierra y
@@ -420,7 +427,11 @@ export default function CompanyProcessDetailPage({ data, processId } = {}) {
               </tr>
             </thead>
             <tbody>
-              {candidateRows.map(({ candidate, index, overall, fit, fitLabel, identity, statusLabel }) => (
+              {candidateRows.length === 0 ? (
+                <tr data-testid="v4-pd-no-candidates">
+                  <td colSpan={6}><span className="v4-pd-empty-cell">{copy.pd_noCandidatesYet}</span></td>
+                </tr>
+              ) : candidateRows.map(({ candidate, index, overall, fit, fitLabel, identity, statusLabel }) => (
                 <tr key={candidate.id} className={index < 3 ? 'v3-pd-top-candidate' : undefined}>
                   <td><span className="v3-pd-rank">{index + 1}</span></td>
                   <th scope="row">

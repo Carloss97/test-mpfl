@@ -707,6 +707,68 @@ export function findSessionRow(sessions, sessionId) {
   return (Array.isArray(sessions) ? sessions : []).find((row) => row?.id === sessionId) ?? null;
 }
 
+// ── V4 (t_9319e84d): detalle coherente del proceso draft (plan V4 D4) ───────
+// Mismo shape que buildRealProcessDetail (stats ceros, sin distribution/
+// advanced/tiempo, sin candidatos, averageScore null) + los campos del
+// formulario de diseño (department/location/mode/profile). El detalle de la
+// página rama: 3 perfiles demo → draft (source:'design' en data.processes)
+// → notFound (V3 intacto).
+//
+// Fechas: openedAt es 'YYYY-MM-DD' sin zona. new Date('…T00:00:00Z') formateado
+// CON timeZone:'UTC' → determinista (sin -1 día en CLT). daysActive =
+// diferencia en días (hoy − openedAt; min 0).
+export const DESIGN_MODE_LABELS = Object.freeze({
+  onsite: Object.freeze({ es: 'Presencial', en: 'On-site' }),
+  hybrid: Object.freeze({ es: 'Híbrido', en: 'Hybrid' }),
+  remote: Object.freeze({ es: 'Remoto', en: 'Remote' }),
+});
+
+function parseUtcDay(date) {
+  const parts = String(date ?? '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return null;
+  const utc = Date.UTC(parts[0], parts[1] - 1, parts[2]);
+  return Number.isNaN(utc) ? null : utc;
+}
+
+function longDate(date, language) {
+  const utc = parseUtcDay(date);
+  if (utc == null) return null;
+  return new Date(utc).toLocaleDateString(language === 'en' ? 'en-US' : 'es-CL', {
+    dateStyle: 'long',
+    timeZone: 'UTC',
+  });
+}
+
+function daysBetween(fromDate, toDate) {
+  const from = parseUtcDay(fromDate);
+  const to = parseUtcDay(toDate);
+  if (from == null || to == null) return null;
+  return Math.max(0, Math.round((to - from) / 86400000));
+}
+
+export function buildDraftProcessDetail(process, today = new Date().toISOString().slice(0, 10)) {
+  if (!process || typeof process !== 'object') return null;
+  const mode = DESIGN_MODE_LABELS[process.mode] ?? DESIGN_MODE_LABELS.onsite;
+  return Object.freeze({
+    kind: 'draft',
+    id: process.id ?? null,
+    role: { es: process.role ?? '', en: process.roleEn ?? process.role ?? '' },
+    department: process.department ?? null,
+    location: process.location ?? null,
+    mode,
+    // profile = texto del usuario: mismo en ambos idiomas (sin traducción).
+    profile: process.profile ? { es: process.profile, en: process.profile } : null,
+    openedAt: process.openedAt ?? null,
+    created: { es: longDate(process.openedAt, 'es'), en: longDate(process.openedAt, 'en') },
+    daysActive: daysBetween(process.openedAt, today),
+    status: 'active',
+    averageScore: null,
+    stats: Object.freeze({ applicants: 0, evaluated: 0, pending: 0, distribution: null, avgTimeMin: null }),
+    advanced: null,
+    candidates: Object.freeze([]),
+  });
+}
+
 // Filas reales que pertenecen a un proceso (grupo por rol, V2 D3):
 // slugifyProcessId(role) === processId (sin rol → 'unspecified').
 export function sessionsForProcess(sessions, processId) {

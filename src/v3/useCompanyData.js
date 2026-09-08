@@ -8,15 +8,26 @@
 //     error vacío en la UI).
 // useCompanyData corre en CompanyWorkspace (V3RootApp), no en cada página: un
 // fetch por mount y el shell necesita el source para el banner (plan V2 D4).
+// t_9319e84d (V4): en modo demo la lista se DERIVA de mergeDemoProcesses(drafts)
+// en cada render (D2): los procesos creados por el flujo de diseño
+// (companyProcessStore, solo en memoria) aparecen en vivo en dashboard KPIs +
+// /empresa/procesos. Modo real: sin merge (los drafts son dominio demo — no
+// existe backend de procesos; follow-up plan V4 §4).
 import { useEffect, useState } from 'react';
 import { KRUMM_API_BASE } from '../postulation-demo/postulationDemoConfig.js';
-import { buildCompanyDataFromSessions, DEMO_PROCESSES, fetchCompanySessions } from './companyData.js';
+import {
+  buildCompanyDataFromSessions,
+  fetchCompanySessions,
+  mergeDemoProcesses,
+} from './companyData.js';
+import { useCompanyDraftProcesses } from './companyProcessStore.js';
 
 export function useCompanyData({ apiBase = KRUMM_API_BASE, fetchImpl = globalThis.fetch, enabled = true } = {}) {
+  const drafts = useCompanyDraftProcesses();
   const [state, setState] = useState(() => (
     enabled && apiBase
       ? { source: 'checking', processes: [], sessions: [] }
-      : { source: 'demo', processes: DEMO_PROCESSES, sessions: [] }
+      : { source: 'demo', processes: [], sessions: [] }
   ));
 
   useEffect(() => {
@@ -26,11 +37,14 @@ export function useCompanyData({ apiBase = KRUMM_API_BASE, fetchImpl = globalThi
       if (cancelled) return;
       setState(sessions
         ? { source: 'real', processes: buildCompanyDataFromSessions(sessions), sessions }
-        : { source: 'demo', processes: DEMO_PROCESSES, sessions: [] });
+        : { source: 'demo', processes: [], sessions: [] });
     });
     return () => { cancelled = true; };
   }, [enabled, apiBase, fetchImpl]);
 
+  if (state.source === 'demo') {
+    return { source: 'demo', processes: mergeDemoProcesses(drafts), sessions: [] };
+  }
   return state;
 }
 

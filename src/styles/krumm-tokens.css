@@ -174,6 +174,37 @@
   --k-pd-fit-excellent: #795331;            /* fit "Excelente" (AA 6.5:1) */
   --k-pd-menu-shadow: rgba(56, 39, 29, 0.09); /* sombra menú ⋯ (ref #38271d18) */
 
+  /* ── Fase v3 (V4, t_9319e84d) — new request: cards + diseño + upload (ref
+   *    new-request.css). Valores 1:1 de la referencia; solo superficies/
+   *    acentos sin token equivalente (textos vía --k-ink-* / --k-co-*).
+   *    Pares texto/fondo verificados AA (scripts/contrast_v4_check.py,
+   *    2026-09-08): todos ≥3:1; peores pares 4.75:1 (--k-ink-medium sobre
+   *    --k-req-card-bg-featured) y 5.08:1 (--k-req-icon-ink sobre
+   *    --k-req-icon-bg, gráfico). */
+  --k-req-card-bg: #eee1d0;                 /* superficie card (ref .nr-card) */
+  --k-req-card-line: #cbb59c;               /* borde card (ref) */
+  --k-req-card-line-featured: #ae825a;      /* borde card featured (ref) */
+  --k-req-card-bg-featured: #e4cdb5;        /* fondo card featured (ref) */
+  --k-req-card-shadow: rgba(99, 68, 44, 0.05); /* sombra card (ref #63442c0d) */
+  --k-req-icon-bg: #dfc5a7;                 /* fondo icon box (ref .nr-icon) */
+  --k-req-icon-line: #c5a582;               /* borde icon box (ref) */
+  --k-req-icon-ink: #65472e;                /* icono (gráfico, 5.1:1 sobre icon-bg) */
+  --k-req-badge-bg: #f2ece3;                /* fondo badge QUICK (ref) */
+  --k-req-badge-ink: #765e4d;               /* texto badge (AA 5.1:1) */
+  --k-req-featured-bg: #795638;             /* badge RECOMMENDED + action (ref) */
+  --k-req-preview-doc: #e3d2bc;             /* fondo preview documento (ref) */
+  --k-req-preview-doc-line: #ad8a65;        /* borde dashed preview (ref) */
+  --k-req-preview-chat: #d8bc9c;            /* fondo preview pasos (ref) */
+  --k-req-preview-line: #e0d3c2;            /* borde paper/step (ref) */
+  --k-req-preview-line-soft: #e6daca;       /* líneas del paper (ref) */
+  --k-req-preview-paper-ink: #977250;       /* icono del paper (decorativo) */
+  --k-req-preview-msg-user: #ede2d2;        /* fondo step usuario (ref) */
+  --k-req-preview-msg-user-line: #e5d7c3;   /* borde step usuario (ref) */
+  --k-req-preview-msg-ink: #805d3d;         /* label step (AA 5.7:1) */
+  --k-req-action-bg: #fff5e8;               /* fondo action (ref) */
+  --k-req-action-line: #b39370;             /* borde action (ref) */
+  --k-req-action-ink: #75503a;              /* texto action (AA 6.6:1) */
+
   /* ── H4.2 (rebuild landing) — extension layout/tipografia ──── */
   --k-gutter-mobile: 24px;             /* margen lateral <900px (design-system §5.1) */
   --k-space-section-mobile: 64px;      /* padding de sección <900px (§5.1) */

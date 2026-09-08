@@ -363,14 +363,17 @@ describe('K. V3RootApp — integración modo real (detalle + reporte)', () => {
     expect(screen.getByTestId('v3-breadcrumb-current')).toHaveTextContent(V3_COPY.es.company_processReport);
   });
 
-  it('/empresa/nueva-solicitud sigue placeholder (V4, enabled=false) — sin regresión', async () => {
+  it('/empresa/nueva-solicitud: página real V4 (2 cards) — sin fetch (enabled=false)', async () => {
     const fetchStub = vi.fn().mockRejectedValue(new Error('no debe llamarse'));
     vi.stubGlobal('fetch', fetchStub);
     cleanup();
     window.history.pushState({}, '', '/empresa/nueva-solicitud');
     render(<LanguageProvider><V3RootApp /></LanguageProvider>);
     expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.pages.newRequest.title })).toBeInTheDocument();
-    expect(document.body.querySelector('.v3-placeholder')).not.toBeNull();
+    // V4 (t_9319e84d): el placeholder de V3 se reemplaza por las 2 cards reales
+    expect(document.body.querySelector('.v3-placeholder')).toBeNull();
+    expect(screen.getByRole('link', { name: new RegExp(V3_COPY.es.request_upload) })).toHaveAttribute('href', '/empresa/nueva-solicitud/subida');
+    expect(screen.getByRole('link', { name: new RegExp(V3_COPY.es.request_design) })).toHaveAttribute('href', '/empresa/nueva-solicitud/diseño');
     expect(fetchStub).not.toHaveBeenCalled();
   });
 });

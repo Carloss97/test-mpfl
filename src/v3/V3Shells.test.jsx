@@ -307,9 +307,10 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
     expect(hubContainer.querySelector('.v3-placeholder')).toBeNull();
   });
 
-  it('rutas empresa (V3 real, V4 placeholder): detalle real con back a procesos; dashboard y procesos sin placeholder', () => {
-    // t_84f00355 (V3): /empresa/proceso/:id es página real (detalle) — el back
-    // "Volver a procesos" queda en los placeholders V4 (new request).
+  it('rutas empresa (V3/V4 reales): detalle real con back a procesos; dashboard y procesos sin placeholder', () => {
+    // t_84f00355 (V3): /empresa/proceso/:id es página real (detalle);
+    // t_9319e84d (V4): new request también es real (ya no hay placeholders
+    // en rutas empresa; su verificación vive en V4CompanyRequest.test.jsx).
     renderV3Route('/empresa/proceso/supervisor');
     expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.company_supervisor })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: V3_COPY.es.pl_back })).toHaveAttribute('href', '/empresa/procesos');

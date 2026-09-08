@@ -93,7 +93,7 @@ crudos en ninguna vista nueva.
 | **V1 — Lado candidato** ✅ done (t_482f57b2, 2026-09-07) | `/portal`, `/candidato` (2 cards), `/candidato/acceso` (integración del guard de invitación), `/empleos` (honesto next-iteration) | Recorrido: portal → home → acceso → (invitación válida) → `/postulaciones` (flujo intacto); ES/EN; smoke |
 | **V2 — Empresa: dashboard + procesos** ✅ done (t_90a5157c, 2026-09-08) | `/empresa/acceso` (demo), `/empresa` (KPIs + tabla), `/empresa/procesos` (búsqueda/filtros/sort funcionales, patrón processes.js), datos demo consistentes | Filtros/sort operativos (tests de lógica + smoke); KPIs coherentes con la lista; demo banner |
 | **V3 — Empresa: detalle + reporte** ✅ done (t_84f00355, 2026-09-08) | `/empresa/proceso/:id` (3 perfiles demo), reporte de candidato embebido (motor H4.3), acciones (edit/pause/view candidates — UI + estado local) | Reporte embebido = mismo data-model (8 constructs, caveats); navegación back; ES/EN |
-| **V4 — Empresa: new request** | `/empresa/nueva-solicitud` + `/diseño` (flujo guiado mínimo) + `/subida` (upload → metadatos) | Diseño crea un "proceso" en el estado demo (aparece en /procesos); upload valida tipo/archivo y confirma; sin promesas de NLP |
+| **V4 — Empresa: new request** ✅ done (t_9319e84d, 2026-09-08) | `/empresa/nueva-solicitud` + `/diseño` (flujo guiado mínimo) + `/subida` (upload → metadatos) | Diseño crea un "proceso" en el estado demo (aparece en /procesos); upload valida tipo/archivo y confirma; sin promesas de NLP |
 | **V5 — Cutover + limpieza + audit final** | Redirecciones, borrado de vistas deprecadas (hr-dashboard v1, landing interna), audit visual h46c (todas las rutas nuevas, 2 viewports, ES/EN), deploy AWS + verificación prod | Suite 100%, build, audit 0 fallos, krumm.cl sirve las rutas nuevas y las viejas redirigen |
 
 **Orden:** V0 → V1 → V2 → V3 → V4 → V5 (cadenas kanban parent/child).
@@ -151,6 +151,31 @@ build OK, smoke vivo sobre build prod: 14 screenshots + 5 interacciones
 `.v3-pd-sr-only` (abs) sin ancestro posicionado inflaba scrollWidth del doc a
 690 en móvil → `position: relative` en el scroll container. Detalle:
 `docs/plans/2026-09-08-plan-t84f00355-v3-process-detail.md`.
+
+**V4 done (t_9319e84d, 2026-09-08):** `/empresa/nueva-solicitud` (hub: 2 cards
+QUICK upload / RECOMMENDED design, copias de new-request.html; desviación D6:
+la card design no promete chat LLM — preview de 3 pasos + descripción adaptada
+al flujo guiado real), `/empresa/nueva-solicitud/diseño` (formulario guiado de
+3 pasos SIN LLM: cargo/área/ubicación → modalidad/perfil → resumen → crea
+proceso **draft** en el store `companyProcessStore.js` — memoria de cliente en
+sessionStorage de la pestaña, **sin backend** (desviación 1 del plan V4: un
+store puramente en RAM moría con la navegación de carga completa y rompía la
+aceptación en navegador real)) y `/empresa/nueva-solicitud/subida` (upload
+PDF/DOCX/TXT → validación tipo/tamaño (≤10MB) → metadatos + confirmación; sin
+NLP: el contenido del archivo nunca se lee ni persiste). El draft aparece en
+`/empresa/procesos` (count 4), en los KPIs del dashboard y con detalle
+coherente en `/empresa/proceso/:id` (shape "real" vacío: 0/0/0/—, config del
+form, sin avanzadas, nota "Aún no hay candidatos"). **Fix de bug V3 (D7):**
+clave `company_candidate` ausente en v3Copy.js → header de tabla del detalle
+renderizaba vacío; añadida ES/EN. 22 tokens nuevos (bloque "Fase v3 (V4)",
+pares AA verificados con `scripts/contrast_v4_check.py`). Suite **950/950**
+(132 archivos; +31 tests), build OK, oxlint 0 errores en diff, audit 0 high,
+smoke vivo sobre build prod: 16 screenshots + recorrido completo de aceptación
+(navegación real carga-completa: diseño → crear → 4 cards en /procesos →
+detalle → dashboard KPI 4 → upload txt OK / png rechazado → recarga persiste 4
+cards → contexto nuevo 3 cards sin backend) + EN (hub + validaciones) + móvil
+390×844 (0 overflow, cards apiladas) — 0 fallos/0 console errors. Detalle:
+`docs/plans/2026-09-08-plan-t9319e84d-v4-company-request.md`.
 
 ## 4. Riesgos / decisiones documentadas
 1. **Job board sin datos** → pantalla honesta "próxima iteración" (como la ref); no
