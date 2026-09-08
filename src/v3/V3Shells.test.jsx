@@ -281,11 +281,17 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
       // t_482f57b2 (V1): /candidato y /candidato/acceso son páginas reales
       // (home de la referencia + form de acceso); el resto candidato
       // (/empleos) sigue placeholder honesto con el título del diccionario.
+      // t_84f00355 (V3): /empresa/proceso/:id es real (h1 = cargo; :id
+      // sustituido por 'supervisor' arriba); el reporte con :sessionId='ses-1'
+      // (desconocido en demo) cae al not-found que conserva el título de la
+      // página ('Informe del candidato' = pages.processReport.title).
       const expectedTitle = route.page === 'candidateHome'
         ? V3_COPY.es.cp_title
         : route.page === 'candidateAccess'
           ? V3_COPY.es.cp_access
-          : V3_COPY.es.pages[route.page].title;
+          : route.page === 'processDetail'
+            ? V3_COPY.es.company_supervisor
+            : V3_COPY.es.pages[route.page].title;
       expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent), pathname).toContain(expectedTitle);
     }
   });
@@ -301,11 +307,13 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
     expect(hubContainer.querySelector('.v3-placeholder')).toBeNull();
   });
 
-  it('rutas empresa placeholder (V3–V4): back al dashboard; dashboard y procesos ya son reales (V2)', () => {
-    // t_90a5157c (V2): /empresa y /empresa/procesos son páginas reales — el
-    // back link "Volver al dashboard" queda en los placeholders V3–V4.
+  it('rutas empresa (V3 real, V4 placeholder): detalle real con back a procesos; dashboard y procesos sin placeholder', () => {
+    // t_84f00355 (V3): /empresa/proceso/:id es página real (detalle) — el back
+    // "Volver a procesos" queda en los placeholders V4 (new request).
     renderV3Route('/empresa/proceso/supervisor');
-    expect(screen.getByRole('link', { name: V3_COPY.es.pages.processDetail.backLabel })).toHaveAttribute('href', '/empresa');
+    expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.company_supervisor })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: V3_COPY.es.pl_back })).toHaveAttribute('href', '/empresa/procesos');
+    expect(screen.queryByText(V3_COPY.es.pages.processDetail.note)).toBeNull();
     window.history.pushState({}, '', '/empresa');
     const { container: dashContainer } = renderV3Route('/empresa');
     expect(dashContainer.querySelector('.v3-back')).toBeNull();

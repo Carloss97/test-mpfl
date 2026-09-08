@@ -155,6 +155,25 @@
   --k-co-card-line: #d4bda2;               /* borde card de proceso (ref) */
   --k-co-mini-track: #eadfce;              /* track mini-score tabla (ref) */
 
+  /* ── Fase v3 (V3, t_84f00355) — detalle proceso + reporte embebido (ref
+   *    process-detail.css). Solo superficies/acentos sin token equivalente.
+   *    Pares texto/fondo verificados AA (script, 2026-09-08): rank-ink sobre
+   *    rank-bg 5.0:1; fit-excellent sobre co-surface 6.5:1 y sobre row-top
+   *    6.1:1; clock-ink (icono, no texto) sobre time-bg 4.0:1 ≥3:1. */
+  --k-pd-seg-evaluated: #ad825a;            /* segmento evaluado (ref) */
+  --k-pd-seg-pending: #e5d5c2;              /* segmento pendiente (ref) */
+  --k-pd-bar-track: #f0e6d9;                /* track barras distribución/avanzadas (ref) */
+  --k-pd-bar-fill: #bd956c;                 /* relleno barras (ref) */
+  --k-pd-time-bg: #f4eadc;                  /* fondo stat tiempo + nota avanzada (ref) */
+  --k-pd-clock-line: #ddc6aa;               /* borde icono reloj (ref) */
+  --k-pd-clock-ink: #936b47;                /* icono reloj (decorativo, ≥3:1) */
+  --k-pd-row-top: #faf1e5;                  /* fila top-3 candidatos (ref) */
+  --k-pd-rank-bg: #e9d5bb;                  /* badge rank top-3 (ref) */
+  --k-pd-rank-ink: #725035;                 /* texto badge rank (AA 5.0:1) */
+  --k-pd-avatar-top: #e6ceb0;               /* avatar top-3 (ref) */
+  --k-pd-fit-excellent: #795331;            /* fit "Excelente" (AA 6.5:1) */
+  --k-pd-menu-shadow: rgba(56, 39, 29, 0.09); /* sombra menú ⋯ (ref #38271d18) */
+
   /* ── H4.2 (rebuild landing) — extension layout/tipografia ──── */
   --k-gutter-mobile: 24px;             /* margen lateral <900px (design-system §5.1) */
   --k-space-section-mobile: 64px;      /* padding de sección <900px (§5.1) */

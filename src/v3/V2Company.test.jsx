@@ -319,7 +319,7 @@ describe('B. useCompanyData — fuente de datos del workspace empresa', () => {
     spy.mockRestore();
   });
 
-  it('enabled=false: no fetch aunque haya apiBase (placeholder V3–V4)', () => {
+  it('enabled=false: no fetch aunque haya apiBase (placeholders V4)', () => {
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ candidates: FIXTURE_SESSIONS }) });
     const { result } = renderHook(() => useCompanyData({ apiBase: 'https://api.test', fetchImpl, enabled: false }));
     expect(result.current.source).toBe('demo');
@@ -630,10 +630,11 @@ describe('E. V3RootApp — /empresa y /empresa/procesos son páginas reales (V2)
     expect(screen.getByTestId('v2-process-count')).toHaveTextContent('3');
   });
 
-  it('/empresa/proceso/:id sigue placeholder (V3) con back al dashboard', () => {
+  it('/empresa/proceso/:id ya es página real (V3): back a procesos, sin placeholder', () => {
     const { container } = renderV3Route('/empresa/proceso/supervisor');
-    expect(container.querySelector('.v3-placeholder')).not.toBeNull();
-    expect(screen.getByRole('link', { name: V3_COPY.es.pages.processDetail.backLabel })).toHaveAttribute('href', '/empresa');
+    expect(container.querySelector('.v3-placeholder')).toBeNull();
+    expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.company_supervisor })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: V3_COPY.es.pl_back })).toHaveAttribute('href', '/empresa/procesos');
   });
 
   it('/empresa/acceso intacto (V0): coming soon + CTA al demo', () => {

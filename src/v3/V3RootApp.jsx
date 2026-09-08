@@ -10,8 +10,11 @@
 // tabla de procesos) y /empresa/procesos (CompanyProcessesPage: búsqueda +
 // filtros + sort funcionales, patrón processes.js de la referencia). El hook
 // useCompanyData corre en CompanyWorkspace (un fetch por mount) y el source
-// decide el banner del shell (demo | loading | real). Proceso/:id, reporte y
-// new request siguen placeholder hasta V3–V4.
+// decide el banner del shell (demo | loading | real).
+// t_84f00355 (V3): /empresa/proceso/:id (CompanyProcessDetailPage: 3 perfiles
+// demo de la referencia + acciones preview) y /empresa/proceso/:id/candidatos/
+// :sessionId (CompanyProcessReportPage: reporte embebido, mismo motor H4.3).
+// New request (V4) sigue placeholder.
 //
 // Las páginas bare (/portal y /empresa/acceso) replican el chrome estático de
 // la referencia (portal.html, login-company.html): brand + toggle + main.
@@ -26,6 +29,8 @@ import CandidateHomePage from './CandidateHomePage.jsx';
 import CandidateAccessPage from './CandidateAccessPage.jsx';
 import CompanyDashboardPage from './CompanyDashboardPage.jsx';
 import CompanyProcessesPage from './CompanyProcessesPage.jsx';
+import CompanyProcessDetailPage from './CompanyProcessDetailPage.jsx';
+import CompanyProcessReportPage from './CompanyProcessReportPage.jsx';
 import { useCompanyData } from './useCompanyData.js';
 import './v3Shells.css';
 
@@ -128,9 +133,11 @@ function CompanyLoginPage() {
 // página): un fetch por mount, y el source decide el banner del shell:
 // real → "Sesiones reales (staging)" + aviso humanReviewOnly; checking →
 // "Cargando sesiones…"; demo → el banner default de V0 (no se pasa note).
-function CompanyWorkspace({ route }) {
+// t_84f00355 (V3): detail/report también consumen el data (fetch habilitado
+// para esas rutas: el detalle real agrupa por rol y el reporte usa las filas).
+function CompanyWorkspace({ route, params } = {}) {
   const copy = useV3Copy();
-  const needsData = route.page === 'dashboard' || route.page === 'processes';
+  const needsData = ['dashboard', 'processes', 'processDetail', 'processReport'].includes(route.page);
   const data = useCompanyData({ enabled: needsData });
   const note = data.source === 'real'
     ? { badge: copy.company_liveBadge, text: copy.company_liveNotice }
@@ -143,6 +150,16 @@ function CompanyWorkspace({ route }) {
     content = <CompanyDashboardPage data={data} />;
   } else if (route.page === 'processes') {
     content = <CompanyProcessesPage data={data} />;
+  } else if (route.page === 'processDetail') {
+    content = <CompanyProcessDetailPage data={data} processId={params?.id ?? ''} />;
+  } else if (route.page === 'processReport') {
+    content = (
+      <CompanyProcessReportPage
+        data={data}
+        processId={params?.id ?? ''}
+        sessionId={params?.sessionId ?? ''}
+      />
+    );
   } else {
     content = (
       <V3Placeholder
@@ -206,10 +223,12 @@ export default function V3RootApp() {
   }
 
   if (resolved.shell === V3_SHELLS.COMPANY) {
-    // t_90a5157c (V2): dashboard y procesos son páginas reales; proceso/:id,
-    // reporte y new request siguen placeholder hasta V3–V4 (CompanyWorkspace
-    // resuelve el contenido y el banner según la fuente de datos).
-    return <CompanyWorkspace route={resolved.route} />;
+    // t_90a5157c (V2): dashboard y procesos son páginas reales;
+    // t_84f00355 (V3): detalle de proceso + reporte de candidato embebido son
+    // páginas reales (motor H4.3); new request sigue placeholder hasta V4
+    // (CompanyWorkspace resuelve el contenido y el banner según la fuente de
+    // datos).
+    return <CompanyWorkspace route={resolved.route} params={resolved.params} />;
   }
 
   if (resolved.shell === V3_SHELLS.PORTAL) {

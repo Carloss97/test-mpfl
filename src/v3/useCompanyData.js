@@ -15,8 +15,8 @@ import { buildCompanyDataFromSessions, DEMO_PROCESSES, fetchCompanySessions } fr
 export function useCompanyData({ apiBase = KRUMM_API_BASE, fetchImpl = globalThis.fetch, enabled = true } = {}) {
   const [state, setState] = useState(() => (
     enabled && apiBase
-      ? { source: 'checking', processes: [] }
-      : { source: 'demo', processes: DEMO_PROCESSES }
+      ? { source: 'checking', processes: [], sessions: [] }
+      : { source: 'demo', processes: DEMO_PROCESSES, sessions: [] }
   ));
 
   useEffect(() => {
@@ -25,8 +25,8 @@ export function useCompanyData({ apiBase = KRUMM_API_BASE, fetchImpl = globalThi
     fetchCompanySessions({ apiBase, fetchImpl }).then((sessions) => {
       if (cancelled) return;
       setState(sessions
-        ? { source: 'real', processes: buildCompanyDataFromSessions(sessions) }
-        : { source: 'demo', processes: DEMO_PROCESSES });
+        ? { source: 'real', processes: buildCompanyDataFromSessions(sessions), sessions }
+        : { source: 'demo', processes: DEMO_PROCESSES, sessions: [] });
     });
     return () => { cancelled = true; };
   }, [enabled, apiBase, fetchImpl]);

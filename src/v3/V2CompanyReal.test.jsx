@@ -10,9 +10,14 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // vi.mock se hoistea antes de los imports: KRUMM_API_BASE = api fake.
-vi.mock('../postulation-demo/postulationDemoConfig.js', () => ({
-  KRUMM_API_BASE: 'https://api.krumm.test/staging',
-}));
+// t_84f00355 (V3): el detalle/reporte importan el builder del flujo, que a su
+// vez necesita el resto de los exports del config → importar el original y
+// sobrescribir SOLO KRUMM_API_BASE (los datos demo del detalle no dependen de
+// la API).
+vi.mock('../postulation-demo/postulationDemoConfig.js', async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, KRUMM_API_BASE: 'https://api.krumm.test/staging' };
+});
 
 import { LanguageProvider } from '../i18n/LanguageContext.jsx';
 import { V3_COPY } from './v3Copy.js';
@@ -130,13 +135,21 @@ describe('V2CompanyReal — modo real (VITE_KRUMM_API_BASE + GET /sessions)', ()
     expect(screen.queryByText(V3_COPY.es.company_liveBadge)).toBeNull();
   });
 
-  it('placeholder empresa (V3) con API: enabled=false → no fetch, banner demo', async () => {
+  it('placeholder empresa (V4) con API: enabled=false → no fetch, banner demo', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('no debe llamarse')));
-    renderRoute('/empresa/proceso/supervisor');
-    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.pages.processDetail.title })).toBeInTheDocument());
+    renderRoute('/empresa/nueva-solicitud');
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.pages.newRequest.title })).toBeInTheDocument());
     expect(screen.getByText(V3_COPY.es.company_demoBadge)).toBeInTheDocument();
     expect(okFetch).not.toHaveBeenCalled();
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('V3: /empresa/proceso/:id real ahora fetcha (detalle por rol) y no es placeholder', async () => {
+    vi.stubGlobal('fetch', okFetch);
+    renderRoute('/empresa/proceso/operations-analyst');
+    await screen.findByRole('heading', { level: 1, name: 'Operations Analyst' });
+    expect(okFetch).toHaveBeenCalledTimes(1);
+    expect(document.body.querySelector('.v3-placeholder')).toBeNull();
   });
 
   it('sanity: buildCompanyDataFromSessions del fixture (coherencia con el banner real)', () => {

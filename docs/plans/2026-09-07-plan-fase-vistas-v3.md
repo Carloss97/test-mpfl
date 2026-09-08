@@ -92,7 +92,7 @@ crudos en ninguna vista nueva.
 | **V0 — Shells + rutas + i18n base** ✅ done (t_1c27edbf, 2026-09-07) | `CandidateShell`/`CompanyShell`, tablas de nav, footer, Help dialog, user chip, banner demo, registro de rutas (placeholders), copy EN+ES | Shells renderizan en 2 viewports con 0 overflow/0 errors; tokens `--k-*` (sin hex en vistas); spec de declaración |
 | **V1 — Lado candidato** ✅ done (t_482f57b2, 2026-09-07) | `/portal`, `/candidato` (2 cards), `/candidato/acceso` (integración del guard de invitación), `/empleos` (honesto next-iteration) | Recorrido: portal → home → acceso → (invitación válida) → `/postulaciones` (flujo intacto); ES/EN; smoke |
 | **V2 — Empresa: dashboard + procesos** ✅ done (t_90a5157c, 2026-09-08) | `/empresa/acceso` (demo), `/empresa` (KPIs + tabla), `/empresa/procesos` (búsqueda/filtros/sort funcionales, patrón processes.js), datos demo consistentes | Filtros/sort operativos (tests de lógica + smoke); KPIs coherentes con la lista; demo banner |
-| **V3 — Empresa: detalle + reporte** | `/empresa/proceso/:id` (3 perfiles demo), reporte de candidato embebido (motor H4.3), acciones (edit/pause/view candidates — UI + estado local) | Reporte embebido = mismo data-model (8 constructs, caveats); navegación back; ES/EN |
+| **V3 — Empresa: detalle + reporte** ✅ done (t_84f00355, 2026-09-08) | `/empresa/proceso/:id` (3 perfiles demo), reporte de candidato embebido (motor H4.3), acciones (edit/pause/view candidates — UI + estado local) | Reporte embebido = mismo data-model (8 constructs, caveats); navegación back; ES/EN |
 | **V4 — Empresa: new request** | `/empresa/nueva-solicitud` + `/diseño` (flujo guiado mínimo) + `/subida` (upload → metadatos) | Diseño crea un "proceso" en el estado demo (aparece en /procesos); upload valida tipo/archivo y confirma; sin promesas de NLP |
 | **V5 — Cutover + limpieza + audit final** | Redirecciones, borrado de vistas deprecadas (hr-dashboard v1, landing interna), audit visual h46c (todas las rutas nuevas, 2 viewports, ES/EN), deploy AWS + verificación prod | Suite 100%, build, audit 0 fallos, krumm.cl sirve las rutas nuevas y las viejas redirigen |
 
@@ -134,6 +134,23 @@ EN desktop × 2 + 6 interacciones: search/department/sort/empty/reset/sort-EN,
 (≤1150/≤1000 añadidos tras ≤760 → pl-grid 2 col ganaba en móvil, overflow
 404>390) → orden descendente estricto documentado en design-system §10.
 Detalle: `docs/plans/2026-09-08-plan-t90a5157c-v2-company.md`.
+**V3 done (t_84f00355, 2026-09-08):** `/empresa/proceso/:id` (3 perfiles demo de
+la referencia: header con estado/días + acciones Editar/⋯ (diálogos de preview),
+4 métricas 18/23/19/78%, configuration, statistics + advanced (disclosure),
+ranking 6 rows con score/fit/estado y link a su reporte, process actions) y
+`/empresa/proceso/:id/candidatos/:sessionId` — **reporte de candidato embebido
+con el MISMO motor H4.3 del flujo** (`buildPostulationDemoArtifacts` con
+`original_games`: resumen ejecutivo + 8 constructos R-6 + 5 juegos + calidad +
+caveats, con banner demo + banner batería; los 2 constructos descriptivos
+conservan score null). Datos/escalado en `companyProcessDetail.js` (fit bands
+calibradas contra el motor real: overalls 89/87/85/82/80/78), nuevo bloque de
+tokens V3 (AA verificado). Modo real: detalle por grupo + reporte por fila
+(alias), tests con fetch stub. Suite **919/919** (131 archivos; +49 tests),
+build OK, smoke vivo sobre build prod: 14 screenshots + 5 interacciones
+(0 fallos/0 errors) + 3 vision checks. **Bug detectado y corregido en smoke:**
+`.v3-pd-sr-only` (abs) sin ancestro posicionado inflaba scrollWidth del doc a
+690 en móvil → `position: relative` en el scroll container. Detalle:
+`docs/plans/2026-09-08-plan-t84f00355-v3-process-detail.md`.
 
 ## 4. Riesgos / decisiones documentadas
 1. **Job board sin datos** → pantalla honesta "próxima iteración" (como la ref); no

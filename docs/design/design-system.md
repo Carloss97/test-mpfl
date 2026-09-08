@@ -294,3 +294,27 @@ breakpoint. Guardián: régimen de tokens V0 + `V2Company.test.jsx` /
 `V2CompanyReal.test.jsx`. Detalle:
 `docs/plans/2026-09-08-plan-t90a5157c-v2-company.md`.
 
+**Fase v3 (V3, t_84f00355, 2026-09-08):** lado empresa — detalle de proceso
+`/empresa/proceso/:id` (3 perfiles demo de la ref: header estado+días+acciones
+Edit/⋯, 4 métricas, configuration, statistics + advanced colapsable,
+recommended table 6 rows, process actions) y reporte de candidato embebido
+`/empresa/proceso/:id/candidatos/:sessionId` (mismo motor H4.3: resumen
+ejecutivo, mapa de evidencia 8 constructos, resultados por juego, calidad,
+gobernanza/caveats; sin descargas — read-only embebido). 13 tokens nuevos
+(bloque "Fase v3 (V3)" en `krumm-tokens.css`): `--k-pd-seg-evaluated`
+(`#ad825a`), `--k-pd-seg-pending` (`#e5d5c2`), `--k-pd-bar-track` (`#f0e6d9`),
+`--k-pd-bar-fill` (`#bd956c`), `--k-pd-time-bg` (`#f4eadc`),
+`--k-pd-clock-line` (`#ddc6aa`), `--k-pd-clock-ink` (`#936b47`, icono no-texto
+4.0:1 ≥3 ✓), `--k-pd-row-top` (`#faf1e5`), `--k-pd-rank-bg` (`#e9d5bb`),
+`--k-pd-rank-ink` (`#725035`, 5.0:1 sobre rank-bg — AA ✓),
+`--k-pd-avatar-top` (`#e6ceb0`), `--k-pd-fit-excellent` (`#795331`, 6.5:1
+sobre co-surface / 6.1:1 sobre row-top — AA ✓), `--k-pd-menu-shadow`
+(`rgba(56,39,29,.09)`, ref `#38271d18`). Textos vía `--k-ink-*`/`--k-co-*`
+existentes. Breakpoints: el `≤1100px` de la ref plegado al `≤1150px` de la
+cadena V2 (orden descendente estricto — plan V3 D10); reglas V3 viven DENTRO
+de los `@media` existentes (1150/760/480), no en bloques nuevos. La tabla
+`pd-table` (min-width 780px) va dentro de `.v3-pd-table-scroll` (overflow-x)
+para no romper el aserto de 0 overflow móvil. Guardián: `V3CompanyProcess.test.jsx`
++ `V3CompanyReport.test.jsx` + régimen de tokens V0. Detalle:
+`docs/plans/2026-09-08-plan-t84f00355-v3-process-detail.md`.
+
