@@ -254,3 +254,21 @@ los scopes v3 lo anulan con `box-shadow: none` (el CTA gold conserva
 `--k-shadow-gold`). El leak preexistente en LanguageToggle de vistas anteriores
 queda documentado como follow-up (plan t_1c27edbf, desviación 4).
 
+**Fase v3 (V1, t_482f57b2, 2026-09-07):** lado candidato — home `/candidato`
+(hero + 2 cards de `candidate.html` de la ref: "Explore opportunities" →
+`/empleos`, "I already have an invitation" → `/candidato/acceso`), form de
+acceso (invitación: link/token → guard de `/postulaciones`) y job board honesto.
+4 tokens nuevos (bloque "Fase v3 (V1)"): `--k-cp-card-bg` (`#efe2d0`, superficie
+card), `--k-cp-card-line` (`#d5bfa4`, borde card + icon box),
+`--k-cp-card-line-hover` (`#ad825a`), `--k-cp-card-shadow`
+(`rgba(98,67,43,.05)`, ref `#62432b0d`). Resto mapeado a tokens existentes
+(icon bg → `--k-bg-light-sand`; eyebrow/icon ink → `--k-ink-terracotta`;
+body/hint → `--k-ink-medium`; CTA card → `--k-gold` + `--k-gold-dark`, espresso
+6.9:1 sobre gold). **Fix de bug V0 (detectado en smoke V1):** los encabezados
+dentro de `<a>` (h2 cards `/portal`, h3 cards home) caían al color de enlace UA
+(lila) → `color: inherit` en la regla de enlaces de los scopes v3 (la referencia
+lo aplica global: `a { color: inherit }`); los back links conservan terracota
+vía regla compuesta (0,2,0) sobre la neutralización (0,1,1). Guardián de
+declaración: `V1Candidate.test.jsx` (régimen V1). Detalle:
+`docs/plans/2026-09-07-plan-t482f57b2-v1-candidate.md`.
+

@@ -278,21 +278,27 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
       }
       if (route.shell === 'portal') expect(container.querySelector('.v3-portal'), pathname).not.toBeNull();
       if (route.shell === 'companyLogin') expect(container.querySelector('.v3-company-login'), pathname).not.toBeNull();
-      // placeholder honesto: pages.{page}.title del diccionario (ES default)
-      const page = V3_COPY.es.pages[route.page];
-      expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toContain(page.title);
+      // t_482f57b2 (V1): /candidato y /candidato/acceso son páginas reales
+      // (home de la referencia + form de acceso); el resto candidato
+      // (/empleos) sigue placeholder honesto con el título del diccionario.
+      const expectedTitle = route.page === 'candidateHome'
+        ? V3_COPY.es.cp_title
+        : route.page === 'candidateAccess'
+          ? V3_COPY.es.cp_access
+          : V3_COPY.es.pages[route.page].title;
+      expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent), pathname).toContain(expectedTitle);
     }
   });
 
-  it('rutas candidato: eyebrow + note de próxima iteración + back al hub', () => {
+  it('rutas candidato: /empleos placeholder (note + back al hub); el hub ya no es placeholder', () => {
     const { container } = renderV3Route('/empleos');
     expect(container.querySelector('.v3-placeholder__eyebrow')).toHaveTextContent(V3_COPY.es.cp_eyebrow);
     expect(screen.getByText(V3_COPY.es.pages.jobs.note)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: V3_COPY.es.pages.jobs.backLabel })).toHaveAttribute('href', '/candidato');
-    // el hub /candidato no muestra back a sí mismo
-    window.history.pushState({}, '', '/candidato');
+    // el hub /candidato (V1: home real) no muestra back a sí mismo
     const { container: hubContainer } = renderV3Route('/candidato');
     expect(hubContainer.querySelector('.v3-back')).toBeNull();
+    expect(hubContainer.querySelector('.v3-placeholder')).toBeNull();
   });
 
   it('rutas empresa (no dashboard): back al dashboard; dashboard es el hub', () => {
@@ -327,11 +333,13 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
     expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toContain(V3_COPY.es.pages.processReport.title);
   });
 
-  it('i18n en el root app: EN traduce placeholder + shells', () => {
+  it('i18n en el root app: EN traduce página real de acceso + shells', () => {
     renderV3Route('/candidato/acceso');
     fireEvent.click(screen.getByRole('button', { name: 'EN' }));
-    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toContain(V3_COPY.en.pages.candidateAccess.title);
-    expect(screen.getByText(V3_COPY.en.pages.candidateAccess.note)).toBeInTheDocument();
+    // t_482f57b2 (V1): /candidato/acceso es el form real (sin note de
+    // placeholder); h1 = cp_access EN + intro de la página.
+    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toContain(V3_COPY.en.cp_access);
+    expect(screen.getByText(V3_COPY.en.ca_intro)).toBeInTheDocument();
   });
 });
 

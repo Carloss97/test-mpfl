@@ -45,6 +45,11 @@
 .v3-bare a,
 .v3-bare button {
   text-decoration: none;
+  /* t_482f57b2 (V1): la referencia aplica `a { color: inherit }` global —
+     sin esto, los encabezados dentro de <a> (h2 portal, h3 cards home)
+     caen al morado UA del navegador y rompen la paleta (bug detectado en
+     smoke V1; afectaba también a las cards de /portal de V0). */
+  color: inherit;
 }
 /* §6.1: focus-visible obligatorio — terracota AA sobre superficies claras */
 .v3-candidate :is(a, button):focus-visible,
@@ -130,6 +135,172 @@
 }
 .v3-cp-footer-links { display: flex; gap: 24px; }
 .v3-cp-footer .v3-text-button { font-size: 0.6875rem; }
+
+/* ── V1: home candidato (ref candidate.html — hero + 2 cards) ────────────── */
+.v3-cp-hero { max-width: 760px; text-align: center; margin: 0 auto 42px; }
+.v3-cp-eyebrow {
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  color: var(--k-ink-terracotta);
+  margin: 0 0 20px;
+}
+.v3-cp-hero h1 {
+  font-family: var(--k-font-display);
+  font-weight: 600;
+  font-size: clamp(34px, 4.5vw, 52px);
+  line-height: 1.12;
+  letter-spacing: -1.8px;
+  margin: 0;
+  text-wrap: balance;
+}
+.v3-cp-subtitle {
+  max-width: 630px;
+  font-size: 0.9375rem;
+  line-height: 1.85;
+  color: var(--k-ink-medium);
+  margin: 22px auto 0;
+  text-wrap: pretty;
+}
+.v3-cp-question {
+  font-family: var(--k-font-display);
+  font-weight: 500;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  text-align: center;
+  letter-spacing: -0.3px;
+  margin: 0 0 24px;
+}
+.v3-cp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.v3-cp-card {
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+  border: 1px solid var(--k-cp-card-line);
+  border-radius: 14px;
+  background: var(--k-cp-card-bg);
+}
+.v3-cp-card:hover {
+  border-color: var(--k-cp-card-line-hover);
+  box-shadow: var(--k-cp-card-shadow);
+}
+.v3-cp-card-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--k-cp-card-line);
+  border-radius: 12px;
+  background: var(--k-bg-light-sand);
+  color: var(--k-ink-terracotta);
+  margin-bottom: 24px;
+}
+.v3-cp-card-icon svg { width: 26px; height: 26px; }
+.v3-cp-card h3 {
+  font-family: var(--k-font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  letter-spacing: -0.6px;
+  margin: 0 0 14px;
+}
+.v3-cp-card > p {
+  margin: 0 0 28px;
+  color: var(--k-ink-medium);
+  font-size: 0.8125rem;
+  line-height: 1.9;
+}
+.v3-cp-card-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 48px;
+  padding: 13px 18px;
+  margin-top: auto;
+  border: 1px solid var(--k-gold-dark);
+  border-radius: 8px;
+  background: var(--k-gold);
+  color: var(--k-ink-espresso);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.v3-cp-card-cta svg { width: 20px; height: 20px; flex-shrink: 0; }
+.v3-cp-hint {
+  display: block;
+  text-align: center;
+  margin-top: 14px;
+  font-size: 0.625rem;
+  line-height: 1.6;
+  color: var(--k-ink-medium);
+}
+
+/* ── V1: acceso candidato (form de invitación → guard /postulaciones) ────── */
+.v3-ca { max-width: 560px; margin: 0 auto; padding-top: 48px; text-align: center; }
+.v3-ca-intro {
+  max-width: 480px;
+  color: var(--k-ink-medium);
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  margin: 18px auto 0;
+}
+.v3-ca-form { margin: 32px auto 0; text-align: left; }
+.v3-ca-field {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--k-ink-espresso);
+}
+.v3-ca-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 52px;
+  padding: 14px 16px;
+  border: 1px solid var(--k-cp-card-line);
+  border-radius: 10px;
+  background: var(--k-bg-light);
+  color: var(--k-ink-espresso);
+  font: 500 0.9375rem/1.4 var(--k-font-sans);
+}
+.v3-ca-input::placeholder { color: var(--k-ink-medium); }
+.v3-ca-input:focus-visible {
+  outline: 3px solid var(--k-ink-terracotta);
+  outline-offset: 2px;
+}
+.v3-ca-submit {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 20px;
+  border: 1px solid var(--k-gold-dark);
+  border-radius: 12px;
+  background: linear-gradient(115deg, var(--k-btn-gold-from), var(--k-btn-gold-to));
+  color: var(--k-btn-gold-ink);
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+/* La neutralización V0 `.v3-candidate button { box-shadow: none }` (0,1,1)
+   gana a la clase sola (0,1,0): la regla compuesta (0,2,0) restaura la
+   sombra de marca del CTA (mismo patrón que .v3-bare .v3-cta-gold). */
+.v3-candidate .v3-ca-submit { box-shadow: var(--k-shadow-gold); }
+.v3-ca-submit:hover { box-shadow: var(--k-shadow-cta); }
+.v3-ca-error {
+  margin: 12px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--k-status-error);
+}
+.v3-ca-note {
+  margin: 20px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--k-ink-medium);
+}
+.v3-ca .v3-back { margin-top: 28px; }
 
 /* ── Shell empresa (ref company.html) ───────────────────────────────────── */
 .v3-company { background: var(--k-bg-beige); font-size: 0.875rem; line-height: 1.5; }
@@ -454,6 +625,13 @@
   font-size: 0.8125rem;
   color: var(--k-ink-terracotta);
 }
+/* La regla `color: inherit` de los enlaces v3 (0,1,1) pisa a `.v3-back`
+   (0,1,0): la compuesta (0,2,0) restaura la terracota de los back links. */
+.v3-candidate .v3-back,
+.v3-company .v3-back,
+.v3-bare .v3-back {
+  color: var(--k-ink-terracotta);
+}
 .v3-back:hover { text-decoration: underline; text-underline-offset: 4px; }
 .v3-back--bare { margin-top: 8px; }
 
@@ -516,6 +694,9 @@
     border-color: var(--k-gold-dark);
     box-shadow: var(--k-shadow-soft);
   }
+  .v3-cp-card { transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+  .v3-cp-card:hover { transform: translateY(-3px); }
+  .v3-ca-submit { transition: box-shadow 180ms ease; }
   .v3-co-nav-item { transition: background 160ms ease; }
   .v3-cta-gold { transition: box-shadow 180ms ease; }
   .v3-cta-gold:hover { transform: translateY(-2px); }
@@ -527,6 +708,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .v3-portal-card:hover { transform: none; }
+  .v3-cp-card:hover { transform: none; }
   .v3-cta-gold:hover { transform: none; }
 }
 
@@ -575,4 +757,11 @@
   .v3-bare-brand img { width: 88px; height: 88px; }
   .v3-portal-grid { grid-template-columns: 1fr; }
   .v3-bare-main { padding: 28px 20px 56px; }
+  /* V1: home candidato (ref candidate.css ≤700px) */
+  .v3-cp-grid { grid-template-columns: 1fr; gap: 20px; }
+  .v3-cp-card { padding: 28px 24px; }
+  .v3-cp-hero { margin-bottom: 32px; }
+  .v3-cp-subtitle { font-size: 0.875rem; }
+  .v3-cp-hero h1 { letter-spacing: -1.2px; }
+  .v3-ca { padding-top: 24px; }
 }

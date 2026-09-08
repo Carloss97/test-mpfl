@@ -9,8 +9,16 @@
 //   3. La sesión se liga a la invitación: el runId y el header x-invitation-id
 //      se derivan del token aceptado.
 //
+// t_482f57b2 (V1 fase v3): extractInviteToken + buildInvitationUrl — puente del
+// form de acceso (/candidato/acceso): el candidato pega un link de invitación
+// (URL completa o relativa) o el token crudo y la página navega a
+// /postulaciones?invite=<token>; el guard de esta misma módulo valida y liga
+// la sesión. El formato de token no cambia (TOKEN_REGEX es la única fuente).
+//
 // Regla de privacidad: nunca guardar el email completo en el cliente; el backend
 // devuelve maskedEmail. El token en sí no es PII.
+
+import { POSTULATION_DEMO_BASE_PATH } from './postulationDemoRoute.js';
 
 export const INVITATION_PARAM = 'invite';
 
@@ -36,6 +44,38 @@ export function parseInviteToken(search) {
 
 export function hasInviteParam(search) {
   return parseInviteToken(search) !== null;
+}
+
+/**
+ * Extrae un token de invitación de lo que el candidato pega en el form de
+ * acceso (t_482f57b2 V1). Acepta 3 shapes:
+ *   1. URL completa o relativa con query (`…/postulaciones?invite=<token>`;
+ *      el fragment se ignora) → el token sale del query, y solo si pasa el
+ *      TOKEN_REGEX (una URL con `invite` ausente/mal formada → null, nunca se
+ *      reinterpreta el texto completo como token crudo).
+ *   2. Token crudo (pasa TOKEN_REGEX) → el token.
+ *   3. Cualquier otra cosa → null (el form muestra el error de formato y el
+ *      veredicto final lo sigue dando el guard de /postulaciones).
+ */
+export function extractInviteToken(input) {
+  const raw = String(input ?? '').trim();
+  if (!raw) return null;
+  const withoutFragment = raw.split('#', 1)[0];
+  const questionIndex = withoutFragment.indexOf('?');
+  if (questionIndex !== -1) {
+    return parseInviteToken(withoutFragment.slice(questionIndex + 1));
+  }
+  return TOKEN_REGEX.test(raw) ? raw : null;
+}
+
+/**
+ * Compone la URL de entrada al guard de /postulaciones con el token (t_482f57b2
+ * V1). Misma forma que la de los enlaces de invitación existentes
+ * (`/postulaciones?invite=<token>`), para que `parseInviteToken` del guard la
+ * lea sin cambios.
+ */
+export function buildInvitationUrl(token) {
+  return `${POSTULATION_DEMO_BASE_PATH}?${INVITATION_PARAM}=${encodeURIComponent(token)}`;
 }
 
 /**

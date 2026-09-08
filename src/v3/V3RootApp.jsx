@@ -1,7 +1,11 @@
 // t_1c27edbf (V0 fase v3): raiz de las rutas de la fase. main.jsx despacha
 // aquí cuando resolveV3Route(pathname) matcha; este componente monta el shell
-// correcto (candidate / company / portal / companyLogin) con el placeholder
-// honesto de la página (contenido real: V1–V4).
+// correcto (candidate / company / portal / companyLogin) con el contenido de
+// la página.
+// t_482f57b2 (V1): lado candidato real — /candidato (CandidateHomePage,
+// 2 cards de la referencia) y /candidato/acceso (CandidateAccessPage, form →
+// guard de invitación de /postulaciones); /empleos sigue placeholder honesto
+// (igual que jobs.html de la referencia). Empresa: placeholders hasta V2–V4.
 //
 // Las páginas bare (/portal y /empresa/acceso) replican el chrome estático de
 // la referencia (portal.html, login-company.html): brand + toggle + main.
@@ -12,6 +16,8 @@ import { resolveV3Route, V3_SHELLS } from './v3Routes.js';
 import CandidateShell from './CandidateShell.jsx';
 import CompanyShell from './CompanyShell.jsx';
 import V3Placeholder from './V3Placeholder.jsx';
+import CandidateHomePage from './CandidateHomePage.jsx';
+import CandidateAccessPage from './CandidateAccessPage.jsx';
 import './v3Shells.css';
 
 function IconBuilding() {
@@ -128,10 +134,28 @@ export default function V3RootApp() {
   const page = copy.pages[resolved.page];
 
   if (resolved.shell === V3_SHELLS.CANDIDATE) {
-    const backTo = resolved.page === 'candidateHome' ? null : '/candidato';
+    // t_482f57b2 (V1): /candidato (home, 2 cards de la referencia) y
+    // /candidato/acceso (form → guard de invitación de /postulaciones) son
+    // páginas reales; /empleos conserva el placeholder honesto "próxima
+    // iteración" (idéntico a jobs.html de la referencia).
+    let content;
+    if (resolved.page === 'candidateHome') {
+      content = <CandidateHomePage />;
+    } else if (resolved.page === 'candidateAccess') {
+      content = <CandidateAccessPage />;
+    } else {
+      content = (
+        <V3Placeholder
+          page={page}
+          eyebrow={copy.cp_eyebrow}
+          backTo={resolved.page === 'candidateHome' ? null : '/candidato'}
+          backLabel={page.backLabel}
+        />
+      );
+    }
     return (
       <CandidateShell breadcrumb={copy[resolved.route.breadcrumbKey]}>
-        <V3Placeholder page={page} eyebrow={copy.cp_eyebrow} backTo={backTo} backLabel={page.backLabel} />
+        {content}
       </CandidateShell>
     );
   }

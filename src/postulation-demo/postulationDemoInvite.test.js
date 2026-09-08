@@ -5,6 +5,8 @@ import {
   validateInvitationToken,
   localValidateInvitationToken,
   runIdForInvitation,
+  extractInviteToken,
+  buildInvitationUrl,
   INVITATION_STATUS,
 } from './postulationDemoInvite.js';
 
@@ -113,5 +115,58 @@ describe('runIdForInvitation', () => {
 
   it('fallback a postulation-demo si el token no es usale', () => {
     expect(runIdForInvitation('')).toMatch(/^postulation-demo-/);
+  });
+});
+
+describe('extractInviteToken (t_482f57b2 V1: input pegado → token)', () => {
+  it('acepta un token crudo válido (con ±whitespace)', () => {
+    expect(extractInviteToken('tok-valid-abc123')).toBe('tok-valid-abc123');
+    expect(extractInviteToken('  tok-valid-abc123  ')).toBe('tok-valid-abc123');
+  });
+
+  it('extrae el token de una URL completa (https)', () => {
+    expect(extractInviteToken('https://krumm.cl/postulaciones?invite=tok-valid-abc123')).toBe('tok-valid-abc123');
+    expect(extractInviteToken('https://staging.krumm.cl/postulaciones?battery=stable_dg&invite=tok-valid-abc123')).toBe('tok-valid-abc123');
+  });
+
+  it('extrae el token de una URL relativa', () => {
+    expect(extractInviteToken('/postulaciones?invite=tok-valid-abc123')).toBe('tok-valid-abc123');
+  });
+
+  it('ignora el fragment de la URL', () => {
+    expect(extractInviteToken('https://krumm.cl/postulaciones?invite=tok-valid-abc123#sesion')).toBe('tok-valid-abc123');
+  });
+
+  it('URL sin param invite → null', () => {
+    expect(extractInviteToken('https://krumm.cl/postulaciones?battery=stable_dg')).toBeNull();
+    expect(extractInviteToken('https://krumm.cl/postulaciones')).toBeNull();
+  });
+
+  it('URL con invite mal formado → null (no lo trata como token crudo)', () => {
+    expect(extractInviteToken('https://krumm.cl/postulaciones?invite=abc')).toBeNull();
+    expect(extractInviteToken('https://krumm.cl/postulaciones?invite=')).toBeNull();
+  });
+
+  it('texto basura → null', () => {
+    expect(extractInviteToken('hola mundo')).toBeNull();
+    expect(extractInviteToken('https://krumm.cl/ayuda')).toBeNull();
+    expect(extractInviteToken('')).toBeNull();
+    expect(extractInviteToken(null)).toBeNull();
+    expect(extractInviteToken(undefined)).toBeNull();
+  });
+
+  it('token crudo corto/inválido → null (regex)', () => {
+    expect(extractInviteToken('abc')).toBeNull();
+    expect(extractInviteToken('tok valid!')).toBeNull();
+  });
+});
+
+describe('buildInvitationUrl (t_482f57b2 V1)', () => {
+  it('compone /postulaciones?invite=<token>', () => {
+    expect(buildInvitationUrl('tok-valid-abc123')).toBe('/postulaciones?invite=tok-valid-abc123');
+  });
+
+  it('codifica el token (aunque el regex actual no lo permita, el encode es defensivo)', () => {
+    expect(buildInvitationUrl('AbC-123_def')).toBe('/postulaciones?invite=AbC-123_def');
   });
 });

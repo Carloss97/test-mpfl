@@ -90,7 +90,7 @@ crudos en ninguna vista nueva.
 | Card | Scope | Criterio de aceptación (resumen) |
 |---|---|---|
 | **V0 — Shells + rutas + i18n base** ✅ done (t_1c27edbf, 2026-09-07) | `CandidateShell`/`CompanyShell`, tablas de nav, footer, Help dialog, user chip, banner demo, registro de rutas (placeholders), copy EN+ES | Shells renderizan en 2 viewports con 0 overflow/0 errors; tokens `--k-*` (sin hex en vistas); spec de declaración |
-| **V1 — Lado candidato** | `/portal`, `/candidato` (2 cards), `/candidato/acceso` (integración del guard de invitación), `/empleos` (honesto next-iteration) | Recorrido: portal → home → acceso → (invitación válida) → `/postulaciones` (flujo intacto); ES/EN; smoke |
+| **V1 — Lado candidato** ✅ done (t_482f57b2, 2026-09-07) | `/portal`, `/candidato` (2 cards), `/candidato/acceso` (integración del guard de invitación), `/empleos` (honesto next-iteration) | Recorrido: portal → home → acceso → (invitación válida) → `/postulaciones` (flujo intacto); ES/EN; smoke |
 | **V2 — Empresa: dashboard + procesos** | `/empresa/acceso` (demo), `/empresa` (KPIs + tabla), `/empresa/procesos` (búsqueda/filtros/sort funcionales, patrón processes.js), datos demo consistentes | Filtros/sort operativos (tests de lógica + smoke); KPIs coherentes con la lista; demo banner |
 | **V3 — Empresa: detalle + reporte** | `/empresa/proceso/:id` (3 perfiles demo), reporte de candidato embebido (motor H4.3), acciones (edit/pause/view candidates — UI + estado local) | Reporte embebido = mismo data-model (8 constructs, caveats); navegación back; ES/EN |
 | **V4 — Empresa: new request** | `/empresa/nueva-solicitud` + `/diseño` (flujo guiado mínimo) + `/subida` (upload → metadatos) | Diseño crea un "proceso" en el estado demo (aparece en /procesos); upload valida tipo/archivo y confirma; sin promesas de NLP |
@@ -106,6 +106,18 @@ krumm-tokens.css + registro en main.jsx. Suite 771/771, build OK, smoke vivo
 12 rutas × 2 viewports + EN (0 fallos, 0 console errors) sobre `vite preview`.
 Detalle + desviaciones + hallazgo (leak box-shadow global button → candidate
 follow-up): `docs/plans/2026-09-07-plan-t1c27edbf-v0-shells.md`.
+**V1 done (t_482f57b2, 2026-09-07):** `/candidato` (home real: hero + 2 cards de la
+referencia, copias textuales EN/ES), `/candidato/acceso` (form: link/token →
+`extractInviteToken`/`buildInvitationUrl` nuevos en postulationDemoInvite.js →
+`/postulaciones?invite=…` → guard existente → sesión; auto-navegación si la URL ya
+trae el token), `/empleos` job board honesto (placeholder, igual que la ref),
+`/portal` verificado (V0). 4 tokens nuevos (bloque "Fase v3 (V1)") + **fix de bug V0
+detectado en smoke V1**: encabezados dentro de `<a>` caían al morado UA
+(h2 portal, h3 cards home) → `color: inherit` en los enlaces v3 (referencia) +
+especificidad compuesta para los back links. Suite 805/805 (127 archivos), build
+OK, smoke vivo: 12 cargas estáticas (0 overflow/0 errors) + recorrido de
+aceptación portal→home→acceso→token válido→**setup** (flujo intacto) + guard
+expirado (mensaje correcto). Detalle: `docs/plans/2026-09-07-plan-t482f57b2-v1-candidate.md`.
 
 ## 4. Riesgos / decisiones documentadas
 1. **Job board sin datos** → pantalla honesta "próxima iteración" (como la ref); no

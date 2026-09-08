@@ -127,6 +127,18 @@
   --k-text-muted-sand: #cdb8a4;            /* labels secundarios sobre oscuro (ref --muted) */
   --k-scrim: rgba(43, 30, 22, 0.45);       /* backdrop de diálogos (ref #38271d66) */
 
+  /* ── Fase v3 (V1, t_482f57b2) — cards de la home candidato (ref candidate.css) ──
+   * Superficie/borde/sombra de las 2 cards "Explore opportunities" /
+   * "I already have an invitation" (y su icon box). El resto mapea a tokens
+   * existentes: icon bg → --k-bg-light-sand, icon ink/eyebrow →
+   * --k-ink-terracotta, body/hint → --k-ink-medium, CTA card → --k-gold +
+   * --k-gold-dark (espresso 6.9:1 sobre gold, AA ✓). Ver plan
+   * docs/plans/2026-09-07-plan-t482f57b2-v1-candidate.md Task 3. */
+  --k-cp-card-bg: #efe2d0;                 /* superficie card home (ref .cp-card) */
+  --k-cp-card-line: #d5bfa4;               /* borde card + icon box (ref) */
+  --k-cp-card-line-hover: #ad825a;         /* borde card en hover (ref) */
+  --k-cp-card-shadow: rgba(98, 67, 43, 0.05); /* sombra card hover (ref #62432b0d) */
+
   /* ── H4.2 (rebuild landing) — extension layout/tipografia ──── */
   --k-gutter-mobile: 24px;             /* margen lateral <900px (design-system §5.1) */
   --k-space-section-mobile: 64px;      /* padding de sección <900px (§5.1) */
