@@ -224,6 +224,26 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
     'ATENCIÓN - MODELO B: Donde el protocolo indique INTERRUPTOR 1, utiliza INTERRUPTOR 3. ' +
     'Donde indique CABLE ROJO, corta CABLE AZUL. Las demás instrucciones no cambian.',
 
+  /**
+   * UX copy exacto (Doc 2 §11 "UX copy completo") — ES fuente de verdad; la UI traduce
+   * (EN) y B5 completa el diccionario §11. Las transiciones "Antes de Lx" se renderizan
+   * en la intro del nivel (decisión B1 #7: TRANSITION es momento en el motor).
+   */
+  intro: Object.freeze({
+    transitionEs: Object.freeze({
+      1: 'Primero aprenderás el protocolo base del MODELO A.',
+      2: 'Se añadirá una nueva instrucción. Las reglas anteriores siguen vigentes.',
+      3: 'La secuencia será más larga y tendrás menos tiempo para recordarla.',
+      4: 'ATENCIÓN: este artefacto es MODELO B. Algunas instrucciones cambian. Revisa el protocolo antes de continuar.',
+    }),
+    delayEs: 'Memoriza la secuencia.',
+    penaltyEs: 'Secuencia incorrecta. Tiempo penalizado.',
+    successEs: 'Artefacto neutralizado.',
+    failTimeoutEs: 'Tiempo agotado. Nivel finalizado.',
+    failErrorsEs: 'Se alcanzó el límite de errores. Nivel finalizado.',
+    sessionCompleteEs: 'Simulación finalizada. Tus resultados fueron procesados.',
+  }),
+
   errorClasses: BOMB_ERROR_CLASSES,
 });
 
@@ -264,6 +284,27 @@ export function transformSequence(ruleIds, bombType, manifest = BOMB_RULE_MANIFE
       to: action.to ?? null,
     });
   });
+}
+
+/**
+ * Regla "nueva" de un nivel evaluado respecto al nivel anterior (spec Doc 2 §5: Level
+ * Intro muestra "regla nueva destacada"). Puro y derivado del manifest (DoD §16.2):
+ * última regla del nivel que no estaba en el nivel anterior evaluado (excluye tutorial).
+ * - L1 → null (primer nivel evaluado: el protocolo base, sin regla "nueva").
+ * - L2 → 'B1' (hold botón amarillo).
+ * - L3 → 'C1' (cable verde).
+ * - L4 → null (misma base que L3; el cambio es el tipo de bomba → la UI destaca el
+ *   modificador Tipo B, `typeBNoticeEs`).
+ */
+export function newRuleForLevel(levelKey, manifest = BOMB_RULE_MANIFEST) {
+  const order = manifest.levelOrder.filter((k) => k !== 'tutorial');
+  const idx = order.indexOf(levelKey);
+  if (idx < 0) return null;
+  if (idx === 0) return null;
+  const prevIds = manifest.levels[order[idx - 1]].sequenceIds;
+  const curIds = manifest.levels[levelKey].sequenceIds;
+  const added = curIds.filter((id) => !prevIds.includes(id));
+  return added.length > 0 ? added[added.length - 1] : null;
 }
 
 /** Secuencia efectiva de un nivel según manifest (clave de nivel: 'tutorial'|1..4). */

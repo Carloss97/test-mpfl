@@ -231,6 +231,7 @@
 /* ── Columnas §6.1 (manual | panel) ─────────────────────────────────────── */
 
 .bomb-columns {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(250px, 350px) minmax(0, 1fr);
   gap: 16px;
@@ -744,6 +745,332 @@
 
 .bomb-cta:active { transform: translateY(1px); }
 
+.bomb-cta--secondary {
+  background: transparent;
+  border: 1px solid var(--bomb-panel-line);
+  color: var(--bomb-text-dim);
+}
+
+.bomb-cta--secondary:hover:not(:disabled) {
+  border-color: var(--bomb-amber);
+  color: var(--bomb-amber);
+  filter: none;
+}
+
+/* ── B3: fases de niveles (Doc 2 §5: Level Intro / Encoding / Blind Delay /
+      Resultado; §10 timing; §16 animaciones) ───────────────────────────── */
+
+/* Level Intro (columna manual): nivel + modelo + copy "Antes de Lx" + regla
+   nueva destacada + CTA Continuar (Doc 1 §4: "Resumen breve / Solo continuar"). */
+
+.bomb-intro {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.bomb-intro__level {
+  margin: 0;
+  font-family: var(--k-font-display);
+  font-weight: 900;
+  font-size: 1.35rem;
+  color: var(--bomb-text);
+}
+
+.bomb-intro__model {
+  justify-self: start;
+  padding: 3px 10px;
+  border: 2px solid var(--bomb-panel-line);
+  border-radius: 8px;
+  background: #0d1319;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: var(--bomb-text);
+}
+
+.bomb-intro__model--B {
+  border-color: var(--bomb-amber);
+  color: var(--bomb-amber);
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 180, 84, 0.16) 0 5px, transparent 5px 10px),
+    #0d1319;
+}
+
+.bomb-intro__transition {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.45;
+  color: var(--bomb-text);
+}
+
+.bomb-intro__highlight {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--bomb-panel-line);
+  border-left: 3px solid var(--bomb-amber);
+  border-radius: 10px;
+  background: rgba(255, 180, 84, 0.08);
+}
+
+.bomb-intro__tag {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bomb-amber);
+}
+
+.bomb-intro__highlight-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--bomb-text);
+}
+
+.bomb-intro__highlight--B {
+  border-left-color: var(--bomb-red);
+  background: rgba(255, 98, 82, 0.08);
+}
+
+.bomb-intro__highlight--B .bomb-intro__tag { color: var(--bomb-red); }
+
+.bomb-intro .bomb-cta { justify-self: start; }
+
+/* Instruction Encoding: manual central + barra de exposición (L2-L4) o
+   "Lectura libre" + CTA (L1). Panel atenuado/desbloqueado-físico (atenuado). */
+
+.bomb-encoding {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.bomb-encoding__free {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bomb-text-dim);
+}
+
+.bomb-exposure {
+  height: 6px;
+  border-radius: 3px;
+  background: #0d1319;
+  border: 1px solid #2c3945;
+  overflow: hidden;
+}
+
+.bomb-exposure__fill {
+  height: 100%;
+  background: var(--bomb-amber);
+}
+
+/* "Manual hide" §16 (150-250 ms, ease-in): pre-fade 200 ms antes del fin de la
+   exposición; el INSTRUCTIONS_HIDE lo dispara el motor en su tick exacto. */
+.bomb-manual__lines--prehide {
+  opacity: 0;
+  transition: opacity 180ms ease-in;
+}
+
+/* Countdown 0.5 s antes de encoding (§10: "evita que el usuario pierda exposición
+   por transición" — el reloj de exposición arranca cuando termina este beat). */
+
+.bomb-countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  border-radius: 14px;
+  background: rgba(8, 12, 16, 0.88);
+  cursor: default;
+}
+
+.bomb-countdown__text {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bomb-text);
+}
+
+.bomb-countdown__track {
+  width: min(240px, 60%);
+  height: 6px;
+  border-radius: 3px;
+  background: #2c3945;
+  overflow: hidden;
+}
+
+.bomb-countdown__fill {
+  width: 100%;
+  height: 100%;
+  background: var(--bomb-amber);
+  animation: bomb-countdown-fill 500ms linear;
+}
+
+@keyframes bomb-countdown-fill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* Blind Delay (Doc 1 §4: "Pantalla oscura con estática sutil; sin manual ni
+   targets accionables"). §14/§16: estática sutil (grano desplazándose, sin
+   parpadeo >3 Hz — la animación mueve background-position, no opacity) y
+   reemplazable por negro limpio bajo reduced-motion. */
+
+.bomb-delay-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #05080b;
+  cursor: default;
+  overflow: hidden;
+}
+
+.bomb-delay-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.55) 0.5px, transparent 0.7px);
+  background-size: 3px 3px;
+  animation: bomb-delay-static 1.8s linear infinite;
+}
+
+@keyframes bomb-delay-static {
+  from { background-position: 0 0; }
+  to { background-position: 6px 5px; }
+}
+
+.bomb-delay-screen__text {
+  position: relative;
+  margin: 0;
+  pointer-events: none;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--bomb-text-dim);
+}
+
+/* Panel atenuado en fases con input bloqueado (intro/encoding, Doc 1 §4):
+   los controles siguen operables para registrar INPUT_DURING_LOCK (QA-08);
+   el cursor comunica el bloqueo. */
+
+.bomb-panel--locked {
+  filter: saturate(0.55) brightness(0.72);
+}
+
+.bomb-panel--locked .bomb-switch,
+.bomb-panel--locked .bomb-wire,
+.bomb-panel--locked .bomb-hold-btn {
+  cursor: not-allowed;
+}
+
+.bomb-panel--locked .bomb-switch:hover:not(:disabled),
+.bomb-panel--locked .bomb-wire:hover:not(:disabled) {
+  border-color: var(--bomb-panel-line);
+  background: #141b23;
+}
+
+/* Success (Doc 2 §5): LED verde + timer congelado (HUD) + pulso breve de borde
+   del panel (§16 "Success pulse" 300 ms ease-out; no bloquea el CTA). */
+
+.bomb-panel--success {
+  animation: bomb-success-edge var(--bomb-anim-success) ease-out;
+}
+
+@keyframes bomb-success-edge {
+  0% { box-shadow: inset 0 0 0 0 rgba(83, 217, 126, 0.55), 0 18px 40px rgba(3, 6, 10, 0.45); }
+  100% { box-shadow: inset 0 0 0 14px rgba(83, 217, 126, 0), 0 18px 40px rgba(3, 6, 10, 0.45); }
+}
+
+/* Overlays de resultado (solo columnas: el HUD con LED/timer congelado sigue
+   visible, Doc 2 §5). Fail: razón general, sin revelar la respuesta (§13.1). */
+
+.bomb-columns-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  border-radius: 14px;
+  background: rgba(8, 12, 16, 0.78);
+  cursor: default;
+}
+
+.bomb-result {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 480px;
+  padding: 20px;
+  border: 1px solid #2c3945;
+  border-radius: 14px;
+  background: #141b23;
+}
+
+.bomb-result__title {
+  margin: 0;
+  font-family: var(--k-font-display);
+  font-weight: 900;
+  font-size: clamp(1.15rem, 2.2vw, 1.6rem);
+  line-height: 1.3;
+  color: var(--bomb-text);
+}
+
+.bomb-result__summary {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--bomb-text-dim);
+}
+
+.bomb-result--success { border-color: var(--bomb-green); }
+.bomb-result--success .bomb-result__title { color: var(--bomb-green); }
+.bomb-result--fail { border-color: var(--bomb-red); }
+.bomb-result--fail .bomb-result__title { color: var(--bomb-red); }
+
+/* Copy de penalty en la barra de estado (Doc 2 §11: "Secuencia incorrecta.
+   Tiempo penalizado.") — texto + LED, nunca solo color. */
+
+.bomb-status--penalty {
+  color: var(--bomb-red);
+  font-weight: 700;
+}
+
+/* Cierre de sesión (Doc 2 §5 "Session End": cierre + confirmación) */
+
+.bomb-session-complete {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  text-align: center;
+  max-width: 560px;
+}
+
+.bomb-session-complete h2 {
+  margin: 0;
+  font-family: var(--k-font-display);
+  font-weight: 900;
+  font-size: clamp(1.25rem, 2.4vw, 1.8rem);
+  line-height: 1.3;
+  color: var(--bomb-text);
+}
+
 /* Banner del stage DEV (solo /dev/bomb) */
 
 .bomb-dev-banner {
@@ -833,6 +1160,13 @@
   .bomb-wire--spark .bomb-wire__spark-dot { animation: none; opacity: 0; }
   .bomb-hold-btn--accepted { animation: none; }
   .bomb-led[data-led='success'] .bomb-led__dot { animation: none; }
+  /* B3: countdown sin animación (barra llena, el beat sigue durando 500 ms),
+     estática del delay reemplazada por negro limpio (§14), pre-fade inmediato,
+     pulso de success sin animación — la lógica no cambia (DoD §20). */
+  .bomb-countdown__fill { animation: none; }
+  .bomb-delay-screen::before { animation: none; opacity: 0; }
+  .bomb-panel--success { animation: none; }
+  .bomb-manual__lines--prehide { transition: none; }
   .bomb-switch__knob,
   .bomb-switch,
   .bomb-wire,
