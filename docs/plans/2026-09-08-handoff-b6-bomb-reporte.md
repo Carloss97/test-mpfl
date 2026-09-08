@@ -125,7 +125,8 @@ y seed de campaña por defecto (`BOMB_DEFAULT_SESSION_SEED`, determinismo §15).
 ## Commits
 - `4e65c75` — B5 cierre + backfill integracion (telemetría B5 + blueprint + game
   map + fixture + feedback + instruction check + seed campaña).
-- `<commit B6>` — B6: 9° constructo + feature vector 2.2.0 + docs + audit.
+- `9565bae` — B6: 9° constructo + feature vector 2.2.0 + docs + audit (este
+  handoff cerrado en `docs(t_32c02f91)` posterior con el hash).
 
 ## Siguiente (ordenado)
 1. **T.3b** (`t_c1892485`, desbloqueada): sensibilidades MoveNet/FaceMesh —
