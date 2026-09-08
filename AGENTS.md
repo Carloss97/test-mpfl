@@ -4,7 +4,7 @@
 
 - Repo runtime y fuente de verdad: `/home/sarlock/krumm/test-mpfl`.
 - Repo visual/original de referencia (solo cuando se solicite portabilidad): `/mnt/c/Users/sarlo/OneDrive/Escritorio/Proyectos/Test` (PC Windows, sync manual).
-- Ruta producto: `/postulaciones-demo`.
+- Ruta producto: `/postulaciones` (cutover V5: `/reclutador`→`/empresa`, `/postulaciones` sin invite/fixture→`/candidato`).
 - Batería predeterminada/fallback: `stable_dg`.
 - Batería interna controlada: `?battery=original`.
 - Fixtures: `?fixture=1` y `?fixture=1&battery=original`.
