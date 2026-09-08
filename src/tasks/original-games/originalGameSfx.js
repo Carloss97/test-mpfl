@@ -18,6 +18,19 @@ export const GAME_SFX_DEFS = Object.freeze({
   deliver: Object.freeze({ type: 'arpeggio', freqs: [880, 1174.66], stepMs: 70, durationMs: 90, gain: 0.05 }),
   complete: Object.freeze({ type: 'arpeggio', freqs: [523.25, 659.25, 783.99, 1046.5], stepMs: 100, durationMs: 90, gain: 0.05 }),
   pop: Object.freeze({ type: 'slide', freqFrom: 200, freqTo: 55, durationMs: 320, gain: 0.09 }),
+
+  // EXP-BOMB-001 (B2): 8 SFX del mundo "Desactivación" (spec Doc 2 §17: switch,
+  // cut, button, beep, penalty, success, fail — dentro del rango 6-8; §10.1
+  // beeps de temporizador con beep marcado en crítico; §12 mapa feedback→audio).
+  // Nombres con prefijo `bomb_` para no colisionar con el catálogo compartido.
+  bomb_switch: Object.freeze({ type: 'slide', freqFrom: 420, freqTo: 180, durationMs: 45, gain: 0.06 }),
+  bomb_wire_cut: Object.freeze({ type: 'slide', freqFrom: 900, freqTo: 200, durationMs: 60, gain: 0.07 }),
+  bomb_button: Object.freeze({ type: 'beep', freq: 220, durationMs: 50, gain: 0.06 }),
+  bomb_beep: Object.freeze({ type: 'beep', freq: 880, durationMs: 60, gain: 0.04 }),
+  bomb_beep_hi: Object.freeze({ type: 'beep', freq: 1180, durationMs: 45, gain: 0.05 }),
+  bomb_penalty: Object.freeze({ type: 'slide', freqFrom: 320, freqTo: 160, durationMs: 120, gain: 0.07 }),
+  bomb_success: Object.freeze({ type: 'arpeggio', freqs: [523.25, 659.25, 783.99], stepMs: 90, durationMs: 70, gain: 0.05 }),
+  bomb_fail: Object.freeze({ type: 'slide', freqFrom: 180, freqTo: 60, durationMs: 300, gain: 0.07 }),
 });
 
 export function isSfxName(name) {

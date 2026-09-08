@@ -4,6 +4,7 @@ import './styles/krumm-tokens.css';
 import App from './App.jsx';
 import PostulationDemoApp from './postulation-demo/PostulationDemoApp.jsx';
 import LandingPage from './landing/LandingPage.jsx';
+import BombDevStage from './dev/BombDevStage.jsx';
 import {
   isPostulationDemoPath,
   isLegacyPostulationPath,
@@ -40,6 +41,10 @@ if (v5Cutover) {
 }
 
 const isTechnicalAppPath = effectivePath.startsWith('/tecnico');
+// EXP-7 BOMB (B2, t_2fdada28): laboratorio dev del panel + HUD (sin batería,
+// sin evaluación). Queda disponible hasta que B5 registre el juego en la
+// batería original; se puede retirar entonces si el smoke lo hace vía fixture.
+const isDevBombPath = effectivePath === '/dev/bomb' || effectivePath.startsWith('/dev/bomb/');
 // Orden de prioridad (plan fase v3 §2, actualizado en V5): las rutas de
 // producto /postulaciones* (flujo de evaluación, entrada con invite o fixture)
 // y /tecnico* no cambian; las 12 rutas de la fase v3 (V0–V4) van antes del
@@ -47,11 +52,13 @@ const isTechnicalAppPath = effectivePath.startsWith('/tecnico');
 // llegan a renderizarse (cutover arriba).
 const RootApp = isPostulationDemoPath(effectivePath)
   ? PostulationDemoApp
-  : isTechnicalAppPath
-    ? App
-    : resolveV3Route(effectivePath)
-      ? V3RootApp
-      : LandingPage;
+  : isDevBombPath
+    ? BombDevStage
+    : isTechnicalAppPath
+      ? App
+      : resolveV3Route(effectivePath)
+        ? V3RootApp
+        : LandingPage;
 
 // LanguageToggle se oculta del árbol principal: se renderiza dentro de cada página
 // en su header (landing: nav) para evitar el botón flotante sobre contenido.

@@ -1,0 +1,110 @@
+{
+  "baseUrl": "http://127.0.0.1:5173",
+  "failures": [],
+  "consoleErrors": [],
+  "results": [
+    {
+      "viewport": "1280x720",
+      "boot": {
+        "welcome": true,
+        "sw1Disabled": true,
+        "holdDisabled": true,
+        "model": "A",
+        "timerPhase": "idle",
+        "led": "neutral",
+        "warning": false,
+        "overflow": 0,
+        "gameRight": 1230,
+        "vpW": 1280
+      },
+      "shoots": "docs/qa/b2-bomb-panel-hud/01-boot-1280x720.png",
+      "practice": {
+        "swEnabled": true,
+        "holdEnabled": true,
+        "swHit": {
+          "w": 251,
+          "h": 98
+        },
+        "wireHit": {
+          "w": 187,
+          "h": 75
+        },
+        "holdHit": {
+          "w": 84,
+          "h": 84
+        },
+        "lines": [
+          "1. Activa el INTERRUPTOR 1.",
+          "2. Corta el CABLE ROJO.",
+          "3. Mantén presionado el BOTÓN AMARILLO durante 2 segundos."
+        ],
+        "level": "Práctica",
+        "twoCols": true
+      },
+      "fit": {
+        "gameBottom": 702,
+        "statusbarBottom": 693,
+        "vpH": 720
+      },
+      "afterBlue": {
+        "led": "penalty",
+        "blueDisabled": true
+      },
+      "ringDuringHold": true,
+      "holdMs": 1983,
+      "afterHold": {
+        "led": "success",
+        "sw2Disabled": true
+      },
+      "afterRestart": {
+        "sw1Pressed": "false",
+        "redEnabled": true,
+        "doneGone": true
+      },
+      "focusVisible": true,
+      "sfx": {
+        "before": {
+          "toggle": "false",
+          "line": "Audio: OFF"
+        },
+        "after": {
+          "toggle": "true",
+          "line": "Audio: ON"
+        }
+      },
+      "timerCss": {
+        "fontVariantNumeric": "tabular-nums",
+        "minWidth": "100px"
+      }
+    },
+    {
+      "viewport": "390x844",
+      "geometry": {
+        "warning": true,
+        "overflow": 0,
+        "stacked": true,
+        "swH": 121,
+        "gameRight": 367,
+        "vpW": 390
+      },
+      "shoots": "docs/qa/b2-bomb-panel-hud/07-mobile-practice-390x844.png"
+    },
+    {
+      "viewport": "1000x700",
+      "geometry": {
+        "warning": true,
+        "twoCols": true,
+        "overflow": 0
+      },
+      "shoots": "docs/qa/b2-bomb-panel-hud/08-narrow-warning-1000x700.png"
+    },
+    {
+      "viewport": "reduced-motion",
+      "reduced": {
+        "powered": true,
+        "animationName": "none"
+      },
+      "shoots": "docs/qa/b2-bomb-panel-hud/09-reduced-motion-reduced-motion.png"
+    }
+  ]
+}

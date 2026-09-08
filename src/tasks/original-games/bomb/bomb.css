@@ -1,0 +1,844 @@
+/* bomb.css — EXP-BOMB-001 · B2: mundo "Desactivación" (táctico/industrial).
+ *
+ * H4.5: el mundo NO se tokeniza — la paleta propia vive aquí; solo el chrome
+ * compartido (pills .task-title/.task-progress, caption) recibe override para
+ * superficie oscura (tokens --k-* en krumm-tokens.css).
+ *
+ * Spec (ley): Doc 2 §6 (HUD/layout), §7 (componentes/estados), §12 (feedback),
+ * §14 (accesibilidad: color+letra/patrón, foco visible, ≥44px, reduced-motion,
+ * audio opcional), §15 (responsive: 1280×720 baseline, aviso <1024px),
+ * §16 (animaciones: durations/curvas fijas), §17 (assets).
+ *
+ * Contraste (pares texto/fondo verificados AA ≥4.5:1, scripts/bomb_contrast_check.py):
+ *   --bomb-text      #eaf1f7 sobre #10151b → 16.1:1
+ *   --bomb-text-dim  #9fb0be sobre #1d2731 → 6.8:1
+ *   --bomb-amber     #ffb454 sobre #0d1319 → 10.6:1
+ *   --bomb-green     #53d97e sobre #141b23 → 9.6:1
+ *   --bomb-red       #ff6252 sobre #0d1319 → 6.3:1
+ *   CTA #241a08 sobre #ffb454 → 9.7:1 · hold ink #3d2f05 sobre #ffd23f → 9.0:1
+ */
+
+.bomb-game {
+  /* ── Paleta del mundo (acero + ámbar/rojo de panel + LED) ── */
+  --bomb-bg: #10151b;
+  --bomb-surface: #171e26;
+  --bomb-panel: #212c37;
+  --bomb-panel-line: #3a4855;
+  --bomb-inset: #131a21;
+  --bomb-text: #eaf1f7;
+  --bomb-text-dim: #9fb0be;
+  --bomb-amber: #ffb454;
+  --bomb-red: #ff6252;
+  --bomb-green: #53d97e;
+  --bomb-focus: #ffd28a;
+  --bomb-wire-red: #ff5347;
+  --bomb-wire-blue: #5b8cff;
+  --bomb-wire-green: #3fd07f;
+  --bomb-wire-yellow: #ffd23f;
+
+  /* ── Animaciones §16 (durations/curvas fijas; spec: power-on 300-500ms
+        ease-out · switch 100-140ms ease-out · cut 120-180ms ease-out ·
+        shake 100-150ms ease-in-out ≤6px · success 300ms ease-out ·
+        critical pulse 500-800ms ciclo ease-in-out, sin mover layout) ── */
+  --bomb-anim-power-on: 400ms ease-out;
+  --bomb-anim-switch: 120ms ease-out;
+  --bomb-anim-cut: 150ms ease-out;
+  --bomb-anim-shake: 120ms ease-in-out;
+  --bomb-anim-success: 300ms ease-out;
+  --bomb-anim-critical: 650ms ease-in-out;
+
+  position: relative;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(10px, 1.6vw, 20px);
+  border-radius: var(--k-radius-panel);
+  border: 1px solid #2c3945;
+  background:
+    radial-gradient(circle at 82% -10%, rgba(255, 180, 84, 0.08), transparent 34%),
+    linear-gradient(165deg, #171e26 0%, #10151b 60%, #0c1117 100%);
+  color: var(--bomb-text);
+  font-family: var(--k-font-sans);
+  overflow: hidden;
+}
+
+/* ── Chrome compartido sobre superficie oscura (tokens --k-*) ───────────── */
+
+.postulation-demo .bomb-game .task-header {
+  width: 100%;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.postulation-demo .bomb-game .task-title,
+.postulation-demo .bomb-game .task-progress {
+  border-color: var(--bomb-panel-line);
+  background: var(--bomb-inset);
+  color: var(--bomb-text);
+  box-shadow: none;
+}
+
+.postulation-demo .bomb-game .caption {
+  color: var(--bomb-text-dim);
+}
+
+/* ── Aviso §15: <1024 px de ancho ───────────────────────────────────────── */
+
+.bomb-viewport-warning {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--bomb-amber);
+  border-radius: 10px;
+  background: rgba(255, 180, 84, 0.1);
+  color: var(--bomb-amber);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ── HUD §6.1 (nivel · timer · MODEL A/B; siempre visible en ejecución) ── */
+
+.bomb-hud {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  border: 1px solid #2c3945;
+  border-radius: 14px;
+  background: rgba(13, 19, 25, 0.72);
+}
+
+.bomb-hud__level {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bomb-text-dim);
+  white-space: nowrap;
+}
+
+.bomb-timer {
+  justify-self: center;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-width: 112px;
+  min-height: 44px;
+  padding: 4px 14px;
+  border-radius: 10px;
+  border: 1px solid #2c3945;
+  background: #0d1319;
+  color: var(--bomb-text);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.bomb-timer__digits { line-height: 1.1; }
+
+/* Label de fase: el estado del timer NUNCA depende solo del color (a11y §14:
+   "el estado crítico no puede depender solo de rojo"); en práctica muestra
+   "sin límite" (la ausencia de countdown no parece un valor perdido). */
+.bomb-timer__phase {
+  font-family: var(--k-font-sans);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bomb-text-dim);
+  line-height: 1.2;
+}
+
+.bomb-timer--warning {
+  color: var(--bomb-amber);
+  border-color: var(--bomb-amber);
+}
+
+.bomb-timer--warning .bomb-timer__phase { color: var(--bomb-amber); }
+
+.bomb-timer--critical {
+  color: var(--bomb-red);
+  border-color: var(--bomb-red);
+  animation: bomb-critical-pulse var(--bomb-anim-critical) infinite;
+}
+
+.bomb-timer--critical .bomb-timer__phase { color: var(--bomb-red); }
+
+@keyframes bomb-critical-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 98, 82, 0); }
+  50% { box-shadow: 0 0 16px 2px rgba(255, 98, 82, 0.45); }
+}
+
+/* Placa MODEL A/B (§7: alta legibilidad; NO solo color — letra + textura) */
+
+.bomb-model {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  min-height: 48px;
+  padding: 4px 14px;
+  border-radius: 10px;
+  border: 2px solid var(--bomb-panel-line);
+  background: #0d1319;
+}
+
+.bomb-model small {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--bomb-text-dim);
+}
+
+.bomb-model strong {
+  font-family: var(--k-font-display);
+  font-weight: 900;
+  font-size: 1.5rem;
+  line-height: 1.05;
+  color: var(--bomb-text);
+}
+
+.bomb-model--B {
+  border-color: var(--bomb-amber);
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 180, 84, 0.16) 0 6px, transparent 6px 12px),
+    #0d1319;
+}
+
+.bomb-model--B strong { color: var(--bomb-amber); }
+
+.bomb-model__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Columnas §6.1 (manual | panel) ─────────────────────────────────────── */
+
+.bomb-columns {
+  display: grid;
+  grid-template-columns: minmax(250px, 350px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* Manual / protocolo (columna izquierda) */
+
+.bomb-manual {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 180px;
+  padding: 14px;
+  border: 1px solid #2c3945;
+  border-radius: 14px;
+  background: #141b23;
+}
+
+.bomb-manual__title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bomb-text-dim);
+}
+
+.bomb-manual__lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: bomb-line;
+  display: grid;
+  gap: 10px;
+  font-size: 1.02rem;
+  line-height: 1.45;
+  color: var(--bomb-text);
+}
+
+.bomb-manual__notice {
+  margin: 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--bomb-amber);
+  border-radius: 0 8px 8px 0;
+  background: rgba(255, 180, 84, 0.08);
+  color: var(--bomb-amber);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.bomb-manual__placeholder {
+  margin: 0;
+  color: var(--bomb-text-dim);
+  font-size: 0.95rem;
+}
+
+/* Panel de bomba (mundo) */
+
+.bomb-panel {
+  position: relative;
+  border: 1px solid var(--bomb-panel-line);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #26323e 0%, #1d2731 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 18px 40px rgba(3, 6, 10, 0.45);
+}
+
+.bomb-panel--powered { animation: bomb-power-on var(--bomb-anim-power-on); }
+
+@keyframes bomb-power-on {
+  from { opacity: 0.3; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bomb-panel--shake { animation: bomb-shake var(--bomb-anim-shake); }
+
+@keyframes bomb-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.bomb-panel--fail { filter: saturate(0.35) brightness(0.8); }
+
+.bomb-panel__inset {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 14px;
+}
+
+/* Switches §7 (OFF/ON/disabled; label SW1-3; palanca + estado inmediato) */
+
+.bomb-switches {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(96px, 1fr));
+  gap: 12px;
+}
+
+.bomb-switch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 10px 6px 8px;
+  background: #141b23;
+  border: 1px solid var(--bomb-panel-line);
+  border-radius: 12px;
+  color: var(--bomb-text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color var(--bomb-anim-switch), background-color var(--bomb-anim-switch);
+}
+
+.bomb-switch:hover:not(:disabled) {
+  border-color: var(--bomb-amber);
+  background: #18212b;
+}
+
+.bomb-switch:focus-visible {
+  outline: 3px solid var(--bomb-focus);
+  outline-offset: 2px;
+}
+
+.bomb-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.bomb-switch__track {
+  position: relative;
+  width: 34px;
+  height: 56px;
+  border-radius: 8px;
+  border: 1px solid #2c3945;
+  background: #0d1319;
+}
+
+.bomb-switch__knob {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 4px;
+  height: 24px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #4a5866, #333f4b);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: transform var(--bomb-anim-switch);
+}
+
+.bomb-switch--on .bomb-switch__knob {
+  transform: translateY(24px);
+  background: linear-gradient(180deg, #6b7a8a, #4a5866);
+}
+
+.bomb-switch__label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.bomb-switch__state {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--bomb-text-dim);
+}
+
+.bomb-switch--on .bomb-switch__state { color: var(--bomb-green); }
+
+/* Cables §7/§14 (INTACT/CUT; color + letra + patrón; corte irreversible) */
+
+.bomb-wires {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bomb-wire {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 10px 8px;
+  background: #141b23;
+  border: 1px solid var(--bomb-panel-line);
+  border-radius: 12px;
+  color: var(--bomb-text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color var(--bomb-anim-switch), background-color var(--bomb-anim-switch);
+}
+
+.bomb-wire:hover:not(:disabled) {
+  border-color: var(--bomb-amber);
+  background: #18212b;
+}
+
+.bomb-wire:focus-visible {
+  outline: 3px solid var(--bomb-focus);
+  outline-offset: 2px;
+}
+
+.bomb-wire:disabled {
+  cursor: not-allowed;
+}
+
+.bomb-wire:disabled:not(.bomb-wire--cut) { opacity: 0.55; }
+
+.bomb-wire--red { --wire-face: linear-gradient(180deg, #7a1f1a, var(--bomb-wire-red) 45%, #7a1f1a); }
+.bomb-wire--blue {
+  --wire-face:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.22) 0 3px, transparent 3px 11px),
+    linear-gradient(180deg, #20335f, var(--bomb-wire-blue) 45%, #20335f);
+}
+.bomb-wire--green {
+  --wire-face:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.16) 0 4px, transparent 4px 12px),
+    linear-gradient(180deg, #1d4d33, var(--bomb-wire-green) 45%, #1d4d33);
+}
+.bomb-wire--yellow {
+  --wire-face:
+    radial-gradient(rgba(255, 255, 255, 0.28) 1.5px, transparent 1.8px) 0 50% / 12px 12px repeat-x,
+    linear-gradient(180deg, #7a6112, var(--bomb-wire-yellow) 45%, #7a6112);
+}
+
+.bomb-wire__cable {
+  position: relative;
+  width: 100%;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--wire-face);
+  transition: filter var(--bomb-anim-cut);
+}
+
+.bomb-wire__badge {
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  min-height: 20px;
+}
+
+.bomb-wire__state {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--bomb-text-dim);
+}
+
+/* Corte (§8.3 irreversible; §12: separación + chispa mínima; hitbox se
+   desactiva tras el corte) */
+
+.bomb-wire--cut .bomb-wire__cable { background: #10161c; }
+
+.bomb-wire--cut .bomb-wire__cable::before,
+.bomb-wire--cut .bomb-wire__cable::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  background: var(--wire-face);
+  border-radius: 9px;
+  transition: transform var(--bomb-anim-cut);
+}
+
+.bomb-wire--cut .bomb-wire__cable::before {
+  left: 0;
+  border-radius: 9px 2px 2px 9px;
+  transform: translateY(-3px) rotate(-3deg);
+}
+
+.bomb-wire--cut .bomb-wire__cable::after {
+  right: 0;
+  border-radius: 2px 9px 9px 2px;
+  transform: translateY(3px) rotate(3deg);
+}
+
+.bomb-wire__spark-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, var(--bomb-amber) 35%, rgba(255, 180, 84, 0) 70%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bomb-wire--spark .bomb-wire__spark-dot { animation: bomb-spark var(--bomb-anim-cut) ease-out; }
+
+@keyframes bomb-spark {
+  0% { opacity: 0; transform: scale(0.4); }
+  35% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(0.55); }
+}
+
+/* Botón amarillo §7 (IDLE/PRESSED/accepted; hold 2 s; ring SOLO en práctica) */
+
+.bomb-button-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.bomb-hold-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  min-height: 44px;
+  border-radius: 50%;
+  border: 6px solid #8a6d12;
+  background: radial-gradient(circle at 38% 32%, #ffe08a, var(--bomb-wire-yellow) 55%, #d9a815 100%);
+  box-shadow: 0 8px 0 #6d5510, 0 14px 22px rgba(0, 0, 0, 0.5);
+  color: #3d2f05;
+  font-family: var(--k-font-display);
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  touch-action: none;
+  transition: transform var(--bomb-anim-switch), box-shadow var(--bomb-anim-switch), filter var(--bomb-anim-switch);
+}
+
+.bomb-hold-btn:hover:not(:disabled) { filter: brightness(1.06); }
+
+.bomb-hold-btn:focus-visible {
+  outline: 3px solid var(--bomb-focus);
+  outline-offset: 3px;
+}
+
+.bomb-hold-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: 0 4px 0 #6d5510, 0 8px 14px rgba(0, 0, 0, 0.4);
+}
+
+.bomb-hold-btn--pressed {
+  transform: translateY(7px);
+  box-shadow: 0 1px 0 #6d5510, 0 4px 8px rgba(0, 0, 0, 0.55);
+}
+
+.bomb-hold-btn--accepted {
+  animation: bomb-success-pulse var(--bomb-anim-success);
+}
+
+@keyframes bomb-success-pulse {
+  0% { box-shadow: 0 8px 0 #6d5510, 0 0 0 0 rgba(83, 217, 126, 0.55); }
+  100% { box-shadow: 0 8px 0 #6d5510, 0 0 0 16px rgba(83, 217, 126, 0); }
+}
+
+.bomb-hold-btn__label { position: relative; z-index: 1; }
+
+.bomb-hold-btn__ring {
+  position: absolute;
+  inset: -14px;
+  pointer-events: none;
+}
+
+.bomb-hold-btn__ring-track { stroke: rgba(255, 255, 255, 0.16); }
+.bomb-hold-btn__ring-fill { stroke: #ffffff; transition: stroke-dasharray 80ms linear; }
+
+.bomb-hint {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--bomb-text-dim);
+}
+
+/* Fila inferior §6.1 (estado/aviso breve · LED · Audio ON/OFF) */
+
+.bomb-statusbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  min-height: 44px;
+  border: 1px solid #2c3945;
+  border-radius: 12px;
+  background: rgba(13, 19, 25, 0.6);
+}
+
+.bomb-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--bomb-text-dim);
+}
+
+.bomb-led {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bomb-led__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3a4855;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: background-color 150ms linear, box-shadow 150ms linear;
+}
+
+.bomb-led span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bomb-text-dim);
+}
+
+.bomb-led[data-led='penalty'] .bomb-led__dot {
+  background: var(--bomb-red);
+  box-shadow: 0 0 10px rgba(255, 98, 82, 0.8);
+}
+
+.bomb-led[data-led='penalty'] span { color: var(--bomb-red); }
+
+.bomb-led[data-led='success'] .bomb-led__dot {
+  background: var(--bomb-green);
+  box-shadow: 0 0 10px rgba(83, 217, 126, 0.8);
+  animation: bomb-success-pulse var(--bomb-anim-success);
+}
+
+.bomb-led[data-led='success'] span { color: var(--bomb-green); }
+
+.bomb-led[data-led='fail'] .bomb-led__dot {
+  background: var(--bomb-red);
+  box-shadow: 0 0 10px rgba(255, 98, 82, 0.6);
+}
+
+.bomb-audio {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--bomb-text-dim);
+}
+
+/* Overlays (bienvenida BOOT / práctica completada) — B4: §4.1/§4.3 completos */
+
+.bomb-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 12, 16, 0.82);
+}
+
+.bomb-welcome,
+.bomb-practice-done {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  text-align: center;
+  max-width: 560px;
+}
+
+.bomb-welcome h2,
+.bomb-practice-done h2 {
+  margin: 0;
+  font-family: var(--k-font-display);
+  font-weight: 900;
+  font-size: clamp(1.25rem, 2.4vw, 1.8rem);
+  letter-spacing: -0.01em;
+  color: var(--bomb-text);
+}
+
+.bomb-welcome p,
+.bomb-practice-done p {
+  margin: 0;
+  color: var(--bomb-text-dim);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.bomb-cta {
+  min-height: 48px;
+  padding: 12px 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bomb-amber);
+  color: #241a08;
+  font-family: var(--k-font-sans);
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter var(--bomb-anim-switch), transform var(--bomb-anim-switch);
+}
+
+.bomb-cta:hover:not(:disabled) { filter: brightness(1.08); }
+
+.bomb-cta:focus-visible {
+  outline: 3px solid var(--bomb-focus);
+  outline-offset: 3px;
+}
+
+.bomb-cta:active { transform: translateY(1px); }
+
+/* Banner del stage DEV (solo /dev/bomb) */
+
+.bomb-dev-banner {
+  margin: 0 0 10px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--k-ink-terracotta, #704f39);
+}
+
+/* ── Responsive §15 (baseline 1280×720 compacta; <900px 1 columna) ─────── */
+
+@media (max-width: 1366px), (max-height: 820px) {
+  .bomb-game { padding: 10px; }
+  .bomb-hud {
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    min-height: 48px;
+  }
+  .bomb-columns { gap: 10px; }
+  .bomb-manual { padding: 10px; }
+  .bomb-panel__inset { padding: 12px; gap: 12px; }
+  .bomb-timer {
+    font-size: 1.25rem;
+    min-width: 96px;
+    padding: 4px 12px;
+  }
+  .bomb-model { min-width: 76px; min-height: 44px; }
+}
+
+/* 1280×720 = baseline de evaluación (spec §15: "compactar paddings, mantener
+   target sizes"): compactación vertical para que mundo + HUD + barra de estado
+   quepan en el viewport sin scroll (todos los targets siguen ≥44 px). */
+@media (max-height: 820px) {
+  .bomb-game { padding: 8px 10px; }
+  .bomb-game__header { margin-bottom: 8px; }
+  .bomb-hud { margin-bottom: 8px; padding: 3px 10px; min-height: 46px; }
+  .bomb-timer { font-size: 1.15rem; min-width: 100px; padding: 2px 12px; }
+  .bomb-model { min-height: 44px; padding: 2px 12px; }
+  .bomb-model strong { font-size: 1.3rem; }
+  .bomb-columns { gap: 10px; }
+  .bomb-manual { padding: 10px; gap: 8px; }
+  .bomb-manual__lines { gap: 6px; font-size: 0.98rem; }
+  .bomb-panel__inset { padding: 10px; gap: 8px; }
+  .bomb-switch { padding: 6px 6px 5px; gap: 4px; }
+  .bomb-switch__track { height: 46px; }
+  .bomb-switch__knob { height: 20px; }
+  .bomb-switch--on .bomb-switch__knob { transform: translateY(18px); }
+  .bomb-switch__label { font-size: 0.75rem; }
+  .bomb-switch__state { font-size: 0.65rem; }
+  .bomb-wire { padding: 8px 10px 6px; gap: 5px; }
+  .bomb-wire__cable { height: 14px; border-radius: 7px; }
+  .bomb-wire--cut .bomb-wire__cable::before,
+  .bomb-wire--cut .bomb-wire__cable::after { border-radius: 7px; }
+  .bomb-hold-btn { width: 84px; height: 84px; border-width: 5px; font-size: 0.85rem; }
+  .bomb-hold-btn__ring { inset: -12px; }
+  .bomb-statusbar { margin-top: 8px; padding: 6px 12px; min-height: 40px; }
+  .bomb-status { font-size: 0.88rem; }
+}
+
+@media (max-width: 899px) {
+  .bomb-columns { grid-template-columns: 1fr; }
+  .bomb-manual { min-height: 0; }
+}
+
+@media (max-width: 559px) {
+  .bomb-hud {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+    text-align: center;
+  }
+  .bomb-hud__level { text-align: center; }
+  .bomb-model { width: 100%; }
+  .bomb-wires { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bomb-statusbar { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+
+/* ── Accesibilidad §14: reduced-motion — elimina shake/power-on/spark/pulsos
+      sin cambiar la lógica (DoD §20) ───────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .bomb-panel--powered { animation: none; }
+  .bomb-panel--shake { animation: none; }
+  .bomb-timer--critical { animation: none; }
+  .bomb-wire--spark .bomb-wire__spark-dot { animation: none; opacity: 0; }
+  .bomb-hold-btn--accepted { animation: none; }
+  .bomb-led[data-led='success'] .bomb-led__dot { animation: none; }
+  .bomb-switch__knob,
+  .bomb-switch,
+  .bomb-wire,
+  .bomb-wire__cable,
+  .bomb-hold-btn,
+  .bomb-hold-btn__ring-fill,
+  .bomb-cta,
+  .bomb-overlay { transition: none; }
+}
