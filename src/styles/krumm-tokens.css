@@ -139,6 +139,22 @@
   --k-cp-card-line-hover: #ad825a;         /* borde card en hover (ref) */
   --k-cp-card-shadow: rgba(98, 67, 43, 0.05); /* sombra card hover (ref #62432b0d) */
 
+  /* ── Fase v3 (V2, t_90a5157c) — dashboard/lista procesos empresa (ref
+   *    company.css + processes.css). Solo superficies/bordes sin token
+   *    equivalente; textos usan --k-ink-* existentes. Pares texto/fondo
+   *    verificados AA: --k-co-status-ink sobre --k-co-status-bg = 5.6:1;
+   *    --k-co-text-button sobre --k-bg-light = 6.2:1. Ver plan V2 §Task 3. */
+  --k-co-surface: #fffaf4;                 /* fondo métricas/tabla/cards (ref --co-surface) */
+  --k-co-table-head: #f3ece2;              /* fondo th tabla procesos (ref) */
+  --k-co-table-row-hover: #faf3e9;         /* hover fila tabla (ref) */
+  --k-co-status-line: #ddc8ad;             /* borde pill estado (ref) */
+  --k-co-status-bg: #f0e4d2;               /* fondo pill estado (ref) */
+  --k-co-status-ink: #755134;              /* texto pill estado (ref; AA sobre status-bg) */
+  --k-co-text-button: #765033;             /* botones de texto "View process" (ref; AA) */
+  --k-co-input-line: #cbb59c;              /* borde inputs/selects filtros (ref) */
+  --k-co-card-line: #d4bda2;               /* borde card de proceso (ref) */
+  --k-co-mini-track: #eadfce;              /* track mini-score tabla (ref) */
+
   /* ── H4.2 (rebuild landing) — extension layout/tipografia ──── */
   --k-gutter-mobile: 24px;             /* margen lateral <900px (design-system §5.1) */
   --k-space-section-mobile: 64px;      /* padding de sección <900px (§5.1) */

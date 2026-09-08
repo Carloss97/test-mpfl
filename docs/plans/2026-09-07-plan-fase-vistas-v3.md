@@ -91,7 +91,7 @@ crudos en ninguna vista nueva.
 |---|---|---|
 | **V0 — Shells + rutas + i18n base** ✅ done (t_1c27edbf, 2026-09-07) | `CandidateShell`/`CompanyShell`, tablas de nav, footer, Help dialog, user chip, banner demo, registro de rutas (placeholders), copy EN+ES | Shells renderizan en 2 viewports con 0 overflow/0 errors; tokens `--k-*` (sin hex en vistas); spec de declaración |
 | **V1 — Lado candidato** ✅ done (t_482f57b2, 2026-09-07) | `/portal`, `/candidato` (2 cards), `/candidato/acceso` (integración del guard de invitación), `/empleos` (honesto next-iteration) | Recorrido: portal → home → acceso → (invitación válida) → `/postulaciones` (flujo intacto); ES/EN; smoke |
-| **V2 — Empresa: dashboard + procesos** | `/empresa/acceso` (demo), `/empresa` (KPIs + tabla), `/empresa/procesos` (búsqueda/filtros/sort funcionales, patrón processes.js), datos demo consistentes | Filtros/sort operativos (tests de lógica + smoke); KPIs coherentes con la lista; demo banner |
+| **V2 — Empresa: dashboard + procesos** ✅ done (t_90a5157c, 2026-09-08) | `/empresa/acceso` (demo), `/empresa` (KPIs + tabla), `/empresa/procesos` (búsqueda/filtros/sort funcionales, patrón processes.js), datos demo consistentes | Filtros/sort operativos (tests de lógica + smoke); KPIs coherentes con la lista; demo banner |
 | **V3 — Empresa: detalle + reporte** | `/empresa/proceso/:id` (3 perfiles demo), reporte de candidato embebido (motor H4.3), acciones (edit/pause/view candidates — UI + estado local) | Reporte embebido = mismo data-model (8 constructs, caveats); navegación back; ES/EN |
 | **V4 — Empresa: new request** | `/empresa/nueva-solicitud` + `/diseño` (flujo guiado mínimo) + `/subida` (upload → metadatos) | Diseño crea un "proceso" en el estado demo (aparece en /procesos); upload valida tipo/archivo y confirma; sin promesas de NLP |
 | **V5 — Cutover + limpieza + audit final** | Redirecciones, borrado de vistas deprecadas (hr-dashboard v1, landing interna), audit visual h46c (todas las rutas nuevas, 2 viewports, ES/EN), deploy AWS + verificación prod | Suite 100%, build, audit 0 fallos, krumm.cl sirve las rutas nuevas y las viejas redirigen |
@@ -118,6 +118,22 @@ especificidad compuesta para los back links. Suite 805/805 (127 archivos), build
 OK, smoke vivo: 12 cargas estáticas (0 overflow/0 errors) + recorrido de
 aceptación portal→home→acceso→token válido→**setup** (flujo intacto) + guard
 expirado (mensaje correcto). Detalle: `docs/plans/2026-09-07-plan-t482f57b2-v1-candidate.md`.
+**V2 done (t_90a5157c, 2026-09-08):** `/empresa` (dashboard real: 4 KPIs
+**derivados de la lista** 3/85/81%/24 — decisión D1 del plan V2, la ref era
+incoherente con sus propios KPIs — + tabla de 3 procesos de la ref + CTA New
+request) y `/empresa/procesos` (búsqueda NFD + filtros department/location +
+sort 5 opciones + reset + empty state, patrón processes.js; cards con
+pill/fecha/cargo/área·ubicación/dl). Lógica pura en `companyData.js` + hook
+`useCompanyData` (demo | checking | real vía `GET /sessions` con fallback demo,
+contract v1; CompanyShell gana prop `note` para el banner real/loading).
+`/empresa/acceso` intacto (V0). 10 tokens nuevos (bloque "Fase v3 (V2)").
+Suite 870/870 (129 archivos; +65 tests: V2Company + V2CompanyReal), build OK,
+smoke vivo sobre build prod: 12 screenshots (ES desktop+móvil × 3 rutas +
+EN desktop × 2 + 6 interacciones: search/department/sort/empty/reset/sort-EN,
+0 fallos/0 errors). **Bug detectado y corregido en smoke:** orden de `@media`
+(≤1150/≤1000 añadidos tras ≤760 → pl-grid 2 col ganaba en móvil, overflow
+404>390) → orden descendente estricto documentado en design-system §10.
+Detalle: `docs/plans/2026-09-08-plan-t90a5157c-v2-company.md`.
 
 ## 4. Riesgos / decisiones documentadas
 1. **Job board sin datos** → pantalla honesta "próxima iteración" (como la ref); no

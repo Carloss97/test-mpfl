@@ -5,7 +5,13 @@
 // t_482f57b2 (V1): lado candidato real — /candidato (CandidateHomePage,
 // 2 cards de la referencia) y /candidato/acceso (CandidateAccessPage, form →
 // guard de invitación de /postulaciones); /empleos sigue placeholder honesto
-// (igual que jobs.html de la referencia). Empresa: placeholders hasta V2–V4.
+// (igual que jobs.html de la referencia).
+// t_90a5157c (V2): lado empresa real — /empresa (CompanyDashboardPage: KPIs +
+// tabla de procesos) y /empresa/procesos (CompanyProcessesPage: búsqueda +
+// filtros + sort funcionales, patrón processes.js de la referencia). El hook
+// useCompanyData corre en CompanyWorkspace (un fetch por mount) y el source
+// decide el banner del shell (demo | loading | real). Proceso/:id, reporte y
+// new request siguen placeholder hasta V3–V4.
 //
 // Las páginas bare (/portal y /empresa/acceso) replican el chrome estático de
 // la referencia (portal.html, login-company.html): brand + toggle + main.
@@ -18,6 +24,9 @@ import CompanyShell from './CompanyShell.jsx';
 import V3Placeholder from './V3Placeholder.jsx';
 import CandidateHomePage from './CandidateHomePage.jsx';
 import CandidateAccessPage from './CandidateAccessPage.jsx';
+import CompanyDashboardPage from './CompanyDashboardPage.jsx';
+import CompanyProcessesPage from './CompanyProcessesPage.jsx';
+import { useCompanyData } from './useCompanyData.js';
 import './v3Shells.css';
 
 function IconBuilding() {
@@ -115,6 +124,42 @@ function CompanyLoginPage() {
   );
 }
 
+// /empresa* — workspace empresa (V2). useCompanyData corre aquí (no en cada
+// página): un fetch por mount, y el source decide el banner del shell:
+// real → "Sesiones reales (staging)" + aviso humanReviewOnly; checking →
+// "Cargando sesiones…"; demo → el banner default de V0 (no se pasa note).
+function CompanyWorkspace({ route }) {
+  const copy = useV3Copy();
+  const needsData = route.page === 'dashboard' || route.page === 'processes';
+  const data = useCompanyData({ enabled: needsData });
+  const note = data.source === 'real'
+    ? { badge: copy.company_liveBadge, text: copy.company_liveNotice }
+    : data.source === 'checking'
+      ? { badge: copy.company_demoBadge, text: copy.company_loading }
+      : undefined;
+  const page = copy.pages[route.page];
+  let content;
+  if (route.page === 'dashboard') {
+    content = <CompanyDashboardPage data={data} />;
+  } else if (route.page === 'processes') {
+    content = <CompanyProcessesPage data={data} />;
+  } else {
+    content = (
+      <V3Placeholder
+        page={page}
+        eyebrow={copy.company_eyebrow}
+        backTo={route.page === 'dashboard' ? null : '/empresa'}
+        backLabel={page.backLabel}
+      />
+    );
+  }
+  return (
+    <CompanyShell section={copy[route.sectionKey]} active={route.navActive} note={note}>
+      {content}
+    </CompanyShell>
+  );
+}
+
 export default function V3RootApp() {
   const copy = useV3Copy();
   const resolved = resolveV3Route(typeof window === 'undefined' ? '/' : window.location.pathname);
@@ -161,12 +206,10 @@ export default function V3RootApp() {
   }
 
   if (resolved.shell === V3_SHELLS.COMPANY) {
-    const backTo = resolved.page === 'dashboard' ? null : '/empresa';
-    return (
-      <CompanyShell section={copy[resolved.route.sectionKey]} active={resolved.route.navActive}>
-        <V3Placeholder page={page} eyebrow={copy.company_eyebrow} backTo={backTo} backLabel={page.backLabel} />
-      </CompanyShell>
-    );
+    // t_90a5157c (V2): dashboard y procesos son páginas reales; proceso/:id,
+    // reporte y new request siguen placeholder hasta V3–V4 (CompanyWorkspace
+    // resuelve el contenido y el banner según la fuente de datos).
+    return <CompanyWorkspace route={resolved.route} />;
   }
 
   if (resolved.shell === V3_SHELLS.PORTAL) {

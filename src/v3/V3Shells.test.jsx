@@ -301,12 +301,19 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
     expect(hubContainer.querySelector('.v3-placeholder')).toBeNull();
   });
 
-  it('rutas empresa (no dashboard): back al dashboard; dashboard es el hub', () => {
-    renderV3Route('/empresa/procesos');
-    expect(screen.getByRole('link', { name: V3_COPY.es.pages.processes.backLabel })).toHaveAttribute('href', '/empresa');
+  it('rutas empresa placeholder (V3–V4): back al dashboard; dashboard y procesos ya son reales (V2)', () => {
+    // t_90a5157c (V2): /empresa y /empresa/procesos son páginas reales — el
+    // back link "Volver al dashboard" queda en los placeholders V3–V4.
+    renderV3Route('/empresa/proceso/supervisor');
+    expect(screen.getByRole('link', { name: V3_COPY.es.pages.processDetail.backLabel })).toHaveAttribute('href', '/empresa');
     window.history.pushState({}, '', '/empresa');
     const { container: dashContainer } = renderV3Route('/empresa');
     expect(dashContainer.querySelector('.v3-back')).toBeNull();
+    expect(dashContainer.querySelector('.v3-placeholder')).toBeNull();
+    window.history.pushState({}, '', '/empresa/procesos');
+    const { container: procsContainer } = renderV3Route('/empresa/procesos');
+    expect(procsContainer.querySelector('.v3-back')).toBeNull();
+    expect(procsContainer.querySelector('.v3-placeholder')).toBeNull();
   });
 
   it('/portal: 2 cards de la referencia con hrefs correctos + back home', () => {

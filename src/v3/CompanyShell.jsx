@@ -5,6 +5,9 @@
 // KRUMM / {sección}, EN|ES, notificaciones, perfil con dropdown) + banner
 // "Demo workspace — todos los datos son ficticios" (privacidad: sin datos
 // reales, humanReviewOnly).
+// t_90a5157c (V2): prop opcional `note={badge,text}` para el banner — en modo
+// real (GET /sessions) el dato ya no es ficticio y el workspace pasa "Sesiones
+// reales (staging)" + aviso humanReviewOnly; default = demo (V0 intacto).
 // El contenido de cada página (V2–V4) entra como children.
 import React, { useEffect, useRef, useState } from 'react';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
@@ -84,7 +87,7 @@ function IconMenu() {
   );
 }
 
-export default function CompanyShell({ section, active, children }) {
+export default function CompanyShell({ section, active, children, note } = {}) {
   const copy = useV3Copy();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -241,8 +244,8 @@ export default function CompanyShell({ section, active, children }) {
 
         <main className="v3-co-main" id={COMPANY_MAIN_ID} tabIndex={-1}>
           <div className="v3-co-demo-note">
-            <span className="v3-co-demo-badge">{copy.company_demoBadge}</span>
-            <span>{copy.company_demoNotice}</span>
+            <span className="v3-co-demo-badge">{note?.badge ?? copy.company_demoBadge}</span>
+            <span>{note?.text ?? copy.company_demoNotice}</span>
           </div>
           {children}
         </main>

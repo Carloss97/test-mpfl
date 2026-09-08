@@ -272,3 +272,25 @@ vía regla compuesta (0,2,0) sobre la neutralización (0,1,1). Guardián de
 declaración: `V1Candidate.test.jsx` (régimen V1). Detalle:
 `docs/plans/2026-09-07-plan-t482f57b2-v1-candidate.md`.
 
+**Fase v3 (V2, t_90a5157c, 2026-09-08):** lado empresa — dashboard `/empresa`
+(4 KPIs derivados de la lista: 3/85/81%/24 + tabla de procesos activos) y
+`/empresa/procesos` (búsqueda + filtros department/location + sort 5 opciones,
+patrón `processes.js` de la ref; cards de proceso). 10 tokens nuevos (bloque
+"Fase v3 (V2)"): `--k-co-surface` (`#fffaf4`), `--k-co-table-head` (`#f3ece2`),
+`--k-co-table-row-hover` (`#faf3e9`), `--k-co-status-line` (`#ddc8ad`),
+`--k-co-status-bg` (`#f0e4d2`), `--k-co-status-ink` (`#755134`, 5.6:1 sobre
+status-bg — AA ✓), `--k-co-text-button` (`#765033`, 6.2:1 sobre crema — AA ✓),
+`--k-co-input-line` (`#cbb59c`), `--k-co-card-line` (`#d4bda2`),
+`--k-co-mini-track` (`#eadfce`). Textos vía `--k-ink-*` existentes.
+CompanyShell gana prop opcional `note` (banner por fuente: demo default V0 /
+loading / real "Sesiones reales (staging)" + humanReviewOnly).
+**Bug detectado en smoke V2:** los nuevos `@media` (≤1150/≤1000) se añadieron
+DESPUÉS del ≤760 → a misma especificidad el 2-columnas de `pl-grid` ganaba en
+móvil (overflow horizontal 404>390 en `/empresa/procesos`) → reglas responsive
+en orden estrictamente descendente (1200→1150→1000→760→700→480) +
+`minmax(0,1fr)` en los grids de card/dl. Regla general: los bloques `@media
+(max-width)` de v3Shells.css se mantienen ordenados de mayor a menor
+breakpoint. Guardián: régimen de tokens V0 + `V2Company.test.jsx` /
+`V2CompanyReal.test.jsx`. Detalle:
+`docs/plans/2026-09-08-plan-t90a5157c-v2-company.md`.
+
