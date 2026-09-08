@@ -38,7 +38,7 @@ vi.mock('../originalGameSfx.js', async (importOriginal) => {
 
 import { playSfx } from '../originalGameSfx.js';
 import BombDefusalGame, { bombTimerBeepDecision } from './bombGame.jsx';
-import { BOMB_RULE_MANIFEST } from './bombRules.js';
+import { BOMB_DEFAULT_SESSION_SEED, BOMB_RULE_MANIFEST } from './bombRules.js';
 
 function createFakeClock(start = 0) {
   let t = start;
@@ -445,5 +445,25 @@ describe('BombDefusalGame — CSS del mundo (regimen §14/§15/§16 verificado s
   it('2 columnas (manual | panel) en desktop, 1 columna en <900px (§6.1/§15)', () => {
     expect(blockOf('.bomb-columns')).toContain('grid-template-columns');
     expect(css).toContain('@media (max-width: 899px)');
+  });
+});
+
+describe('B5-backfill (t_32c02f91): seed de campaña por defecto (spec §15 determinismo)', () => {
+  it('sin prop seed, la sesión usa BOMB_DEFAULT_SESSION_SEED (SESSION_START.meta.seed)', () => {
+    const clock = createFakeClock(0);
+    const { onGameEvent } = renderGame({ nowFn: clock.now });
+    startPractice();
+    const sessions = forwardEvents(onGameEvent, 'SESSION_START');
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0].response.bomb.meta.seed).toBe(BOMB_DEFAULT_SESSION_SEED);
+  });
+
+  it('una prop seed explícita (dev/QA) tiene prioridad sobre el default de campaña', () => {
+    const clock = createFakeClock(0);
+    const { onGameEvent } = renderGame({ nowFn: clock.now, seed: 777 });
+    startPractice();
+    const sessions = forwardEvents(onGameEvent, 'SESSION_START');
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0].response.bomb.meta.seed).toBe(777);
   });
 });

@@ -5,6 +5,11 @@ import {
   BOMB_CONFIG_VERSION,
   BOMB_MANIFEST_VERSION,
   BOMB_RULE_MANIFEST,
+  BOMB_BEHAVIORAL_METRIC_KEYS,
+  BOMB_CRITICAL_EVENTS,
+  BOMB_DEFAULT_SESSION_SEED,
+  BOMB_EVENT_NAMES,
+  BOMB_FPS_DROP_THRESHOLD,
   transformSequence,
   effectiveSequenceForLevel,
   buildLevelSpec,
@@ -355,5 +360,102 @@ describe('bombRules — B4: salida del tutorial §4.3 (copy exacto) + replay §1
     );
     expect(d.ctaEs).toBe('Comenzar evaluación');
     expect(d.replayEs).toBe('Repetir práctica');
+  });
+});
+
+describe('bombRules — B5: diccionario UX copy §11 completo (ES fuente + EN) + diccionario de eventos §11', () => {
+  it('intro §11: los 10 momentos tienen ES y EN (transiciones L1-L4, delay, penalty, success, fail×2, final)', () => {
+    const i = BOMB_RULE_MANIFEST.intro;
+    for (const level of [1, 2, 3, 4]) {
+      expect(i.transitionEs[level]).toMatch(/\S/);
+      expect(i.transitionEn[level]).toMatch(/\S/);
+    }
+    for (const key of ['delay', 'penalty', 'success', 'failTimeout', 'failErrors', 'sessionComplete']) {
+      expect(i[`${key}Es`]).toMatch(/\S/);
+      expect(i[`${key}En`]).toMatch(/\S/);
+    }
+    // ES = fuente de verdad (copy exacto Doc 2 §11)
+    expect(i.delayEs).toBe('Memoriza la secuencia.');
+    expect(i.penaltyEs).toBe('Secuencia incorrecta. Tiempo penalizado.');
+    expect(i.successEs).toBe('Artefacto neutralizado.');
+    expect(i.failTimeoutEs).toBe('Tiempo agotado. Nivel finalizado.');
+    expect(i.failErrorsEs).toBe('Se alcanzó el límite de errores. Nivel finalizado.');
+    expect(i.sessionCompleteEs).toBe('Simulación finalizada. Tus resultados fueron procesados.');
+  });
+
+  it('manual §9.2: cada regla tiene manualEs/manualEn para A y B (labels idénticos a la UI)', () => {
+    for (const ruleId of ['A1', 'A2', 'B1', 'C1']) {
+      const rule = BOMB_RULE_MANIFEST.rules[ruleId];
+      for (const bombType of ['A', 'B']) {
+        expect(rule.manualEs[bombType]).toMatch(/\S/);
+        expect(rule.manualEn[bombType]).toMatch(/\S/);
+      }
+    }
+    expect(BOMB_RULE_MANIFEST.rules.A1.manualEs.A).toBe('Activa el INTERRUPTOR 1.');
+    expect(BOMB_RULE_MANIFEST.rules.A1.manualEs.B).toBe('Activa el INTERRUPTOR 3.');
+    expect(BOMB_RULE_MANIFEST.rules.A2.manualEs.A).toBe('Corta el CABLE ROJO.');
+    expect(BOMB_RULE_MANIFEST.rules.A2.manualEs.B).toBe('Corta el CABLE AZUL.');
+  });
+
+  it('aviso MODEL B §9.2: ES + EN', () => {
+    expect(BOMB_RULE_MANIFEST.typeBNoticeEs).toContain('ATENCIÓN - MODELO B');
+    expect(BOMB_RULE_MANIFEST.typeBNoticeEn).toContain('ATTENTION - MODEL B');
+  });
+
+  it('tutorial §4: welcome/settings/nodos T1-T5/salida con ES + EN', () => {
+    const t = BOMB_RULE_MANIFEST.tutorial;
+    for (const key of ['title', 'sub', 'message', 'cta', 'secondary']) {
+      expect(t.welcome[`${key}Es`]).toMatch(/\S/);
+      expect(t.welcome[`${key}En`]).toMatch(/\S/);
+    }
+    expect(t.settings.audioEs).toBe('Audio');
+    expect(t.settings.audioEn).toBe('Audio');
+    expect(t.settings.a11yEs).toMatch(/\S/);
+    expect(t.settings.a11yEn).toMatch(/\S/);
+    for (const seg of t.segments) {
+      for (const node of seg.nodes) {
+        expect(node.overlayEs).toMatch(/\S/);
+        expect(node.overlayEn).toMatch(/\S/);
+      }
+    }
+    for (const key of ['modal', 'cta', 'replay']) {
+      expect(t.done[`${key}Es`]).toMatch(/\S/);
+      expect(t.done[`${key}En`]).toMatch(/\S/);
+    }
+  });
+
+  it('diccionario de eventos: los 18 eventos §11 + de apoyo; críticos ⊆ diccionario; SESSION_START no crítico', () => {
+    const core = ['SESSION_START', 'LEVEL_START', 'INSTRUCTIONS_SHOW', 'INSTRUCTIONS_HIDE',
+      'BLACK_SCREEN_START', 'BLACK_SCREEN_END', 'EXECUTION_START', 'ACTION_SWITCH',
+      'ACTION_WIRE_CUT', 'ACTION_BUTTON_DOWN', 'ACTION_BUTTON_UP', 'STEP_SUCCESS', 'STEP_ERROR',
+      'TIME_PENALTY', 'LEVEL_SUCCESS', 'LEVEL_FAIL', 'FOCUS_CHANGE', 'SESSION_COMPLETE'];
+    for (const name of core) expect(BOMB_EVENT_NAMES.has(name)).toBe(true);
+    for (const name of ['NEXT_LEVEL', 'TUTORIAL_SEGMENT', 'TUTORIAL_REPLAY', 'MISCLICK_PROXIMAL', 'TECHNICAL_ABORT']) {
+      expect(BOMB_EVENT_NAMES.has(name)).toBe(true);
+    }
+    for (const name of BOMB_CRITICAL_EVENTS) expect(BOMB_EVENT_NAMES.has(name)).toBe(true);
+    expect(BOMB_CRITICAL_EVENTS.has('SESSION_START')).toBe(false);
+    expect(BOMB_CRITICAL_EVENTS.has('LEVEL_START')).toBe(true);
+    expect(BOMB_CRITICAL_EVENTS.has('STEP_ERROR')).toBe(true);
+  });
+
+  it('métricas §12: las 10 claves exactas del esquema §19', () => {
+    expect([...BOMB_BEHAVIORAL_METRIC_KEYS].sort()).toEqual([
+      'error_recovery_latency_ms',
+      'first_action_latency_ms',
+      'hold_duration_error_ms',
+      'inter_step_latency_median_ms',
+      'interference_error_count',
+      'memory_decay_slope',
+      'retention_accuracy_rate',
+      'serial_position_accuracy',
+      'switch_cost_ms',
+      'timeout_rate',
+    ]);
+  });
+
+  it('seed de campaña por defecto (v1 progresión fija, spec §10.1) + umbral FPS 30 (spec §15)', () => {
+    expect(BOMB_DEFAULT_SESSION_SEED).toBe(20260907);
+    expect(BOMB_FPS_DROP_THRESHOLD).toBe(30);
   });
 });

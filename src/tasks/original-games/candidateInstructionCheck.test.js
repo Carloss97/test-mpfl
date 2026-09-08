@@ -125,6 +125,34 @@ describe('candidate instruction check', () => {
     expectNoForbiddenKeys(check);
   });
 
+  it('supports bomb_defusal aggregates as an instruction-check source (complete session = low)', () => {
+    const check = buildCandidateInstructionCheck([
+      { gameId: 'bomb_defusal', result: { aggregateOnly: true, completed: true, levelsCompleted: 4, levelsFailed: 0, reachedLevelCount: 4 } },
+    ]);
+
+    expect(check.instructionRiskFlag).toBe('low');
+    expect(check.excludeFromTalentMappingFlag).toBe(false);
+    expect(check.gameSummaries[0]).toMatchObject({
+      gameId: 'bomb_defusal',
+      instructionRisk: 'low',
+      reason: 'no_instruction_signal_detected',
+    });
+    expectNoForbiddenKeys(check);
+  });
+
+  it('flags manual-comprehension review when no level is completed of those reached (bomb_defusal)', () => {
+    const check = buildCandidateInstructionCheck([
+      { gameId: 'bomb_defusal', result: { aggregateOnly: true, completed: false, levelsCompleted: 0, levelsFailed: 2, reachedLevelCount: 2 } },
+    ]);
+
+    expect(check.instructionRiskFlag).toBe('review');
+    expect(check.gameSummaries[0]).toMatchObject({
+      instructionRisk: 'review',
+      reason: 'manual_comprehension_review',
+    });
+    expectNoForbiddenKeys(check);
+  });
+
   it('rejects non aggregate or raw-field contaminated inputs', () => {
     const check = buildCandidateInstructionCheck([
       { gameId: 'laser_puzzle', result: { aggregateOnly: true, completed: true, beamCells: ['1,1'] } },

@@ -192,12 +192,17 @@ describe('bombEngine — flujo de sesión (state machine pura)', () => {
     expect(tutorialSuccess.meta.evaluated).toBe(false);
   });
 
-  it('emite los eventos de contexto del nivel: LEVEL_START con level/bomb_type/seq_ids/seed (spec §11)', () => {
+  it('emite los eventos de contexto del nivel: LEVEL_START con level/bomb_type/seq_ids/seed (spec §11) + B5 DoD (level_id, t_ms nivel-relativo, session_offset_ms)', () => {
     const h = makeHarness(99);
     h.runTutorial();
     h.gotoLevel(4);
     const ls = h.last('LEVEL_START');
-    expect(ls.meta).toEqual({ level: 4, bomb_type: 'B', seq_ids: ['A1', 'A2', 'B1', 'C1'], seed: 99, evaluated: true });
+    expect(ls.meta).toMatchObject({ level: 4, bomb_type: 'B', seq_ids: ['A1', 'A2', 'B1', 'C1'], seed: 99, evaluated: true });
+    // B5 (DoD §16.2): timestamp + level_id en eventos críticos.
+    expect(ls.meta.level_id).toBe(4);
+    expect(ls.meta.level_t_ms).toBe(0); // LEVEL_START marca el t_ms=0 del nivel (spec §1/§19)
+    expect(typeof ls.meta.session_offset_ms).toBe('number');
+    expect(ls.meta.session_offset_ms).toBeGreaterThan(0); // L4 arranca después del tutorial+L1-L3
   });
 
   it('exposición automática: INSTRUCTIONS_HIDE reason=exposure_elapsed; manual libre: reason=continue', () => {

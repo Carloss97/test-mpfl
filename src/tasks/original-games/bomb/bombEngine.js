@@ -1,13 +1,30 @@
 // bombEngine.js — EXP-BOMB-001 · B1: state machine pura + input gate + action validator.
+// B5: Telemetry Logger completo (Doc 1 §11/§14/§19, DoD §16.2):
+//   - Reloj doble inyectable: `now` (timer lógico, monotónico) + `eventNow` (timestamps
+//     de eventos). El desfase máximo entre ambos se registra como integrity flag
+//     `event_clock_drift_ms` (spec §14.1).
+//   - Timestamps RELATIVOS AL INICIO DEL NIVEL (spec §1: "timestamps relativos al
+//     inicio del nivel"; §19: el primer LEVEL_START de cada nivel es t_ms=0). Cada
+//     LEVEL_START lleva `session_offset_ms` (offset del nivel dentro de la sesión)
+//     para reconstruir la línea de tiempo global (DoD §16.2: la sesión puede
+//     reconstruirse desde raw events).
+//   - `level_id` en TODOS los eventos (DoD §16.2: "Todos los eventos críticos
+//     contienen timestamp y level_id"; SESSION_START ocurre antes de cualquier nivel
+//     y lleva level_id: null).
+//   - `eventBuffer` (raw events { t_ms, event, meta }) + `levelRecords` (datos por
+//     nivel para las métricas derivadas §12) — ambos los consume bombTelemetry.js
+//     para el payload de sesión §19.
 //
-// Especificación: Doc 1 §5 (inputs), §6 (módulos: Rule Engine / Action Validator / Timer
-// Service / Input Gate), §7 (máquina de estados), §8 (resolución de secuencia y tolerancias),
-// §13 (taxonomía), §16.2 (DoD). Doc 2 §19 (casos límite de UI: clamp, hold cancelado en
-// transición, cola determinista de inputs).
+// Especificación: Doc 1 §5 (inputs), §6 (módulos: Rule Engine / Action Validator /
+// Timer Service / Input Gate / Telemetry Logger / Session Integrity), §7 (máquina de
+// estados), §8 (resolución de secuencia y tolerancias), §13 (taxonomía), §16.2 (DoD).
+// Doc 2 §19 (casos límite de UI: clamp, hold cancelado en transición, cola
+// determinista de inputs).
 //
-// Pureza: sin DOM ni temporizadores de navegador. El reloj (`now`) y el logger (`log`) se
-// inyectan; en headless/tests se usa reloj falso (riesgo #2 del plan EXP-7). La UI (B2/B3)
-// es el único lugar que pinta y despacha; este módulo decide.
+// Pureza: sin DOM ni temporizadores de navegador. El reloj (`now`/`eventNow`) y el
+// logger (`log`) se inyectan; en headless/tests se usa reloj falso (riesgo #2 del
+// plan EXP-7). La UI (B2/B3) es el único lugar que pinta y despacha; este módulo
+// decide.
 //
 // Reglas duras heredadas:
 // - Secuencia efectiva SOLO desde `transformSequence` del manifest (DoD §16.2).
@@ -21,6 +38,7 @@
 import {
   BOMB_RULE_MANIFEST,
   BOMB_ERROR_CLASSES,
+  BOMB_FPS_DROP_THRESHOLD,
   BOMB_MATCH,
   buildLevelSpec,
   typeAOnlyActions,
@@ -44,6 +62,9 @@ export const BOMB_STATES = Object.freeze({
 });
 
 const STATES = BOMB_STATES;
+
+/** B5: tope del buffer de raw events por sesión (auditoría, DoD §16.2). */
+const EVENT_BUFFER_CAP = 400;
 
 const DEFAULT_NOW = () => (typeof performance !== 'undefined' && typeof performance.now === 'function'
   ? performance.now()
@@ -167,19 +188,25 @@ function initialComponents() {
 }
 
 /**
- * Crea el motor (Experience Orchestrator + Rule Engine + Validator + Input Gate + Timer).
+ * Crea el motor (Experience Orchestrator + Rule Engine + Validator + Input Gate +
+ * Timer + Telemetry Logger + Session Integrity).
  *
  * @param {object} options
  * @param {object} [options.manifest] por defecto BOMB_RULE_MANIFEST.
- * @param {Function} [options.now] reloj monotónico inyectable (ms). Default performance.now.
- * @param {Function} [options.log] (eventName, meta) => void. Default no-op (B5 conecta el
- *   Telemetry Logger real; los tests inyectan un collector).
+ * @param {Function} [options.now] reloj lógico monotónico (ms) del timer. Default performance.now.
+ * @param {Function} [options.eventNow] reloj de timestamps de eventos (ms). Default: `now`.
+ *   Si difiere de `now`, el desfase máximo se registra como `event_clock_drift_ms`
+ *   (spec §14.1). En la UI ambos son performance.now (drift ≈ 0; honesto).
+ * @param {Function} [options.log] (eventName, metaEnriquecida) => void. Default no-op. La UI
+ *   conecta el forward game_event_v1 + feedback; los tests inyectan un collector. B5: el
+ *   meta que recibe YA incluye `level_id` + `level_t_ms` (DoD §16.2).
  * @param {number|null} [options.seed] session seed (determinismo, spec §15/§9).
- * @param {string} [options.sessionId] para los eventos (host lo provee; opcional en B1).
+ * @param {string} [options.sessionId] para los eventos (host lo provee).
  */
 export function createBombEngine(options = {}) {
   const manifest = options.manifest ?? BOMB_RULE_MANIFEST;
   const now = options.now ?? DEFAULT_NOW;
+  const eventNow = options.eventNow ?? now;
   const log = options.log ?? (() => {});
   const seed = typeof options.seed === 'number' ? options.seed : null;
   const sessionId = options.sessionId ?? null;
@@ -212,9 +239,26 @@ export function createBombEngine(options = {}) {
       misclickCount: 0,
       technicalAbortCount: 0,
       unexpectedStateTransitionCount: 0,
+      // B5: spec §14.1 (flags de integridad) + Doc 2 §18 (analítica de diseño).
+      fpsDropCount: 0,
+      minFps: null,
+      eventClockDriftMs: 0,
+      bioTrackingLossMs: 0, // biometría off por defecto (plan §3): 0
+      inputDeviceType: null,
+      viewport: null,
+      devicePixelRatio: null,
+      viewportResizeCount: 0,
+      sessionResumeCount: 0, // Doc 2 §13.2 "Recarga": nunca se reanuda → siempre 0
     },
     hold: { downAt: null, buttonId: null },
     lastBlurAt: null,
+    // B5: Telemetry Logger (spec §6) — buffer de raw events + registros por nivel.
+    eventBuffer: [],
+    eventBufferCap: EVENT_BUFFER_CAP,
+    levelRecords: [],
+    currentRecord: null,
+    sessionAnchorMs: null, // eventNow en beginSession (sincronización de sesión)
+    levelAnchorMs: null,   // eventNow al iniciar el runtime del nivel (t_ms=0 del nivel)
   };
 
   function enterState(next) {
@@ -226,6 +270,62 @@ export function createBombEngine(options = {}) {
     if (allowed.includes(engine.state)) return true;
     engine.integrity.unexpectedStateTransitionCount += 1;
     return false;
+  }
+
+  // ---------------- B5: Telemetry Logger (eventos §11 + integrity §14) ----------------
+
+  function currentLevelId() {
+    return engine.level && typeof engine.level.level === 'number' ? engine.level.level : null;
+  }
+
+  /** ms desde el inicio del nivel actual (t_ms de los raw events; spec §1/§19). */
+  function levelRelativeMs() {
+    if (engine.levelAnchorMs == null) return null;
+    return Math.max(0, Math.round(eventNow() - engine.levelAnchorMs));
+  }
+
+  /**
+   * Único punto de registro de eventos del motor (Telemetry Logger, spec §6).
+   * - Enriquece el meta con `level_id` + `level_t_ms` (DoD §16.2) y, en LEVEL_START,
+   *   `session_offset_ms` (reconstrucción de la sesión global).
+   * - Registra en `eventBuffer` con `t_ms` relativo al inicio del nivel (0 antes del
+   *   primer LEVEL_START; el primer LEVEL_START de cada nivel es t_ms=0).
+   * - Mide el drift reloj lógico vs reloj de eventos (spec §14.1).
+   * - Llama al logger inyectado (UI: forward + feedback).
+   */
+  function logEvent(eventName, meta = {}) {
+    const t = eventNow();
+    const drift = Math.abs(now() - t);
+    if (drift > engine.integrity.eventClockDriftMs) {
+      engine.integrity.eventClockDriftMs = Math.round(drift);
+    }
+    const enriched = { ...meta };
+    if (enriched.level_id == null) enriched.level_id = currentLevelId();
+    const levelT = levelRelativeMs();
+    if (levelT != null) enriched.level_t_ms = levelT;
+    if (eventName === 'LEVEL_START' && enriched.session_offset_ms == null) {
+      enriched.session_offset_ms = engine.sessionAnchorMs != null && engine.levelAnchorMs != null
+        ? Math.max(0, Math.round(engine.levelAnchorMs - engine.sessionAnchorMs))
+        : null;
+    }
+    const record = { t_ms: levelT ?? 0, event: eventName, meta: enriched };
+    engine.eventBuffer.push(record);
+    if (engine.eventBuffer.length > engine.eventBufferCap) {
+      engine.eventBuffer.splice(0, engine.eventBuffer.length - engine.eventBufferCap);
+    }
+    log(eventName, enriched);
+  }
+
+  /** B5: registro del runtime del nivel actual (datos para métricas §12 + level_summary §19). */
+  function currentRecord() {
+    return engine.currentRecord ?? null;
+  }
+
+  function noteFirstAction() {
+    const record = currentRecord();
+    if (record && record.executionStartMs != null && record.firstActionMs == null) {
+      record.firstActionMs = levelRelativeMs() ?? null;
+    }
   }
 
   function resetLevelRuntime() {
@@ -248,13 +348,43 @@ export function createBombEngine(options = {}) {
       warningRemainingPct: manifest.timer.warningRemainingPct,
       criticalRemainingMs: manifest.timer.criticalRemainingMs,
     });
+    // B5: ancla de timestamps nivel-relativos + record (el tutorial crea un record por
+    // segmento: cada avance reinicia el runtime, Decisión B4 #1).
+    engine.levelAnchorMs = eventNow();
+    const record = {
+      levelKey: key,
+      level: engine.level.level,
+      bombType: engine.level.bombType,
+      sequenceIds: [...engine.level.sequenceIds],
+      effectiveStepIds: engine.effectiveSequence.map((s) => s.stepId),
+      timeLimitMs: engine.level.timeLimitMs,
+      delayMs: engine.level.delayMs,
+      exposureMs: engine.level.exposureMs,
+      evaluated: engine.level.evaluated,
+      sessionOffsetMs: engine.sessionAnchorMs != null
+        ? Math.max(0, Math.round(engine.levelAnchorMs - engine.sessionAnchorMs))
+        : null,
+      executionStartMs: null,
+      endedMs: null,
+      result: null,
+      failReason: null,
+      errors: 0,
+      stepsCompleted: 0,
+      firstActionMs: null,
+      validActionMs: [],
+      penalizedErrorMs: [],
+      holdMsSamples: [],
+    };
+    engine.levelRecords.push(record);
+    engine.currentRecord = record;
   }
 
   // ---------------- Sesión / tutorial ----------------
 
   engine.beginSession = function beginSession() {
     if (!requireState(STATES.BOOT)) return { ok: false, reason: 'INVALID_STATE' };
-    log('SESSION_START', {
+    engine.sessionAnchorMs = eventNow(); // B5: sincronización de sesión (spec §1)
+    logEvent('SESSION_START', {
       session_id: sessionId,
       build_version: manifest.buildVersion,
       config_version: manifest.configVersion,
@@ -270,15 +400,15 @@ export function createBombEngine(options = {}) {
     engine.tutorialSegment = 1;
     startLevelRuntime('tutorial');
     enterState(STATES.TUTORIAL_PLAY);
-    log('LEVEL_START', {
+    logEvent('LEVEL_START', {
       level: 0,
       bomb_type: engine.level.bombType,
       seq_ids: engine.level.sequenceIds,
       seed,
       evaluated: false,
     });
-    log('INSTRUCTIONS_SHOW', { exposure_ms: null, tutorial: true, segment: 1 });
-    log('TUTORIAL_SEGMENT', { segment: 1, mode: manifest.tutorial.segments[0].mode, tutorial: true, evaluated: false });
+    logEvent('INSTRUCTIONS_SHOW', { exposure_ms: null, tutorial: true, segment: 1 });
+    logEvent('TUTORIAL_SEGMENT', { segment: 1, mode: manifest.tutorial.segments[0].mode, tutorial: true, evaluated: false });
     return { ok: true };
   };
 
@@ -294,18 +424,34 @@ export function createBombEngine(options = {}) {
     engine.tutorialSegment += 1;
     const seg = segs[engine.tutorialSegment - 1];
     startLevelRuntime('tutorial'); // panel fresh
+    // B5: cada segmento es un runtime de nivel nuevo (spec §7: LEVEL_START abre el
+    // nivel) → t_ms nivel-relativo se ancla de nuevo + grupo propio en raw events.
+    logEvent('LEVEL_START', {
+      level: 0,
+      bomb_type: engine.level.bombType,
+      seq_ids: engine.level.sequenceIds,
+      seed,
+      evaluated: false,
+      tutorial: true,
+      segment: engine.tutorialSegment,
+    });
     if (seg.mode === 'memory') {
       // T5: lectura fija (INSTRUCTION_ENCODING con exposición) → delay breve →
       // ejecución. Reutiliza el flujo de encoding/delay del motor (eventos §11).
       engine.level = Object.freeze({ ...engine.level, exposureMs: seg.readMs, delayMs: seg.delayMs });
+      // B5: el record del segmento refleja el runtime real (exposición/delay de T5).
+      if (engine.currentRecord) {
+        engine.currentRecord.exposureMs = seg.readMs;
+        engine.currentRecord.delayMs = seg.delayMs;
+      }
       enterState(STATES.INSTRUCTION_ENCODING);
       engine.encodingEndAt = now() + seg.readMs;
-      log('INSTRUCTIONS_SHOW', { exposure_ms: seg.readMs, tutorial: true, segment: engine.tutorialSegment });
+      logEvent('INSTRUCTIONS_SHOW', { exposure_ms: seg.readMs, tutorial: true, segment: engine.tutorialSegment });
     } else {
       enterState(STATES.TUTORIAL_PLAY);
-      log('INSTRUCTIONS_SHOW', { exposure_ms: null, tutorial: true, segment: engine.tutorialSegment });
+      logEvent('INSTRUCTIONS_SHOW', { exposure_ms: null, tutorial: true, segment: engine.tutorialSegment });
     }
-    log('TUTORIAL_SEGMENT', {
+    logEvent('TUTORIAL_SEGMENT', {
       segment: engine.tutorialSegment,
       mode: seg.mode,
       tutorial: true,
@@ -334,8 +480,19 @@ export function createBombEngine(options = {}) {
     engine.tutorialSegment = 1;
     startLevelRuntime('tutorial');
     enterState(STATES.TUTORIAL_PLAY);
-    log('TUTORIAL_REPLAY', { count: engine.tutorialReplayCount, tutorial: true, evaluated: false });
-    log('INSTRUCTIONS_SHOW', { exposure_ms: null, tutorial: true, segment: 1 });
+    logEvent('TUTORIAL_REPLAY', { count: engine.tutorialReplayCount, tutorial: true, evaluated: false });
+    // B5: el replay reinicia el runtime del nivel → nuevo LEVEL_START (grupo de
+    // raw events + ancla de t_ms nivel-relativo).
+    logEvent('LEVEL_START', {
+      level: 0,
+      bomb_type: engine.level.bombType,
+      seq_ids: engine.level.sequenceIds,
+      seed,
+      evaluated: false,
+      tutorial: true,
+      segment: 1,
+    });
+    logEvent('INSTRUCTIONS_SHOW', { exposure_ms: null, tutorial: true, segment: 1 });
     return { ok: true, reason: 'TUTORIAL_RESTART' };
   };
 
@@ -345,7 +502,7 @@ export function createBombEngine(options = {}) {
     if (!requireState(STATES.LEVEL_INTRO)) return { ok: false, reason: 'INVALID_STATE' };
     enterState(STATES.INSTRUCTION_ENCODING);
     engine.encodingEndAt = engine.level.exposureMs != null ? now() + engine.level.exposureMs : null;
-    log('INSTRUCTIONS_SHOW', { exposure_ms: engine.level.exposureMs });
+    logEvent('INSTRUCTIONS_SHOW', { exposure_ms: engine.level.exposureMs });
     return { ok: true };
   };
 
@@ -356,11 +513,11 @@ export function createBombEngine(options = {}) {
 
   engine.hideInstructions = function hideInstructions(reason) {
     if (!requireState(STATES.INSTRUCTION_ENCODING)) return { ok: false, reason: 'INVALID_STATE' };
-    log('INSTRUCTIONS_HIDE', { reason });
+    logEvent('INSTRUCTIONS_HIDE', { reason });
     if (engine.level.delayMs > 0) {
       enterState(STATES.BLIND_DELAY);
       engine.delayEndAt = now() + engine.level.delayMs;
-      log('BLACK_SCREEN_START', { duration_ms: engine.level.delayMs });
+      logEvent('BLACK_SCREEN_START', { duration_ms: engine.level.delayMs });
     } else {
       engine.beginExecution();
     }
@@ -369,7 +526,7 @@ export function createBombEngine(options = {}) {
 
   engine.endDelay = function endDelay() {
     if (!requireState(STATES.BLIND_DELAY)) return { ok: false, reason: 'INVALID_STATE' };
-    log('BLACK_SCREEN_END', {});
+    logEvent('BLACK_SCREEN_END', {});
     engine.beginExecution();
     return { ok: true };
   };
@@ -377,7 +534,9 @@ export function createBombEngine(options = {}) {
   engine.beginExecution = function beginExecution() {
     enterState(STATES.EXECUTION);
     engine.executionStartAt = now();
-    log('EXECUTION_START', { time_limit_s: engine.level.timeLimitMs != null ? engine.level.timeLimitMs / 1000 : null });
+    const record = currentRecord();
+    if (record) record.executionStartMs = levelRelativeMs() ?? null; // B5: métricas §12
+    logEvent('EXECUTION_START', { time_limit_s: engine.level.timeLimitMs != null ? engine.level.timeLimitMs / 1000 : null });
     engine.timer.start();
   };
 
@@ -396,12 +555,12 @@ export function createBombEngine(options = {}) {
       return { ok: true };
     }
     enterState(STATES.TRANSITION);
-    log('NEXT_LEVEL', { next_level: nextKey === 'tutorial' ? 0 : nextKey });
+    logEvent('NEXT_LEVEL', { next_level: nextKey === 'tutorial' ? 0 : nextKey });
     // TRANSITION es momentáneo en el motor: la pantalla de transición (copy "Antes de Lx",
     // Doc 2 §11) y la de LEVEL_INTRO se renderizan juntas por la UI (B3).
     startLevelRuntime(nextKey);
     enterState(STATES.LEVEL_INTRO);
-    log('LEVEL_START', {
+    logEvent('LEVEL_START', {
       level: nextKey === 'tutorial' ? 0 : nextKey,
       bomb_type: engine.level.bombType,
       seq_ids: engine.level.sequenceIds,
@@ -413,7 +572,7 @@ export function createBombEngine(options = {}) {
 
   function finishSession() {
     enterState(STATES.SESSION_COMPLETE);
-    log('SESSION_COMPLETE', { levels_completed: engine.levelsCompleted });
+    logEvent('SESSION_COMPLETE', { levels_completed: engine.levelsCompleted });
   }
 
   // ---------------- Tick del host (reloj falso en tests) ----------------
@@ -462,7 +621,7 @@ export function createBombEngine(options = {}) {
       engine.integrity.inputDuringLockCount += 1;
       if (observed?.kind === 'BUTTON') {
         const phase = observed.phase === 'DOWN' ? 'DOWN' : 'UP';
-        log(phase === 'DOWN' ? 'ACTION_BUTTON_DOWN' : 'ACTION_BUTTON_UP', {
+        logEvent(phase === 'DOWN' ? 'ACTION_BUTTON_DOWN' : 'ACTION_BUTTON_UP', {
           id: observed.id,
           valid: false,
           reason: 'INPUT_DURING_LOCK',
@@ -472,15 +631,15 @@ export function createBombEngine(options = {}) {
           kind: observed?.kind, id: observed?.id, op: observed?.op, to: observed?.to,
         });
         if (norm) {
-          log(actionEventName(norm), { id: norm.id, valid: false, reason: 'INPUT_DURING_LOCK' });
-          log('STEP_ERROR', {
+          logEvent(actionEventName(norm), { id: norm.id, valid: false, reason: 'INPUT_DURING_LOCK' });
+          logEvent('STEP_ERROR', {
             expected: null,
             observed: normStepId(norm),
             error_class: 'INPUT_DURING_LOCK',
             penalizes: false,
           });
         } else {
-          log('STEP_ERROR', {
+          logEvent('STEP_ERROR', {
             expected: null,
             observed: 'UNKNOWN',
             error_class: 'INPUT_DURING_LOCK',
@@ -490,6 +649,8 @@ export function createBombEngine(options = {}) {
       }
       return { ok: true, accepted: false, reason: 'INPUT_DURING_LOCK' };
     }
+
+    noteFirstAction(); // B5: primera acción de la ventana de ejecución (métricas §12)
 
     // Botón: DOWN/UP separados (hold canónico por reloj del motor, Doc 2 §19: no heredar hold
     // en transiciones; si el nivel terminó, el hold en curso se cancela silenciosamente).
@@ -508,13 +669,13 @@ export function createBombEngine(options = {}) {
       if (norm.to === 'ON' || norm.to === 'OFF') {
         engine.components.switches[norm.id] = norm.to === 'ON' ? 'ON' : 'OFF';
       }
-      log('ACTION_SWITCH', { id: norm.id, from: norm.from ?? null, to: norm.to ?? null, valid: verdict.match === BOMB_MATCH.EXACT_MATCH });
+      logEvent('ACTION_SWITCH', { id: norm.id, from: norm.from ?? null, to: norm.to ?? null, valid: verdict.match === BOMB_MATCH.EXACT_MATCH });
     } else if (norm.kind === 'WIRE') {
       // Corte irreversible dentro del nivel (spec §8.3): se refleja en el estado físico
       // aunque la clasificación sea error (Doc 2 §19: "Cable puede mostrar corte físico;
       // lógica aplica penalización").
       engine.components.wires[norm.id] = 'CUT';
-      log('ACTION_WIRE_CUT', { id: norm.id, valid: verdict.match === BOMB_MATCH.EXACT_MATCH });
+      logEvent('ACTION_WIRE_CUT', { id: norm.id, valid: verdict.match === BOMB_MATCH.EXACT_MATCH });
     }
 
     return settleAction(norm, verdict, expected);
@@ -560,25 +721,26 @@ export function createBombEngine(options = {}) {
     if (phase === 'DOWN') {
       if (engine.hold.downAt != null) {
         // Segundo DOWN mientras ya hay hold: ignorar (UI debe evitarlo; determinismo).
-        log('ACTION_BUTTON_DOWN', { id, valid: false, reason: 'ALREADY_PRESSED' });
+        logEvent('ACTION_BUTTON_DOWN', { id, valid: false, reason: 'ALREADY_PRESSED' });
         return { ok: true, accepted: false, reason: 'ALREADY_PRESSED' };
       }
+      noteFirstAction(); // B5: el DOWN del hold es una acción de ejecución
       engine.hold.downAt = now();
       engine.hold.buttonId = id;
       engine.components.buttons[id] = 'PRESSED';
-      log('ACTION_BUTTON_DOWN', { id, valid: null });
+      logEvent('ACTION_BUTTON_DOWN', { id, valid: null });
       return { ok: true, accepted: true, reason: 'HOLD_STARTED' };
     }
     // phase === 'UP'
     if (engine.hold.downAt == null || engine.hold.buttonId !== id) {
-      log('ACTION_BUTTON_UP', { id, hold_ms: null, valid: false, reason: 'NO_HOLD_IN_FLIGHT' });
+      logEvent('ACTION_BUTTON_UP', { id, hold_ms: null, valid: false, reason: 'NO_HOLD_IN_FLIGHT' });
       return { ok: true, accepted: false, reason: 'NO_HOLD_IN_FLIGHT' };
     }
     const holdMs = Math.max(0, now() - engine.hold.downAt);
     engine.hold.downAt = null;
     engine.hold.buttonId = null;
     engine.components.buttons[id] = 'IDLE';
-    log('ACTION_BUTTON_UP', {
+    logEvent('ACTION_BUTTON_UP', {
       id,
       hold_ms: Math.round(holdMs),
       observed_hold_ms: typeof observedHoldMs === 'number' ? Math.round(observedHoldMs) : null,
@@ -591,11 +753,19 @@ export function createBombEngine(options = {}) {
   };
 
   function settleAction(norm, verdict, expected) {
+    const record = currentRecord();
     if (verdict.match === BOMB_MATCH.EXACT_MATCH) {
       const step = expected;
       const meta = { step_id: step.stepId, serial_pos: verdict.stepPosition + 1 };
-      if (verdict.holdMs != null) meta.hold_ms = Math.round(verdict.holdMs); // spec §8.3: duración exacta aunque aceptada
-      log('STEP_SUCCESS', meta);
+      if (verdict.holdMs != null) {
+        meta.hold_ms = Math.round(verdict.holdMs); // spec §8.3: duración exacta aunque aceptada
+        if (record) record.holdMsSamples.push(Math.round(verdict.holdMs)); // B5
+      }
+      logEvent('STEP_SUCCESS', meta);
+      if (record) {
+        record.stepsCompleted += 1; // B5: métricas §12
+        record.validActionMs.push(levelRelativeMs() ?? null);
+      }
       engine.completedActions.push({
         kind: norm.kind, id: norm.id, op: norm.op ?? (norm.to === 'ON' ? 'ON' : null), to: norm.to ?? null,
       });
@@ -614,14 +784,16 @@ export function createBombEngine(options = {}) {
     }
 
     const errorClass = verdict.errorClass;
-    log('STEP_ERROR', {
+    const penalizes = BOMB_ERROR_CLASSES[errorClass]?.penalizes ?? false;
+    logEvent('STEP_ERROR', {
       expected: expected ? expected.stepId : null,
       observed: normStepId(norm),
       error_class: errorClass,
       step_position: verdict.stepPosition ?? null,
       ...(verdict.holdMs != null ? { hold_ms: Math.round(verdict.holdMs) } : {}),
-      penalizes: BOMB_ERROR_CLASSES[errorClass]?.penalizes ?? false,
+      penalizes,
     });
+    if (record && verdict.holdMs != null) record.holdMsSamples.push(Math.round(verdict.holdMs)); // B5: control temporal
 
     if (!engine.level?.evaluated) {
       // Tutorial: se registra pero no puntúa (DoD §16.2).
@@ -629,9 +801,13 @@ export function createBombEngine(options = {}) {
     }
 
     engine.errorCount += 1;
+    if (record) {
+      record.errors += 1; // B5
+      if (penalizes) record.penalizedErrorMs.push(levelRelativeMs() ?? null); // B5: error_recovery_latency_ms
+    }
     const pct = manifest.penalty.errorTimePenaltyPct;
     const removed = engine.timer.applyPenalty(pct);
-    log('TIME_PENALTY', { pct, ms_removed: Math.round(removed) });
+    logEvent('TIME_PENALTY', { pct, ms_removed: Math.round(removed) });
 
     if (engine.errorCount >= manifest.maxErrors) {
       engine.failLevel('MAX_ERRORS');
@@ -647,9 +823,11 @@ export function createBombEngine(options = {}) {
   function finishLevelSuccess() {
     const elapsed = engine.timer.isRunning() ? engine.timer.elapsedMs() : 0;
     engine.timer.stop();
+    const record = currentRecord();
+    if (record) { record.result = 'success'; record.endedMs = levelRelativeMs() ?? null; } // B5
     enterState(STATES.LEVEL_SUCCESS);
     if (engine.level?.evaluated) engine.levelsCompleted.push(engine.levelKey);
-    log('LEVEL_SUCCESS', {
+    logEvent('LEVEL_SUCCESS', {
       level: engine.levelKey,
       elapsed_ms: Math.round(elapsed ?? 0),
       errors: engine.errorCount,
@@ -670,6 +848,8 @@ export function createBombEngine(options = {}) {
     engine.timer.stop();
     engine.hold.downAt = null; // Doc 2 §19: no heredar hold en transiciones
     engine.hold.buttonId = null;
+    const record = currentRecord();
+    if (record) { record.result = 'fail'; record.failReason = reason; record.endedMs = levelRelativeMs() ?? null; } // B5
     enterState(STATES.LEVEL_FAIL);
     const meta = {
       reason,
@@ -683,7 +863,7 @@ export function createBombEngine(options = {}) {
         .map((s) => s.stepId); // taxonomía OMISSION (spec §13)
       meta.omission_error_class = 'OMISSION';
     }
-    log('LEVEL_FAIL', meta);
+    logEvent('LEVEL_FAIL', meta);
     return { ok: true, reason };
   };
 
@@ -698,7 +878,7 @@ export function createBombEngine(options = {}) {
   // ---------------- Integridad (spec §14, QA-09/10) ----------------
 
   engine.focusChange = function focusChange(visible) {
-    log('FOCUS_CHANGE', { visible: !!visible, blur_count: engine.integrity.blurCount });
+    logEvent('FOCUS_CHANGE', { visible: !!visible, blur_count: engine.integrity.blurCount });
     if (visible) {
       if (engine.lastBlurAt != null) {
         engine.integrity.totalBlurMs += Math.max(0, now() - engine.lastBlurAt);
@@ -715,7 +895,7 @@ export function createBombEngine(options = {}) {
     // Ruido motor (spec §13): se registra para analítica de diseño (Doc 2 §18
     // misclick_rate_by_component); NUNCA penaliza.
     engine.integrity.misclickCount += 1;
-    log('MISCLICK_PROXIMAL', { component_id: componentId ?? null, error_class: 'MISCLICK_PROXIMAL', penalizes: false });
+    logEvent('MISCLICK_PROXIMAL', { component_id: componentId ?? null, error_class: 'MISCLICK_PROXIMAL', penalizes: false });
     return { ok: true };
   };
 
@@ -724,13 +904,53 @@ export function createBombEngine(options = {}) {
     // nunca se reanuda silenciosamente un nivel evaluativo.
     engine.integrity.technicalAbortCount += 1;
     engine.sessionIncomplete = true;
-    log('TECHNICAL_ABORT', { reason: reason ?? 'unknown', error_class: 'TECHNICAL_ABORT' });
+    logEvent('TECHNICAL_ABORT', { reason: reason ?? 'unknown', error_class: 'TECHNICAL_ABORT' });
     return { ok: true };
   };
 
-  // ---------------- Resumen (para B5: payload sesión, spec §19) ----------------
+  // ---------------- B5: señales de integridad del host (spec §14.1, Doc 2 §18) ----------------
+
+  /** Muestra de FPS del host (el rAF la calcula). < BOMB_FPS_DROP_THRESHOLD => drop. */
+  engine.recordFpsSample = function recordFpsSample(fps) {
+    const f = Number(fps);
+    if (!Number.isFinite(f) || f <= 0) return { ok: false, reason: 'INVALID_FPS' };
+    const int = engine.integrity;
+    const rounded = Math.round(f);
+    if (int.minFps == null || rounded < int.minFps) int.minFps = rounded;
+    if (f < BOMB_FPS_DROP_THRESHOLD) int.fpsDropCount += 1;
+    return { ok: true };
+  };
+
+  /** Viewport de la sesión (el host lo envía en mount y en cada resize). */
+  engine.recordViewport = function recordViewport(viewport) {
+    const width = Number(viewport?.width);
+    const height = Number(viewport?.height);
+    const dpr = Number(viewport?.dpr);
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+      return { ok: false, reason: 'INVALID_VIEWPORT' };
+    }
+    const int = engine.integrity;
+    if (int.viewport == null) {
+      int.viewport = { width: Math.round(width), height: Math.round(height) };
+      if (Number.isFinite(dpr) && dpr > 0) int.devicePixelRatio = dpr;
+    } else {
+      int.viewportResizeCount += 1; // Doc 2 §18 viewport_resize_events
+    }
+    return { ok: true };
+  };
+
+  /** Tipo de dispositivo de input (el host registra el PRIMER uso por tipo). */
+  engine.recordInputDevice = function recordInputDevice(type) {
+    const t = String(type ?? '').trim().toLowerCase();
+    if (!['mouse', 'touch', 'pen', 'keyboard'].includes(t)) return { ok: false, reason: 'UNKNOWN_DEVICE' };
+    if (engine.integrity.inputDeviceType == null) engine.integrity.inputDeviceType = t;
+    return { ok: true };
+  };
+
+  // ---------------- Resumen (B5: payload sesión, spec §19) ----------------
 
   engine.sessionSummary = function sessionSummary() {
+    const int = engine.integrity;
     return {
       exp_id: manifest.experienceId,
       build_version: manifest.buildVersion,
@@ -742,7 +962,26 @@ export function createBombEngine(options = {}) {
       levels_completed: engine.levelsCompleted,
       session_incomplete: engine.sessionIncomplete,
       tutorial_replay_count: engine.tutorialReplayCount, // B4: Doc 2 §18 (analítica de diseño)
-      integrity: { ...engine.integrity },
+      integrity: { ...int },
+      // B5: integridad §14.1 + analítica de diseño (Doc 2 §18) en campos planos
+      // (el blueprint de batería solo conserva escalares; los anidados van por
+      // bombTelemetry.buildBombIntegrityFlags desde `integrity`).
+      blurEvents: int.blurCount,
+      totalBlurMs: Math.round(int.totalBlurMs),
+      fpsDropCount: int.fpsDropCount,
+      minFps: int.minFps,
+      eventClockDriftMs: Math.round(int.eventClockDriftMs),
+      bioTrackingLossMs: int.bioTrackingLossMs,
+      inputDeviceType: int.inputDeviceType,
+      viewportWidth: int.viewport?.width ?? null,
+      viewportHeight: int.viewport?.height ?? null,
+      devicePixelRatio: int.devicePixelRatio ?? null,
+      viewportResizeCount: int.viewportResizeCount,
+      sessionResumeCount: int.sessionResumeCount,
+      unexpectedStateTransitionCount: int.unexpectedStateTransitionCount,
+      inputDuringLockCount: int.inputDuringLockCount,
+      misclickCount: int.misclickCount,
+      technicalAbortCount: int.technicalAbortCount,
     };
   };
 

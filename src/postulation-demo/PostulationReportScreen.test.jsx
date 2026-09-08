@@ -161,6 +161,7 @@ describe('PostulationReportScreen', () => {
     const balloon = cards.find((card) => card.id === 'balloon_risk');
     const passenger = cards.find((card) => card.id === 'passenger_routes');
     const team = cards.find((card) => card.id === 'team_coordination');
+    const bomb = cards.find((card) => card.id === 'bomb_defusal');
 
     expect(laser.metrics).toEqual(expect.arrayContaining([
       { label: 'Precisión', value: '100%' },
@@ -175,6 +176,13 @@ describe('PostulationReportScreen', () => {
       { label: 'Coordinación', value: expect.stringMatching(/%/) },
       { label: 'Tiempo total', value: expect.stringMatching(/s|ms/) },
     ]));
+    // BOMB (B5): métricas del agregado §12, sin campo "Precisión" genérico.
+    expect(bomb.metrics).toEqual(expect.arrayContaining([
+      { label: 'Niveles completados', value: '4/4' },
+      { label: 'Retención post-delay', value: expect.stringMatching(/%/) },
+      { label: 'Tiempo total', value: expect.stringMatching(/s|ms/) },
+    ]));
+    expect(bomb.metrics.map((metric) => metric.label)).not.toContain('Precisión');
     expect(JSON.stringify(cards.map((card) => card.metrics))).not.toMatch(/"value":"—"/);
   });
 
@@ -289,6 +297,7 @@ describe('PostulationReportScreen', () => {
       'passenger_routes',
       'team_coordination',
       'tangram_exp001',
+      'bomb_defusal',
     ]);
     expect(cards.map((card) => card.feedback?.displayCategory)).toEqual([
       'clear_solution',
@@ -296,6 +305,7 @@ describe('PostulationReportScreen', () => {
       'clear_success',
       'structured_coordination_signal',
       'efficient_assembly',
+      'protocol_retained',
     ]);
     expect(JSON.stringify(cards.map((card) => card.feedback))).not.toMatch(/beamCells|pumpSequence|fullRoute|visitedCells|rawGameEvents|pointerSamples|freeText|typedResponse|choiceSequence/i);
   });

@@ -44,23 +44,33 @@ describe('postulationDemoFixture', () => {
     });
 
     expect(fixture.summary.batteryMode).toBe('original_games');
-    expect(fixture.summary.completedCount).toBe(5);
+    expect(fixture.summary.completedCount).toBe(6);
     expect(fixture.summary.blocks.map((entry) => entry.block.gameId)).toEqual([
       'laser_puzzle',
       'balloon_risk',
       'passenger_routes',
       'team_coordination',
       'tangram_exp001',
+      'bomb_defusal',
     ]);
     expect(fixture.artifacts.batteryMode).toBe('original_games');
-    expect(fixture.artifacts.assessmentSession.blocks).toHaveLength(5);
+    expect(fixture.artifacts.assessmentSession.blocks).toHaveLength(6);
     expect(fixture.artifacts.payload.behavioral.gameResults.map((result) => result.gameId)).toEqual([
       'laser_puzzle',
       'balloon_risk',
       'passenger_routes',
       'team_coordination',
       'tangram_exp001',
+      'bomb_defusal',
     ]);
+    // B5: el agregado del fixture es GENUINO del motor (payload §19, seed 42):
+    // métricas §12 presentes y biometría off.
+    const bombResult = fixture.artifacts.assessmentSession.blocks.find((block) => block.gameId === 'bomb_defusal');
+    expect(bombResult.result.aggregateSchemaVersion).toBe('bomb_defusal_aggregate_v1');
+    expect(bombResult.result.completed).toBe(true);
+    expect(bombResult.result.seed).toBe(42);
+    expect(bombResult.result.bioTrackingLossMs).toBe(0);
+    expect(typeof bombResult.result.retentionAccuracyRate).toBe('number');
     expect(stringifyCoreArtifacts(fixture)).not.toMatch(/fullRoute|routeTrace|visitedCells|rawGameEvents|pointerSamples|freeText|typedResponse/i);
   });
 });

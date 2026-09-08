@@ -63,7 +63,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import GameRuntime from '../../GameRuntime.jsx';
 import { useLanguage } from '../../../i18n/LanguageContext.jsx';
 import { playSfx, getGameSfxEnabled, setGameSfxEnabled } from '../originalGameSfx.js';
-import { BOMB_COMPONENTS, BOMB_RULE_MANIFEST, buildManualText, newRuleForLevel, tutorialNodeFor, tutorialNodeIdsDone } from './bombRules.js';
+import { BOMB_COMPONENTS, BOMB_DEFAULT_SESSION_SEED, BOMB_RULE_MANIFEST, buildManualText, newRuleForLevel, tutorialNodeFor, tutorialNodeIdsDone } from './bombRules.js';
 import { BOMB_STATES, createBombEngine } from './bombEngine.js';
 import './bomb.css';
 
@@ -309,7 +309,10 @@ function BombInner({ emit, nowFn, seed, onComplete }) {
   }, [nowFn]);
 
   const readNow = useCallback(() => (nowRef.current ? nowRef.current() : DEFAULT_NOW()), []);
-  const seedRef = useRef(typeof seed === 'number' ? seed : null);
+  // B5-backfill (B6 t_32c02f91): sin seed inyectada por el host, la batería usa el
+  // seed de campaña (BOMB_DEFAULT_SESSION_SEED) — progresión v1 fija + determinismo
+  // por seed (spec §15); el dev stage y QA inyectan su propio seed.
+  const seedRef = useRef(typeof seed === 'number' ? seed : BOMB_DEFAULT_SESSION_SEED);
   const onCompleteRef = useRef(onComplete);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 

@@ -6,6 +6,10 @@ import {
   getOriginalGameBlueprint,
   sanitizeOriginalGameAggregate,
 } from './originalGameBlueprints.js';
+import {
+  buildBombBlockSummary,
+  generateBombSyntheticSessionPayload,
+} from '../tasks/original-games/bomb/bombTelemetry.js';
 
 describe('original game integration blueprints', () => {
   it('declares the original games plus the structured team brief completion probe and the tangram module', () => {
@@ -15,13 +19,14 @@ describe('original game integration blueprints', () => {
       'passenger_routes',
       'team_coordination',
       'tangram_exp001',
+      'bomb_defusal',
     ]);
   });
 
   it('keeps source paths, target roles, aggregate fields and human-review language explicit', () => {
     for (const blueprint of ORIGINAL_GAME_BLUEPRINTS) {
       expect(blueprint.label).toMatch(/\S/);
-      expect(blueprint.source.primary).toMatch(['team_coordination', 'tangram_exp001'].includes(blueprint.gameId) ? /src\/tasks\/original-games/ : /\/Test\/src\//);
+      expect(blueprint.source.primary).toMatch(['team_coordination', 'tangram_exp001', 'bomb_defusal'].includes(blueprint.gameId) ? /src\/tasks\/original-games/ : /\/Test\/src\//);
       expect(blueprint.postulation.skill).toMatch(/\S/);
       expect(blueprint.postulation.durationLabel).toMatch(/min|s/);
       expect(blueprint.allowedAggregateFields.length).toBeGreaterThanOrEqual(5);
@@ -37,7 +42,23 @@ describe('original game integration blueprints', () => {
       expect.objectContaining({ gameId: 'passenger_routes', visible: false, phase: 'original_games_replacement', activationStatus: 'ported_hidden' }),
       expect.objectContaining({ gameId: 'team_coordination', visible: false, phase: 'original_games_completion_probe', activationStatus: 'controlled_active' }),
       expect.objectContaining({ gameId: 'tangram_exp001', visible: false, phase: 'original_games_completion_probe', activationStatus: 'controlled_active' }),
+      expect.objectContaining({ gameId: 'bomb_defusal', visible: false, phase: 'original_games_completion_probe', activationStatus: 'controlled_active' }),
     ]);
+  });
+
+  it('bomb_defusal allowlist is a superset of buildBombBlockSummary keys (anti-drift B5)', () => {
+    const blueprint = getOriginalGameBlueprint('bomb_defusal');
+    const payload = generateBombSyntheticSessionPayload({ seed: 42 });
+    const summary = buildBombBlockSummary(payload, { state: 'SESSION_COMPLETE' });
+    const allowed = new Set(blueprint.allowedAggregateFields);
+    const missing = Object.keys(summary).filter((key) => !allowed.has(key));
+    expect(missing).toEqual([]);
+    // El agregado sobrevive el sanitizer completo (solo escalares permitidos).
+    const sanitized = sanitizeOriginalGameAggregate('bomb_defusal', summary);
+    expect(sanitized.aggregateSchemaVersion).toBe('bomb_defusal_aggregate_v1');
+    expect(sanitized.completed).toBe(true);
+    expect(sanitized.aggregateOnly).toBe(true);
+    expect(typeof sanitized.retentionAccuracyRate).toBe('number');
   });
 
   it('defines privacy-forbidden fields that must not leave game components', () => {

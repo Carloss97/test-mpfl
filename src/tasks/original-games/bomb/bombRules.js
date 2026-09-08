@@ -1,5 +1,7 @@
 // bombRules.js — EXP-BOMB-001 (Bomb Defusal) · B1: rule manifest versionado + secuencia
-// efectiva · B4: tutorial T1-T5 + welcome (Doc 2 §4.1/§4.2/§4.3, §18).
+// efectiva · B4: tutorial T1-T5 + welcome (Doc 2 §4.1/§4.2/§4.3, §18) ·
+// B5: diccionario UX copy §11 completo (ES fuente + EN) + diccionario de eventos
+// §11 (BOMB_EVENT_NAMES) + constantes de telemetría (metrics §12, seed por defecto).
 //
 // Fuente de verdad: docs/spec/EXP-BOMB-001/ (Draft v1.1.0, 07-sep-2026):
 //   - Doc 1 §8 (motor de reglas), §9 (parámetros), §10 (progresión), §13 (taxonomía), §19 (esquema JSON)
@@ -19,6 +21,90 @@ export const BOMB_EXPERIENCE_ID = 'EXP-BOMB-001';
 export const BOMB_BUILD_VERSION = '1.1.0';
 export const BOMB_CONFIG_VERSION = 'bomb-v1.1';
 export const BOMB_MANIFEST_VERSION = '1.1.0';
+
+/**
+ * B5: seed de sesión por defecto de la batería. La progresión v1 es fija (spec
+ * §10.1: "La versión base debe conservar una progresión fija para facilitar
+ * comparación entre usuarios"; sin variantes/formas paralelas en v1), por lo que el
+ * seed es una constante de campaña: mismo seed + config => misma forma, secuencia
+ * y transformaciones (spec §15). El host puede inyectar otro seed (dev/QA).
+ */
+export const BOMB_DEFAULT_SESSION_SEED = 20260907;
+
+/**
+ * B5: diccionario de eventos (Doc 1 §11, canónico) + eventos de apoyo existentes
+ * (NEXT_LEVEL: transición; TUTORIAL_SEGMENT/TUTORIAL_REPLAY: B4; MISCLICK_PROXIMAL/
+ * TECHNICAL_ABORT: taxonomía §13). Fuente única: el whitelist de telemetría de la
+ * UI y los verificados del payload (BOMB_CRITICAL_EVENTS) se derivan de aquí.
+ */
+export const BOMB_EVENT_NAMES = Object.freeze(new Set([
+  'SESSION_START',
+  'LEVEL_START',
+  'INSTRUCTIONS_SHOW',
+  'INSTRUCTIONS_HIDE',
+  'BLACK_SCREEN_START',
+  'BLACK_SCREEN_END',
+  'EXECUTION_START',
+  'ACTION_SWITCH',
+  'ACTION_WIRE_CUT',
+  'ACTION_BUTTON_DOWN',
+  'ACTION_BUTTON_UP',
+  'STEP_SUCCESS',
+  'STEP_ERROR',
+  'TIME_PENALTY',
+  'LEVEL_SUCCESS',
+  'LEVEL_FAIL',
+  'FOCUS_CHANGE',
+  'SESSION_COMPLETE',
+  'NEXT_LEVEL',
+  'TUTORIAL_SEGMENT',
+  'TUTORIAL_REPLAY',
+  'MISCLICK_PROXIMAL',
+  'TECHNICAL_ABORT',
+]));
+
+/**
+ * B5: eventos críticos (DoD Doc 1 §16.2: "Todos los eventos críticos contienen
+ * timestamp y level_id"). Son los del diccionario §11 que delimitan un nivel o
+ * constituyen una acción/veredicto; SESSION_START queda exento de level_id (ocurre
+ * antes de cualquier nivel).
+ */
+export const BOMB_CRITICAL_EVENTS = Object.freeze(new Set([
+  'LEVEL_START',
+  'INSTRUCTIONS_SHOW',
+  'INSTRUCTIONS_HIDE',
+  'BLACK_SCREEN_START',
+  'BLACK_SCREEN_END',
+  'EXECUTION_START',
+  'ACTION_SWITCH',
+  'ACTION_WIRE_CUT',
+  'ACTION_BUTTON_DOWN',
+  'ACTION_BUTTON_UP',
+  'STEP_SUCCESS',
+  'STEP_ERROR',
+  'TIME_PENALTY',
+  'LEVEL_SUCCESS',
+  'LEVEL_FAIL',
+  'FOCUS_CHANGE',
+  'SESSION_COMPLETE',
+]));
+
+/** B5: las 10 métricas derivadas (Doc 1 §12) — claves del payload §19. */
+export const BOMB_BEHAVIORAL_METRIC_KEYS = Object.freeze([
+  'retention_accuracy_rate',
+  'serial_position_accuracy',
+  'first_action_latency_ms',
+  'inter_step_latency_median_ms',
+  'interference_error_count',
+  'switch_cost_ms',
+  'hold_duration_error_ms',
+  'memory_decay_slope',
+  'timeout_rate',
+  'error_recovery_latency_ms',
+]);
+
+/** B5: umbral de degradación FPS (Doc 1 §15: "degradación controlada a 30 FPS"). */
+export const BOMB_FPS_DROP_THRESHOLD = 30;
 
 /**
  * Acciones físicas del panel (componentes).
@@ -191,6 +277,7 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
       typeA: Object.freeze({ kind: 'SWITCH', id: 'SW_1', from: 'OFF', to: 'ON' }),
       typeB: Object.freeze({ kind: 'SWITCH', id: 'SW_3', from: 'OFF', to: 'ON' }),
       manualEs: Object.freeze({ A: 'Activa el INTERRUPTOR 1.', B: 'Activa el INTERRUPTOR 3.' }),
+      manualEn: Object.freeze({ A: 'Activate SWITCH 1.', B: 'Activate SWITCH 3.' }),
     }),
     A2: Object.freeze({
       id: 'A2',
@@ -200,6 +287,7 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
       /** En Modelo B, WIRE_RED queda explícitamente prohibido (spec §8.1). */
       forbiddenInB: Object.freeze([{ kind: 'WIRE', id: 'WIRE_RED', op: 'CUT' }]),
       manualEs: Object.freeze({ A: 'Corta el CABLE ROJO.', B: 'Corta el CABLE AZUL.' }),
+      manualEn: Object.freeze({ A: 'Cut the RED WIRE.', B: 'Cut the BLUE WIRE.' }),
     }),
     B1: Object.freeze({
       id: 'B1',
@@ -210,6 +298,10 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
         A: 'Mantén presionado el BOTÓN AMARILLO durante 2 segundos.',
         B: 'Mantén presionado el BOTÓN AMARILLO durante 2 segundos.',
       }),
+      manualEn: Object.freeze({
+        A: 'Hold the YELLOW BUTTON down for 2 seconds.',
+        B: 'Hold the YELLOW BUTTON down for 2 seconds.',
+      }),
     }),
     C1: Object.freeze({
       id: 'C1',
@@ -217,6 +309,7 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
       typeA: Object.freeze({ kind: 'WIRE', id: 'WIRE_GREEN', op: 'CUT' }),
       typeB: Object.freeze({ kind: 'WIRE', id: 'WIRE_GREEN', op: 'CUT' }),
       manualEs: Object.freeze({ A: 'Corta el CABLE VERDE.', B: 'Corta el CABLE VERDE.' }),
+      manualEn: Object.freeze({ A: 'Cut the GREEN WIRE.', B: 'Cut the GREEN WIRE.' }),
     }),
   }),
 
@@ -224,11 +317,15 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
   typeBNoticeEs:
     'ATENCIÓN - MODELO B: Donde el protocolo indique INTERRUPTOR 1, utiliza INTERRUPTOR 3. ' +
     'Donde indique CABLE ROJO, corta CABLE AZUL. Las demás instrucciones no cambian.',
+  typeBNoticeEn:
+    'ATTENTION - MODEL B: Where the protocol says SWITCH 1, use SWITCH 3. ' +
+    'Where it says RED WIRE, cut the BLUE WIRE. The other instructions do not change.',
 
   /**
-   * UX copy exacto (Doc 2 §11 "UX copy completo") — ES fuente de verdad; la UI traduce
-   * (EN) y B5 completa el diccionario §11. Las transiciones "Antes de Lx" se renderizan
-   * en la intro del nivel (decisión B1 #7: TRANSITION es momento en el motor).
+   * UX copy exacto (Doc 2 §11 "UX copy completo") — B5: diccionario completo ES
+   * (fuente de verdad) + EN. Cada momento de la evaluación existe en ambos idiomas
+   * (test de paridad en bombRules.test.js). Las transiciones "Antes de Lx" se
+   * renderizan en la intro del nivel (decisión B1 #7: TRANSITION es momento en el motor).
    */
   intro: Object.freeze({
     transitionEs: Object.freeze({
@@ -237,12 +334,24 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
       3: 'La secuencia será más larga y tendrás menos tiempo para recordarla.',
       4: 'ATENCIÓN: este artefacto es MODELO B. Algunas instrucciones cambian. Revisa el protocolo antes de continuar.',
     }),
+    transitionEn: Object.freeze({
+      1: 'First you will learn the base protocol of MODEL A.',
+      2: 'A new instruction will be added. The previous rules remain in effect.',
+      3: 'The sequence will be longer and you will have less time to remember it.',
+      4: 'ATTENTION: this artifact is MODEL B. Some instructions change. Review the protocol before continuing.',
+    }),
     delayEs: 'Memoriza la secuencia.',
+    delayEn: 'Memorize the sequence.',
     penaltyEs: 'Secuencia incorrecta. Tiempo penalizado.',
+    penaltyEn: 'Incorrect sequence. Time penalized.',
     successEs: 'Artefacto neutralizado.',
+    successEn: 'Artifact neutralized.',
     failTimeoutEs: 'Tiempo agotado. Nivel finalizado.',
+    failTimeoutEn: 'Time up. Level finished.',
     failErrorsEs: 'Se alcanzó el límite de errores. Nivel finalizado.',
+    failErrorsEn: 'The error limit was reached. Level finished.',
     sessionCompleteEs: 'Simulación finalizada. Tus resultados fueron procesados.',
+    sessionCompleteEn: 'Simulation finished. Your results have been processed.',
   }),
 
   /**
@@ -263,7 +372,7 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
    *                 → ejecución sin manual y sin presión (timeLimitMs null).
    */
   tutorial: Object.freeze({
-    /** Pantalla de bienvenida (Doc 2 §4.1, copy exacto). */
+    /** Pantalla de bienvenida (Doc 2 §4.1, copy exacto) — ES fuente + EN (B5). */
     welcome: Object.freeze({
       titleEs: 'Simulación de Protocolo Operativo: Desactivación',
       subEs: 'Memoriza el protocolo y ejecuta cada paso en el orden indicado.',
@@ -272,23 +381,37 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
         + 'Revisa con atención el tipo de artefacto y el tiempo disponible.',
       ctaEs: 'Iniciar práctica',
       secondaryEs: 'Ajustes de audio / accesibilidad',
+      titleEn: 'Operational Protocol Simulation: Defusal',
+      subEn: 'Memorize the protocol and execute each step in the indicated order.',
+      messageEn:
+        'Instructions may disappear before you can interact with the panel. '
+        + 'Pay close attention to the artifact type and the time available.',
+      ctaEn: 'Start practice',
+      secondaryEn: 'Audio / accessibility settings',
     }),
-    /** Nodos T1-T5 en 3 segmentos (Doc 2 §4.2). */
+    /** Ajustes §4.1 secundario (B4: panel inline) — ES fuente + EN (B5). */
+    settings: Object.freeze({
+      audioEs: 'Audio',
+      audioEn: 'Audio',
+      a11yEs: 'Foco visible · targets ≥ 44 px · cables con color + letra · respeta «movimiento reducido».',
+      a11yEn: 'Visible focus · targets ≥ 44 px · wires with color + letter · respects “reduced motion”.',
+    }),
+    /** Nodos T1-T5 en 3 segmentos (Doc 2 §4.2) — ES fuente + EN (B5). */
     segments: Object.freeze([
       Object.freeze({
         id: 'S1',
         mode: 'guided',
         nodes: Object.freeze([
-          Object.freeze({ id: 'T1', overlayEs: 'Activa el Interruptor 1.' }),
-          Object.freeze({ id: 'T2', overlayEs: 'Corta el cable rojo.' }),
-          Object.freeze({ id: 'T3', overlayEs: 'Mantén presionado el botón amarillo durante 2 segundos.' }),
+          Object.freeze({ id: 'T1', overlayEs: 'Activa el Interruptor 1.', overlayEn: 'Turn on Switch 1.' }),
+          Object.freeze({ id: 'T2', overlayEs: 'Corta el cable rojo.', overlayEn: 'Cut the red wire.' }),
+          Object.freeze({ id: 'T3', overlayEs: 'Mantén presionado el botón amarillo durante 2 segundos.', overlayEn: 'Hold the yellow button down for 2 seconds.' }),
         ]),
       }),
       Object.freeze({
         id: 'S2',
         mode: 'sequence',
         nodes: Object.freeze([
-          Object.freeze({ id: 'T4', overlayEs: 'Ahora ejecuta: SW1 → Rojo → Amarillo.' }),
+          Object.freeze({ id: 'T4', overlayEs: 'Ahora ejecuta: SW1 → Rojo → Amarillo.', overlayEn: 'Now execute: SW1 → Red → Yellow.' }),
         ]),
       }),
       Object.freeze({
@@ -297,7 +420,7 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
         readMs: 3000,
         delayMs: 1500,
         nodes: Object.freeze([
-          Object.freeze({ id: 'T5', overlayEs: 'Lee la secuencia. La pantalla se ocultará brevemente.' }),
+          Object.freeze({ id: 'T5', overlayEs: 'Lee la secuencia. La pantalla se ocultará brevemente.', overlayEn: 'Read the sequence. The screen will be hidden briefly.' }),
         ]),
       }),
     ]),
@@ -308,6 +431,11 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
         + 'Las instrucciones pueden cambiar según el tipo de artefacto.',
       ctaEs: 'Comenzar evaluación',
       replayEs: 'Repetir práctica',
+      modalEn:
+        'Practice complete. From the next level, your times and decisions will be recorded. '
+        + 'Instructions may change depending on the artifact type.',
+      ctaEn: 'Start evaluation',
+      replayEn: 'Repeat practice',
     }),
   }),
 

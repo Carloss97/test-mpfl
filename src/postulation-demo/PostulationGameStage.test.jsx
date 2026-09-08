@@ -182,8 +182,19 @@ describe('PostulationGameStage', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
-  describe('H2: indicador discreto de error de señal por juego (batería original, 5 juegos)', () => {
-    const ORIGINAL_GAMES = ['laser_puzzle', 'balloon_risk', 'passenger_routes', 'team_coordination', 'tangram_exp001'];
+  it('can render the BOMB defusal block through the default component map (B5-backfill t_32c02f91)', () => {
+    const bombBlock = buildOriginalGamePostulationBlocks().find((block) => block.gameId === 'bomb_defusal');
+    render(<PostulationGameStage blocks={[{ ...bombBlock, visible: true, trialCount: 4 }]} onGameEvent={vi.fn()} />);
+
+    // Chrome shared (task-title pill) con el label del blueprint.
+    expect(screen.getByRole('heading', { name: /Desactivación de secuencias \(Bomba\)/i })).toBeInTheDocument();
+    // El mundo BOMB real (no un mock) se monta vía DEFAULT_GAME_COMPONENTS.
+    expect(screen.getByTestId('bomb-welcome')).toBeInTheDocument();
+    expect(screen.getByTestId('bomb-start-practice')).toBeInTheDocument();
+  });
+
+  describe('H2: indicador discreto de error de señal por juego (batería original, 6 juegos)', () => {
+    const ORIGINAL_GAMES = ['laser_puzzle', 'balloon_risk', 'passenger_routes', 'team_coordination', 'tangram_exp001', 'bomb_defusal'];
     const OK_SNAPSHOT = Object.freeze({ camera: 'ok', face: 'ok', signal: 'ok', events: 3, report: 'pending' });
     const ERROR_SNAPSHOT = Object.freeze({ camera: 'error', face: 'idle', signal: 'idle', events: 3, report: 'pending' });
     const WARNING_SNAPSHOT = Object.freeze({ camera: 'ok', face: 'warning', signal: 'warning', events: 3, report: 'pending' });

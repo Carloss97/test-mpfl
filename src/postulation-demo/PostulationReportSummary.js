@@ -3,6 +3,7 @@ import { buildLaserPuzzleFeedback } from '../tasks/original-games/laserPuzzleFee
 import { buildPassengerConstraintFeedback } from '../tasks/original-games/passengerRouteFeedback.js';
 import { buildTeamCoordinationFeedback } from '../tasks/original-games/teamCoordinationFeedback.js';
 import { buildTangramReportFeedback } from '../tasks/original-games/tangramReportFeedback.js';
+import { buildBombDefusalFeedback } from '../tasks/original-games/bomb/bombFeedback.js';
 import { getOriginalGameBlueprint } from './originalGameBlueprints.js';
 import { getPostulationDemoBlock } from './postulationDemoConfig.js';
 import { getConstructDefinition } from '../assessment/originalGameTalentMapping.js';
@@ -84,6 +85,14 @@ function getOriginalGameMetrics(t, gameId, result = {}, fallbackTrialCount = 0) 
     pushMetric(metrics, t('Tiempo total', 'Total time'), formatDurationMs(result.totalTimeMs));
     return metrics;
   }
+  if (gameId === 'bomb_defusal') {
+    pushMetric(metrics, t('Niveles completados', 'Levels completed'), `${result.levelsCompleted ?? 0}/${result.reachedLevelCount ?? fallbackTrialCount ?? 4}`);
+    if (Number.isFinite(Number(result.retentionAccuracyRate))) pushMetric(metrics, t('Retención post-delay', 'Post-delay retention'), pct(result.retentionAccuracyRate));
+    if (Number.isFinite(Number(result.serialPositionAccuracy))) pushMetric(metrics, t('Orden serial', 'Serial order'), pct(result.serialPositionAccuracy));
+    pushMetric(metrics, t('Errores', 'Errors'), result.totalErrorCount ?? 0);
+    pushMetric(metrics, t('Tiempo total', 'Total time'), formatDurationMs(result.timeMs));
+    return metrics;
+  }
   return metrics;
 }
 
@@ -105,6 +114,7 @@ function buildOriginalGameFeedback(gameId, result) {
   if (gameId === 'passenger_routes') return buildPassengerConstraintFeedback(result);
   if (gameId === 'team_coordination') return buildTeamCoordinationFeedback(result);
   if (gameId === 'tangram_exp001') return buildTangramReportFeedback(result);
+  if (gameId === 'bomb_defusal') return buildBombDefusalFeedback(result);
   return null;
 }
 
@@ -130,6 +140,10 @@ const FEEDBACK_CATEGORY_LABELS = Object.freeze({
   efficient_assembly: { es: 'Ensamblaje eficiente', en: 'Efficient assembly' },
   move_overhead_review: { es: 'Encaje a revisar', en: 'Fit to review' },
   incomplete_assembly: { es: 'Ensamblaje incompleto', en: 'Incomplete assembly' },
+  protocol_retained: { es: 'Protocolo retenido', en: 'Protocol retained' },
+  partial_sequence_execution: { es: 'Ejecución parcial de secuencia', en: 'Partial sequence execution' },
+  sequence_not_completed: { es: 'Secuencia no completada', en: 'Sequence not completed' },
+  incomplete_session: { es: 'Sesión incompleta', en: 'Incomplete session' },
 });
 
 function normalizeFeedback(t, feedback = null) {

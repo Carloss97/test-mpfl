@@ -6,6 +6,10 @@ import {
   listVisiblePostulationBlocks,
   normalizePostulationDemoBatteryMode,
 } from './postulationDemoConfig.js';
+import {
+  buildBombBlockSummary,
+  generateBombSyntheticSessionPayload,
+} from '../tasks/original-games/bomb/bombTelemetry.js';
 
 export const POSTULATION_DEMO_FIXTURE_RUN_ID = 'postulation-demo-fixture-v1';
 export const POSTULATION_DEMO_ORIGINAL_FIXTURE_RUN_ID = 'postulation-demo-original-games-fixture-v1';
@@ -121,6 +125,13 @@ function blockSummary(block, index) {
       aggregateOnly: true,
     };
   }
+  if (block.gameId === 'bomb_defusal') {
+    // B5: agregado GENUINO del motor (headless, reloj falso, guion con un error
+    // TYPE_INTERFERENCE real en L4 — QA-04), no inventado a mano: payload §19
+    // determinista (seed fijo) reconstruible desde raw events (DoD §16.2).
+    const payload = generateBombSyntheticSessionPayload({ seed: 42 });
+    return buildBombBlockSummary(payload, { state: 'SESSION_COMPLETE' });
+  }
   const accuracy = [0.88, 0.76, 0.82, 0.9][index] ?? 0.82;
   const score = [0.84, 0.72, 0.8, 0.87][index] ?? 0.8;
   const meanReactionTimeMs = [520, 610, 680, 740][index] ?? 620;
@@ -147,6 +158,7 @@ function fixtureResponse(block, index) {
   if (block.gameId === 'passenger_routes') return { ...base, correct: true, outcome: 'route_completed', passengerRoutes: summary };
   if (block.gameId === 'team_coordination') return { ...base, correct: true, outcome: 'structured_choice', teamCoordination: summary };
   if (block.gameId === 'tangram_exp001') return { ...base, correct: true, outcome: 'assembly_completed', tangram: summary };
+  if (block.gameId === 'bomb_defusal') return { ...base, correct: true, outcome: 'sequence_completed', bombDefusal: summary };
   return {
     ...base,
     pointerSummary: { pathEfficiency: 0.78 + (index * 0.03), correctionCount: index === 1 ? 2 : 0 },

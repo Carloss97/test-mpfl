@@ -112,6 +112,19 @@ function summarizeTangram(result = {}) {
   return baseSummary('tangram_exp001', 'low', 'no_instruction_signal_detected', diagnostics);
 }
 
+function summarizeBomb(result = {}) {
+  const levelsCompleted = nonNegativeInteger(result.levelsCompleted ?? 0) ?? 0;
+  const reachedLevelCount = nonNegativeInteger(result.reachedLevelCount ?? 0) ?? 0;
+  const diagnostics = { levelsCompleted, reachedLevelCount };
+  // 0 niveles completados de los alcanzados = señal de revisión de comprensión
+  // del manual/controles (NO de desempeño: los errores de memoria son el
+  // constructo que BOMB mide, no un riesgo de instrucción — spec §3.3).
+  if (reachedLevelCount > 0 && levelsCompleted === 0) {
+    return baseSummary('bomb_defusal', 'review', 'manual_comprehension_review', diagnostics);
+  }
+  return baseSummary('bomb_defusal', 'low', 'no_instruction_signal_detected', diagnostics);
+}
+
 function normalizeBlock(block = {}) {
   const gameId = block.gameId ?? block.block?.gameId ?? block.result?.gameId ?? block.summary?.gameId ?? 'unknown';
   const result = block.result ?? block.summary ?? block;
@@ -128,6 +141,7 @@ function summarizeGame(block = {}) {
   if (gameId === 'balloon_risk') return summarizeBalloon(result);
   if (gameId === 'team_coordination') return summarizeTeamCoordination(result);
   if (gameId === 'tangram_exp001') return summarizeTangram(result);
+  if (gameId === 'bomb_defusal') return summarizeBomb(result);
   return baseSummary(gameId, 'review', 'unsupported_game_for_instruction_check');
 }
 
