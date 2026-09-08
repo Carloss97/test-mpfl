@@ -1,0 +1,219 @@
+import { describe, it, expect } from 'vitest';
+import {
+  BOMB_EXPERIENCE_ID,
+  BOMB_BUILD_VERSION,
+  BOMB_CONFIG_VERSION,
+  BOMB_MANIFEST_VERSION,
+  BOMB_RULE_MANIFEST,
+  transformSequence,
+  effectiveSequenceForLevel,
+  buildLevelSpec,
+  buildManualText,
+  typeAOnlyActions,
+} from './bombRules.js';
+
+// B1 EXP-7 BOMB — tests del rule manifest versionado (spec Doc 1 §8/§9/§10/§19,
+// Doc 2 §9). La spec es ley: docs/spec/EXP-BOMB-001/.
+
+describe('bombRules — identidad del manifest', () => {
+  it('versiona experiencia, build y config (observabilidad spec §15)', () => {
+    expect(BOMB_EXPERIENCE_ID).toBe('EXP-BOMB-001');
+    expect(BOMB_BUILD_VERSION).toBe('1.1.0');
+    expect(BOMB_CONFIG_VERSION).toBe('bomb-v1.1');
+    expect(BOMB_MANIFEST_VERSION).toBe('1.1.0');
+    expect(BOMB_RULE_MANIFEST.experienceId).toBe('EXP-BOMB-001');
+    expect(BOMB_RULE_MANIFEST.configVersion).toBe('bomb-v1.1');
+    expect(BOMB_RULE_MANIFEST.manifestVersion).toBe('1.1.0');
+    expect(BOMB_RULE_MANIFEST.buildVersion).toBe('1.1.0');
+  });
+
+  it('declara las reglas canónicas A1/A2/B1/C1 con acción por tipo (spec §8.1)', () => {
+    const rules = BOMB_RULE_MANIFEST.rules;
+    expect(Object.keys(rules).sort()).toEqual(['A1', 'A2', 'B1', 'C1']);
+    // A1: SW_1→ON (B: SW_3→ON)
+    expect(rules.A1.typeA).toMatchObject({ kind: 'SWITCH', id: 'SW_1', to: 'ON' });
+    expect(rules.A1.typeB).toMatchObject({ kind: 'SWITCH', id: 'SW_3', to: 'ON' });
+    // A2: CUT RED (B: CUT BLUE, RED prohibido)
+    expect(rules.A2.typeA).toMatchObject({ kind: 'WIRE', id: 'WIRE_RED', op: 'CUT' });
+    expect(rules.A2.typeB).toMatchObject({ kind: 'WIRE', id: 'WIRE_BLUE', op: 'CUT' });
+    expect(rules.A2.forbiddenInB).toContainEqual(
+      expect.objectContaining({ kind: 'WIRE', id: 'WIRE_RED', op: 'CUT' }),
+    );
+    // B1: HOLD BTN_YELLOW 2000 ms (sin cambio en B)
+    expect(rules.B1.typeA).toMatchObject({ kind: 'BUTTON', id: 'BTN_YELLOW', op: 'HOLD', durationMs: 2000 });
+    expect(rules.B1.typeB).toMatchObject({ kind: 'BUTTON', id: 'BTN_YELLOW', op: 'HOLD', durationMs: 2000 });
+    // C1: CUT GREEN (sin cambio en B)
+    expect(rules.C1.typeA).toMatchObject({ kind: 'WIRE', id: 'WIRE_GREEN', op: 'CUT' });
+    expect(rules.C1.typeB).toMatchObject({ kind: 'WIRE', id: 'WIRE_GREEN', op: 'CUT' });
+  });
+
+  it('fija tolerancias hold 2000 ms ±200 (ventana 1800-2400, spec §8.3/§9)', () => {
+    const hold = BOMB_RULE_MANIFEST.hold;
+    expect(hold.targetMs).toBe(2000);
+    expect(hold.toleranceMs).toBe(200);
+    expect(hold.window).toEqual([1800, 2400]);
+  });
+
+  it('fija penalización 30% del tiempo restante y max_errors 2 (baseline v1.1)', () => {
+    expect(BOMB_RULE_MANIFEST.penalty.errorTimePenaltyPct).toBe(0.3);
+    expect(BOMB_RULE_MANIFEST.penalty.clampToZero).toBe(true);
+    expect(BOMB_RULE_MANIFEST.maxErrors).toBe(2);
+  });
+
+  it('fija fases del timer: warning último 30%, critical últimos 5 s (Doc 2 §10)', () => {
+    expect(BOMB_RULE_MANIFEST.timer.warningRemainingPct).toBe(0.3);
+    expect(BOMB_RULE_MANIFEST.timer.criticalRemainingMs).toBe(5000);
+  });
+
+  it('progresión de dificultad: tiempos 20/15/12/10 s y delays 0/2/4/3 s (spec §10)', () => {
+    const levels = BOMB_RULE_MANIFEST.levels;
+    expect(levels[1].timeLimitMs).toBe(20000);
+    expect(levels[2].timeLimitMs).toBe(15000);
+    expect(levels[3].timeLimitMs).toBe(12000);
+    expect(levels[4].timeLimitMs).toBe(10000);
+    expect(levels[1].delayMs).toBe(0);
+    expect(levels[2].delayMs).toBe(2000);
+    expect(levels[3].delayMs).toBe(4000);
+    expect(levels[4].delayMs).toBe(3000);
+    // L4 es el único Modelo B (spec §9: "A salvo L4")
+    expect(levels[1].bombType).toBe('A');
+    expect(levels[2].bombType).toBe('A');
+    expect(levels[3].bombType).toBe('A');
+    expect(levels[4].bombType).toBe('B');
+    // Tutorial sin presión temporal
+    expect(levels.tutorial.timeLimitMs).toBeNull();
+  });
+});
+
+describe('bombRules — secuencias efectivas L1-L4 (aceptación B1)', () => {
+  const stepIds = (steps) => steps.map((s) => s.stepId);
+
+  it('L1 (A): SW1 ON → CUT RED', () => {
+    expect(stepIds(effectiveSequenceForLevel(1))).toEqual(['SW_1_ON', 'CUT_RED']);
+  });
+
+  it('L2 (A): SW1 ON → CUT RED → HOLD YELLOW 2s', () => {
+    expect(stepIds(effectiveSequenceForLevel(2))).toEqual([
+      'SW_1_ON', 'CUT_RED', 'HOLD_YELLOW_2000',
+    ]);
+  });
+
+  it('L3 (A): SW1 ON → CUT RED → HOLD YELLOW 2s → CUT GREEN', () => {
+    expect(stepIds(effectiveSequenceForLevel(3))).toEqual([
+      'SW_1_ON', 'CUT_RED', 'HOLD_YELLOW_2000', 'CUT_GREEN',
+    ]);
+  });
+
+  it('L4 (B): SW3 ON → CUT BLUE → HOLD YELLOW 2s → CUT GREEN (esquema §19)', () => {
+    const seq = effectiveSequenceForLevel(4);
+    expect(stepIds(seq)).toEqual([
+      'SW_3_ON', 'CUT_BLUE', 'HOLD_YELLOW_2000', 'CUT_GREEN',
+    ]);
+    // Componentes físicos coherentes con el tipo B
+    expect(seq[0]).toMatchObject({ kind: 'SWITCH', id: 'SW_3', to: 'ON' });
+    expect(seq[1]).toMatchObject({ kind: 'WIRE', id: 'WIRE_BLUE', op: 'CUT' });
+    expect(seq[2]).toMatchObject({ kind: 'BUTTON', id: 'BTN_YELLOW', op: 'HOLD', durationMs: 2000 });
+    expect(seq[3]).toMatchObject({ kind: 'WIRE', id: 'WIRE_GREEN', op: 'CUT' });
+  });
+
+  it('tutorial (A): SW1 ON → CUT RED → HOLD YELLOW 2s (práctica guiada, Doc 2 §4.2 T4)', () => {
+    expect(stepIds(effectiveSequenceForLevel('tutorial'))).toEqual([
+      'SW_1_ON', 'CUT_RED', 'HOLD_YELLOW_2000',
+    ]);
+  });
+});
+
+describe('bombRules — transformación B DESDE el manifest (DoD §16.2)', () => {
+  it('transformSequence aplica solo los descriptors typeA/typeB del manifest (sin condicionales)', () => {
+    const base = ['A1', 'A2', 'B1', 'C1'];
+    const a = transformSequence(base, 'A');
+    const b = transformSequence(base, 'B');
+    // Reglas sin cambio (B1, C1) idénticas en ambos tipos
+    expect(b[2]).toMatchObject({ stepId: 'HOLD_YELLOW_2000', id: 'BTN_YELLOW', op: 'HOLD' });
+    expect(b[3]).toMatchObject({ stepId: 'CUT_GREEN', id: 'WIRE_GREEN', op: 'CUT' });
+    // Reglas transformadas (A1, A2) distintas
+    expect(a[0]).toMatchObject({ stepId: 'SW_1_ON', id: 'SW_1' });
+    expect(b[0]).toMatchObject({ stepId: 'SW_3_ON', id: 'SW_3' });
+    expect(a[1]).toMatchObject({ stepId: 'CUT_RED', id: 'WIRE_RED' });
+    expect(b[1]).toMatchObject({ stepId: 'CUT_BLUE', id: 'WIRE_BLUE' });
+    // La secuencia L4 se obtiene 100% de datos del manifest
+    expect(b).toEqual(effectiveSequenceForLevel(4));
+  });
+
+  it('transformSequence rechaza reglas desconocidas (fallo temprano, no silencio)', () => {
+    expect(() => transformSequence(['A1', 'Z9'], 'A')).toThrow(/regla desconocida/);
+    expect(() => transformSequence([], 'A')).toThrow(/ruleIds vacío/);
+  });
+
+  it('transformSequence rechaza bombType inválido', () => {
+    expect(() => transformSequence(['A1'], 'C')).toThrow(/bombType inválido/);
+  });
+
+  it('buildLevelSpec enriquece el nivel con la secuencia efectiva precalculada', () => {
+    const spec = buildLevelSpec(4);
+    expect(spec.bombType).toBe('B');
+    expect(spec.sequenceIds).toEqual(['A1', 'A2', 'B1', 'C1']);
+    expect(spec.effectiveSequence.map((s) => s.stepId)).toEqual([
+      'SW_3_ON', 'CUT_BLUE', 'HOLD_YELLOW_2000', 'CUT_GREEN',
+    ]);
+  });
+
+  it('typeAOnlyActions deriva solo acciones exclusivas Tipo A (SW_1 ON, WIRE_RED CUT)', () => {
+    const actions = typeAOnlyActions();
+    expect(actions).toContainEqual({ kind: 'SWITCH', id: 'SW_1', op: null, to: 'ON' });
+    expect(actions).toContainEqual({ kind: 'WIRE', id: 'WIRE_RED', op: 'CUT', to: null });
+    // B1/C1 no cambian de tipo => no son interferencia
+    expect(actions.find((a) => a.id === 'BTN_YELLOW')).toBeUndefined();
+    expect(actions.find((a) => a.id === 'WIRE_GREEN')).toBeUndefined();
+  });
+});
+
+describe('bombRules — copy del manual desde el manifest (Doc 2 §9.2)', () => {
+  it('L1 Tipo A: dos líneas numeradas con los nombres exactos de la UI', () => {
+    const manual = buildManualText(['A1', 'A2'], 'A');
+    expect(manual.lines).toEqual([
+      '1. Activa el INTERRUPTOR 1.',
+      '2. Corta el CABLE ROJO.',
+    ]);
+    expect(manual.notice).toBeNull();
+  });
+
+  it('L4 Tipo B: líneas transformadas + aviso MODEL B (Doc 2 §9.2 "Modificador Tipo B")', () => {
+    const manual = buildManualText(['A1', 'A2', 'B1', 'C1'], 'B');
+    expect(manual.lines).toEqual([
+      '1. Activa el INTERRUPTOR 3.',
+      '2. Corta el CABLE AZUL.',
+      '3. Mantén presionado el BOTÓN AMARILLO durante 2 segundos.',
+      '4. Corta el CABLE VERDE.',
+    ]);
+    expect(manual.notice).toMatch(/ATENCIÓN - MODELO B/);
+    expect(manual.notice).toMatch(/INTERRUPTOR 1.*INTERRUPTOR 3/s);
+    expect(manual.notice).toMatch(/CABLE ROJO.*CABLE AZUL/s);
+  });
+});
+
+describe('bombRules — taxonomía de errores (spec §13)', () => {
+  it('declara los 10 códigos con semántica y flag de penalización', () => {
+    const codes = Object.keys(BOMB_RULE_MANIFEST.errorClasses).sort();
+    expect(codes).toEqual([
+      'HOLD_TOO_LONG',
+      'HOLD_TOO_SHORT',
+      'INPUT_DURING_LOCK',
+      'MISCLICK_PROXIMAL',
+      'OMISSION',
+      'ORDER_ERROR',
+      'REPEAT_ACTION',
+      'TECHNICAL_ABORT',
+      'TYPE_INTERFERENCE',
+      'WRONG_TARGET',
+    ]);
+    // Los que penalizan: los de secuencia/hold (spec §8.2 los descuenta del tiempo)
+    for (const code of ['ORDER_ERROR', 'WRONG_TARGET', 'TYPE_INTERFERENCE', 'REPEAT_ACTION', 'HOLD_TOO_SHORT', 'HOLD_TOO_LONG']) {
+      expect(BOMB_RULE_MANIFEST.errorClasses[code].penalizes).toBe(true);
+    }
+    // Los que NO penalizan: lock, misclick, omisión (se marca en timeout), abort técnico
+    for (const code of ['INPUT_DURING_LOCK', 'MISCLICK_PROXIMAL', 'OMISSION', 'TECHNICAL_ABORT']) {
+      expect(BOMB_RULE_MANIFEST.errorClasses[code].penalizes).toBe(false);
+    }
+  });
+});
