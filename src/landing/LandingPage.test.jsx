@@ -26,9 +26,9 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(screen.getByText(/telemetría conductual procesada con Edge-AI directamente en el navegador/i)).toBeInTheDocument();
     });
 
-    it('mantiene los CTAs actuales del hero: /postulaciones + ancla cómo funciona', () => {
+    it('mantiene los CTAs actuales del hero: /candidato + ancla cómo funciona (V5 cutover)', () => {
       renderLanding();
-      expect(screen.getByRole('link', { name: 'Acceso candidatos' })).toHaveAttribute('href', '/postulaciones');
+      expect(screen.getByRole('link', { name: 'Acceso candidatos' })).toHaveAttribute('href', '/candidato');
       expect(screen.getByRole('link', { name: /Ver cómo funciona/i })).toHaveAttribute('href', '#como-funciona');
     });
 
@@ -122,7 +122,7 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(screen.getByText(/Nada de “score confiable” sin evidencia ni contexto/i)).toBeInTheDocument();
     });
 
-    it('Accesos: 2 cards de referencia con CTAs a /reclutador y /postulaciones', () => {
+    it('Accesos: 2 cards de referencia con CTAs a /empresa/acceso y /candidato (V5 cutover)', () => {
       renderLanding();
       expect(document.getElementById('accesos')).not.toBeNull();
       expect(screen.getByRole('heading', { name: '¿Dónde quieres ingresar?' })).toBeInTheDocument();
@@ -130,9 +130,9 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(screen.getByRole('heading', { name: 'Portal para empresas' })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Portal para candidatos' })).toBeInTheDocument();
       const empresa = screen.getByRole('link', { name: /Ingresar como empresa/i });
-      expect(empresa).toHaveAttribute('href', '/reclutador');
+      expect(empresa).toHaveAttribute('href', '/empresa/acceso');
       const candidato = screen.getByRole('link', { name: /Ingresar como candidato/i });
-      expect(candidato).toHaveAttribute('href', '/postulaciones');
+      expect(candidato).toHaveAttribute('href', '/candidato');
       expect(screen.getByRole('link', { name: /Volver a KRUMM/i })).toHaveAttribute('href', '/');
     });
 
@@ -165,7 +165,7 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '#accesos');
       expect(screen.getByRole('heading', { name: 'Where do you want to sign in?' })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Discover what KRUMM can measure in your organization.' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Sign in as a company' })).toHaveAttribute('href', '/reclutador');
+      expect(screen.getByRole('link', { name: 'Sign in as a company' })).toHaveAttribute('href', '/empresa/acceso');
       expect(screen.getByRole('contentinfo')).toHaveTextContent('Technology for talent assessment');
     });
   });

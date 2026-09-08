@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PostulationConsentSetup from './PostulationConsentSetup.jsx';
 import PostulationGameStage from './PostulationGameStage.jsx';
-import PostulationLanding from './PostulationLanding.jsx';
 import BackgroundSignalOrchestrator from './BackgroundSignalOrchestrator.jsx';
 import PostulationReportScreen from './PostulationReportScreen.jsx';
 import { buildPostulationDemoFixture, isPostulationFixtureMode } from './postulationDemoFixture.js';
 import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.js';
 import { getPostulationDemoBattery, getPostulationDemoBatteryId, KRUMM_API_BASE, listVisiblePostulationBlocks, normalizePostulationDemoBatteryMode, resolvePostulationDemoBatteryMode } from './postulationDemoConfig.js';
 import { parseInviteToken, runIdForInvitation, INVITATION_STATUS, INVITATION_GUARD_MESSAGES, validateInvitationToken } from './postulationDemoInvite.js';
+import { candidateHomeRedirectUrl } from './postulationDemoRoute.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
 import './postulationDemo.css';
@@ -39,8 +39,12 @@ function buildInitialDemoState(requestedBatteryMode) {
   const blocks = listVisiblePostulationBlocks(getPostulationDemoBattery(batteryMode));
   const inviteToken = parseInviteToken(globalThis.location?.search ?? '');
   if (!isPostulationFixtureMode()) {
+    // V5 cutover (t_0184d2e6): sin invite (y sin fixture) ya no existe la
+    // landing interna: el phase de entrada es la redirección a /candidato
+    // (main.jsx también redirige por URL; esta es la rama defensiva para
+    // montajes directos del componente, p. ej. tests).
     return {
-      phase: inviteToken ? 'invite-check' : 'landing',
+      phase: inviteToken ? 'invite-check' : 'home-redirect',
       inviteToken,
       inviteStatus: inviteToken ? INVITATION_STATUS.CHECKING : null,
       demoSummary: null, demoArtifacts: null, batteryMode, batteryId, blocks,
@@ -57,7 +61,14 @@ function buildInitialDemoState(requestedBatteryMode) {
   };
 }
 
-export default function PostulationDemoApp({ gameComponents, batteryMode: requestedBatteryMode } = {}) {
+// V5: navegación real de salida del flujo (default cuando no se inyecta `navigate`).
+const defaultNavigate = (url) => { window.location.replace(url); };
+
+export default function PostulationDemoApp({ gameComponents, batteryMode: requestedBatteryMode, navigate } = {}) {
+  // V5: la salida del flujo (volver / abortar / reiniciar / entrada sin invite)
+  // navega a /candidato. `navigate` es inyectable (patrón onNavigate de V1)
+  // para tests; por defecto hace la navegación real.
+  const doNavigate = navigate ?? defaultNavigate;
   const { t } = useLanguage();
   const initialStateRef = useRef(null);
   if (initialStateRef.current === null) initialStateRef.current = buildInitialDemoState(requestedBatteryMode);
@@ -100,17 +111,20 @@ export default function PostulationDemoApp({ gameComponents, batteryMode: reques
     descriptors.forEach((descriptor) => triggerDownload(descriptor));
   }, []);
 
-  const goLanding = useCallback(() => {
-    setBackgroundActive(false);
-    setGameEventCount(0);
-    gameEventsRef.current = [];
-    signalContextRef.current = null;
-    setDemoSummary(null);
-    setDemoArtifacts(null);
-    setReportError(null);
-    setSessionStatus(null);
-    setPhase('landing');
-  }, []);
+  // V5 cutover (t_0184d2e6): las acciones de salida del flujo (volver / abortar
+  // / reiniciar) ya no llevan a la landing interna (borrada) sino a la home de
+  // candidato /candidato (navegación real; conserva el idioma).
+  const goCandidateHome = useCallback(() => {
+    doNavigate(candidateHomeRedirectUrl(globalThis.location?.search ?? ''));
+  }, [doNavigate]);
+
+  // Rama defensiva: montado sin invite ni fixture (main.jsx redirige por URL
+  // antes; esto cubre montajes directos, p. ej. tests).
+  useEffect(() => {
+    if (phase !== 'home-redirect') return undefined;
+    doNavigate(candidateHomeRedirectUrl(globalThis.location?.search ?? ''));
+    return undefined;
+  }, [phase, doNavigate]);
 
   const finishDemo = useCallback((summary) => {
     const completedDemo = { ...summary, batteryMode, batteryId };
@@ -190,7 +204,7 @@ export default function PostulationDemoApp({ gameComponents, batteryMode: reques
           signalSnapshot={signalSnapshot}
           onEnableCamera={() => setBackgroundActive(true)}
           onContinue={() => setPhase('gameplay')}
-          onBack={goLanding}
+          onBack={goCandidateHome}
         >
           <BackgroundSignalOrchestrator active={backgroundActive} eventCount={gameEventCount} onSnapshot={handleSnapshot} onSignalContext={handleSignalContext} />
         </PostulationConsentSetup>
@@ -208,7 +222,7 @@ export default function PostulationDemoApp({ gameComponents, batteryMode: reques
           signalSnapshot={signalSnapshot}
           onGameEvent={handleGameEvent}
           onCompleteDemo={finishDemo}
-          onAbortDemo={goLanding}
+          onAbortDemo={goCandidateHome}
         />
       </div>
     );
@@ -222,7 +236,7 @@ export default function PostulationDemoApp({ gameComponents, batteryMode: reques
           completedDemo={demoSummary}
           reportError={reportError}
           sessionStatus={sessionStatus}
-          onRestart={goLanding}
+          onRestart={goCandidateHome}
           onDownloadFile={handleDownloadFile}
           onDownloadAll={handleDownloadAll}
         />
@@ -230,9 +244,13 @@ export default function PostulationDemoApp({ gameComponents, batteryMode: reques
     );
   }
 
+  // V5: la landing interna fue deprecada (fase v3 §2) — la entrada sin invite
+  // redirige a /candidato (efecto de arriba); esta pantalla es solo el estado
+  // transitorio de la navegación.
   return (
-    <div className="postulation-demo" data-demo-phase="landing" data-battery-mode={batteryMode}>
-      <PostulationLanding batteryMode={batteryMode} onStart={() => setPhase('setup')} />
-    </div>
+    <main className="postulation-demo__invite-guard" role="status" aria-busy="true" data-demo-phase="home-redirect">
+      <h1>{t('Volviendo al portal de candidato…', 'Returning to the candidate portal…')}</h1>
+      <LanguageToggle />
+    </main>
   );
 }

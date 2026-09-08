@@ -1,12 +1,13 @@
-// H4.3/H4.4 (2026-09-07): spec de reconstrucción del flujo candidato y
-// /reclutador sobre el design system (tokens --k-*), alineado con LandingPage
-// (H4.2). Criterio de aceptación: consistencia visual verificable sección a
-// sección — el chrome del flujo (landing interna, guard, setup, stage,
-// reporte) y el portal HR usan tokens del sistema, sin hex/rgba indigo
-// duplicados en vistas de flujo. H4.5 (t_5d775c9a) aplicó tokens al chrome de
-// juegos: ver PostulationGamesDesignSystem.test.jsx — las superficies de
-// juego de :root quedaron tokenizadas; los mundos de cada juego y los
-// colores de estado funcional de tarea se conservan.
+// H4.3 (2026-09-07): spec de reconstrucción del flujo candidato sobre el
+// design system (tokens --k-*), alineado con LandingPage (H4.2). Criterio de
+// aceptación: consistencia visual verificable sección a sección — el chrome
+// del flujo (guard, setup, stage, reporte) usa tokens del sistema, sin
+// hex/rgba indigo duplicados en vistas de flujo. H4.5 (t_5d775c9a) aplicó
+// tokens al chrome de juegos: ver PostulationGamesDesignSystem.test.jsx —
+// las superficies de juego de :root quedaron tokenizadas; los mundos de cada
+// juego y los colores de estado funcional de tarea se conservan.
+// V5 (t_0184d2e6, fase v3): las secciones H4.4 (/reclutador, hr-dashboard v1)
+// fueron eliminadas con el borrado de la vista deprecada.
 import fs from 'node:fs';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
@@ -29,7 +30,6 @@ const localStorageMock = (() => {
 Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
 
 const css = fs.readFileSync('src/postulation-demo/postulationDemo.css', 'utf8');
-const hrCss = fs.readFileSync('src/postulation-demo/hr-dashboard/postulationHrDashboard.css', 'utf8');
 
 // Extrae las declaraciones de la primera regla cuyo selector exacto aparece
 // en el texto (selector + '{' + hasta el '}' de cierre de esa regla).
@@ -87,7 +87,7 @@ const blockedArtifacts = {
   validation: { ok: false },
 };
 
-describe('H4.3/H4.4 — flujo candidato y /reclutador sobre design system', () => {
+describe('H4.3 — flujo candidato sobre design system', () => {
   it(':root — mapa semántico del flujo a tokens --k-*', () => {
     for (const line of [
       '--postulation-bg: var(--k-bg-light);',
@@ -201,27 +201,6 @@ describe('H4.3/H4.4 — flujo candidato y /reclutador sobre design system', () =
     expect(document.querySelector('.postulation-demo__report-status-card--blocked')).toBeNull();
   });
 
-  it('H4.4 — /reclutador mapea --hr-* a --k-* (sin tokens indigo duplicados)', () => {
-    for (const line of [
-      '--hr-bg: var(--k-bg-light);',
-      '--hr-ink: var(--k-ink-espresso);',
-      '--hr-muted: var(--k-ink-medium);',
-      '--hr-line: var(--k-divider);',
-      '--hr-shadow: var(--k-shadow-soft);',
-    ]) {
-      expect(hrCss).toContain(line);
-    }
-    expect(hrCss).not.toContain('--hr-indigo');
-  });
-
-  it('H4.4 — topbar espresso + pill de idioma con override oscuro', () => {
-    const topbar = blockOf(hrCss, '.hr-dashboard__topbar');
-    expect(topbar).toContain('background: var(--k-bg-dark-deep);');
-    expect(topbar).toContain('border-bottom: 1px solid rgba(241, 231, 219, 0.16);');
-    expect(hrCss).toContain('.hr-dashboard__topbar .krumm-lang-toggle__btn.is-active {');
-    expect(blockOf(hrCss, '.hr-dashboard__topbar .krumm-lang-toggle__btn.is-active')).toContain('text-decoration: underline;');
-  });
-
   it('pill de idioma tema claro — activo subrayado espresso y focus terracota 3px AA (design-system §6/§6.1)', () => {
     const tokens = fs.readFileSync('src/styles/krumm-tokens.css', 'utf8');
     const landing = fs.readFileSync('src/landing/landing.css', 'utf8');
@@ -237,11 +216,5 @@ describe('H4.3/H4.4 — flujo candidato y /reclutador sobre design system', () =
     // marca v2, krumm_frontend.zip: .language-switcher button:focus-visible),
     // --k-gold == --k-accent-sand (#d8b38c) ≥3:1 sobre espresso.
     expect(blockOf(landing, '.landing .krumm-lang-toggle__btn:focus-visible')).toContain('outline: 2px solid var(--k-gold);');
-  });
-
-  it('H4.4 — métricas y selección con acento oro/arena del sistema', () => {
-    expect(blockOf(hrCss, '.hr-dashboard__metric-icon')).toContain('background: var(--k-tint-gold);');
-    expect(blockOf(hrCss, '.hr-dashboard__candidate--selected')).toContain('background: var(--k-tint-gold);');
-    expect(blockOf(hrCss, '.hr-dashboard__construct-track i')).toContain('linear-gradient(90deg, var(--k-accent-sand), var(--k-ink-terracotta))');
   });
 });

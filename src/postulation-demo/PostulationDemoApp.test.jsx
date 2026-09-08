@@ -73,15 +73,25 @@ const MOCK_GAMES = {
   tangram_exp001: MockGame,
 };
 
+// V5 (t_0184d2e6): la landing interna deprecada — el flujo se entra con
+// invitación (guard M3) y las acciones de salida redirigen a /candidato.
+const INVITE_URL = '/postulaciones?invite=tok-live-abc123';
+
 /** Accept the explicit-consent checkbox and continue into the game stage. */
 function startGames() {
-  fireEvent.click(screen.getByRole('button', { name: /Comenzar prueba de postulación/i }));
   fireEvent.click(screen.getByTestId('postulation-explicit-consent'));
   fireEvent.click(screen.getByRole('button', { name: /Continuar a juegos/i }));
 }
 
+async function enterSetup() {
+  await waitFor(() => {
+    expect(screen.getByRole('heading', { name: /Preparación de la sesión/i })).toBeInTheDocument();
+  });
+}
+
 afterEach(() => {
   window.history.pushState({}, '', '/');
+  vi.restoreAllMocks();
 });
 
 describe('PostulationDemoApp shell and flow', () => {
@@ -116,27 +126,32 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(isPostulationDemoPath('/demo')).toBe(false);
   });
 
-  it('renders a polished candidate-facing landing with a separate HR dashboard entry', () => {
-  render(<PostulationDemoApp />);
+  it('V5 cutover: sin invite ni fixture redirige a /candidato (landing interna deprecada)', () => {
+    const navigate = vi.fn();
+    render(<PostulationDemoApp navigate={navigate} />);
 
-  expect(screen.getByRole('heading', { name: /KRUMM Postulaciones/i })).toBeInTheDocument();
-  expect(screen.getByText(/Juegos breves, procesamiento local y reporte para revisión humana/i)).toBeInTheDocument();
-  expect(screen.getByText(/^KRUMM$/i)).toBeInTheDocument();
-  expect(screen.getByText(/6-8 min/i)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /Comenzar prueba de postulación/i })).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: /Abrir vista reclutador/i })).toHaveAttribute('href', '/reclutador');
-    expect(screen.getByText(/métricas de desempeño|métricas agregadas/i)).toBeInTheDocument();
-    expect(screen.getByText(/calidad de captura y el contexto de la sesión/i)).toBeInTheDocument();
-    expect(screen.queryByText(/FaceMesh|AUs\/FACS|MoveNet|payload privacy-safe/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/KRUMM Edge Fusion PoC/i)).not.toBeInTheDocument();
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith('/candidato');
+    expect(screen.getByRole('heading', { name: /Volviendo al portal de candidato/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /KRUMM Postulaciones/i })).not.toBeInTheDocument();
   });
 
-  it('moves from landing into the productized signal setup screen', () => {
-    render(<PostulationDemoApp />);
+  it('V5 cutover: salir del flujo (setup "Volver al inicio") redirige a /candidato preservando lang', async () => {
+    window.history.pushState({}, '', `${INVITE_URL}&lang=en`);
+    const navigate = vi.fn();
+    render(<PostulationDemoApp gameComponents={MOCK_GAMES} navigate={navigate} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Comenzar prueba de postulación/i }));
+    await enterSetup();
+    fireEvent.click(screen.getByRole('button', { name: /Volver al inicio/i }));
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith('/candidato?lang=en');
+  });
 
-    expect(screen.getByRole('heading', { name: /Preparación de la sesión/i })).toBeInTheDocument();
+  it('setup: pantalla de señales del producto (entrada vía invitación tras V5)', async () => {
+    window.history.pushState({}, '', INVITE_URL);
+    render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
+
+    await enterSetup();
     expect(screen.getByText(/Cámara local opcional/i)).toBeInTheDocument();
     expect(screen.getByText(/no se usan por sí solas para inferir talento/i)).toBeInTheDocument();
     expect(screen.queryByText(/FaceMesh|AUs\/FACS|MoveNet/i)).not.toBeInTheDocument();
@@ -147,9 +162,11 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(screen.getByRole('button', { name: /Volver al inicio/i })).toBeInTheDocument();
   });
 
-  it('continues from setup into the candidate game stage instead of the technical dashboard', () => {
-    render(<PostulationDemoApp />);
+  it('continues from setup into the candidate game stage instead of the technical dashboard', async () => {
+    window.history.pushState({}, '', INVITE_URL);
+    render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
 
+    await enterSetup();
     startGames();
 
     expect(screen.getByRole('heading', { name: /Ruta de precisión adaptativa/i })).toBeInTheDocument();
@@ -162,9 +179,11 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(screen.queryByText(/Dashboard/i)).not.toBeInTheDocument();
   });
 
-  it('generates a productized privacy-safe report screen after completing the mocked candidate game stage', () => {
+  it('generates a productized privacy-safe report screen after completing the mocked candidate game stage', async () => {
+    window.history.pushState({}, '', INVITE_URL);
     render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
 
+    await enterSetup();
     startGames();
     fireEvent.click(screen.getByRole('button', { name: /Completar precision_targeting/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar go_nogo/i }));
@@ -190,11 +209,11 @@ describe('PostulationDemoApp shell and flow', () => {
     expect(screen.queryByRole('heading', { name: /KRUMM Postulaciones/i })).not.toBeInTheDocument();
   });
 
-  it('activates the original games only through the explicit battery query and completes all five blocks', () => {
-    window.history.pushState({}, '', '/postulaciones?battery=original');
+  it('activates the original games only through the explicit battery query and completes all five blocks', async () => {
+    window.history.pushState({}, '', '/postulaciones?invite=tok-live-abc123&battery=original');
     render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
 
-    expect(screen.getByText(/Batería original · Prueba controlada/i)).toBeInTheDocument();
+    await enterSetup();
     startGames();
 
     expect(screen.getByRole('heading', { name: /Puzzle láser/i })).toBeInTheDocument();

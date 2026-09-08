@@ -49,3 +49,42 @@ export function normalizeLegacyPostulationPath(pathname = '') {
   }
   return value;
 }
+
+// ── V5 cutover (t_0184d2e6, fase v3 §2) ─────────────────────────────────────
+// Las rutas viejas reemplazadas por la fase v3 redirigen a las nuevas:
+//   /reclutador*      → /empresa    (hr-dashboard v1 deprecado)
+//   /postulaciones*   → /candidato  (landing interna deprecada), SOLO cuando
+//                       no hay invite (?invite=… entra al flujo de evaluación)
+//                       ni fixture (?fixture=1 entra al reporte QA).
+// Devuelve el path base de destino SIN query (main.jsx conserva el search y
+// hash originales) o null si no aplica el cutover.
+export function resolveV5Cutover(pathname = '', search = '') {
+  const raw = String(pathname || '');
+  const qIndex = raw.indexOf('?');
+  const value = qIndex === -1 ? raw : raw.slice(0, qIndex);
+  // La query puede llegar en `search` (window.location.search) o embebida en
+  // el pathname (full URL): se combinan ambas para la decisión invite/fixture.
+  const params = new URLSearchParams(
+    (qIndex === -1 ? '' : raw.slice(qIndex + 1)) + '&' + String(search || '').replace(/^\?/, ''),
+  );
+  if (value === '/reclutador' || value.startsWith('/reclutador/')) {
+    return '/empresa';
+  }
+  const stripped = value.length > 1 && value.endsWith('/') ? value.slice(0, -1) : value;
+  if (stripped === POSTULATION_DEMO_BASE_PATH || stripped.startsWith(`${POSTULATION_DEMO_BASE_PATH}/`)) {
+    if (!params.get('invite') && !params.get('fixture')) return '/candidato';
+  }
+  return null;
+}
+
+// Destino de salida del flujo de evaluación (las acciones "volver/salir/reiniciar"
+// ya no llevan a la landing interna, deprecada en V5): home de candidato
+// /candidato, conservando el idioma y descartando parámetros del flujo.
+export function candidateHomeRedirectUrl(search = '') {
+  const params = new URLSearchParams(String(search || ''));
+  params.delete('invite');
+  params.delete('battery');
+  params.delete('fixture');
+  const qs = params.toString();
+  return '/candidato' + (qs ? `?${qs}` : '');
+}

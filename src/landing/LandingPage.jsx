@@ -82,8 +82,8 @@ function IconClipboard() {
  * Referencia: ~/krumm/design_ref/Landing pge Krumm/ (krumm_frontend.zip).
  * Tokens: src/styles/krumm-tokens.css (paleta beige/crema/arena/marrón/dorado,
  * Archivo display + Manrope body). Se conservan: anclas, i18n (t()), CTAs
- * (/postulaciones, /reclutador, emails), accesibilidad (h1 único, nav/main/
- * footer etiquelados, skip link) y menú móvil.
+ * (/candidato, /empresa/acceso, emails — cutover V5 t_0184d2e6), accesibilidad
+ * (h1 único, nav/main/footer etiquelados, skip link) y menú móvil.
  */
 export default function LandingPage() {
   const { t } = useLanguage();
@@ -164,7 +164,7 @@ export default function LandingPage() {
               )}
             </p>
             <div className="landing__hero-buttons">
-              <a className="landing__cta landing__cta--gold" href="/postulaciones">
+              <a className="landing__cta landing__cta--gold" href="/candidato">
                 {t('Acceso candidatos', 'Candidate access')}
               </a>
               <a className="landing__cta landing__cta--outline" href="#como-funciona">
@@ -207,10 +207,10 @@ export default function LandingPage() {
               </p>
             </div>
             <ol className="landing__steps">
-              <li>{t('La persona accede al portal /postulaciones y activa la cámara si es necesario.', 'The person accesses the /postulaciones portal and enables the camera if needed.')}</li>
+              <li>{t('La persona accede al portal de candidato (/candidato) y activa la cámara si es necesario.', 'The person accesses the candidate portal (/candidato) and enables the camera if needed.')}</li>
               <li>{t('Juega a una batería de 5 juegos gamificados; las métricas se recopilan localmente.', 'They play a battery of 5 gamified games; metrics are gathered locally.')}</li>
               <li>{t('KRUMM procesa en local → genera un reporte para revisión humana.', 'KRUMM processes locally → generates a report for human review.')}</li>
-              <li>{t('El reclutador revisa en /reclutador, ve la evidencia y toma una decisión contextualizada.', 'The recruiter reviews at /reclutador, sees the evidence, and makes a grounded decision.')}</li>
+              <li>{t('El reclutador revisa en el workspace de empresa (/empresa), ve la evidencia y toma una decisión contextualizada.', 'The recruiter reviews in the company workspace (/empresa), sees the evidence, and makes a grounded decision.')}</li>
             </ol>
           </div>
         </section>
@@ -286,7 +286,7 @@ export default function LandingPage() {
                 <h3>{t('Portal para empresas', 'Portal for companies')}</h3>
                 <p>{t('Gestiona procesos de evaluación, candidatos, resultados y equipos.', 'Manage assessment processes, candidates, results, and teams.')}</p>
                 <span className="landing__acceso-divider" aria-hidden="true" />
-                <a className="landing__acceso-cta" href="/reclutador">
+                <a className="landing__acceso-cta" href="/empresa/acceso">
                   {t('Ingresar como empresa', 'Sign in as a company')} <span aria-hidden="true">→</span>
                 </a>
               </article>
@@ -296,7 +296,7 @@ export default function LandingPage() {
                 <h3>{t('Portal para candidatos', 'Portal for candidates')}</h3>
                 <p>{t('Accede a tus evaluaciones y experiencias KRUMM.', 'Access your assessments and KRUMM experiences.')}</p>
                 <span className="landing__acceso-divider" aria-hidden="true" />
-                <a className="landing__acceso-cta" href="/postulaciones">
+                <a className="landing__acceso-cta" href="/candidato">
                   {t('Ingresar como candidato', 'Sign in as a candidate')} <span aria-hidden="true">→</span>
                 </a>
               </article>
