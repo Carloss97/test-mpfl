@@ -1,4 +1,5 @@
-// bombRules.js — EXP-BOMB-001 (Bomb Defusal) · B1: rule manifest versionado + secuencia efectiva.
+// bombRules.js — EXP-BOMB-001 (Bomb Defusal) · B1: rule manifest versionado + secuencia
+// efectiva · B4: tutorial T1-T5 + welcome (Doc 2 §4.1/§4.2/§4.3, §18).
 //
 // Fuente de verdad: docs/spec/EXP-BOMB-001/ (Draft v1.1.0, 07-sep-2026):
 //   - Doc 1 §8 (motor de reglas), §9 (parámetros), §10 (progresión), §13 (taxonomía), §19 (esquema JSON)
@@ -244,6 +245,72 @@ export const BOMB_RULE_MANIFEST = Object.freeze({
     sessionCompleteEs: 'Simulación finalizada. Tus resultados fueron procesados.',
   }),
 
+  /**
+   * Tutorial y bienvenida (Doc 2 §4, copy exacto — ES fuente de verdad; la capa UI
+   * traduce EN y B5 completa el diccionario §11).
+   *
+   * `segments`: el tutorial guiado T1-T5 (Doc 2 §4.2) corre en 3 segmentos del motor.
+   * El motor consume esta estructura (segmentación, modos, tiempos de T5); la UI solo
+   * pinta los overlays de nodo (DoD §16.2: nada de reglas/secuencias en UI).
+   *   S1 guided   — T1/T2/T3: un nodo por paso del runtime tutorial (A1→A2→B1); el
+   *                 criterio de avance de cada nodo es el STEP_SUCCESS del paso (Doc 2
+   *                 §4.2: SW1→ON / cable CUT / hold dentro de tolerancia).
+   *   S2 sequence — T4: secuencia completa (SW1→Rojo→Amarillo) en panel FRESH (el
+   *                 motor reinicia el runtime al avanzar de segmento; sin estado
+   *                 físico heredado).
+   *   S3 memory   — T5: lectura fija (`readMs`) → ocultación "breve" (`delayMs`, menor
+   *                 que el delay de L2: Doc 2 §4.2 "La pantalla se ocultará brevemente")
+   *                 → ejecución sin manual y sin presión (timeLimitMs null).
+   */
+  tutorial: Object.freeze({
+    /** Pantalla de bienvenida (Doc 2 §4.1, copy exacto). */
+    welcome: Object.freeze({
+      titleEs: 'Simulación de Protocolo Operativo: Desactivación',
+      subEs: 'Memoriza el protocolo y ejecuta cada paso en el orden indicado.',
+      messageEs:
+        'Las instrucciones pueden desaparecer antes de que puedas interactuar con el panel. '
+        + 'Revisa con atención el tipo de artefacto y el tiempo disponible.',
+      ctaEs: 'Iniciar práctica',
+      secondaryEs: 'Ajustes de audio / accesibilidad',
+    }),
+    /** Nodos T1-T5 en 3 segmentos (Doc 2 §4.2). */
+    segments: Object.freeze([
+      Object.freeze({
+        id: 'S1',
+        mode: 'guided',
+        nodes: Object.freeze([
+          Object.freeze({ id: 'T1', overlayEs: 'Activa el Interruptor 1.' }),
+          Object.freeze({ id: 'T2', overlayEs: 'Corta el cable rojo.' }),
+          Object.freeze({ id: 'T3', overlayEs: 'Mantén presionado el botón amarillo durante 2 segundos.' }),
+        ]),
+      }),
+      Object.freeze({
+        id: 'S2',
+        mode: 'sequence',
+        nodes: Object.freeze([
+          Object.freeze({ id: 'T4', overlayEs: 'Ahora ejecuta: SW1 → Rojo → Amarillo.' }),
+        ]),
+      }),
+      Object.freeze({
+        id: 'S3',
+        mode: 'memory',
+        readMs: 3000,
+        delayMs: 1500,
+        nodes: Object.freeze([
+          Object.freeze({ id: 'T5', overlayEs: 'Lee la secuencia. La pantalla se ocultará brevemente.' }),
+        ]),
+      }),
+    ]),
+    /** Salida del tutorial (Doc 2 §4.3, copy exacto) + replay (Doc 1 §5.1 INPUT_RESTART_TUTORIAL). */
+    done: Object.freeze({
+      modalEs:
+        'Práctica completada. Desde el siguiente nivel, tus tiempos y decisiones serán registrados. '
+        + 'Las instrucciones pueden cambiar según el tipo de artefacto.',
+      ctaEs: 'Comenzar evaluación',
+      replayEs: 'Repetir práctica',
+    }),
+  }),
+
   errorClasses: BOMB_ERROR_CLASSES,
 });
 
@@ -314,6 +381,47 @@ export function effectiveSequenceForLevel(levelKey, manifest = BOMB_RULE_MANIFES
     throw new Error(`effectiveSequenceForLevel: nivel desconocido ${String(levelKey)}`);
   }
   return transformSequence(levelDef.sequenceIds, levelDef.bombType, manifest);
+}
+
+/**
+ * Nodo activo del tutorial guiado (Doc 2 §4.2) por (segmento, paso). Puro, derivado del
+ * manifest. En modo `guided` hay un nodo por paso (T1/T2/T3); en `sequence`/`memory` el
+ * único nodo del segmento cubre todo el segmento (T4/T5). Segmento fuera de rango → null.
+ *
+ * @param {number} segment 1-based (1..N según `manifest.tutorial.segments`).
+ * @param {number} stepIndex índice de paso del runtime tutorial (0-based).
+ * @param {object} [manifest]
+ * @returns {{id: string, overlayEs: string}|null}
+ */
+export function tutorialNodeFor(segment, stepIndex, manifest = BOMB_RULE_MANIFEST) {
+  const seg = manifest.tutorial.segments[segment - 1];
+  if (!seg) return null;
+  if (seg.mode === 'guided') {
+    return seg.nodes[Math.min(stepIndex, seg.nodes.length - 1)] ?? null;
+  }
+  return seg.nodes[0] ?? null;
+}
+
+/**
+ * IDs de nodos COMPLETADOS del tutorial guiado por (segmento, paso) — para el progreso
+ * visual (pips) de la UI. Puro, derivado del manifest: los segmentos anteriores
+ * aportan todos sus nodos; en el segmento `guided` en curso, los pasos ya validados.
+ *
+ * @returns {string[]}
+ */
+export function tutorialNodeIdsDone(segment, stepIndex, manifest = BOMB_RULE_MANIFEST) {
+  const segs = manifest.tutorial.segments;
+  const done = [];
+  const cur = Math.min(segment, segs.length + 1); // clamp: segmento futuro → todo completado
+  for (let i = 0; i < segs.length; i += 1) {
+    if (i + 1 < cur) {
+      for (const n of segs[i].nodes) done.push(n.id);
+    } else if (i + 1 === cur && segs[i].mode === 'guided') {
+      const n = Math.max(0, Math.min(stepIndex, segs[i].nodes.length));
+      for (let j = 0; j < n; j += 1) done.push(segs[i].nodes[j].id);
+    }
+  }
+  return done;
 }
 
 /**

@@ -1,0 +1,90 @@
+{
+  "date": "2026-09-08T14:40:20.448Z",
+  "baseUrl": "http://127.0.0.1:5173",
+  "consoleErrors": [],
+  "failures": [],
+  "results": [
+    {
+      "run": "A (1280x720 welcome→T5→L1, seed=42)",
+      "error": null,
+      "overflowWelcome": 0,
+      "welcomeCopy": {
+        "title": true,
+        "sub": true,
+        "message": true
+      },
+      "welcomeCta": true,
+      "welcomeSecondary": true,
+      "shoots": [
+        "docs/qa/b4-bomb-tutorial/01-welcome-runA.png",
+        "docs/qa/b4-bomb-tutorial/02-settings-runA.png",
+        "docs/qa/b4-bomb-tutorial/20-t4-runA.png",
+        "docs/qa/b4-bomb-tutorial/21-t5-execution-runA.png",
+        "docs/qa/b4-bomb-tutorial/22-done-modal-runA.png",
+        "docs/qa/b4-bomb-tutorial/23-l1-intro-runA.png"
+      ],
+      "settings": {
+        "audio": true,
+        "a11y": true
+      },
+      "audioToggle": true,
+      "t1": true,
+      "t2": true,
+      "t3": true,
+      "t3ring": true,
+      "t4": true,
+      "t4node": true,
+      "t4fresh": true,
+      "readMs": 3057,
+      "delayMs": 1655,
+      "t5execManualHidden": true,
+      "doneModal": true,
+      "doneButtons": true,
+      "l1": {
+        "level": true,
+        "transition": true
+      },
+      "overflowL1": 0
+    },
+    {
+      "run": "B (1280x720 replay)",
+      "error": null,
+      "sw1AtT4": true,
+      "replayOverlay": true,
+      "replayPanelFresh": true,
+      "shoots": [
+        "docs/qa/b4-bomb-tutorial/10-replay-overlay-runB-replay.png",
+        "docs/qa/b4-bomb-tutorial/11-replay-modal-runB-replay.png"
+      ],
+      "replayModal": true
+    },
+    {
+      "run": "C (390x844 mobile)",
+      "error": null,
+      "warning": true,
+      "overflowWelcome": 0,
+      "shoots": [
+        "docs/qa/b4-bomb-tutorial/30-mobile-welcome-runC-390x844.png",
+        "docs/qa/b4-bomb-tutorial/31-mobile-t1-runC-390x844.png",
+        "docs/qa/b4-bomb-tutorial/32-mobile-t5-read-runC-390x844.png",
+        "docs/qa/b4-bomb-tutorial/33-mobile-done-runC-390x844.png"
+      ],
+      "overflowT1": 0,
+      "overflowT5Read": 0,
+      "overflowT5Exec": 0,
+      "overflowDoneModal": 0
+    },
+    {
+      "run": "D (prefers-reduced-motion: reduce)",
+      "error": null,
+      "delayStatic": {
+        "animationName": "none",
+        "opacity": "0"
+      },
+      "shoots": [
+        "docs/qa/b4-bomb-tutorial/40-reduced-delay-runD-reduced.png"
+      ],
+      "logicIntact": true
+    }
+  ]
+}

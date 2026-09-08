@@ -47,13 +47,8 @@ function makeHarness(seed = 42, manifest = BOMB_RULE_MANIFEST) {
       }
       return events.slice(idx + 1);
     },
-    /** BOOT → tutorial completo (SW1 → RED → hold 2000) → TUTORIAL_RESULT. */
-    runTutorial: () => {
-      engine.beginSession();
-      expect(engine.state).toBe(S.TUTORIAL_INTRO);
-      engine.startTutorial();
-      expect(engine.state).toBe(S.TUTORIAL_PLAY);
-      advance(100);
+    /** Ejecuta la secuencia tutorial (SW1 → RED → hold 2000) en el runtime actual. */
+    playSequence: () => {
       engine.action({ kind: 'SWITCH', id: 'SW_1', from: 'OFF', to: 'ON' });
       advance(100);
       engine.action({ kind: 'WIRE', id: 'WIRE_RED', op: 'CUT' });
@@ -61,6 +56,33 @@ function makeHarness(seed = 42, manifest = BOMB_RULE_MANIFEST) {
       engine.buttonAction('BTN_YELLOW', 'DOWN');
       advance(2000);
       engine.buttonAction('BTN_YELLOW', 'UP');
+    },
+    /**
+     * BOOT → tutorial guiado completo (B4: S1 T1-T3 → S2 T4 → S3 T5 lectura/delay/
+     * ejecución) → TUTORIAL_RESULT. El tutorial NO puntúa (DoD §16.2).
+     */
+    runTutorial: () => {
+      engine.beginSession();
+      expect(engine.state).toBe(S.TUTORIAL_INTRO);
+      engine.startTutorial();
+      expect(engine.state).toBe(S.TUTORIAL_PLAY);
+      const seg = BOMB_RULE_MANIFEST.tutorial.segments[2];
+      // S1 (T1-T3): SW1 → RED → hold 2000 → el motor avanza a S2 (panel fresh)
+      api.playSequence();
+      expect(engine.state).toBe(S.TUTORIAL_PLAY);
+      expect(engine.tutorialSegment).toBe(2);
+      // S2 (T4): secuencia completa en panel fresh → el motor avanza a S3 (T5)
+      api.playSequence();
+      expect(engine.state).toBe(S.INSTRUCTION_ENCODING);
+      expect(engine.tutorialSegment).toBe(3);
+      // S3 (T5): lectura (readMs) → delay (delayMs) → ejecución sin manual
+      advance(seg.readMs + 1);
+      engine.tick();
+      expect(engine.state).toBe(S.BLIND_DELAY);
+      advance(seg.delayMs + 1);
+      engine.tick();
+      expect(engine.state).toBe(S.EXECUTION);
+      api.playSequence();
       expect(engine.state).toBe(S.LEVEL_SUCCESS);
       engine.tutorialComplete();
       expect(engine.state).toBe(S.TUTORIAL_RESULT);

@@ -38,6 +38,18 @@ PAIRS = [
     ("fail title #ff6252 / card #141b23", "ff6252", "141b23"),
     ("countdown text #eaf1f7 / overlay ~#0a0f14", "eaf1f7", "0a0f14"),
     ("status penalty #ff6252 / statusbar ~#0d1319", "ff6252", "0d1319"),
+    # B4: bienvenida §4.1 (mensaje/secundario/ajustes sobre el overlay ~#0a0f14)
+    ("welcome message #9fb0be / overlay ~#0a0f14", "9fb0be", "0a0f14"),
+    ("welcome secondary ghost #9fb0be / overlay ~#0a0f14", "9fb0be", "0a0f14"),
+    ("settings label #eaf1f7 / settings panel #131a21", "eaf1f7", "131a21"),
+    ("settings audio ON ink #241a08 / amber #ffb454", "241a08", "ffb454"),
+    ("settings audio OFF ghost #9fb0be / settings panel #131a21", "9fb0be", "131a21"),
+    ("settings a11y #9fb0be / settings panel #131a21", "9fb0be", "131a21"),
+    # B4: tutorial guiado §4.2 (nodo activo + caption T5 sobre card manual #141b23)
+    ("tutorial instruction #eaf1f7 / card #141b23", "eaf1f7", "141b23"),
+    ("tutorial tag #9fb0be / card #141b23", "9fb0be", "141b23"),
+    ("tutorial caption T5 #ffb454 / card #141b23", "ffb454", "141b23"),
+    ("done modal text #9fb0be / overlay ~#0a0f14", "9fb0be", "0a0f14"),
 ]
 
 for label, fg, bg in PAIRS:

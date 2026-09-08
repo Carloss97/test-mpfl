@@ -80,10 +80,32 @@ async function playPractice(page) {
     const b = document.querySelector('[data-testid="bomb-switch-SW_1"]');
     return b && !b.disabled;
   }, null, { timeout: 8000 });
-  await page.getByTestId('bomb-switch-SW_1').click();
-  await page.getByTestId('bomb-wire-WIRE_RED').click();
-  await holdYellow(page, 2000);
-  await waitForTestid(page, 'bomb-practice-done');
+  // B4: tutorial guiado T1-T5 (3 segmentos: S1 T1-T3, S2 T4 panel fresh, S3 T5
+  // lectura 3 s → delay 1.5 s → ejecución sin manual).
+  const seq = async () => {
+    await page.getByTestId('bomb-switch-SW_1').click();
+    await page.getByTestId('bomb-wire-WIRE_RED').click();
+    await holdYellow(page, 2000);
+  };
+  await seq(); // S1: T1-T3
+  await page.waitForFunction(() => {
+    const el = document.querySelector('[data-testid="bomb-tutorial-node"]');
+    return el && el.textContent.includes('T4');
+  }, null, { timeout: 8000 });
+  await seq(); // S2: T4
+  await page.waitForFunction(() => {
+    const el = document.querySelector('[data-testid="bomb-tutorial-instruction"]');
+    return el && el.textContent.includes('Lee la secuencia');
+  }, null, { timeout: 8000 });
+  // S3: T5 — lectura + delay automáticos (motor): esperar la EJECUCIÓN real
+  // (encoding/delay dejan el control atenuado/bloqueado: aria-disabled o disabled).
+  await page.waitForFunction(() => {
+    const b = document.querySelector('[data-testid="bomb-switch-SW_1"]');
+    return b && !b.disabled && !b.hasAttribute('aria-disabled');
+  }, null, { timeout: 15000 });
+  await seq(); // S3: T5 (ejecución sin ayuda)
+  // B4: el tutorial guiado es más largo en tiempo real (~15 s): holgura 30 s
+  await waitForTestid(page, 'bomb-practice-done', 30000);
   await page.getByTestId('bomb-start-evaluation').click();
   await waitForTestid(page, 'bomb-level-intro');
 }

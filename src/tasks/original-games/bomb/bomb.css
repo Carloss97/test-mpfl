@@ -1,4 +1,5 @@
-/* bomb.css — EXP-BOMB-001 · B2: mundo "Desactivación" (táctico/industrial).
+/* bomb.css — EXP-BOMB-001 · B2: mundo "Desactivación" (táctico/industrial) ·
+ * B3: fases de niveles · B4: bienvenida §4.1 + tutorial guiado §4.2 + salida §4.3.
  *
  * H4.5: el mundo NO se tokeniza — la paleta propia vive aquí; solo el chrome
  * compartido (pills .task-title/.task-progress, caption) recibe override para
@@ -755,6 +756,150 @@
   border-color: var(--bomb-amber);
   color: var(--bomb-amber);
   filter: none;
+}
+
+/* ── B4: bienvenida §4.1 completa (+ ajustes) · tutorial guiado §4.2 ·
+      salida §4.3 (card t_b3f1dc15) ───────────────────────────────────────── */
+
+/* §4.1: mensaje (aviso de que las instrucciones pueden desaparecer) */
+.bomb-welcome__message {
+  max-width: 46ch;
+  font-size: 0.92rem;
+}
+
+/* §4.1: secundario "Ajustes de audio / accesibilidad" (pill compacto) */
+.bomb-welcome__secondary {
+  min-height: 40px;
+  padding: 8px 18px;
+  font-size: 0.85rem;
+}
+
+/* §4.1: panel inline de ajustes */
+.bomb-settings {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 420px);
+  padding: 12px 14px;
+  border: 1px solid #2c3945;
+  border-radius: 12px;
+  background: var(--bomb-inset);
+  text-align: left;
+}
+
+.bomb-settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bomb-settings__label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--bomb-text);
+}
+
+.bomb-settings__audio {
+  min-width: 64px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bomb-amber);
+  color: #241a08;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: filter var(--bomb-anim-switch);
+}
+
+.bomb-settings__audio[aria-checked='false'] {
+  background: transparent;
+  border: 1px solid var(--bomb-panel-line);
+  color: var(--bomb-text-dim);
+}
+
+.bomb-settings__audio:hover:not(:disabled) { filter: brightness(1.08); }
+
+.bomb-settings__audio:focus-visible {
+  outline: 3px solid var(--bomb-focus);
+  outline-offset: 3px;
+}
+
+.bomb-settings__a11y {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--bomb-text-dim);
+}
+
+/* §4.2: overlay del nodo activo (T1-T4) en la columna manual */
+.bomb-tutorial {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  justify-items: start;
+  flex: 1;
+}
+
+.bomb-tutorial__tag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bomb-text-dim);
+}
+
+.bomb-tutorial__instruction {
+  margin: 0;
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+  line-height: 1.35;
+  color: var(--bomb-text);
+}
+
+.bomb-tutorial__pips {
+  display: flex;
+  gap: 8px;
+}
+
+.bomb-tutorial__pip {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--bomb-panel-line);
+  background: transparent;
+}
+
+.bomb-tutorial__pip--done {
+  background: var(--bomb-amber);
+  border-color: var(--bomb-amber);
+}
+
+.bomb-tutorial__pip--active {
+  border-color: var(--bomb-amber);
+  box-shadow: 0 0 0 3px rgba(255, 180, 84, 0.25);
+}
+
+.bomb-tutorial__restart {
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+}
+
+/* §4.2 T5: caption del nodo sobre el manual que se lee (memoria) */
+.bomb-encoding__caption {
+  margin: 0;
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--bomb-amber);
+}
+
+/* §4.3: modal de salida (texto exacto del manifest) */
+.bomb-practice-done__text {
+  max-width: 46ch;
 }
 
 /* ── B3: fases de niveles (Doc 2 §5: Level Intro / Encoding / Blind Delay /

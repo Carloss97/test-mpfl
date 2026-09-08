@@ -203,6 +203,8 @@ export function createBombEngine(options = {}) {
     timer: null,
     levelsCompleted: [],
     sessionIncomplete: false,
+    tutorialSegment: 0, // B4: segmento del tutorial guiado (1..N, manifest tutorial.segments)
+    tutorialReplayCount: 0, // B4: Doc 2 §18 tutorial_replay_count (INPUT_RESTART_TUTORIAL)
     integrity: {
       blurCount: 0,
       totalBlurMs: 0,
@@ -265,6 +267,7 @@ export function createBombEngine(options = {}) {
 
   engine.startTutorial = function startTutorial() {
     if (!requireState(STATES.TUTORIAL_INTRO)) return { ok: false, reason: 'INVALID_STATE' };
+    engine.tutorialSegment = 1;
     startLevelRuntime('tutorial');
     enterState(STATES.TUTORIAL_PLAY);
     log('LEVEL_START', {
@@ -274,8 +277,66 @@ export function createBombEngine(options = {}) {
       seed,
       evaluated: false,
     });
-    log('INSTRUCTIONS_SHOW', { exposure_ms: null });
+    log('INSTRUCTIONS_SHOW', { exposure_ms: null, tutorial: true, segment: 1 });
+    log('TUTORIAL_SEGMENT', { segment: 1, mode: manifest.tutorial.segments[0].mode, tutorial: true, evaluated: false });
     return { ok: true };
+  };
+
+  /**
+   * B4: avance a la siguiente porción del tutorial guiado (Doc 2 §4.2: T4 en panel
+   * fresh; T5 = lectura → delay breve → ejecución sin manual). Reinicia el runtime del
+   * nivel tutorial (sin estado físico heredado — Decisión B4 #1) y queda en el estado
+   * que el modo del segmento exige. Todo derivado del manifest `tutorial.segments`
+   * (DoD §16.2: nada de segmentación codificada en el motor fuera del manifest).
+   */
+  function advanceTutorialSegment() {
+    const segs = manifest.tutorial.segments;
+    engine.tutorialSegment += 1;
+    const seg = segs[engine.tutorialSegment - 1];
+    startLevelRuntime('tutorial'); // panel fresh
+    if (seg.mode === 'memory') {
+      // T5: lectura fija (INSTRUCTION_ENCODING con exposición) → delay breve →
+      // ejecución. Reutiliza el flujo de encoding/delay del motor (eventos §11).
+      engine.level = Object.freeze({ ...engine.level, exposureMs: seg.readMs, delayMs: seg.delayMs });
+      enterState(STATES.INSTRUCTION_ENCODING);
+      engine.encodingEndAt = now() + seg.readMs;
+      log('INSTRUCTIONS_SHOW', { exposure_ms: seg.readMs, tutorial: true, segment: engine.tutorialSegment });
+    } else {
+      enterState(STATES.TUTORIAL_PLAY);
+      log('INSTRUCTIONS_SHOW', { exposure_ms: null, tutorial: true, segment: engine.tutorialSegment });
+    }
+    log('TUTORIAL_SEGMENT', {
+      segment: engine.tutorialSegment,
+      mode: seg.mode,
+      tutorial: true,
+      evaluated: false,
+    });
+    return { ok: true, reason: 'TUTORIAL_SEGMENT', segment: engine.tutorialSegment };
+  }
+
+  /**
+   * B4: replay del tutorial (Doc 1 §5.1 INPUT_RESTART_TUTORIAL; §10.1 "repetir
+   * tutorial sin incluir sus datos en scoring"; Doc 2 §18 tutorial_replay_count).
+   * Válido SOLO durante el tutorial (cualquier estado con levelKey 'tutorial'):
+   * segmento 1, panel fresh, contador incrementado. Fuera del tutorial →
+   * INVALID_STATE (no interfiere con la evaluación).
+   */
+  engine.restartTutorial = function restartTutorial() {
+    const inTutorial = engine.levelKey === 'tutorial' && (
+      engine.state === STATES.TUTORIAL_PLAY
+      || engine.state === STATES.INSTRUCTION_ENCODING
+      || engine.state === STATES.BLIND_DELAY
+      || engine.state === STATES.EXECUTION
+      || engine.state === STATES.LEVEL_SUCCESS
+    );
+    if (!inTutorial) return { ok: false, reason: 'INVALID_STATE' };
+    engine.tutorialReplayCount += 1;
+    engine.tutorialSegment = 1;
+    startLevelRuntime('tutorial');
+    enterState(STATES.TUTORIAL_PLAY);
+    log('TUTORIAL_REPLAY', { count: engine.tutorialReplayCount, tutorial: true, evaluated: false });
+    log('INSTRUCTIONS_SHOW', { exposure_ms: null, tutorial: true, segment: 1 });
+    return { ok: true, reason: 'TUTORIAL_RESTART' };
   };
 
   // ---------------- Flujo por nivel ----------------
@@ -540,6 +601,13 @@ export function createBombEngine(options = {}) {
       });
       engine.stepIndex += 1;
       if (engine.stepIndex >= engine.effectiveSequence.length) {
+        // B4: en el tutorial guiado, completar el runtime de un segmento NO termina la
+        // práctica: avanza al siguiente segmento (T4 en panel fresh / T5 lectura+delay),
+        // salvo el último, que cierra con LEVEL_SUCCESS (Doc 2 §4.2 criterios de avance).
+        if (engine.levelKey === 'tutorial' && engine.level && !engine.level.evaluated) {
+          const segs = manifest.tutorial.segments;
+          if (engine.tutorialSegment < segs.length) return advanceTutorialSegment();
+        }
         return finishLevelSuccess();
       }
       return { ok: true, accepted: true, reason: 'STEP_SUCCESS', stepId: step.stepId };
@@ -673,6 +741,7 @@ export function createBombEngine(options = {}) {
       state: engine.state,
       levels_completed: engine.levelsCompleted,
       session_incomplete: engine.sessionIncomplete,
+      tutorial_replay_count: engine.tutorialReplayCount, // B4: Doc 2 §18 (analítica de diseño)
       integrity: { ...engine.integrity },
     };
   };

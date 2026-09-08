@@ -11,6 +11,8 @@ import {
   buildManualText,
   newRuleForLevel,
   typeAOnlyActions,
+  tutorialNodeFor,
+  tutorialNodeIdsDone,
 } from './bombRules.js';
 
 // B1 EXP-7 BOMB — tests del rule manifest versionado (spec Doc 1 §8/§9/§10/§19,
@@ -269,5 +271,89 @@ describe('bombRules — taxonomía de errores (spec §13)', () => {
     for (const code of ['INPUT_DURING_LOCK', 'MISCLICK_PROXIMAL', 'OMISSION', 'TECHNICAL_ABORT']) {
       expect(BOMB_RULE_MANIFEST.errorClasses[code].penalizes).toBe(false);
     }
+  });
+});
+
+// ============================================================================
+// B4 (card t_b3f1dc15): tutorial T1-T5 + welcome (Doc 2 §4.1/§4.2/§4.3/§18)
+// ============================================================================
+
+describe('bombRules — B4: pantalla de bienvenida §4.1 (copy exacto, ES fuente de verdad)', () => {
+  it('título, bajada, mensaje, CTA y secundario — texto exacto de Doc 2 §4.1', () => {
+    const w = BOMB_RULE_MANIFEST.tutorial.welcome;
+    expect(w.titleEs).toBe('Simulación de Protocolo Operativo: Desactivación');
+    expect(w.subEs).toBe('Memoriza el protocolo y ejecuta cada paso en el orden indicado.');
+    expect(w.messageEs).toBe(
+      'Las instrucciones pueden desaparecer antes de que puedas interactuar con el panel. '
+      + 'Revisa con atención el tipo de artefacto y el tiempo disponible.',
+    );
+    expect(w.ctaEs).toBe('Iniciar práctica');
+    expect(w.secondaryEs).toBe('Ajustes de audio / accesibilidad');
+  });
+
+  it('tono §11.1: sin lenguaje alarmista realista en bienvenida/mensaje', () => {
+    const w = BOMB_RULE_MANIFEST.tutorial.welcome;
+    for (const text of [w.titleEs, w.subEs, w.messageEs]) {
+      expect(text).not.toMatch(/vas a (morir|explotar)|explosión real|muerte/i);
+    }
+  });
+});
+
+describe('bombRules — B4: tutorial guiado §4.2 (nodos T1-T5, copy exacto + criterios)', () => {
+  it('cinco nodos T1-T5 con el overlay exacto de Doc 2 §4.2', () => {
+    const nodes = BOMB_RULE_MANIFEST.tutorial.segments.flatMap((s) => s.nodes);
+    expect(nodes.map((n) => n.id)).toEqual(['T1', 'T2', 'T3', 'T4', 'T5']);
+    expect(nodes[0].overlayEs).toBe('Activa el Interruptor 1.');
+    expect(nodes[1].overlayEs).toBe('Corta el cable rojo.');
+    expect(nodes[2].overlayEs).toBe('Mantén presionado el botón amarillo durante 2 segundos.');
+    expect(nodes[3].overlayEs).toBe('Ahora ejecuta: SW1 → Rojo → Amarillo.');
+    expect(nodes[4].overlayEs).toBe('Lee la secuencia. La pantalla se ocultará brevemente.');
+  });
+
+  it('tres segmentos: guided (T1-T3) / sequence (T4) / memory (T5) — el motor no codifica nodos', () => {
+    const segs = BOMB_RULE_MANIFEST.tutorial.segments;
+    expect(segs.map((s) => s.mode)).toEqual(['guided', 'sequence', 'memory']);
+    expect(segs.map((s) => s.nodes.map((n) => n.id))).toEqual([
+      ['T1', 'T2', 'T3'],
+      ['T4'],
+      ['T5'],
+    ]);
+    // T5: lectura fija + ocultación "breve" (Doc 2 §4.2) — menor que el delay de L2 (2 s)
+    const memory = segs[2];
+    expect(memory.readMs).toBeGreaterThan(1500);
+    expect(memory.delayMs).toBeGreaterThan(0);
+    expect(memory.delayMs).toBeLessThan(BOMB_RULE_MANIFEST.levels[2].delayMs);
+  });
+
+  it('tutorialNodeFor: nodo activo por (segmento, paso) — guided uno por paso, los demás el único', () => {
+    expect(tutorialNodeFor(1, 0).id).toBe('T1');
+    expect(tutorialNodeFor(1, 1).id).toBe('T2');
+    expect(tutorialNodeFor(1, 2).id).toBe('T3');
+    expect(tutorialNodeFor(2, 0).id).toBe('T4');
+    expect(tutorialNodeFor(2, 2).id).toBe('T4');
+    expect(tutorialNodeFor(3, 0).id).toBe('T5');
+    expect(tutorialNodeFor(0, 0)).toBeNull();
+    expect(tutorialNodeFor(9, 0)).toBeNull();
+  });
+
+  it('tutorialNodeIdsDone: nodos completados por (segmento, paso)', () => {
+    expect(tutorialNodeIdsDone(1, 0)).toEqual([]);
+    expect(tutorialNodeIdsDone(1, 2)).toEqual(['T1', 'T2']);
+    expect(tutorialNodeIdsDone(2, 0)).toEqual(['T1', 'T2', 'T3']);
+    expect(tutorialNodeIdsDone(3, 0)).toEqual(['T1', 'T2', 'T3', 'T4']);
+    // segmento fuera de rango → todos completados (clamp)
+    expect(tutorialNodeIdsDone(9, 0)).toEqual(['T1', 'T2', 'T3', 'T4', 'T5']);
+  });
+});
+
+describe('bombRules — B4: salida del tutorial §4.3 (copy exacto) + replay §18', () => {
+  it('modal §4.3 exacto + botón "Comenzar evaluación" + copy de replay', () => {
+    const d = BOMB_RULE_MANIFEST.tutorial.done;
+    expect(d.modalEs).toBe(
+      'Práctica completada. Desde el siguiente nivel, tus tiempos y decisiones serán registrados. '
+      + 'Las instrucciones pueden cambiar según el tipo de artefacto.',
+    );
+    expect(d.ctaEs).toBe('Comenzar evaluación');
+    expect(d.replayEs).toBe('Repetir práctica');
   });
 });

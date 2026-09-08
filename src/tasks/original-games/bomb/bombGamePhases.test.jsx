@@ -114,16 +114,29 @@ async function completeLevel(clock, level) {
   fireEvent.click(screen.getByTestId('bomb-result-continue'));
 }
 
-// Práctica completa (tutorial no evaluado) + "Comenzar evaluación" → LEVEL_INTRO L1.
-async function reachL1Intro(clock) {
+// Práctica completa (tutorial guiado T1-T5, B4) + "Comenzar evaluación" → L1 intro.
+async function completeTutorialToModal(clock) {
   fireEvent.click(screen.getByTestId('bomb-start-practice'));
-  fireEvent.click(screen.getByTestId('bomb-switch-SW_1'));
-  fireEvent.click(screen.getByTestId('bomb-wire-WIRE_RED'));
   const hold = screen.getByTestId('bomb-hold-btn');
-  fireEvent.pointerDown(hold);
-  await step(clock, 2000);
-  fireEvent.pointerUp(hold);
+  const playSeq = async () => {
+    fireEvent.click(screen.getByTestId('bomb-switch-SW_1'));
+    fireEvent.click(screen.getByTestId('bomb-wire-WIRE_RED'));
+    fireEvent.pointerDown(hold);
+    await step(clock, 2000);
+    fireEvent.pointerUp(hold);
+  };
+  await playSeq(); // S1: T1-T3
+  await playSeq(); // S2: T4 (panel fresh)
+  // S3: T5 — lectura (readMs) → delay (delayMs) → ejecución sin manual
+  const t5 = BOMB_RULE_MANIFEST.tutorial.segments[2];
+  await step(clock, t5.readMs + 128);
+  await step(clock, t5.delayMs + 128);
+  await playSeq(); // S3: T5
   expect(screen.getByTestId('bomb-practice-done')).toBeInTheDocument();
+}
+
+async function reachL1Intro(clock) {
+  await completeTutorialToModal(clock);
   fireEvent.click(screen.getByTestId('bomb-start-evaluation'));
   expect(screen.getByTestId('bomb-level-intro')).toBeInTheDocument();
   expect(screen.getByTestId('bomb-level').textContent).toContain('Nivel 1 de 4');
@@ -246,15 +259,17 @@ describe('B3 — countdown 0.5 s + INSTRUCTION_ENCODING (Doc 2 §10/§5)', () =>
     const clock = createFakeClock();
     const { onGameEvent } = renderGame({ nowFn: clock.now });
     await reachL1Intro(clock);
+    // B4: el tutorial guiado ya emitió INSTRUCTIONS_SHOW (S1/S2/T5-lectura);
+    // medimos en RELATIVO: durante el countdown (500 ms) no debe emitirse el de L1.
+    const before = forwardEvents(onGameEvent, 'INSTRUCTIONS_SHOW').length;
     fireEvent.click(screen.getByTestId('bomb-intro-continue'));
     expect(screen.getByTestId('bomb-countdown')).toBeInTheDocument();
-    expect(forwardEvents(onGameEvent, 'INSTRUCTIONS_SHOW')).toHaveLength(1); // solo la práctica
     await step(clock, 250);
     expect(screen.getByTestId('bomb-countdown')).toBeInTheDocument();
-    expect(forwardEvents(onGameEvent, 'INSTRUCTIONS_SHOW')).toHaveLength(1);
+    expect(forwardEvents(onGameEvent, 'INSTRUCTIONS_SHOW')).toHaveLength(before);
     await step(clock, 250);
     expect(screen.getByTestId('bomb-encoding')).toBeInTheDocument();
-    expect(forwardEvents(onGameEvent, 'INSTRUCTIONS_SHOW')).toHaveLength(2);
+    expect(forwardEvents(onGameEvent, 'INSTRUCTIONS_SHOW')).toHaveLength(before + 1);
   });
 
   it('L1: exposición libre (sin barra) + CTA "Continuar"; panel atenuado; manual exacto del manifest', async () => {

@@ -14,7 +14,7 @@ import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const BOMB_DEV_BLOCK = Object.freeze({
   gameId: 'bomb_defusal',
-  label: 'Desactivación (EXP-7 B3)',
+  label: 'Desactivación (EXP-7 B4)',
   shortLabel: 'Bomb',
   skill: 'procedural_memory',
   phase: 'dev',
@@ -41,8 +41,8 @@ export default function BombDevStage() {
     <div className="postulation-demo postulation-demo--gameplay" data-demo-phase="dev-bomb">
       <p className="bomb-dev-banner" role="note">
         {t(
-          'DEV — laboratorio EXP-7 BOMB B3: niveles 1-4 + fases. Sin batería; telemetría solo en memoria.',
-          'DEV — EXP-7 BOMB B3 lab: levels 1-4 + phases. No battery; in-memory telemetry only.',
+          'DEV — laboratorio EXP-7 BOMB B4: tutorial T1-T5 + welcome (§4.1/§4.2/§4.3). Sin batería; telemetría solo en memoria.',
+          'DEV — EXP-7 BOMB B4 lab: tutorial T1-T5 + welcome (§4.1/§4.2/§4.3). No battery; in-memory telemetry only.',
         )}
       </p>
       <PostulationGameStage

@@ -69,6 +69,47 @@ function forwardEvents(onGameEvent, eventName) {
     .filter((event) => event.eventType === 'response' && event.response?.bomb?.event === eventName);
 }
 
+/**
+ * B4: tutorial guiado completo (S1 T1-T3 → S2 T4 → S3 T5 lectura/delay/ejecución)
+ * hasta el modal de salida §4.3. Requiere fake timers + rAF funcional (las
+ * transiciones auto de T5 — lectura → delay → ejecución — las corre el bucle vivo
+ * del componente con el reloj falso inyectado).
+ */
+async function completeTutorialToModal(clock) {
+  vi.useFakeTimers();
+  vi.stubGlobal('requestAnimationFrame', (cb) => window.setTimeout(() => cb(0), 16));
+  vi.stubGlobal('cancelAnimationFrame', (id) => window.clearTimeout(id));
+  const step = async (ms) => {
+    await act(async () => {
+      clock.advance(ms);
+      vi.advanceTimersByTime(ms);
+    });
+  };
+  startPractice();
+  fireEvent.click(screen.getByTestId('bomb-switch-SW_1'));
+  fireEvent.click(screen.getByTestId('bomb-wire-WIRE_RED'));
+  const hold = screen.getByTestId('bomb-hold-btn');
+  fireEvent.pointerDown(hold);
+  await step(2000);
+  fireEvent.pointerUp(hold);
+  // S2: T4 (panel fresh)
+  fireEvent.click(screen.getByTestId('bomb-switch-SW_1'));
+  fireEvent.click(screen.getByTestId('bomb-wire-WIRE_RED'));
+  fireEvent.pointerDown(hold);
+  await step(2000);
+  fireEvent.pointerUp(hold);
+  // S3: T5 — lectura (readMs) → delay (delayMs) → ejecución sin manual
+  const t5 = BOMB_RULE_MANIFEST.tutorial.segments[2];
+  await step(t5.readMs + 128);
+  await step(t5.delayMs + 128);
+  fireEvent.click(screen.getByTestId('bomb-switch-SW_1'));
+  fireEvent.click(screen.getByTestId('bomb-wire-WIRE_RED'));
+  fireEvent.pointerDown(hold);
+  await step(2000);
+  fireEvent.pointerUp(hold);
+  expect(screen.getByTestId('bomb-practice-done')).toBeInTheDocument();
+}
+
 beforeEach(() => {
   // rAF neutro en jsdom: el bucle vivo del componente (ring de hold) no corre en tests;
   // los updates de estado llegan por las interacciones/eventos del motor (síncronos).
@@ -172,16 +213,17 @@ describe('BombDefusalGame — mundo + panel + HUD (B2)', () => {
     expect(screen.queryByTestId('bomb-viewport-warning')).not.toBeInTheDocument();
   });
 
-  it('práctica: panel habilitado + copy exacto del manual desde el manifest (DoD §16.2)', () => {
+  it('práctica (S1): panel habilitado + overlay del nodo T1 (copy exacto §4.2) + label "Práctica"', () => {
     renderGame({ nowFn: createFakeClock().now });
     startPractice();
     expect(screen.getByTestId('bomb-switch-SW_1')).toBeEnabled();
     expect(screen.getByTestId('bomb-hold-btn')).toBeEnabled();
     expect(screen.getByTestId('bomb-level').textContent).toContain('Práctica');
-    const manual = buildManualLinesFor('tutorial', 'A');
-    for (const line of manual.lines) {
-      expect(screen.getByText(line)).toBeInTheDocument();
-    }
+    // B4: el tutorial guiado muestra el nodo activo (no el manual completo — ese
+    // aparece en la lectura de T5).
+    expect(screen.getByTestId('bomb-tutorial-node')).toHaveTextContent('T1');
+    expect(screen.getByTestId('bomb-tutorial-instruction')).toHaveTextContent('Activa el Interruptor 1.');
+    expect(screen.queryByText('1. Activa el INTERRUPTOR 1.')).not.toBeInTheDocument();
   });
 
   it('switch: OFF→ON físico + aria-pressed + SFX mecánico + telemetría ACTION_SWITCH', () => {
@@ -231,11 +273,11 @@ describe('BombDefusalGame — mundo + panel + HUD (B2)', () => {
     expect(screen.getByTestId('bomb-wire-WIRE_RED')).toBeDisabled();
   });
 
-  it('hold válido (2000 ms): anillo en práctica, PRESSED, STEP_SUCCESS con hold_ms, y LEVEL_SUCCESS', () => {
+  it('hold válido (2000 ms) en T3: anillo en práctica, STEP_SUCCESS con hold_ms; el motor avanza a T4 (panel fresh, B4)', () => {
     const clock = createFakeClock();
     const { onGameEvent } = renderGame({ nowFn: clock.now });
     startPractice();
-    // Completar los pasos previos en orden.
+    // Completar los pasos previos en orden (T1, T2).
     fireEvent.click(screen.getByTestId('bomb-switch-SW_1'));
     fireEvent.click(screen.getByTestId('bomb-wire-WIRE_RED'));
     const hold = screen.getByTestId('bomb-hold-btn');
@@ -248,11 +290,13 @@ describe('BombDefusalGame — mundo + panel + HUD (B2)', () => {
     const successes = forwardEvents(onGameEvent, 'STEP_SUCCESS');
     expect(successes.at(-1).response.bomb.meta.step_id).toBe('HOLD_YELLOW_2000');
     expect(successes.at(-1).response.bomb.meta.hold_ms).toBe(2000);
-    const levelSuccess = forwardEvents(onGameEvent, 'LEVEL_SUCCESS');
-    expect(levelSuccess.length).toBe(1);
-    expect(playSfx).toHaveBeenCalledWith('bomb_success');
-    expect(screen.getByTestId('bomb-led')).toHaveAttribute('data-led', 'success');
-    expect(screen.getByTestId('bomb-practice-done')).toBeInTheDocument();
+    // B4: completar T1-T3 NO cierra la práctica: avanza a T4 con panel fresh
+    // (LEVEL_SUCCESS del tutorial llega solo al completar T5).
+    expect(forwardEvents(onGameEvent, 'LEVEL_SUCCESS')).toHaveLength(0);
+    expect(screen.getByTestId('bomb-tutorial-node')).toHaveTextContent('T4');
+    expect(screen.getByTestId('bomb-switch-SW_1')).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByTestId('bomb-wire-WIRE_RED')).toHaveTextContent('INTACT');
+    expect(screen.getByTestId('bomb-led')).toHaveAttribute('data-led', 'neutral');
   });
 
   it('hold corto (700 ms): HOLD_TOO_SHORT, botón vuelve a IDLE, sin success del hold', () => {
@@ -272,35 +316,39 @@ describe('BombDefusalGame — mundo + panel + HUD (B2)', () => {
     expect(screen.queryByTestId('bomb-practice-done')).not.toBeInTheDocument();
   });
 
-  it('al completar la práctica, el panel vuelve a bloquearse (inputs no heredados)', () => {
+  it('al completar el tutorial (T5), el panel vuelve a bloquearse (inputs no heredados)', async () => {
     const clock = createFakeClock();
     renderGame({ nowFn: clock.now });
-    startPractice();
-    fireEvent.click(screen.getByTestId('bomb-switch-SW_1'));
-    fireEvent.click(screen.getByTestId('bomb-wire-WIRE_RED'));
-    const hold = screen.getByTestId('bomb-hold-btn');
-    fireEvent.pointerDown(hold);
-    clock.advance(2000);
-    fireEvent.pointerUp(hold);
+    await completeTutorialToModal(clock);
     expect(screen.getByTestId('bomb-switch-SW_2')).toBeDisabled();
     expect(screen.getByTestId('bomb-hold-btn')).toBeDisabled();
   });
 
-  it('"Repetir práctica": engine nuevo, estado físico reseteado (OFF/INTACT/IDLE)', () => {
+  it('"Repetir práctica" (overlay B4): panel fresh (OFF/INTACT/IDLE) + TUTORIAL_REPLAY {count:1} (Doc 2 §18)', () => {
     const clock = createFakeClock();
-    renderGame({ nowFn: clock.now });
+    const { onGameEvent } = renderGame({ nowFn: clock.now });
     startPractice();
+    // T1-T3 (S1) → T4, con progreso en el segmento T4
     fireEvent.click(screen.getByTestId('bomb-switch-SW_1'));
     fireEvent.click(screen.getByTestId('bomb-wire-WIRE_RED'));
     const hold = screen.getByTestId('bomb-hold-btn');
     fireEvent.pointerDown(hold);
     clock.advance(2000);
     fireEvent.pointerUp(hold);
-    fireEvent.click(screen.getByTestId('bomb-practice-restart'));
+    expect(screen.getByTestId('bomb-tutorial-node')).toHaveTextContent('T4');
+    fireEvent.click(screen.getByTestId('bomb-switch-SW_1'));
+    expect(screen.getByTestId('bomb-switch-SW_1')).toHaveAttribute('aria-pressed', 'true');
+    // Replay: vuelve a T1 con el estado físico reseteado (el motor reinicia el runtime;
+    // B4: el motor NO se re-crea — el conteo de replay debe acumular en la sesión).
+    fireEvent.click(screen.getByTestId('bomb-tutorial-restart'));
+    expect(screen.getByTestId('bomb-tutorial-node')).toHaveTextContent('T1');
     expect(screen.getByTestId('bomb-switch-SW_1')).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByTestId('bomb-wire-WIRE_RED')).toBeEnabled();
     expect(screen.getByTestId('bomb-wire-WIRE_RED').textContent).toContain('INTACT');
-    expect(screen.queryByTestId('bomb-practice-done')).not.toBeInTheDocument();
+    expect(screen.getByTestId('bomb-hold-btn')).not.toHaveClass('bomb-hold-btn--pressed');
+    const replays = forwardEvents(onGameEvent, 'TUTORIAL_REPLAY');
+    expect(replays).toHaveLength(1);
+    expect(replays[0].response.bomb.meta.count).toBe(1);
   });
 
   it('misclick sobre el fondo del panel: MISCLICK_PROXIMAL registrado, nunca penaliza', () => {
@@ -399,12 +447,3 @@ describe('BombDefusalGame — CSS del mundo (regimen §14/§15/§16 verificado s
     expect(css).toContain('@media (max-width: 899px)');
   });
 });
-
-// Utilidad local: líneas del manual desde el manifest (misma fuente que el componente).
-function buildManualLinesFor(levelKey, bombType) {
-  const def = BOMB_RULE_MANIFEST.levels[levelKey];
-  return {
-    lines: def.sequenceIds.map((ruleId, i) => `${i + 1}. ${BOMB_RULE_MANIFEST.rules[ruleId].manualEs[bombType]}`),
-    notice: bombType === 'B' ? BOMB_RULE_MANIFEST.typeBNoticeEs : null,
-  };
-}

@@ -1,4 +1,5 @@
-// bombGame.jsx — EXP-BOMB-001 · B2: panel + HUD + a11y · B3: niveles 1-4 + fases.
+// bombGame.jsx — EXP-BOMB-001 · B2: panel + HUD + a11y · B3: niveles 1-4 + fases ·
+// B4: tutorial T1-T5 + welcome (card t_b3f1dc15).
 //
 // Especificación (ley): docs/spec/EXP-BOMB-001/ (Draft v1.1.0):
 //   Doc 1 §4 (paradigma/fases), §5 (inputs), §6 (módulos: Feedback Controller),
@@ -40,20 +41,29 @@
 //   - QA-10: pagehide/beforeunload en nivel evaluado → recordTechnicalAbort (sesión
 //     incompleta; no reanudar silenciosamente).
 //
-// Fuera de B3 (siguen las cards de la cadena): tutorial guiado T1-T5 + bienvenida
-// completa §4.1/§4.3 (B4), telemetría final + registro en batería + ES/EN diccionario
-// §11 completo (B5), constructo + reporte (B6).
+// Alcance B4 (card t_b3f1dc15):
+//   - Bienvenida §4.1 completa (copy exacto del manifest `tutorial.welcome`): título,
+//     bajada, MENSAJE ("Las instrucciones pueden desaparecer...") y secundario
+//     "Ajustes de audio / accesibilidad" (panel inline: toggle de audio funcional —
+//     persistido por originalGameSfx; resumen a11y §14).
+//   - Tutorial guiado T1-T5 (Doc 2 §4.2; nodos/segmentos en el manifest): overlay del
+//     nodo activo en la columna manual (T1 switch / T2 cable / T3 hold con anillo /
+//     T4 secuencia en panel fresh / T5 memoria: lectura readMs → delay breve →
+//     ejecución sin manual). El avance lo decide el motor (STEP_SUCCESS por criterio);
+//     la UI pinta pips de progreso + replay (INPUT_RESTART_TUTORIAL, Doc 1 §5.1;
+//     Doc 2 §18 tutorial_replay_count) desde el overlay y desde el modal de salida.
+//   - Salida §4.3: modal con el texto exacto del manifest + "Comenzar evaluación".
+//   - DoD §16.2: el tutorial NO alimenta scores evaluativos (el motor ya lo garantiza:
+//     evaluated:false — sin penalty/fail/levels_completed; verificado en tests).
+//
+// Fuera de B4 (siguen las cards de la cadena): telemetría final + registro en batería
+// + ES/EN diccionario §11 completo (B5), constructo + reporte (B6).
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import GameRuntime from '../../GameRuntime.jsx';
 import { useLanguage } from '../../../i18n/LanguageContext.jsx';
-import { playSfx, getGameSfxEnabled } from '../originalGameSfx.js';
-import {
-  BOMB_COMPONENTS,
-  BOMB_RULE_MANIFEST,
-  buildManualText,
-  newRuleForLevel,
-} from './bombRules.js';
+import { playSfx, getGameSfxEnabled, setGameSfxEnabled } from '../originalGameSfx.js';
+import { BOMB_COMPONENTS, BOMB_RULE_MANIFEST, buildManualText, newRuleForLevel, tutorialNodeFor, tutorialNodeIdsDone } from './bombRules.js';
 import { BOMB_STATES, createBombEngine } from './bombEngine.js';
 import './bomb.css';
 
@@ -118,6 +128,43 @@ const BOMB_RULE_EN = Object.freeze({
 const BOMB_TYPEB_NOTICE_EN =
   'ATTENTION - MODEL B: Where the protocol says SWITCH 1, use SWITCH 3. '
   + 'Where it says RED WIRE, cut the BLUE WIRE. The other instructions do not change.';
+
+/**
+ * B4: EN del copy de bienvenida §4.1 + nodos T1-T5 §4.2 + salida §4.3 (el ES
+ * fuente de verdad vive en el manifest `tutorial`; B5 completa el diccionario
+ * §11 completo — decisión B3 #10).
+ */
+const BOMB_TUTORIAL_EN = Object.freeze({
+  welcome: Object.freeze({
+    title: 'Operational Protocol Simulation: Defusal',
+    sub: 'Memorize the protocol and execute each step in the indicated order.',
+    message:
+      'Instructions may disappear before you can interact with the panel. '
+      + 'Pay close attention to the artifact type and the time available.',
+    cta: 'Start practice',
+    secondary: 'Audio / accessibility settings',
+  }),
+  nodes: Object.freeze({
+    T1: 'Turn on Switch 1.',
+    T2: 'Cut the red wire.',
+    T3: 'Hold the yellow button down for 2 seconds.',
+    T4: 'Now execute: SW1 → Red → Yellow.',
+    T5: 'Read the sequence. The screen will be hidden briefly.',
+  }),
+  done: Object.freeze({
+    title: 'Practice complete',
+    modal:
+      'Practice complete. From the next level, your times and decisions will be recorded. '
+      + 'Instructions may change depending on the artifact type.',
+    cta: 'Start evaluation',
+    replay: 'Repeat practice',
+  }),
+  settings: Object.freeze({
+    audio: 'Audio',
+    a11y: 'Visible focus · targets ≥ 44 px · wires with color + letter · respects "reduced motion".',
+  }),
+  restart: 'Repeat practice',
+});
 
 function isPanelOpenState(state) {
   return state === BOMB_STATES.EXECUTION || state === BOMB_STATES.TUTORIAL_PLAY;
@@ -200,7 +247,9 @@ export function bombLoopSnapshot(engine, readNow) {
     prehide: st === BOMB_STATES.INSTRUCTION_ENCODING && lvl?.exposureMs != null && encEnd != null
       ? ((encEnd - t) <= BOMB_MANUAL_PREHIDE_MS && (encEnd - t) > -1000)
       : null,
-    hold: st === BOMB_STATES.TUTORIAL_PLAY && engine.hold.downAt != null
+    // B4: anillo del hold en TODO el tutorial (S1-T3 y la ejecución de T5; Doc 2 §7:
+    // "anillo de progreso opcional en tutorial" — nunca en niveles evaluados).
+    hold: lvl?.evaluated === false && engine.hold.downAt != null
       ? Math.min(100, Math.max(0, Math.round(((t - engine.hold.downAt) / BOMB_RULE_MANIFEST.hold.targetMs) * 100)))
       : null,
   };
@@ -231,6 +280,8 @@ const BOMB_TELEMETRY_META_KEYS = new Set([
   'step_id', 'serial_pos', 'expected', 'observed', 'error_class', 'step_position', 'penalizes',
   'pct', 'ms_removed', 'elapsed_ms', 'errors', 'omitted_steps', 'omission_error_class',
   'visible', 'blur_count', 'component_id', 'next_level', 'tutorial',
+  // B4: tutorial guiado (segmentos/nodos §4.2, replay §18 tutorial_replay_count)
+  'segment', 'mode', 'count',
 ]);
 
 function sanitizeBombMeta(meta = {}) {
@@ -285,6 +336,8 @@ function BombInner({ emit, nowFn, seed, onComplete }) {
   const penaltyNoticeTimerRef = useRef(null);
   const [successMeta, setSuccessMeta] = useState(null); // { level, elapsed_ms, errors }
   const [failMeta, setFailMeta] = useState(null); // { level, reason: 'TIMEOUT'|'MAX_ERRORS' }
+  // B4: welcome §4.1 secundario "Ajustes de audio / accesibilidad" (panel inline)
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const eventsRef = useRef([]); // B5: buffer reconstruible (t_ms relativo al inicio de sesión)
   const sessionAnchorRef = useRef(null);
@@ -619,14 +672,15 @@ function BombInner({ emit, nowFn, seed, onComplete }) {
     bump();
   }, [bump, getEngine]);
 
-  const restartPractice = useCallback(() => {
-    engineRef.current = createBombEngine({
-      now: readNow,
-      log: (ev, meta) => handleEngineEventRef.current(ev, meta),
-      seed: seedRef.current,
-    });
-    sessionAnchorRef.current = null;
-    eventsRef.current = [];
+  // B4: replay del tutorial (INPUT_RESTART_TUTORIAL, Doc 1 §5.1/§10.1; Doc 2 §18
+  // tutorial_replay_count): el motor reinicia el runtime en segmento 1 (panel fresh)
+  // y lo registra; la UI solo limpia sus estados transitorios. NUNCA crea un motor
+  // nuevo (el conteo de replay y el buffer de eventos de sesión deben acumular).
+  const restartTutorialUi = useCallback(() => {
+    const current = engineRef.current;
+    if (!current) return;
+    const res = current.restartTutorial();
+    if (!res.ok) return;
     lastBeepSecondRef.current = null;
     setLed('neutral');
     setPenaltyNotice(false);
@@ -635,13 +689,18 @@ function BombInner({ emit, nowFn, seed, onComplete }) {
     setCountdown(false);
     window.clearTimeout(ledFlashTimerRef.current);
     window.clearTimeout(countdownTimerRef.current);
-    const current = engineRef.current;
-    current.beginSession();
-    current.startTutorial();
     bump();
-  }, [bump, readNow]);
+  }, [bump]);
 
   // ---- Transiciones B3 (flujo evaluado) ----
+
+  // B4: §4.1 secundario — toggle de audio (persistido por originalGameSfx; el audio
+  // es opcional §14: nunca el único canal de información ni afecta el score).
+  const toggleAudio = useCallback(() => {
+    const next = !getGameSfxEnabled();
+    setGameSfxEnabled(next);
+    bump();
+  }, [bump]);
 
   // Práctica completada → "Comenzar evaluación" (Doc 2 §4.3; B4 completa el modal):
   // TUTORIAL_RESULT → TRANSITION → LEVEL_INTRO (L1). El motor loguea NEXT_LEVEL.
@@ -716,7 +775,7 @@ function BombInner({ emit, nowFn, seed, onComplete }) {
   const timerDisplayPhase = bombTimerDisplayPhase(state, timer);
   const timerText = formatBombTimer(remainingMs);
 
-  const levelLabel = state === BOMB_STATES.TUTORIAL_PLAY
+  const levelLabel = levelKey === 'tutorial'
     ? t('Práctica', 'Practice')
     : level && typeof level.level === 'number' && level.level > 0
       ? t('Nivel {n} de 4', 'Level {n} of 4', { n: level.level })
@@ -766,6 +825,13 @@ function BombInner({ emit, nowFn, seed, onComplete }) {
         : 'hidden';
 
   const manual = level ? buildManualText(level.sequenceIds, level.bombType, manifest) : null;
+
+  // B4: tutorial guiado (Doc 2 §4.2): nodo activo + nodos completados, todo derivado
+  // del manifest (la UI pinta; el motor decide el avance por STEP_SUCCESS).
+  const isTutorial = levelKey === 'tutorial';
+  const tutorialNode = isTutorial ? tutorialNodeFor(engine.tutorialSegment, engine.stepIndex, manifest) : null;
+  const tutorialDoneIds = isTutorial ? tutorialNodeIdsDone(engine.tutorialSegment, engine.stepIndex, manifest) : [];
+  const tutorialAllNodes = manifest.tutorial.segments.flatMap((s) => s.nodes);
 
   // Exposición (B3): fracción restante para la barra (L2-L4) + pre-fade §16.
   const encodingActive = state === BOMB_STATES.INSTRUCTION_ENCODING && level?.exposureMs != null
@@ -859,17 +925,44 @@ function BombInner({ emit, nowFn, seed, onComplete }) {
         <section className="bomb-manual" data-testid="bomb-manual" aria-label={t('Manual / Protocolo', 'Manual / Protocol')}>
           <h4 className="bomb-manual__title">{t('Manual / Protocolo', 'Manual / Protocol')}</h4>
 
-          {manualMode === 'practice' && manual ? (
-            <>
-              <ol className="bomb-manual__lines">
-                {manual.lines.map((line) => <li key={line}>{line}</li>)}
-              </ol>
-              {manual.notice && <p className="bomb-manual__notice">{manual.notice}</p>}
-            </>
+          {manualMode === 'practice' && tutorialNode ? (
+            // B4: tutorial guiado (Doc 2 §4.2): overlay del nodo activo (copy exacto
+            // del manifest) + progreso T1-T5 (pips) + replay (INPUT_RESTART_TUTORIAL).
+            // El criterio de avance de cada nodo lo valida el motor (STEP_SUCCESS).
+            <div className="bomb-tutorial" data-testid="bomb-tutorial">
+              <span className="bomb-tutorial__tag" data-testid="bomb-tutorial-node">
+                {tutorialNode.id} · {t('Práctica', 'Practice')}
+              </span>
+              <p className="bomb-tutorial__instruction" data-testid="bomb-tutorial-instruction">
+                {t(tutorialNode.overlayEs, BOMB_TUTORIAL_EN.nodes[tutorialNode.id] ?? tutorialNode.overlayEs)}
+              </p>
+              <div className="bomb-tutorial__pips" aria-hidden="true">
+                {tutorialAllNodes.map((n) => (
+                  <i
+                    key={n.id}
+                    className={`bomb-tutorial__pip${tutorialDoneIds.includes(n.id) ? ' bomb-tutorial__pip--done' : ''}${n.id === tutorialNode.id ? ' bomb-tutorial__pip--active' : ''}`}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                className="bomb-cta bomb-cta--secondary bomb-tutorial__restart"
+                data-testid="bomb-tutorial-restart"
+                onClick={restartTutorialUi}
+              >
+                {t(manifest.tutorial.done.replayEs, BOMB_TUTORIAL_EN.done.replay)}
+              </button>
+            </div>
           ) : null}
 
           {manualMode === 'protocol' && manual && level ? (
             <div className="bomb-encoding" data-testid="bomb-encoding">
+              {isTutorial && tutorialNode && (
+                // B4: T5 — caption del nodo (§4.2) sobre el manual que se lee
+                <p className="bomb-encoding__caption" data-testid="bomb-tutorial-instruction">
+                  {t(tutorialNode.overlayEs, BOMB_TUTORIAL_EN.nodes[tutorialNode.id] ?? tutorialNode.overlayEs)}
+                </p>
+              )}
               {level.exposureMs != null ? (
                 <div
                   className="bomb-exposure"
@@ -1139,34 +1232,74 @@ function BombInner({ emit, nowFn, seed, onComplete }) {
         <span className="bomb-audio" data-testid="bomb-audio">{`Audio: ${sfxOn ? 'ON' : 'OFF'}`}</span>
       </div>
 
-      {/* Bienvenida (BOOT) — B4 expande a la pantalla completa §4.1 */}
+      {/* Bienvenida (BOOT) — B4: pantalla completa §4.1 (copy exacto del manifest) */}
       {state === BOMB_STATES.BOOT && (
         <div className="bomb-overlay" data-testid="bomb-welcome-overlay">
           <div className="bomb-welcome" data-testid="bomb-welcome">
             <h2 className="bomb-welcome__title">
-              {t('Simulación de Protocolo Operativo: Desactivación', 'Operational Protocol Simulation: Defusal')}
+              {t(manifest.tutorial.welcome.titleEs, BOMB_TUTORIAL_EN.welcome.title)}
             </h2>
             <p className="bomb-welcome__sub">
-              {t('Memoriza el protocolo y ejecuta cada paso en el orden indicado.', 'Memorize the protocol and execute each step in the indicated order.')}
+              {t(manifest.tutorial.welcome.subEs, BOMB_TUTORIAL_EN.welcome.sub)}
+            </p>
+            <p className="bomb-welcome__message" data-testid="bomb-welcome-message">
+              {t(manifest.tutorial.welcome.messageEs, BOMB_TUTORIAL_EN.welcome.message)}
             </p>
             <button type="button" className="bomb-cta" data-testid="bomb-start-practice" onClick={startPractice}>
-              {t('Iniciar práctica', 'Start practice')}
+              {t(manifest.tutorial.welcome.ctaEs, BOMB_TUTORIAL_EN.welcome.cta)}
             </button>
+            {/* §4.1 secundario: "Ajustes de audio / accesibilidad" (panel inline) */}
+            <button
+              type="button"
+              className="bomb-cta bomb-cta--secondary bomb-welcome__secondary"
+              data-testid="bomb-welcome-secondary"
+              aria-expanded={settingsOpen}
+              onClick={() => setSettingsOpen((open) => !open)}
+            >
+              {t(manifest.tutorial.welcome.secondaryEs, BOMB_TUTORIAL_EN.welcome.secondary)}
+            </button>
+            {settingsOpen && (
+              <div className="bomb-settings" data-testid="bomb-settings">
+                <div className="bomb-settings__row">
+                  <span className="bomb-settings__label">{t('Audio', 'Audio')}</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={sfxOn}
+                    className="bomb-settings__audio"
+                    data-testid="bomb-settings-audio"
+                    onClick={toggleAudio}
+                  >
+                    {sfxOn ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+                <p className="bomb-settings__a11y" data-testid="bomb-settings-a11y">
+                  {t(
+                    'Foco visible · targets ≥ 44 px · cables con color + letra · respeta «movimiento reducido».',
+                    BOMB_TUTORIAL_EN.settings.a11y,
+                  )}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Práctica completada (B4: modal §4.3 completo con "Comenzar evaluación") */}
+      {/* Salida del tutorial — B4: modal §4.3 completo (copy exacto del manifest) */}
       {practiceDone && (
         <div className="bomb-overlay" data-testid="bomb-practice-done-overlay">
-          <div className="bomb-practice-done" data-testid="bomb-practice-done">
-            <h2>{t('Práctica completada', 'Practice complete')}</h2>
-            <p>{t('Puedes repetir la práctica las veces que necesites.', 'You can repeat the practice as many times as you need.')}</p>
+          <div className="bomb-practice-done" data-testid="bomb-practice-done" role="dialog" aria-modal="true">
+            <h2 className="bomb-practice-done__title">
+              {t('Práctica completada', BOMB_TUTORIAL_EN.done.title)}
+            </h2>
+            <p className="bomb-practice-done__text" data-testid="bomb-practice-done-text">
+              {t(manifest.tutorial.done.modalEs, BOMB_TUTORIAL_EN.done.modal)}
+            </p>
             <button type="button" className="bomb-cta" data-testid="bomb-start-evaluation" onClick={startEvaluation}>
-              {t('Comenzar evaluación', 'Start evaluation')}
+              {t(manifest.tutorial.done.ctaEs, BOMB_TUTORIAL_EN.done.cta)}
             </button>
-            <button type="button" className="bomb-cta bomb-cta--secondary" data-testid="bomb-practice-restart" onClick={restartPractice}>
-              {t('Repetir práctica', 'Repeat practice')}
+            <button type="button" className="bomb-cta bomb-cta--secondary" data-testid="bomb-practice-restart" onClick={restartTutorialUi}>
+              {t(manifest.tutorial.done.replayEs, BOMB_TUTORIAL_EN.done.replay)}
             </button>
           </div>
         </div>
