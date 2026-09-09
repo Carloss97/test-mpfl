@@ -136,7 +136,13 @@ Tras cambios con tests y build, entregar resumen de archivos/comandos/resultados
   - **Apagado**: manual por el usuario (desde 2026-09-07); el watchdog solo loguea el umbral. `GPU_AUTO_OFF=1` restaura el auto-apagado.
   - **Aviso AWS SSO** (cada 30 min, `aws-sso-renew.timer`): si el token AWS SSO local expira en <60 min, manda a Discord el enlace de refresh.
 
-- **Channels**: Discord webhook (usa `DISCORD_WEBHOOK_URL` de `~/.hermes/.env`). En card kanban queda bitácora (comentarios automáticos).
+- **Channels Discord (server KRUMM `1384264454631587860`, mapeo 2026-09-08)**:
+  - `general` (`1384264455432572940`) = home_channel del gateway (conversación con Hermes).
+  - `hermes-alerts` (`1545165790641258557`) = **webhook `DISCORD_ALERTS_WEBHOOK_URL`** → alertas infra: SSO expiry (`aws_sso_renew.sh`), salud Pi disco/térmica/gateway (`health_monitor.sh`), watchdog GPU umbral idle/age (`lambda_idle_watchdog.sh`).
+  - `krumm-auto` (`1545165393021116426`) = **webhook `DISCORD_OPS_WEBHOOK_URL`** → eventos operativos del orquestador GPU (`model_orchestrate.py`): GPU up, up-fallido, health no responde, auto-up bloqueado.
+  - `kanban` (`1545165811126243449`) = **bot token `DISCORD_BOT_TOKEN`** → snapshot kanban cada 10' (`kanban_discord_reporter.py`), embed estilo Linear (solo ready/running/blocked + done recientes).
+  - `DISCORD_WEBHOOK_URL` es legacy (apuntaba a un server Discord ajeno): los scripts usan las variables por rol; retirarlo tras validar.
+  - **Cloudflare**: los webhook requieren `User-Agent` de navegador en `urllib` (si no → HTTP 403 error 1010); `curl` no lo necesita. En card kanban queda bitácora (comentarios automáticos).
 
 - **Para el usuario**: desactivar el automatismo: `systemctl --user stop gpu-orchestrate.timer` (o setear `GPU_AUTO_UP=0` en mundial). Default: funcionando.
 

@@ -35,6 +35,7 @@
   (≥3.51.3 → el fix WAL-reset ya está incluido; no se requiere `fix_sqlite_wal_reset.sh`).
 - `AGENTS.md`: sección GPU actualizada con los 5 fixes (una nota adicional sobre el incidente
   run 78 quedó pendiente de aprobación de escritura del archivo).
+- **Discord alerts migrados a server KRUMM (2026-09-08)**: webhooks nuevos `DISCORD_ALERTS_WEBHOOK_URL` → `hermes-alerts` y `DISCORD_OPS_WEBHOOK_URL` → `krumm-auto`; reporter kanban usa bot → `kanban` embed Linear; legacy `DISCORD_WEBHOOK_URL` (server ajeno) queda 30 días de fallback.
 
 ## Cartas de kanban (estado 12:50)
 | Card | Título | Estado |
