@@ -118,8 +118,9 @@ Tras cambios con tests y build, entregar resumen de archivos/comandos/resultados
   3. Salud (2-5 min): `curl -sf http://127.0.0.1:18000/health`.
   4. Config: `~/.hermes/config.yaml` → default `qwen-model` (custom, `http://127.0.0.1:18000/v1`). El agente **NO** puede editar config.yaml (guard de seguridad): se edita a mano o con `hermes config`. Aplica con `/reset` (CLI) o `hermes gateway restart` (Discord).
 - Apagar: terminar instancia por API Lambda (`LAMBDA_API_KEY` en `~/.hermes/.env`, header `User-Agent: curl/8.0`) + `pkill -f "ubuntu@"`. GPU-toggle solo por instrucción explícita del usuario; avisar costo vivo.
-- Watchdog crontab (`~/.hermes/scripts/lambda_idle_watchdog.sh`, cada 5 min) monitorea idle/age; **desde 2026-09-07 en modo manual** (el usuario apaga la instancia): cruza umbral (idle >40min / age >6h) → log en `cost-watchdog.log` sin terminar. `GPU_AUTO_OFF=1` en el crontab restaura el auto-apagado. Fix 2026-09-07: la API Lambda usa `file_system_names` (no `file_systems`) y no expone `launched_at` (edad vía stamp `~/.hermes/lambda_age_since`); con el esquema viejo el watchdog era no-op.
+- Watchdog crontab (`~/.hermes/scripts/lambda_idle_watchdog.sh`, cada 5 min) monitorea idle/age; **desde 2026-09-08 con AUTO-OFF ACTIVO** (`GPU_AUTO_OFF=1` en crontab): cruza umbral (**idle >1h / age >6h**) → termina instancia, limpia state, vuelve a NIM, comenta cards y alerta Discord hermes-alerts. Fix 2026-09-07 (schema drift API Lambda: `file_system_names`, edad via stamp `~/.hermes/lambda_age_since`).
 - Costo real verificado contra la API (2026-09-07): **$8.38/h** (`price_cents_per_hour`=838, us-southeast-1), facturado al segundo.
+- `gpu.sh up` **idempotente (2026-09-08)**: reinicia el gateway solo si la config cambió a GPU (si ya apuntaba, no reinicia) — evita drenar workers en vuelo.
 - Solo encender cuando la tarea lo justifique (tests multi-archivo, builds, análisis pesado, porting).
 
 ## Automatización GPU / modelo — orquestador (2026-09-03)
