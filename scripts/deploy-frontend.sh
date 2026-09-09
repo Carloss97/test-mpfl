@@ -32,3 +32,32 @@ aws cloudfront create-invalidation \
   --paths "/index.html" "/" >/dev/null
 
 echo "OK: deploy completado."
+
+# Notificación deploy a Discord canal general (2026-09-08)
+notify_deploy() {
+  local webhook="$DISCORD_ALERTS_WEBHOOK_URL"
+  local commit
+  commit=$(git -C "$PWD" log -1 --format='%h · %s' 2>/dev/null || echo "n/a")
+  local ts; ts=$(date '+%Y-%m-%d %H:%M CL')
+  local payload
+  payload=$(python3 -c "
+import json,sys
+print(json.dumps({
+  'embeds':[{
+    'title':'🚀 Deploy frontend KRUMM',
+    'color':3066993,
+    'description':f'**{sys.argv[1]}**',
+    'fields':[
+      {'name':'URL','value':'https://krumm.cl','inline':True},
+      {'name':'Commit','value':f'\`{sys.argv[2]}\`','inline':True},
+      {'name':'Tags','value':'S3 + CloudFront','inline':True}
+    ],
+    'footer':{'text':f'{sys.argv[3]} · deploy-frontend.sh'}
+  }]
+})", "$BUCKET" "$commit" "$ts")
+  if [ -n "$webhook" ]; then
+    curl -s -o /dev/null -w "discord: %{http_code}\n" -H "Content-Type: application/json" \
+      -X POST -d "$payload" "$webhook" || true
+  fi
+}
+notify_deploy

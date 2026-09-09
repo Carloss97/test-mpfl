@@ -118,7 +118,7 @@ export default function LandingPage() {
           <a href="#como-funciona" onClick={closeMenu}>{t('Cómo funciona', 'How it works')}</a>
           <a href="#tecnologia" onClick={closeMenu}>{t('Tecnología', 'Technology')}</a>
           <a href="#contacto" onClick={closeMenu}>{t('Contacto', 'Contact')}</a>
-          <a className="landing__nav-login" href="#accesos" onClick={closeMenu}>{t('Iniciar sesión', 'Log in')}</a>
+          <a className="landing__nav-login landing__nav-login--cta" href="#accesos" onClick={closeMenu}>{t('Iniciar sesión', 'Log in')}</a>
         </nav>
 
         <div className="landing__header-actions">
@@ -207,10 +207,10 @@ export default function LandingPage() {
               </p>
             </div>
             <ol className="landing__steps">
-              <li>{t('La persona accede al portal de candidato (/candidato) y activa la cámara si es necesario.', 'The person accesses the candidate portal (/candidato) and enables the camera if needed.')}</li>
-              <li>{t('Juega a una batería de 5 juegos gamificados; las métricas se recopilan localmente.', 'They play a battery of 5 gamified games; metrics are gathered locally.')}</li>
+              <li>{t('La persona accede al portal de evaluación y activa la cámara si es necesaria.', 'The person accesses the evaluation portal and enables the camera if needed.')}</li>
+              <li>{t('Juega a una batería de juegos gamificados; las métricas se recopilan localmente.', 'They play a battery of gamified games; metrics are gathered locally.')}</li>
               <li>{t('KRUMM procesa en local → genera un reporte para revisión humana.', 'KRUMM processes locally → generates a report for human review.')}</li>
-              <li>{t('El reclutador revisa en el workspace de empresa (/empresa), ve la evidencia y toma una decisión contextualizada.', 'The recruiter reviews in the company workspace (/empresa), sees the evidence, and makes a grounded decision.')}</li>
+              <li>{t('El reclutador revisa en el workspace de empresa, ve la evidencia y toma una decisión contextualizada.', 'The recruiter reviews the company workspace, sees the evidence, and makes a grounded decision.')}</li>
             </ol>
           </div>
         </section>
@@ -300,6 +300,16 @@ export default function LandingPage() {
                   {t('Ingresar como candidato', 'Sign in as a candidate')} <span aria-hidden="true">→</span>
                 </a>
               </article>
+              <article className="landing__acceso-card landing__acceso-card--dev">
+                <span className="landing__icon-box"><IconShield /></span>
+                <span className="landing__acceso-kicker">{t('DESARROLLO', 'DEVELOPMENT')}</span>
+                <h3>{t('Acceso directo a juegos', 'Direct game access')}</h3>
+                <p>{t('Salta la secuencia de invitación y accede directamente a cada juego para pruebas.', 'Skip the invitation sequence and access each game directly for testing.')}</p>
+                <span className="landing__acceso-divider" aria-hidden="true" />
+                <a className="landing__acceso-cta" href="/?invite=tok-dev-dev1234">
+                  {t('Ingresar como dev', 'Sign in as dev')} <span aria-hidden="true">→</span>
+                </a>
+              </article>
             </div>
             <a className="landing__volver" href="/">
               <span aria-hidden="true">←</span> {t('Volver a KRUMM', 'Back to KRUMM')}
@@ -320,10 +330,6 @@ export default function LandingPage() {
                 <li>
                   <strong>{t('Candidatos e incidencias técnicas', 'Candidates & technical issues')}</strong>
                   <a href="mailto:contacto@krumm.cl">contacto@krumm.cl</a>
-                </li>
-                <li>
-                  <strong>{t('Alianzas y despliegue', 'Partnerships & deployment')}</strong>
-                  <a href="mailto:carlossaldivia@krumm.cl">carlossaldivia@krumm.cl</a>
                 </li>
               </ul>
               <p className="landing__note">

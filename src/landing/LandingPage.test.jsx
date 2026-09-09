@@ -100,7 +100,7 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       const steps = section.querySelector('ol');
       expect(steps).not.toBeNull();
       expect(steps.querySelectorAll('li')).toHaveLength(4);
-      expect(screen.getByText(/batería de 5 juegos gamificados/i)).toBeInTheDocument();
+      expect(screen.getByText(/batería de juegos gamificados/i)).toBeInTheDocument();
     });
 
     it('02 · Tecnología: kicker y H2 de referencia (fórmula con +)', () => {
@@ -143,7 +143,6 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(screen.getByText('HABLEMOS')).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Descubre qué puede medir KRUMM en tu organización.' })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'contacto@krumm.cl' })).toHaveAttribute('href', 'mailto:contacto@krumm.cl');
-      expect(screen.getByRole('link', { name: 'carlossaldivia@krumm.cl' })).toHaveAttribute('href', 'mailto:carlossaldivia@krumm.cl');
       expect(screen.getByText(/La cámara y las señales biométricas son opcionales y no se utilizan para decisiones finales/i)).toBeInTheDocument();
     });
 

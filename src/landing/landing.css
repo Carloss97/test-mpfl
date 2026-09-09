@@ -192,6 +192,26 @@
   padding: 0 24px;
 }
 
+.landing__nav-login--cta {
+  background: var(--k-gold);
+  color: var(--k-dark);
+  padding: 0.5rem 1rem;
+  border-radius: var(--k-radius);
+  font-weight: var(--k-font-weight-semibold);
+  text-decoration: none;
+  transition: opacity var(--k-transition-fast);
+}
+
+.landing__nav-login--cta:hover {
+  opacity: 0.9;
+}
+
+/* Keep the existing landing__nav-login for fallback */
+.landing__nav-login {
+  color: var(--k-text-primary);
+  text-decoration: none;
+}
+
 .landing__cta--gold {
   color: var(--k-btn-gold-ink);
   background: linear-gradient(115deg, var(--k-btn-gold-from), var(--k-btn-gold-to));

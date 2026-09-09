@@ -265,7 +265,8 @@ const EN = Object.freeze({
   portal_candidate: 'Candidate Portal',
   portal_candidateDescription: 'Access your assessments and KRUMM experiences.',
   portal_candidateCta: 'Explore candidate portal →',
-  // ── placeholders por ruta (plan maestro §2: contenido real en V1–V4) ─────
+      dev_directAccess: 'Direct game access',
+      // ── placeholders por ruta (plan maestro §2: contenido real en V1–V4) ─────
   pages: Object.freeze({
     candidateHome: Object.freeze({
       title: 'Candidate portal',
@@ -577,7 +578,8 @@ const ES = Object.freeze({
   portal_candidate: 'Portal para candidatos',
   portal_candidateDescription: 'Accede a tus evaluaciones y experiencias KRUMM.',
   portal_candidateCta: 'Explorar portal candidato →',
-  // ── placeholders por ruta ────────────────────────────────────────────────
+      dev_directAccess: 'Acceso directo a juegos',
+      // ── placeholders por ruta ────────────────────────────────────────────────
   pages: Object.freeze({
     candidateHome: Object.freeze({
       title: 'Portal para candidatos',
