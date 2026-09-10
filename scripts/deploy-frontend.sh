@@ -35,7 +35,7 @@ echo "OK: deploy completado."
 
 # Notificación deploy a Discord canal general (2026-09-08)
 notify_deploy() {
-  local webhook="$DISCORD_ALERTS_WEBHOOK_URL"
+  local webhook="${DISCORD_ALERTS_WEBHOOK_URL:-}"
   local commit
   commit=$(git -C "$PWD" log -1 --format='%h · %s' 2>/dev/null || echo "n/a")
   local ts; ts=$(date '+%Y-%m-%d %H:%M CL')
