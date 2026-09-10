@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { normalizeGameEvent } from '../telemetry/gameTelemetry.js';
 import { createPointerSampler, appendPointerSample } from '../telemetry/pointerSampler.js';
 import { summarizePointerTrial } from '../telemetry/kinematics.js';
+import { useLanguage } from '../i18n/LanguageContext.jsx';
 
 const TRIAL_COUNT = 10;
 const MAX_RT_MS = 3000;
@@ -12,6 +13,7 @@ const TARGET_RADIUS = 30;
 function randomPos(w, h, m = 60) { return { x: m + Math.random() * (w - m * 2), y: m + Math.random() * (h - m * 2) }; }
 
 export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT, onTrialStart, onTrialEnd, onComplete, onGameEvent, width = 600, height = 400 }) {
+  const { t } = useLanguage();
   const containerRef = useRef(null);
   const onTrialStartRef = useRef(onTrialStart);
   const onTrialEndRef = useRef(onTrialEnd);
@@ -221,7 +223,7 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
   return (
     <div className="simple-rt-task" id="task-area">
       <div className="task-header">
-        <span className="task-title">🎯 Tarea: Tiempo de Reacción</span>
+        <span className="task-title">🎯 {t('Tarea: Tiempo de Reacción', 'Task: Reaction Time')}</span>
         <span className="task-progress">{current + 1}/{trialCount}</span>
         {phase === 'finished' && <span className="task-progress" style={{ background: 'rgba(77,212,172,0.2)' }}>✓</span>}
       </div>
@@ -237,11 +239,11 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
         )}
         {phase === 'finished' && scores && (
           <div className="task-results" style={{ left: '50%', top: '50%' }}>
-            <h3>✓ Completado</h3>
-            <p>Precisión: {Math.round(scores.accuracy * 100)}%</p>
-            <p>RT medio: {Math.round(scores.meanRT)}ms</p>
-            <p>1ª mitad: {Math.round(scores.firstHalf.meanRT)}ms ({Math.round(scores.firstHalf.accuracy * 100)}%)</p>
-            <p>2ª mitad: {Math.round(scores.secondHalf.meanRT)}ms ({Math.round(scores.secondHalf.accuracy * 100)}%)</p>
+            <h3>✓ {t('Completado', 'Complete')}</h3>
+            <p>{t('Precisión: {pct}%', 'Accuracy: {pct}%', { pct: `${Math.round(scores.accuracy * 100)}%` })}</p>
+            <p>{t('RT medio: {ms}ms', 'Mean RT: {ms}ms', { ms: Math.round(scores.meanRT) })}</p>
+            <p>{t('1ª mitad: {ms}ms ({pct}%)', '1st half: {ms}ms ({pct}%)', { ms: Math.round(scores.firstHalf.meanRT), pct: Math.round(scores.firstHalf.accuracy * 100) })}</p>
+            <p>{t('2ª mitad: {ms}ms ({pct}%)', '2nd half: {ms}ms ({pct}%)', { ms: Math.round(scores.secondHalf.meanRT), pct: Math.round(scores.secondHalf.accuracy * 100) })}</p>
             <button type="button" className="secondary" onClick={() => {
               const s = stateRef.current;
               if (s.timeoutId) clearTimeout(s.timeoutId);
@@ -249,7 +251,7 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
               Object.assign(s, { trials: [], trialId: 0, current: 0, phase: 'idle', targetPos: null, timeoutId: null, itiId: null, pointerSampler: createPointerSampler({ maxSamples: 600, sessionId: 'simple_rt' }) });
               triggerRender({ phase: 'idle', current: 0, targetPos: null, feedback: null, scores: null });
               setTimeout(() => doStartTrial(), 200);
-            }} style={{ marginTop: '12px' }}>Repetir</button>
+            }} style={{ marginTop: '12px' }}>{t('Repetir', 'Repeat')}</button>
           </div>
         )}
       </div>
