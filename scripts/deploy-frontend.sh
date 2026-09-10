@@ -40,21 +40,27 @@ notify_deploy() {
   commit=$(git -C "$PWD" log -1 --format='%h · %s' 2>/dev/null || echo "n/a")
   local ts; ts=$(date '+%Y-%m-%d %H:%M CL')
   local payload
-  payload=$(python3 -c "
-import json,sys
+  # Heredoc con delimitador cotado (<<'PY'): CERO expansión shell dentro.
+  # (La versión previa usaba python3 -c "multi-linea" y en el runner GH
+  # 2026 el string llegaba truncado a python → SyntaxError; run 34432361763.)
+  payload=$(python3 - "$BUCKET" "$commit" "$ts" <<'PY'
+import json, sys
+bucket, commit, ts = sys.argv[1], sys.argv[2], sys.argv[3]
 print(json.dumps({
-  'embeds':[{
-    'title':'🚀 Deploy frontend KRUMM',
-    'color':3066993,
-    'description':f'**{sys.argv[1]}**',
-    'fields':[
-      {'name':'URL','value':'https://krumm.cl','inline':True},
-      {'name':'Commit','value':f'\`{sys.argv[2]}\`','inline':True},
-      {'name':'Tags','value':'S3 + CloudFront','inline':True}
-    ],
-    'footer':{'text':f'{sys.argv[3]} · deploy-frontend.sh'}
-  }]
-})", "$BUCKET" "$commit" "$ts")
+    "embeds": [{
+        "title": "\U0001F680 Deploy frontend KRUMM",
+        "color": 3066993,
+        "description": f"**{bucket}**",
+        "fields": [
+            {"name": "URL", "value": "https://krumm.cl", "inline": True},
+            {"name": "Commit", "value": f"`{commit}`", "inline": True},
+            {"name": "Tags", "value": "S3 + CloudFront", "inline": True},
+        ],
+        "footer": {"text": f"{ts} · deploy-frontend.sh"},
+    }]
+}))
+PY
+)
   if [ -n "$webhook" ]; then
     curl -s -o /dev/null -w "discord: %{http_code}\n" -H "Content-Type: application/json" \
       -X POST -d "$payload" "$webhook" || true
