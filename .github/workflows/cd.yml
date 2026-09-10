@@ -51,11 +51,25 @@ jobs:
           aws-region: us-east-1
 
       # deploy-frontend.sh usa --profile default; en el runner no hay
-      # ~/.aws/config (las credenciales OIDC llegan por env vars). Un stub de
-      # profile vacío basta: la CLI toma la region del profile y las keys de
-      # AWS_ACCESS_KEY_ID/SECRET/SESSION_TOKEN del ambiente.
-      - name: AWS profile stub
-        run: mkdir -p ~/.aws && printf '[default]\nregion = us-east-1\n' > ~/.aws/config
+      # ~/.aws/config (credenciales OIDC por env vars, pero el runner 2026
+      # no las usa con --profile explicito: "Unable to locate credentials",
+      # run 34431522513). Lo canónico y robusto: stub [default] + credenciales
+      # en el shared credentials file (~/.aws/credentials).
+      - name: AWS profile stub + credentials file
+        run: |
+          mkdir -p ~/.aws
+          printf '[default]\nregion = us-east-1\n' > ~/.aws/config
+          if [ -n "${AWS_ACCESS_KEY_ID:-}" ] && [ -n "${AWS_SECRET_ACCESS_KEY:-}" ]; then
+            {
+              echo '[default]'
+              echo "aws_access_key_id = ${AWS_ACCESS_KEY_ID}"
+              echo "aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}"
+              if [ -n "${AWS_SESSION_TOKEN:-}" ]; then
+                echo "aws_session_token = ${AWS_SESSION_TOKEN}"
+              fi
+            } > ~/.aws/credentials
+            chmod 600 ~/.aws/credentials
+          fi
 
       - name: Deploy S3 + invalidación CloudFront
         env:
