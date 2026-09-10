@@ -1,11 +1,16 @@
 // Verificación rápida: /dev/bomb renderiza en producción (BOMB, post-B6).
+import { existsSync } from 'node:fs';
 import { chromium } from 'playwright';
 
 const BASE = process.env.BASE_URL || 'https://d3citl7gomy2ql.cloudfront.net';
 
-const browser = await chromium.launch({
-  executablePath: '/home/sarlock/.cache/ms-playwright/chromium-1234/chrome-linux/chrome',
-});
+// Chromium: env PLAYWRIGHT_CHROMIUM → path de la Pi (si existe) → default (CI).
+const PI_CHROMIUM = '/home/sarlock/.cache/ms-playwright/chromium-1234/chrome-linux/chrome';
+const chromiumPath = process.env.PLAYWRIGHT_CHROMIUM
+  ?? (existsSync(PI_CHROMIUM) ? PI_CHROMIUM : undefined);
+const launchOpts = {};
+if (chromiumPath) launchOpts.executablePath = chromiumPath;
+const browser = await chromium.launch(launchOpts);
 const page = await browser.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));

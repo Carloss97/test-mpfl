@@ -1,0 +1,63 @@
+# CD — KRUMM test-mpfl (KRU-51): deploy automático a prod en push a main.
+#
+# Credenciales: federación GitHub OIDC → rol AWS (SIN keys estáticas en el
+# repo). El rol `krumm-gh-actions-deploy` solo firma tokens con
+#   sub = repo:Carloss97/test-mpfl:ref:refs/heads/main
+# (repo público: nunca se habilita para PRs). Policy mínima: S3 deploy
+# (List/Get/Put/Delete) + CloudFront CreateInvalidation — ver
+# scripts/setup-gh-oidc.py y docs/security/SECURITY.md §CI/CD.
+#
+# Puerta final: smoke de producción con Playwright (cutover + landing +
+# /dev/bomb) contra CloudFront live. Si el smoke falla, el run queda rojo
+# (el deploy ya ocurrió; el siguiente push corrige — ver SECURITY.md §CI/CD).
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: cd-main
+  cancel-in-progress: false # un deploy en vuelo no se cancela a mitad
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build (production)
+        run: NODE_ENV=production npm run build
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::931932531447:role/krumm-gh-actions-deploy
+          aws-region: us-east-1
+
+      - name: Deploy S3 + invalidación CloudFront
+        env:
+          BUCKET: krumm-staging-frontend-931932531447
+          DISTRIBUTION_ID: EDQ39PDNI931R
+        run: bash scripts/deploy-frontend.sh
+
+      - name: Playwright Chromium (+ system deps)
+        run: npx playwright install --with-deps chromium
+
+      - name: Prod smoke (post-deploy, contra CloudFront live)
+        env:
+          BASE_URL: https://d3citl7gomy2ql.cloudfront.net
+        run: |
+          # index.html sube con no-cache; 60s de margen para la edge.
+          sleep 60
+          node scripts/prod-verify-v5.mjs
+          node scripts/check-dev-bomb-prod.mjs

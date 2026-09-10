@@ -1,0 +1,59 @@
+# CI — KRUMM test-mpfl (KRU-51)
+# Puerta de calidad de todo push/PR: tests, lint, build, audit, secret scanning.
+# Sin secrets (repo público): solo dependencias públicas de npm + gitleaks.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Unit tests (vitest, NODE_ENV=test)
+        run: NODE_ENV=test npx vitest run --pool=threads --reporter=default
+
+      - name: Lint (oxlint)
+        run: npx oxlint src
+
+      - name: Build (production)
+        run: NODE_ENV=production npm run build
+
+      - name: Audit (high, prod deps)
+        run: npm audit --audit-level=high --omit=dev
+
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # gitleaks: regla por defecto + allowlist documentado en .gitleaks.toml
+      # (única entrada: key Lambda histórica leak en f44a7e4, pendiente de
+      # invalidación en el dashboard — ver docs/security/SECURITY.md).
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_ENABLE_SUMMARY: "true"
+        with:
+          config: .gitleaks.toml

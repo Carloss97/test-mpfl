@@ -1,0 +1,23 @@
+# gitleaks config — KRUMM test-mpfl (repo PÚBLICO)
+#
+# Se usa el ruleset por defecto de gitleaks más el allowlist documentado.
+#
+# ENTRADA ÚNICA DEL ALLOWLIST (no es una omisión silenciosa):
+#   Key Lambda API vieja leakada en la historia pública del repo:
+#   - agregada en commit f44a7e4 (2026-09-05, archivo gpu_manager.py)
+#   - eliminada del tree en c722ce8 (2026-09-06, "limpieza de proyecto")
+#   - PERO sigue visible en el historial git (repo público) → la key DEBE
+#     ser invalidada/rotada en el dashboard de Lambda (acción del usuario;
+#     no expuesta por API). Tracking: docs/security/SECURITY.md §Parches.
+#   - Si la key es invalidada, esta entrada puede retirarse (el scan
+#     seguirá fallando en la historia, pero documentada como benigna).
+#
+# IMPORTANTE: [extend] useDefault = true → las reglas por defecto de
+# gitleaks SE SUMAN a este config. Sin esa línea, pasar --config sustituye
+# el ruleset por defecto y el escaneo no tendría reglas (gap silencioso).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Old Lambda API key in public git history (f44a7e4); pending invalidation on Lambda — see docs/security/SECURITY.md"
+regex = '''secret_hx100_cafacf0a9e67423fa222103412d52610[^"'\s]*'''

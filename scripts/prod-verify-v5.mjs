@@ -10,7 +10,7 @@
 // Uso: BASE_URL=https://d3citl7gomy2ql.cloudfront.net node scripts/prod-verify-v5.mjs
 
 import { chromium } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 
 const baseUrl = process.env.BASE_URL ?? 'https://d3citl7gomy2ql.cloudfront.net';
 const shotsDir = process.env.SHOTS_DIR ?? 'docs/qa/h46c-visual-audit/prod';
@@ -18,11 +18,17 @@ mkdirSync(shotsDir, { recursive: true });
 const failures = [];
 const checks = [];
 
-const browser = await chromium.launch({
+// Chromium: env PLAYWRIGHT_CHROMIUM → path de la Pi (si existe) → default
+// del instalador de Playwright (CI: `npx playwright install --with-deps chromium`).
+const PI_CHROMIUM = '/home/sarlock/.cache/ms-playwright/chromium-1234/chrome-linux/chrome';
+const chromiumPath = process.env.PLAYWRIGHT_CHROMIUM
+  ?? (existsSync(PI_CHROMIUM) ? PI_CHROMIUM : undefined);
+const launchOpts = {
   headless: true,
-  executablePath: '/home/sarlock/.cache/ms-playwright/chromium-1234/chrome-linux/chrome',
   args: ['--headless=new', '--disable-dev-shm-usage', '--disable-gpu'],
-});
+};
+if (chromiumPath) launchOpts.executablePath = chromiumPath;
+const browser = await chromium.launch(launchOpts);
 
 async function openPage(tag, path, viewport = { width: 1280, height: 720 }) {
   const context = await browser.newContext({ viewport });
