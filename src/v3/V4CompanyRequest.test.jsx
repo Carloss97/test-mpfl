@@ -84,6 +84,7 @@ function fillStep1(es = true) {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   resetCompanyProcessStore();
   window.history.pushState({}, '', '/');
   localStorage.clear();
@@ -356,6 +357,12 @@ describe('E. diseño guiado (3 pasos → proceso en estado demo)', () => {
   });
 
   it('detalle del proceso creado: coherente (0/0/0/—, config del form, sin avanzadas, nota sin candidatos)', () => {
+    // El flow UI crea el borrador con new Date() (createDraftProcess sin `now`
+    // inyectado) → la fecha larga del detalle depende de la fecha real del
+    // runner (falló en CI el 10-09: "10 de septiembre"). Congelamos SOLO el
+    // Date a NOW (toFake: ['Date']) para que openedAt = 2026-09-08 sea
+    // determinista; el reloj real (setTimeout/act) queda intacto.
+    vi.useFakeTimers({ now: NOW, toFake: ['Date'] });
     renderV3Route('/empresa/nueva-solicitud/diseño');
     fillStep1();
     fireEvent.click(screen.getByRole('button', { name: V3_COPY.es.rd_next }));

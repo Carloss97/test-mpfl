@@ -2,7 +2,7 @@ import React from 'react';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import LandingPage from './LandingPage.jsx';
 import { LanguageProvider } from '../i18n/LanguageContext.jsx';
 
@@ -13,6 +13,22 @@ function renderLanding() {
     </LanguageProvider>,
   );
 }
+
+// Aislamiento entre tests: el LanguageProvider persiste la lengua elegida en
+// localStorage ('krumm-lang') y <html lang>. Sin limpiarlo, el test i18n EN
+// (que cambia a 'en') contamina a los tests siguientes, que renderizan la
+// página en EN y fallan sus aserciones de copy ES (detectado en CI 2026-09-10,
+// run 34427600666: el test de accesibilidad leía 'en' del test anterior).
+beforeEach(() => {
+  try {
+    window.localStorage.clear();
+  } catch {
+    /* jsdom sin storage accesible */
+  }
+  if (typeof document !== 'undefined' && document.documentElement) {
+    document.documentElement.lang = '';
+  }
+});
 
 describe('LandingPage (design de marca v2, 2026-09-07)', () => {
   describe('Hero de referencia', () => {

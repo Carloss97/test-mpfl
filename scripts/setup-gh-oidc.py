@@ -19,10 +19,15 @@ import urllib.request
 
 GITHUB_OIDC_ISSUER = "https://token.actions.githubusercontent.com"
 GITHUB_OIDC_HOST = "token.actions.githubusercontent.com"  # AWS almacena la URL sin esquema
-GITHUB_OIDC_CLIENT_ID = "token.actions.githubusercontent.com"
+# El JWT de GitHub para STS tiene aud = sts.amazonaws.com; si el provider
+# tiene ClientIDList, AWS valida la audiencia contra esa lista (sin sts
+# aca → "web identity token could not be validated").
+GITHUB_OIDC_CLIENT_ID = "sts.amazonaws.com"
 ROLE_NAME = "krumm-gh-actions-deploy"
 POLICY_NAME = "krumm-gh-actions-deploy-policy"
-SUBJECTS = ["repo:Carloss97/test-mpfl:ref:refs/heads/main"]
+# SOLO main branch (repo público: nunca PRs). AWS normaliza listas de 1
+# elemento a string al almacenar → usar string directo para comparar.
+SUBJECT = "repo:Carloss97/test-mpfl:ref:refs/heads/main"
 
 S3_ARN = "arn:aws:s3:::krumm-staging-frontend-931932531447"
 CFN_ARN = "arn:aws:cloudfront::931932531447:distribution/EDQ39PDNI931R"
@@ -117,7 +122,21 @@ def main() -> None:
                      "--thumbprint-list", *thumbprints])
                 print("provider: thumbprints actualizados")
             else:
-                print("provider: existente, thumbprints OK")
+                print("provider: thumbprints OK")
+            client_ids = detail.get("ClientIDList", [])
+            # add-client-id es idempotente; si el aud real (sts.amazonaws.com)
+            # no está en la lista, AWS rechaza el JWT ("could not be validated").
+            aws(["iam", "add-client-id-to-open-id-connect-provider",
+                 "--open-id-connect-provider-arn", arn,
+                 "--client-id", GITHUB_OIDC_CLIENT_ID])
+            print(f"provider: client-id {GITHUB_OIDC_CLIENT_ID} asegurado")
+            # Retirar el client-id erróneo original (el issuer no es una audiencia)
+            stale_id = GITHUB_OIDC_HOST
+            if stale_id in client_ids:
+                aws(["iam", "remove-client-id-from-open-id-connect-provider",
+                     "--open-id-connect-provider-arn", arn,
+                     "--client-id", stale_id])
+                print(f"provider: client-id stale {stale_id} removido")
             break
     if not provider_arn:
         out = aws(["iam", "create-open-id-connect-provider",
@@ -140,7 +159,7 @@ def main() -> None:
             "Condition": {
                 "StringEquals": {
                     f"{GITHUB_OIDC_HOST}:aud": "sts.amazonaws.com",
-                    f"{GITHUB_OIDC_HOST}:sub": SUBJECTS,
+                    f"{GITHUB_OIDC_HOST}:sub": SUBJECT,
                 },
             },
         }],
@@ -149,10 +168,9 @@ def main() -> None:
     role_arn = None
     for r in roles.get("Roles", []):
         if r["RoleName"] == ROLE_NAME:
-            current = json.loads(aws(["iam", "get-role", "--role-name", ROLE_NAME]))
-            if current["AssumeRolePolicyDocument"] != trust:
+            current = json.loads(aws(["iam", "get-role", "--role-name", ROLE_NAME]))["Role"]
+            if current.get("AssumeRolePolicyDocument") != trust:
                 aws(["iam", "update-assume-role-policy", "--role-name", ROLE_NAME,
-                     "--role-arn", r["Arn"],
                      "--policy-document", json.dumps(trust)])
                 print("rol: trust actualizado (subjects/audience)")
             else:
@@ -197,10 +215,16 @@ def main() -> None:
             existing_pol = p["Arn"]
             break
     if existing_pol:
-        # actualizar version default (idempotente)
-        out = aws(["iam", "create-policy-version", "--policy-arn", existing_pol,
-                   "--policy-document", json.dumps(policy_doc), "--set-as-default"])
-        print("policy: version actualizada")
+        # Solo nueva version si el doc del default cambio (IAM limita a 5 versions)
+        ver = json.loads(aws(["iam", "get-policy", "--policy-arn", existing_pol]))["Policy"]
+        cur_doc = json.loads(aws(["iam", "get-policy-version", "--policy-arn", existing_pol,
+                                  "--version-id", ver["DefaultVersionId"]]))["PolicyVersion"]["Document"]
+        if cur_doc != policy_doc:
+            aws(["iam", "create-policy-version", "--policy-arn", existing_pol,
+                 "--policy-document", json.dumps(policy_doc), "--set-as-default"])
+            print("policy: version actualizada (doc cambió)")
+        else:
+            print("policy: doc sin cambios")
     else:
         out = aws(["iam", "create-policy", "--policy-name", POLICY_NAME,
                    "--policy-document", json.dumps(policy_doc),

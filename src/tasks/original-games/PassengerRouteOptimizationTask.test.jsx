@@ -210,14 +210,16 @@ describe('PassengerRouteOptimizationTask', () => {
 
     skipIntro();
     completeIntroRoute();
-    expect(await screen.findByText(/Circuito 2 de 3/i)).toBeInTheDocument();
+    // timeout 5s (default 1s): flake verificado en suite completa bajo carga
+    // (run Pi 2026-09-09 23:26: 1172/1173, este test falló por findByText 1s)
+    expect(await screen.findByText(/Circuito 2 de 3/i, undefined, { timeout: 5000 })).toBeInTheDocument();
 
     move('Derecha', 5);
     move('Arriba', 3);
     move('Izquierda', 4);
     move('Arriba');
 
-    expect(await screen.findByText(/Circuito 3 de 3/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Circuito 3 de 3/i, undefined, { timeout: 5000 })).toBeInTheDocument();
     move('Derecha', 6);
     move('Arriba');
     expect(screen.getByText(/presupuesto operativo restaurado/i)).toBeInTheDocument();
@@ -260,8 +262,8 @@ describe('PassengerRouteOptimizationTask', () => {
     completeIntroRoute();
 
     // Circuit toast floats over the next board while circuit 2 begins.
-    expect(await screen.findByText(/Circuito 1 completado/i)).toBeInTheDocument();
-    expect(await screen.findByText(/Circuito 2 de 2/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Circuito 1 completado/i, undefined, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByText(/Circuito 2 de 2/i, undefined, { timeout: 5000 })).toBeInTheDocument();
 
     // Circuit 2: pick up A (2,5) and deliver to (6,4) — B still waiting.
     move('Derecha', 5);
