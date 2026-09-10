@@ -26,10 +26,18 @@ aws s3 cp "$DIST_DIR/index.html" "s3://$BUCKET/index.html" \
   --content-type "text/html; charset=utf-8"
 
 echo "==> Invalidación CloudFront"
+# /* (1 path, dentro del tier gratis) invalida TODA la distribución: los assets
+# no-hasheados de public/ (favicon.svg, logo.svg, hero-photo.jpg,
+# krumm-logo-*.png) se suben con max-age=31536000,immutable y con una
+# invalidación acotada (/index.html /) QUEDABAN STALE EN EL EDGE hasta 1 año
+# (bug detectado 2026-09-10: favicon smiley viejo sirviendo tras deploy
+# fa4e0b0, mientras el resto de la app se actualizaba por ser URL hasheadas).
+# Los bundles /assets/* no sufren revalidación innecesaria: cada deploy usa
+# nombres con hash nuevos, así que la caché immutable sigue siendo válida.
 aws cloudfront create-invalidation \
   --profile "$PROFILE" \
   --distribution-id "$DISTRIBUTION_ID" \
-  --paths "/index.html" "/" >/dev/null
+  --paths "/*" >/dev/null
 
 echo "OK: deploy completado."
 
