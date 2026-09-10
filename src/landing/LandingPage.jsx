@@ -137,7 +137,10 @@ export default function LandingPage() {
           aria-controls="main-nav"
           onClick={() => setMenuOpen((open) => !open)}
         >
-          ☰
+          {/* SVG inline en vez del glifo unicode ☰ (caja .notdef en env. sin fuente de símbolos) */}
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+            <path d="M4 6.5h16M4 12h16M4 17.5h16" />
+          </svg>
         </button>
       </header>
 
@@ -168,14 +171,20 @@ export default function LandingPage() {
                 {t('Acceso candidatos', 'Candidate access')}
               </a>
               <a className="landing__cta landing__cta--outline" href="#como-funciona">
-                <span className="landing__play" aria-hidden="true">▶</span>
+                <span className="landing__play" aria-hidden="true">
+                  {/* SVG inline en vez del glifo unicode ▶ (caja .notdef en env. sin fuente de símbolos) */}
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </span>
                 {t('Ver cómo funciona', 'See how it works')}
               </a>
             </div>
             <ul className="landing__proof-row">
-              <li><b aria-hidden="true">✓</b>{t('EDGE-AI EN EL NAVEGADOR', 'EDGE-AI IN YOUR BROWSER')}</li>
-              <li><b aria-hidden="true">✓</b>{t('PRIVACY BY DESIGN', 'PRIVACY BY DESIGN')}</li>
-              <li><b aria-hidden="true">✓</b>{t('EVALUACIÓN CONDUCTUAL INMERSIVA', 'IMMERSIVE BEHAVIORAL ASSESSMENT')}</li>
+              {/* Checks SVG inline en vez del glifo unicode ✓ (caja .notdef en env. sin fuente de símbolos) */}
+              <li><b aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg></b>{t('EDGE-AI EN EL NAVEGADOR', 'EDGE-AI IN YOUR BROWSER')}</li>
+              <li><b aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg></b>{t('PRIVACY BY DESIGN', 'PRIVACY BY DESIGN')}</li>
+              <li><b aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg></b>{t('EVALUACIÓN CONDUCTUAL INMERSIVA', 'IMMERSIVE BEHAVIORAL ASSESSMENT')}</li>
             </ul>
           </div>
 
@@ -298,16 +307,6 @@ export default function LandingPage() {
                 <span className="landing__acceso-divider" aria-hidden="true" />
                 <a className="landing__acceso-cta" href="/candidato">
                   {t('Ingresar como candidato', 'Sign in as a candidate')} <span aria-hidden="true">→</span>
-                </a>
-              </article>
-              <article className="landing__acceso-card landing__acceso-card--dev">
-                <span className="landing__icon-box"><IconShield /></span>
-                <span className="landing__acceso-kicker">{t('DESARROLLO', 'DEVELOPMENT')}</span>
-                <h3>{t('Acceso directo a juegos', 'Direct game access')}</h3>
-                <p>{t('Salta la secuencia de invitación y accede directamente a cada juego para pruebas.', 'Skip the invitation sequence and access each game directly for testing.')}</p>
-                <span className="landing__acceso-divider" aria-hidden="true" />
-                <a className="landing__acceso-cta" href="/?invite=tok-dev-dev1234">
-                  {t('Ingresar como dev', 'Sign in as dev')} <span aria-hidden="true">→</span>
                 </a>
               </article>
             </div>

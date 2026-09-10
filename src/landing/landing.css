@@ -192,9 +192,9 @@
   padding: 0 24px;
 }
 
-.landing__nav-login--cta {
+.landing__nav .landing__nav-login--cta {
   background: var(--k-gold);
-  color: var(--k-dark);
+  color: var(--k-btn-gold-ink);
   padding: 0.5rem 1rem;
   border-radius: var(--k-radius);
   font-weight: var(--k-font-weight-semibold);
@@ -202,14 +202,8 @@
   transition: opacity var(--k-transition-fast);
 }
 
-.landing__nav-login--cta:hover {
+.landing__nav .landing__nav-login--cta:hover {
   opacity: 0.9;
-}
-
-/* Keep the existing landing__nav-login for fallback */
-.landing__nav-login {
-  color: var(--k-text-primary);
-  text-decoration: none;
 }
 
 .landing__cta--gold {
@@ -810,7 +804,7 @@
   .landing__topbar {
     gap: 12px;
     min-height: 148px;
-    padding: 16px 20px;
+    padding: 16px 24px;
   }
 
   .landing__brand {
@@ -825,7 +819,7 @@
   .landing__hero {
     min-height: auto;
     grid-template-columns: 1fr;
-    padding: 178px 20px 70px;
+    padding: 178px 24px 70px;
     gap: 55px;
   }
 
@@ -840,7 +834,7 @@
   }
 
   .landing__hero h1:lang(es) {
-    font-size: min(clamp(54px, 15vw, 90px), calc(12.8cqw + 4.5px));
+    font-size: min(clamp(54px, 15vw, 90px), calc(12cqw + 4.5px));
   }
   .landing__hero-copy {
     font-size: 15px;
@@ -860,7 +854,14 @@
   }
 
   .landing__section {
-    padding: 72px 20px;
+    padding: 72px 0;
+  }
+
+  /* Gutter móvil (design-system §5: 20-24px): el horizontal lo pone el
+     contenedor, no la sección, para que hero/topbar/footer/secciones
+     queden alineadas al mismo borde en móvil. */
+  .landing__container {
+    padding-inline: var(--k-gutter-mobile);
   }
 
   .landing__section--cierre {
@@ -871,6 +872,6 @@
   .landing__footer {
     flex-direction: column;
     gap: 8px;
-    padding: 24px 20px;
+    padding: 24px 0;
   }
 }

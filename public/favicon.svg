@@ -1,7 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#08131f"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="#5bffc3" stroke-width="5"/>
-  <path d="M18 34c8 8 20 8 28 0" fill="none" stroke="#dff8ff" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="24" cy="25" r="3" fill="#dff8ff"/>
-  <circle cx="40" cy="25" r="3" fill="#dff8ff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Favicon KRUMM v4 (2026-09-10): cráneo ANCHO + nariz en saliente angular
+       (2px paso a 16px) + cuello fino → la silueta lee como cabeza de perfil
+       (audit v3: 'pillar/1', cráneo 34u vs cuello 18u). Ramas oro gruesas. -->
+  <rect width="100" height="100" rx="22" fill="#3d2b20"/>
+  <!-- Cabeza perfil derecha (crema): frente x=64, nariz hasta x=77, cuello x 44-58 -->
+  <path fill="#f1e7db" d="M42 16
+    C56 14 64 22 64 32
+    L77 44
+    L64 52
+    C67 55 66 59 63 61
+    C61 65 59 67 58 71
+    L58 96 L44 96 L44 66
+    C35 60 29 50 29 38
+    C29 24 34 17 42 16 Z"/>
+  <!-- Ramas (oro) gruesas desde la coronilla -->
+  <g stroke="#d4b483" stroke-width="7" stroke-linecap="round" fill="none">
+    <path d="M44 15 L44 9"/>
+    <path d="M52 14 L58 8"/>
+    <path d="M36 17 L30 11"/>
+  </g>
+  <!-- Nodos (oro) -->
+  <g fill="#d4b483">
+    <circle cx="44" cy="6" r="4.5"/>
+    <circle cx="60" cy="5" r="4.5"/>
+    <circle cx="28" cy="8" r="4.5"/>
+  </g>
 </svg>
