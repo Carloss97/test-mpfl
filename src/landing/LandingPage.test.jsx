@@ -207,6 +207,58 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
     });
   });
 
+  describe('Contraste (regresión bug prod 2026-09-10)', () => {
+    // Bug detectado en prod (review 2026-09-10, krumm.cl): la regla base
+    // `.landing a { color: inherit }` (especificidad 0,1,1) PISA el color de
+    // `.landing__cta--gold` (0,1,0) → el CTA gold del hero ("Acceso
+    // candidatos") renderizaba `var(--k-text-cream)` hereditario sobre el
+    // gradiente oro (contraste medido en prod 1.35–2.5:1, fail AA).
+    // Fix: selector doble `.landing__cta.landing__cta--gold` (0,2,0) gana la
+    // cascada con `var(--k-btn-gold-ink)` (tinta oscura #3d2b20, ~8.7:1 sobre
+    // la parada más clara del gradiente).
+    // Nota jsdom: getComputedStyle NO resuelve var() (devuelve la declaración
+    // ganadora) pero SÍ resuelve `inherit` — por eso se aserta la declaración:
+    // pre-fix el hero devuelve 'var(--k-text-cream)' (inherit resuelto hasta
+    // .landing__hero); post-fix 'var(--k-btn-gold-ink)'. La verificación rgb
+    // final (navegador real) queda en el smoke Playwright / review prod.
+    const tokensCss = readFileSync(path.resolve(process.cwd(), 'src/styles/krumm-tokens.css'), 'utf8');
+    const landingCss = readFileSync(path.resolve(process.cwd(), 'src/landing/landing.css'), 'utf8');
+
+    function injectLandingStyles() {
+      const style = document.createElement('style');
+      style.textContent = `${tokensCss}\n${landingCss}`;
+      document.head.appendChild(style);
+      return () => style.remove();
+    }
+
+    it('CTA gold del hero: declaración ganadora = --k-btn-gold-ink (no crema heredado)', () => {
+      const remove = injectLandingStyles();
+      renderLanding();
+      const cta = document.querySelector('.landing__hero-buttons .landing__cta--gold');
+      expect(cta).not.toBeNull();
+      expect(getComputedStyle(cta).color).toBe('var(--k-btn-gold-ink)');
+      remove();
+    });
+
+    it('CTA gold "Solicitar demo" (topbar): declaración ganadora = --k-btn-gold-ink', () => {
+      const remove = injectLandingStyles();
+      renderLanding();
+      const demo = document.querySelector('.landing__header-actions .landing__cta--gold');
+      expect(demo).not.toBeNull();
+      expect(getComputedStyle(demo).color).toBe('var(--k-btn-gold-ink)');
+      remove();
+    });
+
+    it('login CTA de nav: declaración ganadora = --k-btn-gold-ink (fix previo, contraste 6.87:1)', () => {
+      const remove = injectLandingStyles();
+      renderLanding();
+      const login = document.querySelector('.landing__nav-login--cta');
+      expect(login).not.toBeNull();
+      expect(getComputedStyle(login).color).toBe('var(--k-btn-gold-ink)');
+      remove();
+    });
+  });
+
   describe('Estilo de marca v2 (tokens + estructura CSS)', () => {
     const css = readFileSync(path.resolve(process.cwd(), 'src/landing/landing.css'), 'utf8');
 
@@ -225,7 +277,8 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
     });
 
     it('botones gold gradient + outline ghost (referencia)', () => {
-      expect(css).toMatch(/\.landing__cta--gold\s*{[^}]*var\(--k-btn-gold-from\)/);
+      // Selector doble (0,2,0): gana la cascada contra `.landing a { color: inherit }`.
+      expect(css).toMatch(/\.landing__cta\.landing__cta--gold\s*{[^}]*var\(--k-btn-gold-from\)/);
       expect(css).toContain('var(--k-btn-gold-to)');
       expect(css).toContain('var(--k-btn-ghost-bg)');
     });

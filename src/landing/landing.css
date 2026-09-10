@@ -206,7 +206,10 @@
   opacity: 0.9;
 }
 
-.landing__cta--gold {
+/* Selector DOBLE (0,2,0): la regla base `.landing a { color: inherit }`
+   (0,1,1) pisaba el color del CTA gold → el hero renderizaba crema
+   --k-text-cream sobre oro (contraste 1.35:1 en prod, review 2026-09-10). */
+.landing__cta.landing__cta--gold {
   color: var(--k-btn-gold-ink);
   background: linear-gradient(115deg, var(--k-btn-gold-from), var(--k-btn-gold-to));
   box-shadow: var(--k-shadow-gold);
