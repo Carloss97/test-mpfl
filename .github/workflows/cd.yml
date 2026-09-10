@@ -50,6 +50,13 @@ jobs:
           role-to-assume: arn:aws:iam::931932531447:role/krumm-gh-actions-deploy
           aws-region: us-east-1
 
+      # deploy-frontend.sh usa --profile default; en el runner no hay
+      # ~/.aws/config (las credenciales OIDC llegan por env vars). Un stub de
+      # profile vacío basta: la CLI toma la region del profile y las keys de
+      # AWS_ACCESS_KEY_ID/SECRET/SESSION_TOKEN del ambiente.
+      - name: AWS profile stub
+        run: mkdir -p ~/.aws && printf '[default]\nregion = us-east-1\n' > ~/.aws/config
+
       - name: Deploy S3 + invalidación CloudFront
         env:
           BUCKET: krumm-staging-frontend-931932531447
