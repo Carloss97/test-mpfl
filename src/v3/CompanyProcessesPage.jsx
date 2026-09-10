@@ -15,6 +15,7 @@ import { useV3Copy } from './v3Copy.js';
 import {
   DEMO_DEPARTMENT_IDS,
   filterProcesses,
+  filterRealProcesses,
   localizeProcessRole,
   sortProcesses,
 } from './companyData.js';
@@ -39,10 +40,24 @@ export default function CompanyProcessesPage({ data } = {}) {
   const [department, setDepartment] = useState('');
   const [location, setLocation] = useState('');
   const [sort, setSort] = useState('recent');
+  // B3 (KRU-50): filtros modo real (solo /sessions; demo no tiene fecha/estado)
+  const [period, setPeriod] = useState('');
+  const [status, setStatus] = useState('');
 
   const departmentLabels = {
     operations: copy.pd_operations,
     maintenance: copy.pd_maintenance,
+  };
+
+  // Badge de estado: real → estado vivo derivado (realStatus); demo → "active"
+  // (referencia; los procesos demo no tienen ciclo).
+  const realStatusLabel = (process) => {
+    const key = {
+      in_progress: 'pl_status_in_progress',
+      completed: 'pl_status_completed',
+      open: 'pl_status_open',
+    }[process?.realStatus];
+    return key ? copy[key] : copy.company_active;
   };
 
   const locations = useMemo(
@@ -50,20 +65,23 @@ export default function CompanyProcessesPage({ data } = {}) {
     [processes, language],
   );
 
-  // filter → sort (la ref ordena primero y oculta después; mismo resultado).
-  const visible = useMemo(
-    () => sortProcesses(
+  // filter → sort → (real) filterRealProcesses. La ref ordena primero y oculta
+  // después; mismo resultado.
+  const visible = useMemo(() => {
+    const base = sortProcesses(
       filterProcesses(processes, { query, department, location }, { language, departmentLabels }),
       sort,
       language,
-    ),
-    [processes, query, department, location, sort, language, departmentLabels],
-  );
+    );
+    return isReal ? filterRealProcesses(base, { dateRange: period, status }, {}) : base;
+  }, [processes, query, department, location, sort, language, departmentLabels, isReal, period, status]);
 
   const reset = () => {
     setQuery('');
     setDepartment('');
     setLocation('');
+    setPeriod('');
+    setStatus('');
     setSort('recent');
   };
 
@@ -91,6 +109,35 @@ export default function CompanyProcessesPage({ data } = {}) {
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
+        {isReal ? (
+          <label>
+            <span>{copy.pl_period}</span>
+            <select
+              id="v2-filter-period"
+              value={period}
+              onChange={(event) => setPeriod(event.target.value)}
+            >
+              <option value="">{copy.pl_period_all}</option>
+              <option value="7d">{copy.pl_period_7d}</option>
+              <option value="30d">{copy.pl_period_30d}</option>
+            </select>
+          </label>
+        ) : null}
+        {isReal ? (
+          <label>
+            <span>{copy.pl_status}</span>
+            <select
+              id="v2-filter-status"
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+            >
+              <option value="">{copy.pl_status_all}</option>
+              <option value="in_progress">{copy.pl_status_in_progress}</option>
+              <option value="completed">{copy.pl_status_completed}</option>
+              <option value="open">{copy.pl_status_open}</option>
+            </select>
+          </label>
+        ) : null}
         {!isReal ? (
           <label>
             <span>{copy.pd_department}</span>
@@ -159,7 +206,7 @@ export default function CompanyProcessesPage({ data } = {}) {
               return (
                 <article className="v3-pl-card" key={process.id} data-testid={`v2-card-${process.id}`}>
                   <div className="v3-pl-card-top">
-                    <span className="v3-co-status">{copy.company_active}</span>
+                    <span className="v3-co-status">{isReal ? realStatusLabel(process) : copy.company_active}</span>
                     <time dateTime={process.openedAt ?? undefined}>{process.openedAt ?? '—'}</time>
                   </div>
                   <h2>{roleLabel}</h2>

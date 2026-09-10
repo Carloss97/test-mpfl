@@ -16,12 +16,21 @@ import V3Dialog from './V3Dialog.jsx';
 import {
   buildDraftProcessDetail,
   buildRealProcessDetail,
+  buildRealReportModel,
   fitForScore,
+  findSessionRow,
   getDemoCandidateOverall,
   getDemoProcessDetail,
   REAL_SESSION_STATUS,
   sessionsForProcess,
 } from './companyProcessDetail.js';
+import {
+  buildBriefMarkdown,
+  buildInterviewBrief,
+  buildProcessCsv,
+  downloadText,
+  pickLocalized,
+} from './companyBrief.js';
 
 function IconClock() {
   return (
@@ -63,6 +72,14 @@ function IconPencil() {
   );
 }
 
+function IconDownload() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 4v11m0 0 4-4m-4 4-4-4M4 19h16" />
+    </svg>
+  );
+}
+
 function localized(entry, language) {
   if (!entry) return '';
   if (language === 'en') return entry.en ?? entry.es ?? '';
@@ -85,6 +102,7 @@ export default function CompanyProcessDetailPage({ data, processId } = {}) {
   const [dialog, setDialog] = useState(null); // { title } — preview (D4)
   const [moreOpen, setMoreOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [briefOpenId, setBriefOpenId] = useState(null); // B3: brief expandido por candidato
   const moreMenuRef = useRef(null);
   const moreButtonRef = useRef(null);
 
@@ -105,6 +123,20 @@ export default function CompanyProcessDetailPage({ data, processId } = {}) {
       .find((entry) => entry.id === processId && entry.source === 'design') ?? null;
     return draft ? buildDraftProcessDetail(draft) : { kind: 'notFound' };
   }, [checking, isReal, data, processId]);
+
+  // B3 (KRU-50): report model por candidato (solo modo real) para el brief y
+  // los exports. buildRealReportModel reutiliza el mapping ya testeado del
+  // reporte (constructs/caveats/coverage + guard de privacidad).
+  // ⚠️ HOOK: debe ir ANTES de los early returns (orden estable de hooks).
+  const realModels = useMemo(() => {
+    const map = new Map();
+    if (!isReal || !detail || detail.kind !== 'real') return map;
+    for (const candidate of detail.candidates) {
+      const model = buildRealReportModel(findSessionRow(data?.sessions ?? [], candidate.id));
+      if (model) map.set(candidate.id, model);
+    }
+    return map;
+  }, [isReal, detail, data?.sessions]);
 
   // Menú ⋯ (ref process-detail.js): click fuera cierra; Escape cierra y
   // devuelve el focus al trigger.
@@ -187,6 +219,45 @@ export default function CompanyProcessDetailPage({ data, processId } = {}) {
     };
   });
 
+  // B3 (KRU-50): realModels (useMemo) declarado arriba, junto a los demás
+  // hooks (antes de los early returns). Handlers + briefs derivados aquí.
+  const briefStamp = () => new Date().toISOString().slice(0, 10);
+
+  const handleExportCsv = () => {
+    const candidates = [...realModels.values()];
+    downloadText(
+      `krumm-brief-${detail.id}-${briefStamp()}.csv`,
+      buildProcessCsv({ process: { id: detail.id, role: detail.role }, candidates }),
+      'text/csv',
+    );
+  };
+
+  const handleBriefMd = (candidateId) => {
+    const model = realModels.get(candidateId);
+    if (!model) return;
+    downloadText(
+      `krumm-brief-${detail.id}-${model.alias ?? candidateId}-${briefStamp()}.md`,
+      buildBriefMarkdown({
+        process: { id: detail.id, role: detail.role },
+        candidates: [model],
+        language,
+        generatedAt: briefStamp(),
+      }),
+      'text/markdown',
+    );
+  };
+
+  const candidateBriefs = isReal
+    ? new Map(
+      candidateRows
+        .map(({ candidate }) => {
+          const model = realModels.get(candidate.id);
+          return model ? [candidate.id, buildInterviewBrief(model)] : null;
+        })
+        .filter(Boolean),
+    )
+    : new Map();
+
   return (
     <div className="v3-pd">
       <a className="v3-back" href="/empresa/procesos">{copy.pl_back}</a>
@@ -207,6 +278,12 @@ export default function CompanyProcessDetailPage({ data, processId } = {}) {
           </div>
         </div>
         <div className="v3-pd-heading-actions">
+          {isReal ? (
+            <button type="button" className="v3-co-primary" onClick={handleExportCsv} data-testid="v3-pd-export-csv">
+              <IconDownload />
+              <span>{copy.pd_export_csv}</span>
+            </button>
+          ) : null}
           <button type="button" className="v3-co-primary" onClick={() => openActionDialog(copy.pd_edit)}>
             <IconPencil />
             <span>{copy.pd_edit}</span>
@@ -423,44 +500,105 @@ export default function CompanyProcessDetailPage({ data, processId } = {}) {
                 <th scope="col">{copy.company_krummScore}</th>
                 <th scope="col">{copy.pd_fit}</th>
                 <th scope="col">{copy.company_status}</th>
+                {isReal ? <th scope="col">{copy.pd_brief}</th> : null}
                 <th scope="col">{copy.company_action}</th>
               </tr>
             </thead>
             <tbody>
               {candidateRows.length === 0 ? (
                 <tr data-testid="v4-pd-no-candidates">
-                  <td colSpan={6}><span className="v4-pd-empty-cell">{copy.pd_noCandidatesYet}</span></td>
+                  <td colSpan={isReal ? 7 : 6}><span className="v4-pd-empty-cell">{copy.pd_noCandidatesYet}</span></td>
                 </tr>
-              ) : candidateRows.map(({ candidate, index, overall, fit, fitLabel, identity, statusLabel }) => (
-                <tr key={candidate.id} className={index < 3 ? 'v3-pd-top-candidate' : undefined}>
-                  <td><span className="v3-pd-rank">{index + 1}</span></td>
-                  <th scope="row">
-                    <div className="v3-pd-person">
-                      <span className="v3-co-avatar" aria-hidden="true">{candidate.initials}</span>
-                      <strong>{identity}</strong>
-                    </div>
-                  </th>
-                  <td>
-                    <span className="v3-pd-score">{overall == null ? '—' : `${overall}%`}</span>
-                    {overall != null ? (
-                      <span className="v3-pd-score-track" aria-hidden="true"><i style={{ width: `${overall}%` }} /></span>
+              ) : candidateRows.map(({ candidate, index, overall, fit, fitLabel, identity, statusLabel }) => {
+                const brief = candidateBriefs.get(candidate.id);
+                const briefOpen = isReal && briefOpenId === candidate.id;
+                return (
+                  <React.Fragment key={candidate.id}>
+                    <tr className={index < 3 ? 'v3-pd-top-candidate' : undefined}>
+                      <td><span className="v3-pd-rank">{index + 1}</span></td>
+                      <th scope="row">
+                        <div className="v3-pd-person">
+                          <span className="v3-co-avatar" aria-hidden="true">{candidate.initials}</span>
+                          <strong>{identity}</strong>
+                        </div>
+                      </th>
+                      <td>
+                        <span className="v3-pd-score">{overall == null ? '—' : `${overall}%`}</span>
+                        {overall != null ? (
+                          <span className="v3-pd-score-track" aria-hidden="true"><i style={{ width: `${overall}%` }} /></span>
+                        ) : null}
+                      </td>
+                      <td>
+                        <span className={`v3-pd-fit${fit === 'excellent' ? ' v3-pd-fit-excellent' : ''}`}>{fitLabel}</span>
+                      </td>
+                      <td><span className="v3-co-status">{statusLabel}</span></td>
+                      {isReal ? (
+                        <td>
+                          <button
+                            type="button"
+                            className="v3-co-text-button v3-pd-brief-toggle"
+                            aria-expanded={briefOpen}
+                            aria-controls={briefOpen ? `v3-pd-brief-panel-${candidate.id}` : undefined}
+                            onClick={() => setBriefOpenId((openId) => (openId === candidate.id ? null : candidate.id))}
+                          >
+                            <span>{briefOpen ? copy.pd_brief_toggle_close : copy.pd_brief_toggle}</span>
+                          </button>
+                        </td>
+                      ) : null}
+                      <td>
+                        <a
+                          className="v3-co-text-button"
+                          href={`/empresa/proceso/${detail.id}/candidatos/${candidate.id}`}
+                        >
+                          <span>{copy.company_viewReport}</span> <span aria-hidden="true">↗</span>
+                          <span className="v3-pd-sr-only"> — {identity}</span>
+                        </a>
+                      </td>
+                    </tr>
+                    {briefOpen ? (
+                      <tr className="v3-pd-brief-row">
+                        <td colSpan={7}>
+                          <div
+                            id={`v3-pd-brief-panel-${candidate.id}`}
+                            className="v3-pd-brief"
+                            role="region"
+                            aria-label={`${copy.pd_brief}: ${identity}`}
+                            data-testid={`v3-pd-brief-${candidate.id}`}
+                          >
+                            <p className="v3-pd-brief-disclaimer">{copy.pd_brief_disclaimer}</p>
+                            <div className="v3-pd-brief-cols">
+                              <div>
+                                <h3>{copy.pd_brief_prompts}</h3>
+                                <ol className="v3-pd-brief-list">
+                                  {(brief?.prompts ?? []).map((prompt) => (
+                                    <li key={prompt.id}>{pickLocalized(prompt, language)}</li>
+                                  ))}
+                                </ol>
+                              </div>
+                              <div>
+                                <h3>{copy.pd_brief_notes}</h3>
+                                <ul className="v3-pd-brief-list">
+                                  {(brief?.notes ?? []).map((note) => (
+                                    <li key={note.id}>{pickLocalized(note, language)}</li>
+                                  ))}
+                                </ul>
+                                <button
+                                  type="button"
+                                  className="v3-co-text-button"
+                                  onClick={() => handleBriefMd(candidate.id)}
+                                  data-testid={`v3-pd-brief-md-${candidate.id}`}
+                                >
+                                  <span>{copy.pd_brief_md}</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
                     ) : null}
-                  </td>
-                  <td>
-                    <span className={`v3-pd-fit${fit === 'excellent' ? ' v3-pd-fit-excellent' : ''}`}>{fitLabel}</span>
-                  </td>
-                  <td><span className="v3-co-status">{statusLabel}</span></td>
-                  <td>
-                    <a
-                      className="v3-co-text-button"
-                      href={`/empresa/proceso/${detail.id}/candidatos/${candidate.id}`}
-                    >
-                      <span>{copy.company_viewReport}</span> <span aria-hidden="true">↗</span>
-                      <span className="v3-pd-sr-only"> — {identity}</span>
-                    </a>
-                  </td>
-                </tr>
-              ))}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

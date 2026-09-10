@@ -1027,7 +1027,7 @@
 .v3-pa-scarce li > span i { background: var(--k-pd-seg-pending); }
 .v3-pd-table-scroll { overflow-x: auto; position: relative; }
 .v3-pd-table-scroll:focus-visible { outline: 2px solid var(--k-ink-terracotta); outline-offset: 2px; }
-.v3-pd-table { width: 100%; min-width: 780px; border-collapse: collapse; text-align: left; font-size: 0.75rem; }
+.v3-pd-table { width: 100%; min-width: 860px; border-collapse: collapse; text-align: left; font-size: 0.75rem; }
 .v3-pd-table thead th { padding: 13px 20px; background: var(--k-co-table-head); border-top: 1px solid var(--k-line); border-bottom: 1px solid var(--k-line); color: var(--k-ink-medium); font-size: 0.625rem; font-weight: 600; white-space: nowrap; }
 .v3-pd-table tbody td, .v3-pd-table tbody th { padding: 18px 20px; border-bottom: 1px solid var(--k-line); }
 .v3-pd-table tbody tr:last-child > * { border-bottom: 0; }
@@ -1045,6 +1045,34 @@
 .v3-pd-fit { font-size: 0.6875rem; color: var(--k-ink-medium); }
 .v3-pd-fit-excellent { color: var(--k-pd-fit-excellent); font-weight: 700; }
 .v3-pd-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ── B3 (KRU-50): brief de entrevista + exports ───────────────────────────── */
+/* Fila expandida dentro de la tabla (colSpan): fondo recessado coherente con
+   el thead; el panel usa el mismo lenguaje tipográfico de la sección. */
+.v3-pd-brief-row > td { background: var(--k-co-table-head); padding: 0 20px; }
+.v3-pd-brief { padding: 20px 8px 24px; }
+.v3-pd-brief-disclaimer {
+  margin: 0 0 16px;
+  font-size: 0.6875rem;
+  line-height: 1.6;
+  font-style: italic;
+  color: var(--k-ink-medium);
+  border-left: 3px solid var(--k-gold);
+  padding-left: 12px;
+}
+.v3-pd-brief-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 32px; }
+.v3-pd-brief-cols h3 {
+  font-family: var(--k-font-display);
+  font-weight: 600;
+  font-size: 0.75rem;
+  margin: 0 0 10px;
+  color: var(--k-ink-card);
+}
+.v3-pd-brief-list { margin: 0 0 12px; padding-left: 18px; }
+.v3-pd-brief-list li { font-size: 0.75rem; line-height: 1.6; color: var(--k-ink-medium); margin-bottom: 8px; }
+.v3-pd-brief-list li:last-child { margin-bottom: 0; }
+.v3-pd-brief .v3-co-text-button { margin-top: 4px; }
+
 .v3-pd-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 8px 0 28px; }
 .v3-pd-actions h2 { font-family: var(--k-font-display); font-weight: 600; font-size: 0.8125rem; line-height: 1.5; margin: 0; color: var(--k-ink-card); }
 .v3-pd-actions > div { display: flex; flex-wrap: wrap; gap: 12px 24px; }
@@ -1363,7 +1391,7 @@
   .v3-pl-grid { grid-template-columns: 1fr; }
   .v3-pl-filters { padding: 20px; }
   /* V3: detalle (ref process-detail.css ≤760px) */
-  .v3-pd-heading-actions { width: 100%; }
+  .v3-pd-heading-actions { width: 100%; flex-wrap: wrap; }
   .v3-pd-heading-actions .v3-co-primary { width: auto; }
   .v3-pd-config { grid-template-columns: 1fr; padding: 20px; gap: 22px; }
   .v3-pd-profile { grid-column: 1 / -1; }
@@ -1374,6 +1402,8 @@
   .v3-pa-summary { padding: 20px; }
   .v3-pa-content { padding: 0 20px 20px; }
   .v3-pa-grid { grid-template-columns: 1fr; }
+  .v3-pd-brief-cols { grid-template-columns: 1fr; }
+  .v3-pd-brief { padding: 16px 0 20px; }
   .v3-pd-table tbody td, .v3-pd-table tbody th { padding: 16px; }
   .v3-pd-table tbody th { position: sticky; left: 0; background: var(--k-co-surface); z-index: 1; }
   .v3-pd-top-candidate th { background: var(--k-pd-row-top); }

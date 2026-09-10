@@ -6,7 +6,7 @@
 // El resto del modo real (hook, mapping, fetch) está cubierto en
 // V2Company.test.jsx (§A/§B) sin dependencias de VITE_*.
 import React from 'react';
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // vi.mock se hoistea antes de los imports: KRUMM_API_BASE = api fake.
@@ -78,6 +78,7 @@ afterEach(() => {
   localStorage.clear();
   document.body.innerHTML = '';
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
   vi.clearAllMocks();
 });
 
@@ -155,5 +156,131 @@ describe('V2CompanyReal — modo real (VITE_KRUMM_API_BASE + GET /sessions)', ()
   it('sanity: buildCompanyDataFromSessions del fixture (coherencia con el banner real)', () => {
     const processes = buildCompanyDataFromSessions(FIXTURE_SESSIONS);
     expect(processes.map((process) => process.id)).toEqual(['maintenance-tech', 'operations-analyst', 'unspecified']);
+  });
+});
+
+// ── B3 (KRU-50): filtros modo real + brief de entrevista + exports ──────────
+
+describe('B3 (KRU-50) — filtros real + brief + exports', () => {
+  it('/empresa/procesos real: selects Periodo + Estado presentes; badge por realStatus derivado', async () => {
+    vi.stubGlobal('fetch', okFetch);
+    renderRoute('/empresa/procesos');
+    await screen.findByText(V3_COPY.es.company_liveBadge);
+    expect(screen.getByLabelText(V3_COPY.es.pl_period)).toBeInTheDocument();
+    expect(screen.getByLabelText(V3_COPY.es.pl_status)).toBeInTheDocument();
+    // Operations Analyst tiene s3 in_progress → "En curso"; Maintenance (ready) → "Completados"
+    expect(screen.getByTestId('v2-card-operations-analyst')).toHaveTextContent(V3_COPY.es.pl_status_in_progress);
+    expect(screen.getByTestId('v2-card-maintenance-tech')).toHaveTextContent(V3_COPY.es.pl_status_completed);
+  });
+
+  it('demo (fetch falla): selects Periodo/Estado ausentes (solo modo real)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('staging down')));
+    renderRoute('/empresa/procesos');
+    await waitFor(() => expect(screen.getByText(V3_COPY.es.company_demoNotice)).toBeInTheDocument());
+    expect(screen.queryByLabelText(V3_COPY.es.pl_period)).toBeNull();
+    expect(screen.queryByLabelText(V3_COPY.es.pl_status)).toBeNull();
+  });
+
+  it('filtro Estado: in_progress → solo el grupo con sesiones en curso; reset restaura', async () => {
+    vi.stubGlobal('fetch', okFetch);
+    renderRoute('/empresa/procesos');
+    await screen.findByText(V3_COPY.es.company_liveBadge);
+    fireEvent.change(screen.getByLabelText(V3_COPY.es.pl_status), { target: { value: 'in_progress' } });
+    expect(screen.getByTestId('v2-process-count')).toHaveTextContent('1');
+    expect(screen.getByTestId('v2-card-operations-analyst')).toBeInTheDocument();
+    expect(screen.queryByTestId('v2-card-maintenance-tech')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: V3_COPY.es.pl_reset }));
+    expect(screen.getByTestId('v2-process-count')).toHaveTextContent('3');
+  });
+
+  it('filtro Periodo: 7d conserva solo procesos recientes (fixture determinista)', async () => {
+    const now = Date.now();
+    const iso = (daysAgo) => new Date(now - daysAgo * 86400000).toISOString().slice(0, 10);
+    const sessions = [
+      fixtureSession({ id: 'r1', role: 'Recent Role', status: 'ready', completedAt: `${iso(2)}T10:00:00.000Z`, scores: [80, 80, 80, 80, 80, 80, 80, 80] }),
+      fixtureSession({ id: 'r2', role: 'Old Role', status: 'ready', completedAt: `${iso(20)}T10:00:00.000Z`, scores: [70, 70, 70, 70, 70, 70, 70, 70] }),
+    ];
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ candidates: sessions, total: 2, hasMore: false }) }));
+    renderRoute('/empresa/procesos');
+    await screen.findByText(V3_COPY.es.company_liveBadge);
+    fireEvent.change(screen.getByLabelText(V3_COPY.es.pl_period), { target: { value: '7d' } });
+    expect(screen.getByTestId('v2-process-count')).toHaveTextContent('1');
+    expect(screen.getByTestId('v2-card-recent-role')).toBeInTheDocument();
+    expect(screen.queryByTestId('v2-card-old-role')).toBeNull();
+    // 30d: ambos
+    fireEvent.change(screen.getByLabelText(V3_COPY.es.pl_period), { target: { value: '30d' } });
+    expect(screen.getByTestId('v2-process-count')).toHaveTextContent('2');
+  });
+
+  it('detalle real: columna Brief + botón export CSV (BOM, header, null = celda vacía)', async () => {
+    vi.stubGlobal('fetch', okFetch);
+    renderRoute('/empresa/proceso/operations-analyst');
+    await screen.findByRole('heading', { level: 1, name: 'Operations Analyst' });
+    expect(screen.getByRole('columnheader', { name: V3_COPY.es.pd_brief })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: V3_COPY.es.pd_brief_toggle })).toHaveLength(3);
+
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-csv');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click');
+    fireEvent.click(screen.getByTestId('v3-pd-export-csv'));
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    const blob = createObjectURL.mock.calls[0][0];
+    expect(blob.type).toBe('text/csv;charset=utf-8');
+    // filename en anchor.download (Blob no tiene .name)
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(clickSpy.mock.instances[0].download).toMatch(/^krumm-brief-operations-analyst-\d{4}-\d{2}-\d{2}\.csv$/);
+    // BOM UTF-8 en bytes (el decodificador por defecto lo descarta del texto)
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
+    const text = new TextDecoder('utf-8').decode(bytes);
+    expect(text.startsWith('process_id,role,candidate_alias,candidate_status,completed_at,overall_score,construct_id,construct_label,construct_score,construct_availability,caveats')).toBe(true);
+    expect(text).toContain('operations-analyst');
+    expect(text).toContain('alias-s1');
+    // s2 tiene c1 = null → fila con celda de score vacía (nunca 0)
+    expect(text).toMatch(/,c1,L,,insufficient,/);
+  });
+
+  it('detalle real: expandir brief → disclaimer + prompts + notas descriptivas + MD por candidato', async () => {
+    vi.stubGlobal('fetch', okFetch);
+    renderRoute('/empresa/proceso/operations-analyst');
+    await screen.findByRole('heading', { level: 1, name: 'Operations Analyst' });
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-md');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    // Orden por overall desc: s3 (90), s1 (80), s2 (70) → toggle[0] = s3 (4 nulls)
+    const toggles = screen.getAllByRole('button', { name: V3_COPY.es.pd_brief_toggle });
+    expect(toggles[0]).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggles[0]);
+    const panel = await screen.findByTestId('v3-pd-brief-s3');
+    expect(toggles[0]).toHaveAttribute('aria-expanded', 'true');
+    expect(panel).toHaveTextContent(V3_COPY.es.pd_brief_disclaimer);
+    expect(panel).toHaveTextContent(V3_COPY.es.pd_brief_prompts);
+    expect(panel).toHaveTextContent(V3_COPY.es.pd_brief_notes);
+    // 5 prompts (apertura + 4 constructos con señal)
+    expect(panel.querySelectorAll('ol li')).toHaveLength(5);
+    expect(panel.querySelector('ol li')).toHaveTextContent(/cómo decidió y priorizó/);
+    // 4 notas "sin señal" (c4..c7 null) — la ausencia NUNCA se lee como bajo desempeño
+    expect(panel.querySelectorAll('ul li')).toHaveLength(4);
+    expect(panel).toHaveTextContent('no interpretar como bajo desempeño');
+
+    // Descargar brief MD del candidato
+    fireEvent.click(screen.getByTestId('v3-pd-brief-md-s3'));
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    const blob = createObjectURL.mock.calls[0][0];
+    expect(blob.type).toBe('text/markdown;charset=utf-8');
+    const text = await blob.text();
+    expect(text).toContain('# Brief de entrevista — Operations Analyst');
+    expect(text).toContain('## alias-s3 · in_progress');
+    expect(text).toContain('humanReviewOnly · noAutomatedDecision · observationalOnly · privacySafe');
+    expect(text).toContain('Puntaje global (descriptivo):** 90/100');
+    expect(text).toContain('sin señal en esta batería');
+  });
+
+  it('detalle demo: sin columna Brief ni export (los datos demo no son sesiones reales)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('sin api')));
+    renderRoute('/empresa/proceso/supervisor');
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.company_supervisor })).toBeInTheDocument());
+    expect(screen.queryByRole('columnheader', { name: V3_COPY.es.pd_brief })).toBeNull();
+    expect(screen.queryByTestId('v3-pd-export-csv')).toBeNull();
   });
 });

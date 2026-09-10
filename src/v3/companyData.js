@@ -205,10 +205,59 @@ export function buildCompanyDataFromSessions(sessions = []) {
       recommended: group.sessions.filter((session) => session.status === 'ready').length,
       averageScore: scores.length > 0 ? Math.round(scores.reduce((sum, v) => sum + v, 0) / scores.length) : null,
       status: 'active',
+      // B3 (KRU-50): estado VIVO derivado de las sesiones (in_progress >
+      // completed > open). `status` sigue 'active' por semántica de KPIs (D1).
+      realStatus: deriveProcessStatus(group.sessions),
     };
   });
   // Orden base = más reciente primero (default sort 'recent').
   return processes.sort((a, b) => String(b.openedAt ?? '').localeCompare(String(a.openedAt ?? '')));
+}
+
+// ── B3 (KRU-50): estado vivo derivado + filtros de modo real ───────────────
+// Los procesos reales son agrupaciones por rol de /sessions; no tienen
+// ciclo abierto/cerrado propio. `realStatus` deriva el estado VIVO del grupo
+// (prioridad: in_progress > completed > open):
+//   - in_progress: alguna sesión sigue en curso
+//   - completed: al menos una sesión evaluada (ready/needs_review) y ninguna
+//     en curso
+//   - open: sin sesiones evaluadas (o sin sesiones)
+export const REAL_PROCESS_STATUS = Object.freeze({
+  in_progress: 'in_progress',
+  completed: 'completed',
+  open: 'open',
+});
+
+export function deriveProcessStatus(sessions = []) {
+  const list = (Array.isArray(sessions) ? sessions : []).filter(Boolean);
+  if (list.length === 0) return REAL_PROCESS_STATUS.open;
+  if (list.some((session) => session?.status === 'in_progress')) return REAL_PROCESS_STATUS.in_progress;
+  if (list.some((session) => session?.status === 'ready' || session?.status === 'needs_review')) return REAL_PROCESS_STATUS.completed;
+  return REAL_PROCESS_STATUS.open;
+}
+
+export const REAL_DATE_RANGES = Object.freeze(['all', '7d', '30d']);
+
+// Filtros modo real (B3): rango de fecha sobre openedAt (ISO 'YYYY-MM-DD' —
+// comparación lexicográfica determinista, sin zonas horarias) + estado vivo.
+// `now` inyectable para tests (determinismo CI/Pi).
+export function filterRealProcesses(processes, { dateRange = 'all', status = '' } = {}, { now = new Date() } = {}) {
+  let list = Array.isArray(processes) ? [...processes] : [];
+  if (dateRange && dateRange !== 'all') {
+    const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : null;
+    if (days != null) {
+      const cutoff = new Date(now);
+      cutoff.setUTCDate(cutoff.getUTCDate() - (days - 1));
+      const cutoffDay = [
+        cutoff.getUTCFullYear(),
+        String(cutoff.getUTCMonth() + 1).padStart(2, '0'),
+        String(cutoff.getUTCDate()).padStart(2, '0'),
+      ].join('-');
+      list = list.filter((process) => String(process?.openedAt ?? '') >= cutoffDay);
+    }
+  }
+  if (status) list = list.filter((process) => process?.realStatus === status);
+  return list;
 }
 
 // ── Fetch real (mismo contract que hr-dashboard v1; D9: módulo propio) ─────

@@ -28,7 +28,9 @@ import {
   buildCompanyKpis,
   candidateOverallScore,
   DEMO_PROCESSES,
+  deriveProcessStatus,
   filterProcesses,
+  filterRealProcesses,
   fetchCompanySessions,
   localizeProcessRole,
   normalizeProcessText,
@@ -285,6 +287,62 @@ describe('A. companyData — modo real (D3: /sessions → procesos por rol)', ()
       averageScore: 75, // (1·90 + 2·75 + 1·60) / 4
       recommended: 3,
     });
+  });
+});
+
+// ── A. companyData — B3 (KRU-50): estado vivo derivado + filtros modo real ──
+
+describe('A. companyData — B3: deriveProcessStatus + filterRealProcesses', () => {
+  it('deriveProcessStatus: prioridad in_progress > completed > open', () => {
+    expect(deriveProcessStatus([
+      { status: 'ready' }, { status: 'in_progress' }, { status: 'needs_review' },
+    ])).toBe('in_progress');
+    expect(deriveProcessStatus([{ status: 'ready' }, { status: 'needs_review' }])).toBe('completed');
+    expect(deriveProcessStatus([{ status: 'in_progress' }])).toBe('in_progress');
+    expect(deriveProcessStatus([])).toBe('open');
+    expect(deriveProcessStatus(null)).toBe('open');
+    expect(deriveProcessStatus([null, undefined])).toBe('open');
+  });
+
+  it('buildCompanyDataFromSessions: realStatus derivado por grupo; `status` sigue active (KPIs D1)', () => {
+    const processes = buildCompanyDataFromSessions(FIXTURE_SESSIONS);
+    const ops = processes.find((process) => process.role === 'Operations Analyst');
+    const maint = processes.find((process) => process.role === 'Maintenance Tech');
+    const unsp = processes.find((process) => process.id === UNSPECIFIED_PROCESS_ID);
+    expect(ops.realStatus).toBe('in_progress'); // s3 in curso mezcla grupo
+    expect(maint.realStatus).toBe('completed');
+    expect(unsp.realStatus).toBe('completed');
+    expect([ops, maint, unsp].map((process) => process.status)).toEqual(['active', 'active', 'active']);
+  });
+
+  it('filterRealProcesses: rango de fecha determinista (now inyectado; 7d incluye el corte)', () => {
+    const now = new Date('2026-09-10T00:00:00.000Z'); // 7d → corte 2026-09-04
+    const processes = [
+      { id: 'a', openedAt: '2026-09-09', realStatus: 'completed' },
+      { id: 'b', openedAt: '2026-09-04', realStatus: 'completed' }, // borde: incluido
+      { id: 'c', openedAt: '2026-09-03', realStatus: 'completed' },
+      { id: 'd', openedAt: '2026-08-15', realStatus: 'in_progress' },
+      { id: 'e', openedAt: null, realStatus: 'open' },
+    ];
+    expect(filterRealProcesses(processes, { dateRange: 'all' }, { now })).toHaveLength(5);
+    expect(filterRealProcesses(processes, { dateRange: '7d' }, { now })).toHaveLength(2);
+    expect(filterRealProcesses(processes, { dateRange: '7d' }, { now }).map((p) => p.id)).toEqual(['a', 'b']);
+    expect(filterRealProcesses(processes, { dateRange: '30d' }, { now })).toHaveLength(4); // a,b,c,d
+    expect(filterRealProcesses({}, {}, { now })).toHaveLength(0);
+  });
+
+  it('filterRealProcesses: filtro por estado vivo (combinable con fecha)', () => {
+    const now = new Date('2026-09-10T00:00:00.000Z');
+    const processes = [
+      { id: 'a', openedAt: '2026-09-09', realStatus: 'completed' },
+      { id: 'b', openedAt: '2026-09-08', realStatus: 'in_progress' },
+      { id: 'c', openedAt: '2026-08-01', realStatus: 'in_progress' },
+    ];
+    expect(filterRealProcesses(processes, { status: 'in_progress' }, { now })).toHaveLength(2);
+    expect(filterRealProcesses(processes, { status: 'in_progress', dateRange: '7d' }, { now }))
+      .toEqual(expect.arrayContaining([processes[1]]));
+    expect(filterRealProcesses(processes, { status: 'nope' }, { now })).toHaveLength(0);
+    expect(filterRealProcesses(processes, {}, { now })).toHaveLength(3);
   });
 });
 
