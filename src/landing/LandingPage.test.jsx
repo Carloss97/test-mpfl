@@ -257,6 +257,17 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(getComputedStyle(login).color).toBe('var(--k-btn-gold-ink)');
       remove();
     });
+
+    it('skip link: crema (no espresso heredado de .landing) — invisible al focus pre-fix', () => {
+      const remove = injectLandingStyles();
+      renderLanding();
+      const skip = document.querySelector('.landing__skip');
+      expect(skip).not.toBeNull();
+      // Pre-fix: getComputedStyle devolvía var(--k-ink-espresso) (inherit de .landing)
+      // sobre el bg dark-deep del propio link → ~1.5:1 al hacer focus.
+      expect(getComputedStyle(skip).color).toBe('var(--k-text-cream)');
+      remove();
+    });
   });
 
   describe('Estilo de marca v2 (tokens + estructura CSS)', () => {

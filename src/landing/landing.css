@@ -57,6 +57,14 @@
   top: 16px;
 }
 
+/* Fix 2026-09-10 (review prod): `.landing a { color: inherit }` (0,1,1)
+   pisaba el color del skip link (0,1,0) → texto espresso heredado sobre el
+   fondo dark-deep del propio link al hacer focus (~1.5:1, invisible).
+   Selector (0,2,1) gana la cascada. */
+.landing a.landing__skip {
+  color: var(--k-text-cream);
+}
+
 /* ── Header (brand grande + nav centrada + actions + idioma) ── */
 .landing__topbar {
   position: absolute;
