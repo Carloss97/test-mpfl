@@ -16,6 +16,12 @@ on:
   push:
     branches: [main]
 
+# El runner necesita id-token:write para emitir el JWT que AWS intercambia
+# por el rol (sin esto: "Could not load credentials from any providers").
+permissions:
+  contents: read
+  id-token: write
+
 concurrency:
   group: cd-main
   cancel-in-progress: false # un deploy en vuelo no se cancela a mitad
