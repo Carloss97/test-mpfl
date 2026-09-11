@@ -77,16 +77,20 @@ Archivo/Manrope; RHP `krumm-staging-rhp-m3`, inmutable — se renombra en cada c
 - **M3:** Cognito login (10k MAU free tier); SES sandbox (plantillas invitación; salida solicitud sep).
 - **M5:** Rate limiting API GW 10 req/min/IP; WAF opcional si presupuesto; OWASP ZAP baseline.
 
-## CI/CD (GitHub Actions, 2026-09-10)
+## CI/CD (GitHub Actions, 2026-09-10 · matriz de entornos 2026-09-11)
 
 **Workflows** (`.github/workflows/`):
 - **CI** (push/PR a main): `npm ci` → vitest (suite completa) → oxlint → build prod → `npm audit --audit-level=high --omit=dev` → **gitleaks** (scan de secretos, historial completo con `fetch-depth: 0`). Sin secrets.
-- **CD** (push a main): build → **OIDC** (`aws-actions/configure-aws-credentials@v4`) → deploy S3 + invalidación CloudFront (`scripts/deploy-frontend.sh`) → smoke de producción con Playwright (`prod-verify-v5.mjs` + `check-dev-bomb-prod.mjs` contra CloudFront live).
+- **CD** (push a main → **stage**): build con `VITE_KRUMM_API_BASE` staging (modo real) → **OIDC** → deploy `krumm-stage-frontend-931932531447` + invalidación dist `E2OPPVGDO8R75S` (`scripts/deploy-frontend.sh`). **Main ya no muta krumm.cl** (KRU-95).
+- **CD** (tag `v*` / `workflow_dispatch` → **prod**, gate humano): build sin API base (modo demo, decisión de producto) → OIDC → deploy `krumm-staging-frontend-931932531447` + invalidación dist `EDQ39PDNI931R` → **smoke de producción** con Playwright (`prod-verify-v5.mjs` + `check-dev-bomb-prod.mjs` contra CloudFront live).
+- **PR Preview** (KRU-96): PR (rama del mismo repo) → build modo real → bucket efímero `krumm-dev-frontend-pr-<N>` con S3 website (index + error document, SPA deep routes) → URL `https://krumm-dev-frontend-pr-<N>.s3-website-us-east-1.amazonaws.com/` en comentario del PR (se actualiza por push) → al cerrar el PR el bucket se borra completo. Público SOLO vía bucket policy `s3:GetObject` (ACLs bloqueadas); contenido = build frontend sin secretos. PRs desde forks no pueden asumir el rol OIDC (limitación GitHub en repo público).
+
+**Matriz de entornos** completa (dominio↔bucket↔dist↔API↔gate, DNS, cert ACM, pitfalls CFN): **`docs/ops/environments.md`**.
 
 **Federación GitHub→AWS (sin keys estáticas):**
 - Provider OIDC `token.actions.githubusercontent.com` (thumbprints desde JWKS; script idempotente `scripts/setup-gh-oidc.py`).
 - **Client ID: `sts.amazonaws.com`** (el aud del JWT de GitHub; si el provider solo tenía el issuer, AWS rechaza: "web identity token could not be validated" — lección del run 34431522513).
-- Rol `krumm-gh-actions-deploy`: trust OIDC con `oidc:sub = repo:Carloss97/test-mpfl:ref:refs/heads/main` **solo** (repo público: nunca PRs/forks). Policy mínima: `s3:Get/Put/DeleteObject` + `s3:ListBucket` (el `s3 sync --delete` del script) + `cloudfront:CreateInvalidation`/`GetDistribution`.
+- Rol `krumm-gh-actions-deploy`: trust OIDC `oidc:sub` ∈ {`ref:refs/heads/main`, `ref:refs/tags/v*`, `pull_request`} (repo público: los sub de PR solo firman ramas del mismo repo, nunca forks). **Policy v4** (2026-09-11): `s3:Get/Put/DeleteObject` + `s3:ListBucket` (buckets prod/stage/dev + `krumm-dev-frontend-pr-*`) + `cloudfront:CreateInvalidation`/`GetDistribution` (dists `EDQ39PDNI931R` + `E2OPPVGDO8R75S`) + config de buckets per-PR (`CreateBucket`, `PutBucketWebsite/Policy`, `PutPublicAccessBlock`, `DeleteBucket`…) para el preview. Mínimo privilegio por SID.
 - Runner: las credenciales OIDC se escriben en `~/.aws/credentials` ([default]) — los runners 2026 no aplican las job env-var credentials con `--profile` explícito (run 34431969106).
 
 **Secret scanning:**

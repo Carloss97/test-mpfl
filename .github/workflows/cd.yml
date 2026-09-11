@@ -1,60 +1,66 @@
-# CD — KRUMM test-mpfl (KRU-51): deploy automático a prod en push a main.
+# CD — KRUMM test-mpfl (KRU-51 + KRU-95):
+# - main → stage (auto, build con VITE_KRUMM_API_BASE staging = datos reales)
+# - tags v* / workflow_dispatch → prod (gate humano; build sin API base = modo demo)
 #
-# Credenciales: federación GitHub OIDC → rol AWS (SIN keys estáticas en el
-# repo). El rol `krumm-gh-actions-deploy` solo firma tokens con
-#   sub = repo:Carloss97/test-mpfl:ref:refs/heads/main
-# (repo público: nunca se habilita para PRs). Policy mínima: S3 deploy
-# (List/Get/Put/Delete) + CloudFront CreateInvalidation — ver
-# scripts/setup-gh-oidc.py y docs/security/SECURITY.md §CI/CD.
-#
-# Puerta final: smoke de producción con Playwright (cutover + landing +
-# /dev/bomb) contra CloudFront live. Si el smoke falla, el run queda rojo
-# (el deploy ya ocurrió; el siguiente push corrige — ver SECURITY.md §CI/CD).
+# Credenciales: federación GitHub OIDC → rol AWS krumm-gh-actions-deploy
+# (policy v4: buckets stage + prod + dev/preview, dists EDQ39PDNI931R y
+# E2OPPVGDO8R75S). Trust: main + tags v* + pull_request (preview).
+# Ver docs/security/SECURITY.md §CI/CD y docs/ops/environments.md.
 name: CD
 
 on:
   push:
     branches: [main]
+    tags:
+      - 'v*'
+  workflow_dispatch:
 
-# El runner necesita id-token:write para emitir el JWT que AWS intercambia
-# por el rol (sin esto: "Could not load credentials from any providers").
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: cd-main
-  cancel-in-progress: false # un deploy en vuelo no se cancela a mitad
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 10
+    outputs:
+      dist_dir: ${{ steps.build.outputs.dist_dir }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-
       - name: Install
         run: npm ci
-
-      - name: Build (production)
+      - name: Build (stage) — VITE_KRUMM_API_BASE staging
+        if: github.ref == 'refs/heads/main'
+        env:
+          VITE_KRUMM_API_BASE: https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/staging
         run: NODE_ENV=production npm run build
+      - name: Build (prod) — sin VITE_KRUMM_API_BASE (modo demo)
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+        run: NODE_ENV=production npm run build
+      - name: Set output
+        id: build
+        run: echo "dist_dir=dist" >> $GITHUB_OUTPUT
 
+  deploy-stage:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::931932531447:role/krumm-gh-actions-deploy
           aws-region: us-east-1
-
-      # deploy-frontend.sh usa --profile default; en el runner no hay
-      # ~/.aws/config (credenciales OIDC por env vars, pero el runner 2026
-      # no las usa con --profile explicito: "Unable to locate credentials",
-      # run 34431522513). Lo canónico y robusto: stub [default] + credenciales
-      # en el shared credentials file (~/.aws/credentials).
       - name: AWS profile stub + credentials file
         run: |
           mkdir -p ~/.aws
@@ -70,8 +76,40 @@ jobs:
             } > ~/.aws/credentials
             chmod 600 ~/.aws/credentials
           fi
+      - name: Deploy to STAGE (S3 + CloudFront invalidation)
+        env:
+          BUCKET: krumm-stage-frontend-931932531447
+          DISTRIBUTION_ID: E2OPPVGDO8R75S
+        run: bash scripts/deploy-frontend.sh
 
-      - name: Deploy S3 + invalidación CloudFront
+  deploy-prod:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::931932531447:role/krumm-gh-actions-deploy
+          aws-region: us-east-1
+      - name: AWS profile stub + credentials file
+        run: |
+          mkdir -p ~/.aws
+          printf '[default]\nregion = us-east-1\n' > ~/.aws/config
+          if [ -n "${AWS_ACCESS_KEY_ID:-}" ] && [ -n "${AWS_SECRET_ACCESS_KEY:-}" ]; then
+            {
+              echo '[default]'
+              echo "aws_access_key_id = ${AWS_ACCESS_KEY_ID}"
+              echo "aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}"
+              if [ -n "${AWS_SESSION_TOKEN:-}" ]; then
+                echo "aws_session_token = ${AWS_SESSION_TOKEN}"
+              fi
+            } > ~/.aws/credentials
+            chmod 600 ~/.aws/credentials
+          fi
+      - name: Deploy to PROD (S3 + CloudFront invalidation)
         env:
           BUCKET: krumm-staging-frontend-931932531447
           DISTRIBUTION_ID: EDQ39PDNI931R
@@ -84,7 +122,6 @@ jobs:
         env:
           BASE_URL: https://d3citl7gomy2ql.cloudfront.net
         run: |
-          # index.html sube con no-cache; 60s de margen para la edge.
           sleep 60
           node scripts/prod-verify-v5.mjs
           node scripts/check-dev-bomb-prod.mjs

@@ -1,0 +1,168 @@
+# PR Preview — KRUMM test-mpfl (KRU-96)
+#
+# PR → build con API staging → bucket efímero `krumm-dev-frontend-pr-<N>` con
+# S3 website (index + error document → las deep routes de la SPA funcionan).
+# URL preview: https://krumm-dev-frontend-pr-<N>.s3-website-us-east-1.amazonaws.com/
+#
+# Ciclo de vida:
+# - opened/synchronize/reopened → (re)deploy + comentario con la URL (se actualiza, no spamea).
+# - closed (merge o cierre) → se borra el bucket completo.
+#
+# Notas:
+# - Repo público: GitHub solo permite OIDC en PRs de ramas del mismo repo
+#   (PRs desde forks NO pueden asumir el rol — el job falla en configure-aws-credentials).
+# - El bucket es público SOLO vía bucket policy (s3:GetObject sobre /*); las
+#   ACLs públicas siguen bloqueadas (BlockPublicAcls/IgnorePublicAcls=true).
+#   El contenido es un build frontend sin secretos (VITE_KRUMM_API_BASE ya es
+#   público en los builds de stage/prod).
+# - Buckets huérfanos (cierre forzado sin evento): barrido manual documentado en
+#   docs/ops/environments.md §Preview.
+name: PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BUCKET: krumm-dev-frontend-pr-${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Build (preview) — VITE_KRUMM_API_BASE staging
+        env:
+          VITE_KRUMM_API_BASE: https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/staging
+        run: NODE_ENV=production npm run build
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::931932531447:role/krumm-gh-actions-deploy
+          aws-region: us-east-1
+      - name: AWS profile stub + credentials file
+        run: |
+          mkdir -p ~/.aws
+          printf '[default]\nregion = us-east-1\n' > ~/.aws/config
+          if [ -n "${AWS_ACCESS_KEY_ID:-}" ] && [ -n "${AWS_SECRET_ACCESS_KEY:-}" ]; then
+            {
+              echo '[default]'
+              echo "aws_access_key_id = ${AWS_ACCESS_KEY_ID}"
+              echo "aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}"
+              if [ -n "${AWS_SESSION_TOKEN:-}" ]; then
+                echo "aws_session_token = ${AWS_SESSION_TOKEN}"
+              fi
+            } > ~/.aws/credentials
+            chmod 600 ~/.aws/credentials
+          fi
+      - name: Ensure per-PR bucket (website + public read policy)
+        run: |
+          # Crear si no existe (us-east-1: sin LocationConstraint)
+          aws s3api head-bucket --bucket "$BUCKET" 2>/dev/null || \
+            aws s3api create-bucket --bucket "$BUCKET" --region us-east-1
+          # BPA: bloquear ACLs públicas; permitir policy pública (la siguiente)
+          aws s3api put-public-access-block --bucket "$BUCKET" \
+            --public-access-block-configuration \
+            BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=false,RestrictPublicBuckets=false
+          # Public read SOLO de este bucket (contenido = build frontend)
+          aws s3api put-bucket-policy --bucket "$BUCKET" \
+            --policy "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicReadPreviewSite\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::${BUCKET}/*\"}]}"
+          # S3 website: index + error document (SPA: refresh en rutas profundas)
+          aws s3api put-bucket-website --bucket "$BUCKET" \
+            --website-configuration '{"IndexDocument":{"Suffix":"index.html"},"ErrorDocument":{"Key":"index.html"}}'
+      - name: Sync build to bucket
+        run: |
+          aws s3 sync dist/ "s3://$BUCKET/" --delete --cache-control "public,max-age=3600"
+          aws s3 cp dist/index.html "s3://$BUCKET/index.html" \
+            --cache-control "no-cache,max-age=0,must-revalidate" \
+            --content-type "text/html; charset=utf-8"
+      - name: Comment PR with preview URL (update existing)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = ${{ github.event.pull_request.number }};
+            const url = `https://${{ env.BUCKET }}.s3-website-us-east-1.amazonaws.com/`;
+            const marker = '<!-- krumm-preview-url -->';
+            const body = `${marker}\n🔍 **Preview deploy** (build \`${context.sha.slice(0, 7)}\`)\n\n**URL:** ${url}\n\nModo real (API staging) · se borra al cerrar el PR.`;
+            const pages = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr,
+            });
+            const existing = pages.flat().find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr,
+                body,
+              });
+            }
+
+  cleanup-preview:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BUCKET: krumm-dev-frontend-pr-${{ github.event.pull_request.number }}
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::931932531447:role/krumm-gh-actions-deploy
+          aws-region: us-east-1
+      - name: AWS profile stub + credentials file
+        run: |
+          mkdir -p ~/.aws
+          printf '[default]\nregion = us-east-1\n' > ~/.aws/config
+          if [ -n "${AWS_ACCESS_KEY_ID:-}" ] && [ -n "${AWS_SECRET_ACCESS_KEY:-}" ]; then
+            {
+              echo '[default]'
+              echo "aws_access_key_id = ${AWS_ACCESS_KEY_ID}"
+              echo "aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}"
+              if [ -n "${AWS_SESSION_TOKEN:-}" ]; then
+                echo "aws_session_token = ${AWS_SESSION_TOKEN}"
+              fi
+            } > ~/.aws/credentials
+            chmod 600 ~/.aws/credentials
+          fi
+      - name: Remove per-PR bucket
+        run: |
+          aws s3 rm "s3://$BUCKET/" --recursive --only-show-errors || true
+          aws s3api delete-bucket-website --bucket "$BUCKET" 2>/dev/null || true
+          aws s3api delete-bucket-policy --bucket "$BUCKET" 2>/dev/null || true
+          aws s3api delete-bucket --bucket "$BUCKET" 2>/dev/null || echo "bucket $BUCKET ya no existe (cambio de zona)"
+      - name: Comment PR closed
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = ${{ github.event.pull_request.number }};
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr,
+              body: `🧹 Preview eliminado (bucket \`${{ env.BUCKET }}\`).`,
+            });
