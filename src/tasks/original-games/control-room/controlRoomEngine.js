@@ -470,6 +470,7 @@ export function createControlRoomEngine({
     completeScenario,
     metrics: computeMetrics,
     dimensionScores,
+    dimensionStats,
     eventCount,
     eventBuffer: () => st.eventBuffer,
     actions: () => st.actions,
