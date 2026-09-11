@@ -437,7 +437,9 @@
 }
 
 .landing__kicker--dark {
-  color: var(--k-bg-light-sand);
+  /* superficies claras → terracota (#704f39, AA ≥4.78). Sobre oscuro el brand
+     #9a7355 solo da ~3.4:1 → usar arena (7.28:1 sobre --k-bg-dark). */
+  color: var(--k-accent-sand);
 }
 
 .landing__section-title {

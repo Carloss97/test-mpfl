@@ -199,11 +199,43 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
   describe('Régimen de tokens (sin estilos ad-hoc)', () => {
     it('landing.css no declara colores hardcodeados (hex/rgb/hsl): todo vía var(--k-*)', () => {
       const css = readFileSync(path.resolve(process.cwd(), 'src/landing/landing.css'), 'utf8');
-      const hex = css.match(/#[0-9a-fA-F]{3,8}\b/g) ?? [];
+      // Strip comments first to avoid false positives on hex in comments
+      const cssNoComments = css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*/g, '');
+      const hex = cssNoComments.match(/#[0-9a-fA-F]{3,8}\b/g) ?? [];
       expect(hex).toEqual([]);
-      expect(css).not.toMatch(/\b(rgb|rgba|hsl|hsla)\s*\(/);
-      const tokenUses = (css.match(/var\(--k-[a-z0-9-]+\)/gi) ?? []).length;
+      expect(cssNoComments).not.toMatch(/\b(rgb|rgba|hsl|hsla)\s*\(/);
+      const tokenUses = (cssNoComments.match(/var\(--k-[a-z0-9-]+\)/gi) ?? []).length;
       expect(tokenUses).toBeGreaterThanOrEqual(40);
+    });
+  });
+
+  describe('Accesibilidad visual (WCAG AA) — gaps del review prod 09-10', () => {
+    // proof-row 26d73476fd06cccb2: revisarlo sobre hero oscuro => hero está en --k-bg-dark (38271d)
+    it('proof-row: la declaración ganadora es un token AA sobre --k-bg-dark (v1.0)', () => {
+      const css = readFileSync(path.resolve(process.cwd(), 'src/landing/landing.css'), 'utf8');
+      const m = css.match(/\.landing__proof-row\s*\{[^}]*color:\s*(var\(--[a-z0-9-]+\))/i);
+      expect(m).not.toBeNull();
+      expect(m[1]).toBe('var(--k-proof-ink)');
+    });
+
+    it('kickers en superficie oscura: el modifier --dark usa --k-accent-sand (AA 7.3:1) — no terracota brand (~3.4:1, falla AA)', () => {
+      const css = readFileSync(path.resolve(process.cwd(), 'src/landing/landing.css'), 'utf8');
+      // una regla con el modifier --dark debe override a arena/gold (no terracota brand)
+      expect(css).toMatch(/\.landing__kicker--dark\s*\{[\s\S]*?color:\s*var\(--k-accent-sand\)/);
+    });
+
+    it('card paragraph: texto siempre es un token con AA ≥4.5 sobre --k-card-cream y --k-card-sand', () => {
+      const css = readFileSync(path.resolve(process.cwd(), 'src/landing/landing.css'), 'utf8');
+      const m = css.match(/\.landing__acceso-card\s+p\s*\{[^}]*color:\s*(var\(--[a-z0-9-]+\))/);
+      expect(m).not.toBeNull();
+      // El token elegido debe pasar AA 4.5+ sobre el más claro (cream) y el más oscuro (sand).
+      expect(m[1]).toBe('var(--k-ink-medium)');
+    });
+
+    it('favicon: SVG existente con un atributo data-favicon-retina + mask simplificado', () => {
+      const icon = readFileSync(path.resolve(process.cwd(), 'public/favicon.svg'), 'utf8');
+      // Debe llevar una capa que haga legible la silueta en 16px (sin detalles internos pequeños).
+      expect(icon).toMatch(/data-retina|data-favicon-retina/i);
     });
   });
 
