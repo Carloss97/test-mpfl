@@ -98,7 +98,9 @@ git tag v<version> && git push origin v<version>   # o: UI de GitHub → CD → 
 
 ## 9. Evidencia 2026-09-11
 
-- Stage: contenido en bucket (deploy 01:18 CL), dist `E2OPPVGDO8R75S` Deployed con alias, TLS estricto SNI `stage.krumm.cl` → HTTP 200 `ssl_verify_result=0`, bundle con `VITE_KRUMM_API_BASE` staging incrustado (modo real).
-- Prod: `krumm.cl` → dist `EDQ39PDNI931R` (sin cambios; gate manual activo).
-- OIDC: trust + policy v4 aplicados (2026-09-11 05:03 UTC).
-- Preview: workflow `preview.yml` (buckets per-PR) — pendiente primer PR de validación.
+- Stage: contenido en bucket (auto-deploy CD run 34565498444, 02:20 CL), dist `E2OPPVGDO8R75S` Deployed con alias, TLS estricto SNI `stage.krumm.cl` → HTTP 200 `ssl_verify_result=0`, bundle con `VITE_KRUMM_API_BASE` staging incrustado (modo real).
+- Prod: `krumm.cl` → dist `EDQ39PDNI931R` (sin cambios; gate manual activo; bundle prod `index-DVbRsXY9.js` intacto tras los pushes a main).
+- OIDC: trust (main + tags v* + pull_request) + policy v5 aplicados (2026-09-11 05:25 UTC).
+- **Preview: validado e2e con PR #1** (merged 05:47 CL): deploy-preview OK (bucket `krumm-dev-frontend-pr-1`), URL `…s3.us-east-1.amazonaws.com/index.html` HTTP 200 con bundle modo real, comentario con URL auto-actualizado, merge → cleanup-preview OK (bucket 404 verificado).
+- **CI: migración actions a runtime node24** (2026-09-11, commit `9e97daa`): `checkout@v5`, `setup-node@v5`, `upload-artifact@v6`, `download-artifact@v7`, `github-script@v8`, `configure-aws-credentials@v6`, `gitleaks-action@v3` + env `GITHUB_TOKEN` (obligatorio en PRs desde gitleaks-action v2.3). **Deadline: Node 20 se retira de los runners de GitHub el 2026-09-16** — sin esta migración todo el pipeline habría dejado de correr.
+- Fix CD bifurcado: el `dist/` debe viajar entre jobs vía `upload-artifact`/`download-artifact` (run 34565085586 falló "No existe dist" — fix `35944ad`).
