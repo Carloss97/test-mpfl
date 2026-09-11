@@ -18,9 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -44,20 +44,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       # gitleaks: regla por defecto + allowlist documentado en .gitleaks.toml
       # (única entrada: key Lambda histórica leak en f44a7e4, pendiente de
       # invalidación en el dashboard — ver docs/security/SECURITY.md).
-      # github-token: OBLIGATORIO desde gitleaks-action v2 en eventos
-      # pull_request (el diff del PR se obtiene vía API; sin token el job
-      # falla: "GITHUB_TOKEN is now required to scan pull requests").
+      # GITHUB_TOKEN (env): OBLIGATORIO en eventos pull_request desde v2.3
+      # (el action escanea el diff del PR vía API; sin token: "GITHUB_TOKEN is
+      # now required to scan pull requests"). v3 = runtime node24 (v2/node20
+      # deja de funcionar en runners GitHub el 2026-09-16).
       - name: gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_SUMMARY: "true"
         with:
           config: .gitleaks.toml
-          github-token: ${{ github.token }}

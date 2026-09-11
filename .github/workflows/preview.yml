@@ -40,8 +40,8 @@ jobs:
     env:
       BUCKET: krumm-dev-frontend-pr-${{ github.event.pull_request.number }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -52,7 +52,7 @@ jobs:
           VITE_KRUMM_API_BASE: https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/staging
         run: NODE_ENV=production npm run build
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::931932531447:role/krumm-gh-actions-deploy
           aws-region: us-east-1
@@ -93,7 +93,7 @@ jobs:
             --cache-control "no-cache,max-age=0,must-revalidate" \
             --content-type "text/html; charset=utf-8"
       - name: Comment PR with preview URL (update existing)
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const pr = ${{ github.event.pull_request.number }};
@@ -130,7 +130,7 @@ jobs:
       BUCKET: krumm-dev-frontend-pr-${{ github.event.pull_request.number }}
     steps:
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::931932531447:role/krumm-gh-actions-deploy
           aws-region: us-east-1
@@ -156,7 +156,7 @@ jobs:
           aws s3api delete-bucket-policy --bucket "$BUCKET" 2>/dev/null || true
           aws s3api delete-bucket --bucket "$BUCKET" 2>/dev/null || echo "bucket $BUCKET ya no existe (cambio de zona)"
       - name: Comment PR closed
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const pr = ${{ github.event.pull_request.number }};
