@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
 import './landing.css';
@@ -91,6 +91,17 @@ export default function LandingPage() {
   const year = new Date().getFullYear();
   const closeMenu = () => setMenuOpen(false);
 
+  // Scroll suave scoped a la ruta landing (anclas #producto, #contacto,
+  // #accesos, etc.). Se limpia en unmount para no afectar a otras rutas
+  // (2026-09-11).
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.scrollBehavior = 'smooth';
+    return () => {
+      root.style.scrollBehavior = '';
+    };
+  }, []);
+
   return (
     <div className="landing">
       <a className="landing__skip" href="#contenido">
@@ -118,13 +129,13 @@ export default function LandingPage() {
           <a href="#como-funciona" onClick={closeMenu}>{t('Cómo funciona', 'How it works')}</a>
           <a href="#tecnologia" onClick={closeMenu}>{t('Tecnología', 'Technology')}</a>
           <a href="#contacto" onClick={closeMenu}>{t('Contacto', 'Contact')}</a>
-          <a className="landing__nav-login landing__nav-login--cta" href="#accesos" onClick={closeMenu}>{t('Iniciar sesión', 'Log in')}</a>
         </nav>
 
+        {/* Fix 2026-09-11: "Iniciar sesión" ocupa el slot donde estaba el CTA
+            "Solicitar demo" (eliminado de la topbar; sigue en la sección
+            HABLEMOS/cierre). */}
         <div className="landing__header-actions">
-          <a className="landing__cta landing__cta--gold landing__cta--sm" href="mailto:carlossaldivia@krumm.cl">
-            {t('Solicitar demo', 'Request a demo')}
-          </a>
+          <a className="landing__nav-login landing__nav-login--cta" href="#accesos" onClick={closeMenu}>{t('Iniciar sesión', 'Log in')}</a>
         </div>
 
         <LanguageToggle />
@@ -137,9 +148,12 @@ export default function LandingPage() {
           aria-controls="main-nav"
           onClick={() => setMenuOpen((open) => !open)}
         >
-          {/* SVG inline en vez del glifo unicode ☰ (caja .notdef en env. sin fuente de símbolos) */}
+          {/* SVG inline en vez del glifo unicode ☰ (caja .notdef en env. sin fuente de símbolos).
+              Clases --1/--2/--3 para el morph hamburguesa→X animado (2026-09-11). */}
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-            <path d="M4 6.5h16M4 12h16M4 17.5h16" />
+            <path className="landing__menu-line landing__menu-line--1" d="M4 6.5h16" />
+            <path className="landing__menu-line landing__menu-line--2" d="M4 12h16" />
+            <path className="landing__menu-line landing__menu-line--3" d="M4 17.5h16" />
           </svg>
         </button>
       </header>

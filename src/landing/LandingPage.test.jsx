@@ -68,8 +68,8 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
     });
   });
 
-  describe('Nav (jerarquía de referencia: brand grande + nav + actions + idioma)', () => {
-    it('logo de marca, links de sección, Iniciar sesión → accesos, CTA demo gold y toggle', () => {
+  describe('Nav (jerarquía: brand + nav + actions con "Iniciar sesión" + idioma)', () => {
+    it('logo de marca, links de sección, Iniciar sesión en header-actions → accesos, CTA demo solo en cierre y toggle', () => {
       renderLanding();
       const logo = screen.getByRole('link', { name: /KRUMM - Inicio/i });
       expect(logo).toHaveAttribute('href', '/');
@@ -78,9 +78,13 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(screen.getByRole('link', { name: 'Cómo funciona' })).toHaveAttribute('href', '#como-funciona');
       expect(screen.getByRole('link', { name: 'Tecnología' })).toHaveAttribute('href', '#tecnologia');
       expect(screen.getByRole('link', { name: 'Contacto' })).toHaveAttribute('href', '#contacto');
-      expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute('href', '#accesos');
+      const login = screen.getByRole('link', { name: 'Iniciar sesión' });
+      expect(login).toHaveAttribute('href', '#accesos');
+      // Fix 2026-09-11: el login ocupa el slot donde estaba "Solicitar demo".
+      expect(login.closest('.landing__header-actions')).not.toBeNull();
+      // "Solicitar demo" eliminado de la topbar; queda solo el del cierre HABLEMOS.
       const demoLinks = screen.getAllByRole('link', { name: 'Solicitar demo' });
-      expect(demoLinks.length).toBeGreaterThanOrEqual(2);
+      expect(demoLinks).toHaveLength(1);
       for (const link of demoLinks) {
         expect(link).toHaveAttribute('href', 'mailto:carlossaldivia@krumm.cl');
       }
@@ -102,6 +106,16 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       fireEvent.click(button);
       expect(button).toHaveAttribute('aria-expanded', 'true');
       expect(screen.getByRole('navigation', { name: /Navegación principal/i })).toHaveClass('landing__nav--open');
+    });
+
+    it('hamburguesa con 3 paths SVG animables (clases --1/--2/--3) para el morph X (2026-09-11)', () => {
+      const { container } = renderLanding();
+      const button = container.querySelector('.landing__menu-button');
+      expect(button).not.toBeNull();
+      for (const i of [1, 2, 3]) {
+        expect(button.querySelector(`.landing__menu-line--${i}`)).not.toBeNull();
+      }
+      expect(button.querySelectorAll('svg path')).toHaveLength(3);
     });
   });
 
@@ -272,16 +286,16 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       remove();
     });
 
-    it('CTA gold "Solicitar demo" (topbar): declaración ganadora = --k-btn-gold-ink', () => {
+    it('login pill en header-actions (ex slot "Solicitar demo", fix 2026-09-11): declaración ganadora = --k-btn-gold-ink', () => {
       const remove = injectLandingStyles();
       renderLanding();
-      const demo = document.querySelector('.landing__header-actions .landing__cta--gold');
-      expect(demo).not.toBeNull();
-      expect(getComputedStyle(demo).color).toBe('var(--k-btn-gold-ink)');
+      const login = document.querySelector('.landing__header-actions .landing__nav-login--cta');
+      expect(login).not.toBeNull();
+      expect(getComputedStyle(login).color).toBe('var(--k-btn-gold-ink)');
       remove();
     });
 
-    it('login CTA de nav: declaración ganadora = --k-btn-gold-ink (fix previo, contraste 6.87:1)', () => {
+    it('login pill: declaración ganadora = --k-btn-gold-ink (regresión cascada .landing a { color: inherit })', () => {
       const remove = injectLandingStyles();
       renderLanding();
       const login = document.querySelector('.landing__nav-login--cta');
@@ -324,6 +338,30 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(css).toMatch(/\.landing__cta\.landing__cta--gold\s*{[^}]*var\(--k-btn-gold-from\)/);
       expect(css).toContain('var(--k-btn-gold-to)');
       expect(css).toContain('var(--k-btn-ghost-bg)');
+    });
+
+    it('transiciones suaves (2026-09-11): dropdown móvil fade/slide, underline nav animado, scroll-margin y reduced-motion', () => {
+      // Dropdown móvil: estado cerrado con opacity/visibility/transform (no display:none).
+      expect(css).toMatch(/@media \(max-width: 1150px\)[\s\S]*?\.landing__nav\s*\{[\s\S]*?visibility:\s*hidden[\s\S]*?transform:\s*translateY\(-10px\)/);
+      // Estado abierto: visible + en reposo.
+      expect(css).toMatch(/\.landing__nav--open\s*\{[\s\S]*?opacity:\s*1[\s\S]*?visibility:\s*visible/);
+      // Subrayado que crece desde la izquierda.
+      expect(css).toMatch(/\.landing__nav a::after\s*\{[\s\S]*?transform:\s*scaleX\(0\)/);
+      expect(css).toMatch(/\.landing__nav a:hover::after[\s\S]*?transform:\s*scaleX\(1\)/);
+      // Easing moderno (cubic-bezier) y respeto a prefers-reduced-motion.
+      expect(css).toContain('cubic-bezier(');
+      expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
+      // Anclas bajo la topbar overlay.
+      expect(css).toMatch(/\.landing__section\s*\{[\s\S]*?scroll-margin-top:\s*190px/);
+    });
+  });
+
+  describe('Scroll suave (2026-09-11)', () => {
+    it('monta con scroll-behavior: smooth y lo limpia al desmontar (scoped a la ruta)', () => {
+      const { unmount } = renderLanding();
+      expect(document.documentElement.style.scrollBehavior).toBe('smooth');
+      unmount();
+      expect(document.documentElement.style.scrollBehavior).toBe('');
     });
   });
 });
