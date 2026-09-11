@@ -84,6 +84,12 @@ function actorFrom(event) {
   return event?.requestContext?.authorizer?.jwt?.claims?.sub ?? 'anonymous';
 }
 
+function stageFrom(event) {
+  // KRU-97 (opción b): stage de la API ('prod' | 'staging'). La misma Lambda y
+  // las mismas tablas sirven ambas rutas; el stage marca el origen de la data.
+  return event?.requestContext?.stage ?? undefined;
+}
+
 function invitationHeader(event) {
   const headers = event?.headers ?? event?.multiValueHeaders ?? {};
   // Búsqueda case-insensitive: API Gateway (y clientes) pueden normalizar el
@@ -301,7 +307,7 @@ export async function handlePostSessions(event, { docClient } = {}) {
     const sessionId = makeSessionId();
     const consumed = await consumeInvitation({ event, docClient, sessionId });
     if (consumed?.error) return invitationActionResponse(consumed);
-    const item = await putSession({ docClient, sessionId, payload: body, tenantId: body?.participant?.aliasHash ?? null, invitationId: consumed.invitationId });
+    const item = await putSession({ docClient, sessionId, payload: body, tenantId: body?.participant?.aliasHash ?? null, invitationId: consumed.invitationId, env: stageFrom(event) });
     await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId, actor: actorFrom(event), action: 'session.create' });
     return json(201, { id: item.sessionId, status: 'created', schemaVersion: item.schemaVersion });
   }
@@ -315,6 +321,7 @@ export async function handlePostSessions(event, { docClient } = {}) {
     payload: body,
     tenantId: body?.participant?.aliasHash ?? null,
     invitationId: consumed.invitationId,
+    env: stageFrom(event),
   });
   await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId: item.sessionId, actor: actorFrom(event), action: 'session.create' });
   return json(201, { id: item.sessionId, status: 'created', schemaVersion: item.schemaVersion });

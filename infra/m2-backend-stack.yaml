@@ -186,6 +186,29 @@ Resources:
         AllowOrigins: ['*']
         AllowHeaders: ['content-type', 'authorization', 'x-invitation-id']
 
+  # --- KRU-97 (opción b): stage 'prod' sobre la MISMA API/Lambda/tablas ---
+  # /prod y /staging comparten dataset (decisión de datos 2026-09-11: un solo
+  # dataset de pilotaje, sin migración). La flag `env` en cada sesión nueva
+  # (requestContext.stage) marca el origen de la data.
+  # Nota: AutoDeploy NO es soportado en recursos CFN (validación temprana
+  # AWS::EarlyValidation::PropertyValidation). El snapshot del stage sigue
+  # válido tras updates de código Lambda (el ARN de la función es estable).
+  # SI CAMBIAN LAS RUTAS de la API: re-deploy manual del stage prod:
+  #   DEPLOY=$(aws apigatewayv2 create-deployment --api-id <API_ID>)
+  #   aws apigatewayv2 update-stage --api-id <API_ID> --stage-name prod --deployment-id $DEPLOY
+  # (ver docs/ops/environments.md §Backend).
+  ProdApiDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    Properties:
+      ApiId: !Ref SessionsApi
+
+  ProdApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      StageName: prod
+      ApiId: !Ref SessionsApi
+      DeploymentId: !Ref ProdApiDeployment
+
 Outputs:
   SessionsApiEndpoint:
     Description: Endpoint base de la API /sessions

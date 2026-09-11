@@ -38,11 +38,11 @@ function assertPayloadSize(payload) {
   return size;
 }
 
-function sessionItem({ sessionId, payload, tenantId, invitationId }) {
+function sessionItem({ sessionId, payload, tenantId, invitationId, env }) {
   const createdAt = nowIso();
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
   const payloadBytes = assertPayloadSize(payload);
-  return {
+  const item = {
     sessionId,
     tenantId: tenantId ?? null,
     invitationId: invitationId ?? null,
@@ -52,10 +52,16 @@ function sessionItem({ sessionId, payload, tenantId, invitationId }) {
     createdAt,
     expiresAt,
   };
+  // KRU-97 (opción b): flag del stage de API que escribió el registro
+  // ('prod' | 'staging') — las rutas /prod y /staging comparten tablas, la
+  // flag distingue el origen de la data. Se omite si es desconocida
+  // (compatibilidad con el shape de registros legacy).
+  if (env) item.env = env;
+  return item;
 }
 
-export function putSession({ docClient, sessionId, payload, tenantId, invitationId }) {
-  const item = sessionItem({ sessionId, payload, tenantId, invitationId });
+export function putSession({ docClient, sessionId, payload, tenantId, invitationId, env }) {
+  const item = sessionItem({ sessionId, payload, tenantId, invitationId, env });
   return docClient.put({
     TableName: SESSIONS_TABLE,
     Item: item,

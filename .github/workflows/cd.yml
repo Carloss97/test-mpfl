@@ -1,6 +1,6 @@
 # CD — KRUMM test-mpfl (KRU-51 + KRU-95):
 # - main → stage (auto, build con VITE_KRUMM_API_BASE staging = datos reales)
-# - tags v* / workflow_dispatch → prod (gate humano; build sin API base = modo demo)
+# - tags v* / workflow_dispatch → prod (gate humano; build MODO REAL vía API /prod)
 #
 # Credenciales: federación GitHub OIDC → rol AWS krumm-gh-actions-deploy
 # (policy v4: buckets stage + prod + dev/preview, dists EDQ39PDNI931R y
@@ -42,8 +42,10 @@ jobs:
         env:
           VITE_KRUMM_API_BASE: https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/staging
         run: NODE_ENV=production npm run build
-      - name: Build (prod) — sin VITE_KRUMM_API_BASE (modo demo)
+      - name: Build (prod) — VITE_KRUMM_API_BASE /prod (modo real, KRU-97 opción b)
         if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+        env:
+          VITE_KRUMM_API_BASE: https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/prod
         run: NODE_ENV=production npm run build
       - name: Set output
         id: build

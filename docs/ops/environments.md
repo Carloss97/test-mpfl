@@ -9,8 +9,8 @@
 |---|---|---|---|---|---|---|
 | **dev** | local `127.0.0.1:5173` (vite) / `:4173` (preview) | — | — | mock (`scripts/mock-sessions-api.mjs`) o staging | sintético o real | — |
 | **test** (PR preview) | `https://krumm-dev-frontend-pr-<N>.s3.us-east-1.amazonaws.com/index.html` (endpoint directo; website `…s3-website-us-east-1…` configurado como alt. para deep routes) | `krumm-dev-frontend-pr-<N>` (efímero) | — (S3 directo) | staging | real (11 sesiones LIVE) | cada PR (rama del mismo repo) |
-| **stage** | `stage.krumm.cl` (⚠️ CNAME pendiente en Cloudflare) | `krumm-stage-frontend-931932531447` | `E2OPPVGDO8R75S` (`d22embgflcqfym.cloudfront.net`) | staging (`…/staging`) | **real** (modo real activo: build con `VITE_KRUMM_API_BASE`) | push a `main` (auto) |
-| **prod** | `krumm.cl`, `www.krumm.cl` | `krumm-staging-frontend-931932531447` (nombre legacy) | `EDQ39PDNI931R` (`d3citl7gomy2ql.cloudfront.net`) | — (build **sin** `VITE_KRUMM_API_BASE`) | demo (decisión de producto) | tag `v*` o `workflow_dispatch` (humano) + smoke |
+| **stage** | `stage.krumm.cl` (activo 2026-09-11, CNAME Cloudflare agregado) | `krumm-stage-frontend-931932531447` | `E2OPPVGDO8R75S` (`d22embgflcqfym.cloudfront.net`) | staging (`…/staging`) | **real** (modo real activo: build con `VITE_KRUMM_API_BASE`) | push a `main` (auto) |
+| **prod** | `krumm.cl`, `www.krumm.cl` | `krumm-staging-frontend-931932531447` (nombre legacy) | `EDQ39PDNI931R` (`d3citl7gomy2ql.cloudfront.net`) | `/prod` (build listo modo real; krumm.cl sigue en **demo** hasta el próximo tag — gate) | real (compartido con staging, KRU-97 b) | tag `v*` o `workflow_dispatch` (humano) + smoke |
 
 **Principio (KRU-95):** `main` alimenta **stage**; **prod** exige tag/dispatch explícito. Cada push a `main` ya no muta krumm.cl.
 
@@ -18,16 +18,7 @@
 
 - La zona `krumm.cl` vive en **Cloudflare** (NS `renan.ns.cloudflare.com` / `rosalyn.ns.cloudflare.com`); no hay hosted zone en AWS.
 - Registros vigentes: `krumm.cl` y `www.krumm.cl` → CNAME a `d3citl7gomy2ql.cloudfront.net`.
-- **PENDIENTE (solo usuario, KRU-94):** agregar en Cloudflare:
-
-  ```
-  Tipo:  CNAME
-  Name:  stage
-  Target: d22embgflcqfym.cloudfront.net
-  Proxy status: DNS only (nube gris)
-  ```
-
-  → `stage.krumm.cl`. Verificado por adelantado: TLS estricto con SNI `stage.krumm.cl` contra la IP de CloudFront ya sirve la app con HTTP 200 (`ssl_verify_result=0`), el cert ACM wildcard cubre el alias.
+- **Hecho (2026-09-11):** CNAME agregado en Cloudflare; `https://stage.krumm.cl` verificado desde la Pi: HTTP 200, TLS estricto OK (`ssl_verify_result=0`), sirviendo el build de stage.
 
 ## 3. Certificados ACM
 
@@ -83,9 +74,24 @@ git tag v<version> && git push origin v<version>   # o: UI de GitHub → CD → 
 
 ## 7. Backend (API)
 
-- **staging (LIVE):** `https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/staging` — SAM `krumm-m2-backend-staging`, tablas DynamoDB `krumm-staging-*`, 11 sesiones reales (contract v1). Rate limit 10 req/min/IP.
-- **prod:** **no existe ruta `/prod`** (KRU-97 pendiente). Opciones del plan: (a) ruta `/prod` en la misma API GW + tablas `krumm-prod-*` (aislamiento real), (b) reutilizar staging con flag (cero costo, mezcla de datos). **Decisión de datos = solo usuario.** Mientras tanto, el build de prod no inyecta API base (modo demo) → no depende de esta decisión.
-- Migración de datos staging→prod: fuera de scope de KRU-97 (scoping aparte si se aprueba).
+- **staging (LIVE):** `https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/staging` — stack SAM `krumm-m2-backend-staging` (template `infra/m2-backend-stack.yaml`), Lambda `krumm-staging-sessions` (Node 20), DynamoDB `krumm-staging-*` (sessions + audit + invitations), 11 sesiones reales (contract v1), CORS `*`, rate limit 10 req/min/IP.
+- **prod (KRU-97 — opción (b), 2026-09-11):** `…/prod` = **segundo stage de la misma HTTP API** (misma Lambda, mismas tablas, mismo dataset). Sesiones creadas vía `/prod` llevan flag `env: 'prod'` en el registro (la flag viene de `requestContext.stage`; registros legacy no la tienen). Decisión de datos (usuario, 2026-09-11): **(b) reutilizar staging con flag** — sin tablas `krumm-prod-*`, sin migración. Verificado: `GET /prod/sessions` = mismas 11 candidatas que `/staging/sessions`.
+- **El stage `prod` es un snapshot de deployment** (CFN no soporta `AutoDeploy` en `AWS::ApiGatewayV2::Deployment` — validación temprana falla). Updates de código Lambda NO lo invalidan (el ARN de la función es estable). **Si cambian las RUTAS de la API**, re-deploy manual:
+  ```bash
+  API_ID=rwm08ik23m  # o extraer del output SessionsApiEndpoint del stack
+  D=$(aws apigatewayv2 create-deployment --api-id "$API_ID" --query DeploymentId --output text)
+  aws apigatewayv2 update-stage --api-id "$API_ID" --stage-name prod --deployment-id "$D"
+  ```
+- **Frontend prod:** el build de `cd.yml` (tag/dispatch) ya inyecta `VITE_KRUMM_API_BASE=…/prod` → el próximo deploy a prod activa el **modo real en krumm.cl** (gate humano). El smoke `prod-verify-v5.mjs` es agnóstico de modo (verificado contra API real: 200 + CORS).
+- **Deploy backend (requiere SSO):**
+  ```bash
+  cd ~/krumm/test-mpfl
+  rm -rf infra/dist/backend/src && cp -r backend/src/. infra/dist/backend/src/
+  cd infra && SAM_CLI_TELEMETRY=0 ~/.sam-cli/bin/sam deploy \
+    --template-file m2-backend-stack.yaml --stack-name krumm-m2-backend-staging \
+    --region us-east-1 --parameter-overrides Environment=staging \
+    --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3
+  ```
 
 ## 8. Pitfalls
 
@@ -98,9 +104,10 @@ git tag v<version> && git push origin v<version>   # o: UI de GitHub → CD → 
 
 ## 9. Evidencia 2026-09-11
 
-- Stage: contenido en bucket (auto-deploy CD run 34565498444, 02:20 CL), dist `E2OPPVGDO8R75S` Deployed con alias, TLS estricto SNI `stage.krumm.cl` → HTTP 200 `ssl_verify_result=0`, bundle con `VITE_KRUMM_API_BASE` staging incrustado (modo real).
+- Stage: contenido en bucket (auto-deploy CD run 34565498444, 02:20 CL), dist `E2OPPVGDO8R75S` Deployed con alias, **CNAME Cloudflare agregado (09-11) → `https://stage.krumm.cl` HTTP 200 + TLS estricto OK desde la Pi**, bundle con `VITE_KRUMM_API_BASE` staging incrustado (modo real). **KRU-94 DONE.**
 - Prod: `krumm.cl` → dist `EDQ39PDNI931R` (sin cambios; gate manual activo; bundle prod `index-DVbRsXY9.js` intacto tras los pushes a main).
 - OIDC: trust (main + tags v* + pull_request) + policy v5 aplicados (2026-09-11 05:25 UTC).
 - **Preview: validado e2e con PR #1** (merged 05:47 CL): deploy-preview OK (bucket `krumm-dev-frontend-pr-1`), URL `…s3.us-east-1.amazonaws.com/index.html` HTTP 200 con bundle modo real, comentario con URL auto-actualizado, merge → cleanup-preview OK (bucket 404 verificado).
 - **CI: migración actions a runtime node24** (2026-09-11, commit `9e97daa`): `checkout@v5`, `setup-node@v5`, `upload-artifact@v6`, `download-artifact@v7`, `github-script@v8`, `configure-aws-credentials@v6`, `gitleaks-action@v3` + env `GITHUB_TOKEN` (obligatorio en PRs desde gitleaks-action v2.3). **Deadline: Node 20 se retira de los runners de GitHub el 2026-09-16** — sin esta migración todo el pipeline habría dejado de correr.
 - Fix CD bifurcado: el `dist/` debe viajar entre jobs vía `upload-artifact`/`download-artifact` (run 34565085586 falló "No existe dist" — fix `35944ad`).
+- **Backend KRU-97 opción (b) (09-11):** stage `prod` en la misma HTTP API (deploy + stack update OK; `AutoDeploy` no soportado en CFN → snapshot, ver §7), flag `env` en sesiones nuevas (tests backend 27/27), `GET /prod/sessions` = 11 candidatas (mismo dataset que `/staging`). Build de prod en `cd.yml` listo para modo real (`VITE_KRUMM_API_BASE=…/prod`); krumm.cl sigue demo hasta el próximo tag/dispatch (gate humano).

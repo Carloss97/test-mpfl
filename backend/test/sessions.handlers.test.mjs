@@ -54,9 +54,9 @@ function makeDocClient() {
   };
 }
 
-function event({ method, route, pathParameters, body }) {
+function event({ method, route, pathParameters, body, stage }) {
   return {
-    requestContext: { http: { method } },
+    requestContext: { http: { method }, stage },
     routeKey: route,
     pathParameters,
     body: body ? JSON.stringify(body) : undefined,
@@ -67,7 +67,7 @@ describe('backend sessions handlers (RED -> GREEN)', () => {
   let deps;
   beforeEach(() => {
     const m = makeDocClient();
-    deps = { docClient: m.client, audit: m.audit };
+    deps = { docClient: m.client, audit: m.audit, store: m.store };
   });
 
   it('POST acepta payload válido -> 201 + id', async () => {
@@ -76,6 +76,22 @@ describe('backend sessions handlers (RED -> GREEN)', () => {
     const body = JSON.parse(res.body);
     expect(body.id).toBe('run-m2-001');
     expect(body.status).toBe('created');
+  });
+
+  it('POST sin stage no escribe env (shape legacy intacto)', async () => {
+    const res = await handlePostSessions(event({ method: 'POST', route: 'POST /sessions', body: VALID_BODY }), deps);
+    expect(res.statusCode).toBe(201);
+    expect(deps.store.get('run-m2-001')?.env).toBeUndefined();
+  });
+
+  it('POST estampa la flag env desde requestContext.stage (KRU-97 opción b)', async () => {
+    const m = makeDocClient();
+    const res = await handlePostSessions(
+      event({ method: 'POST', route: 'POST /sessions', body: VALID_BODY, stage: 'prod' }),
+      { docClient: m.client, audit: m.audit },
+    );
+    expect(res.statusCode).toBe(201);
+    expect(m.store.get('run-m2-001')?.env).toBe('prod');
   });
 
   it('POST rechaza raw fields -> 422', async () => {
