@@ -446,6 +446,8 @@ export function createControlRoomEngine({
     availableCards: () => { const s = currentStep(); return s && !s.composer ? s.cards : []; },
     composerBlocks: () => { const s = currentStep(); return s && s.composer ? s.blocks : []; },
     timerConfig: () => timer.config,
+    timerRemainingMs: () => timer.remainingMs(),
+    timerPhase: () => timer.phase(),
     start,
     selectCard,
     deselectCard,

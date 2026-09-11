@@ -1,0 +1,321 @@
+/* controlRoom.css — EXP-COMM-001 (Sala de Control) · C2: mundo "centro de operaciones".
+ * Doc 2 §7 (layout responsive 3 tiers), §17 (dirección visual), §18 (accesibilidad),
+ * §16 (feedback). H4.5: paleta propia del módulo (no tokenizada); el acento usa el gold
+ * de marca para selección/CTA, NUNCA para codificar respuestas correctas.
+ */
+.control-room {
+  --cr-bg: #0e1420;
+  --cr-panel: #161e2e;
+  --cr-panel-2: #1b2536;
+  --cr-line: #2a3650;
+  --cr-ink: #e8edf5;
+  --cr-ink-dim: #9aa7bd;
+  --cr-accent: #d4a24e;
+  --cr-accent-ink: #1a1206;
+  --cr-critical: #e08a4a;
+  --cr-npc: #223049;
+  --cr-radius: 12px;
+  --cr-font: 16px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  background: var(--cr-bg);
+  color: var(--cr-ink);
+  font-size: var(--cr-font);
+  line-height: 1.45;
+  border-radius: var(--cr-radius);
+  overflow-x: hidden; /* sin scroll horizontal del módulo */
+  overflow-y: auto;   /* red de seguridad: en alturas muy cortas el contenido scrolla, no se recorta */
+}
+.control-room *,
+.control-room *::before,
+.control-room *::after { box-sizing: border-box; }
+
+.cr-loading { color: var(--cr-ink-dim); }
+
+/* Header: bloque + incidente + timer */
+.cr-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cr-header__block {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.82em;
+  color: var(--cr-accent);
+}
+.cr-header__incident { color: var(--cr-ink); font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.cr-header__timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  padding: 4px 10px;
+  border: 1px solid var(--cr-line);
+  border-radius: 8px;
+  color: var(--cr-ink);
+}
+.control-room[data-cr-state] .cr-header__timer { /* énfasis por fase se aplica vía JS class opcional */ }
+
+/* Main: datos (40%) + interlocutor (60%) — desktop */
+.cr-main {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: 14px;
+  align-items: start;
+}
+.cr-main > * { min-width: 0; }
+
+/* Panel de datos */
+.cr-facts {
+  background: var(--cr-panel);
+  border: 1px solid var(--cr-line);
+  border-radius: var(--cr-radius);
+  padding: 14px;
+}
+.cr-facts__title {
+  margin: 0 0 10px;
+  font-size: 0.8em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cr-ink-dim);
+}
+.cr-facts__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cr-fact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--cr-panel-2);
+  border: 1px solid var(--cr-line);
+  border-radius: 8px;
+  min-width: 0;
+}
+.cr-fact__key {
+  color: var(--cr-ink-dim);
+  font-size: 0.9em;
+  text-transform: capitalize;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.cr-fact__value { margin-left: auto; font-weight: 600; overflow-wrap: anywhere; min-width: 0; text-align: right; }
+.cr-fact--critical { border-color: var(--cr-critical); }
+.cr-fact--critical .cr-fact__key { color: var(--cr-critical); font-weight: 700; }
+.cr-fact__tag { color: var(--cr-critical); font-weight: 700; }
+
+/* Interlocutor (NPC) */
+.cr-npc {
+  background: var(--cr-panel);
+  border: 1px solid var(--cr-line);
+  border-radius: var(--cr-radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.cr-npc__id { display: flex; align-items: center; gap: 8px; }
+.cr-npc__avatar { font-size: 1.4em; line-height: 1; }
+.cr-npc__role { font-weight: 600; color: var(--cr-ink-dim); }
+.cr-npc__bubble {
+  background: var(--cr-npc);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 1.05em;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Respuesta: full width */
+.cr-response {
+  background: var(--cr-panel);
+  border: 1px solid var(--cr-line);
+  border-radius: var(--cr-radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.cr-cards { display: flex; flex-direction: column; gap: 10px; }
+.cr-card {
+  min-height: 56px;
+  padding: 12px 14px;
+  font-size: 1em;
+  text-align: left;
+  color: var(--cr-ink);
+  background: var(--cr-panel-2);
+  border: 2px solid var(--cr-line);
+  border-radius: 10px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.cr-card:hover { border-color: #3a4a6a; }
+.cr-card--selected { border-color: var(--cr-accent); background: #2a2416; }
+.cr-card:focus-visible,
+.cr-send:focus-visible,
+.cr-block:focus-visible,
+.cr-composed__ctl:focus-visible {
+  outline: 3px solid var(--cr-accent);
+  outline-offset: 2px;
+}
+
+/* Composer de bloques (Doc 2 §12) */
+.cr-composer { display: flex; flex-direction: column; gap: 12px; }
+.cr-composer__tray { display: flex; flex-wrap: wrap; gap: 8px; }
+.cr-block {
+  min-height: 48px;
+  padding: 10px 14px;
+  font-size: 1em;
+  color: var(--cr-ink);
+  background: var(--cr-panel-2);
+  border: 2px solid var(--cr-line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 120ms ease, opacity 120ms ease;
+}
+.cr-block:disabled { opacity: 0.4; cursor: default; }
+.cr-block--added { border-color: var(--cr-accent); opacity: 0.55; }
+.cr-composer__stage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 10px;
+  background: var(--cr-bg);
+  border: 1px dashed var(--cr-line);
+  border-radius: 10px;
+}
+.cr-composer__empty { color: var(--cr-ink-dim); margin: auto; }
+.cr-composed {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--cr-panel-2);
+  border: 1px solid var(--cr-accent);
+  border-radius: 8px;
+}
+.cr-composed__text { font-weight: 600; overflow-wrap: anywhere; }
+.cr-composed__ctl {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 6px;
+  font-size: 1.1em;
+  line-height: 1;
+  color: var(--cr-ink);
+  background: transparent;
+  border: 1px solid var(--cr-line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cr-composed__ctl:disabled { opacity: 0.3; cursor: default; }
+.cr-composed__ctl--remove { color: var(--cr-critical); border-color: var(--cr-critical); }
+
+/* Acción: enviar */
+.cr-actions { display: flex; justify-content: flex-end; align-items: center; }
+.cr-send {
+  min-height: 52px;
+  padding: 12px 28px;
+  font-size: 1.05em;
+  font-weight: 700;
+  color: var(--cr-accent-ink);
+  background: var(--cr-accent);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: filter 120ms ease;
+}
+.cr-send:disabled { filter: grayscale(0.6) brightness(0.7); cursor: default; }
+.cr-actions__verify { color: var(--cr-ink-dim); font-style: italic; }
+
+/* Consecuencia / completo / error */
+.cr-consequence,
+.cr-complete,
+.cr-error {
+  background: var(--cr-panel);
+  border: 1px solid var(--cr-line);
+  border-radius: var(--cr-radius);
+  padding: 14px 16px;
+}
+.cr-consequence p, .cr-complete p, .cr-error p { margin: 0; overflow-wrap: anywhere; }
+.cr-error { border-color: var(--cr-critical); }
+.cr-error p { color: var(--cr-critical); font-weight: 600; }
+
+/* ---- Responsive: tablet (600-1023) y móvil (320-599) — Doc 2 §7 ---- */
+@media (max-width: 1023px) {
+  .cr-main { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 599px) {
+  .control-room { padding: 12px; font-size: 16px; }
+  .cr-main { grid-template-columns: 1fr; } /* stack: contexto → datos → NPC → respuesta */
+  /* Datos en grid 2 columnas (agrupación visual, no mini-font — Doc 2 §18): compacta la
+   * altura para que respuesta + CTA queden alcanzables en 844px de alto. */
+  .cr-facts__list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .cr-fact { flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 8px; }
+  .cr-fact__value { margin-left: 0; text-align: left; }
+  .cr-card { min-height: 52px; }
+  .cr-block { min-height: 48px; width: auto; }
+  .cr-actions { justify-content: stretch; }
+  .cr-send { width: 100%; }
+  .cr-composed__ctl { min-width: 40px; min-height: 40px; } /* target táctil */
+}
+
+/* Reduced motion (Doc 2 §18) */
+@media (prefers-reduced-motion: reduce) {
+  .control-room * { transition: none !important; animation: none !important; }
+}
+
+/* Altura compacta (isCompactViewport, height <= 820): compactar paddings/tamaños para que
+ * header + datos + NPC + respuesta + enviar QUEPAN sin scroll (p. ej. 1280x720). */
+@media (max-height: 820px) {
+  .control-room { padding: 10px; gap: 8px; }
+  .cr-header { gap: 8px; }
+  .cr-facts, .cr-npc, .cr-response { padding: 8px; }
+  .cr-main { gap: 8px; }
+  .cr-facts__title { margin-bottom: 6px; }
+  .cr-facts__list { gap: 4px; }
+  .cr-fact { padding: 5px 8px; }
+  .cr-fact__key { font-size: 0.82em; }
+  .cr-npc { gap: 6px; }
+  .cr-npc__bubble { padding: 8px 10px; font-size: 1em; }
+  .cr-cards { gap: 6px; }
+  .cr-card { min-height: 44px; padding: 7px 10px; font-size: 0.95em; }
+  .cr-composer__stage { min-height: 44px; padding: 6px; }
+  .cr-send { min-height: 44px; padding: 8px 16px; font-size: 1em; }
+}
+
+/* ---- Dev stage (C2 smoke): /dev/control-room — viewport completo ---- */
+.control-room-dev {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: #0a0f18;
+  box-sizing: border-box;
+}
+.control-room-dev__banner {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #9aa7bd;
+  background: #161e2e;
+  border: 1px solid #2a3650;
+  border-radius: 8px;
+}
+.control-room-dev__stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.control-room-dev__stage > * { flex: 1; min-width: 0; }
