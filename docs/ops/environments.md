@@ -8,7 +8,7 @@
 | Entorno | Dominio | Bucket S3 | CloudFront | API | Datos | Gate de deploy |
 |---|---|---|---|---|---|---|
 | **dev** | local `127.0.0.1:5173` (vite) / `:4173` (preview) | — | — | mock (`scripts/mock-sessions-api.mjs`) o staging | sintético o real | — |
-| **test** (PR preview) | `https://krumm-dev-frontend-pr-<N>.s3-website-us-east-1.amazonaws.com/` | `krumm-dev-frontend-pr-<N>` (efímero) | — (S3 website directo) | staging | real (11 sesiones LIVE) | cada PR (rama del mismo repo) |
+| **test** (PR preview) | `https://krumm-dev-frontend-pr-<N>.s3.us-east-1.amazonaws.com/index.html` (endpoint directo; website `…s3-website-us-east-1…` configurado como alt. para deep routes) | `krumm-dev-frontend-pr-<N>` (efímero) | — (S3 directo) | staging | real (11 sesiones LIVE) | cada PR (rama del mismo repo) |
 | **stage** | `stage.krumm.cl` (⚠️ CNAME pendiente en Cloudflare) | `krumm-stage-frontend-931932531447` | `E2OPPVGDO8R75S` (`d22embgflcqfym.cloudfront.net`) | staging (`…/staging`) | **real** (modo real activo: build con `VITE_KRUMM_API_BASE`) | push a `main` (auto) |
 | **prod** | `krumm.cl`, `www.krumm.cl` | `krumm-staging-frontend-931932531447` (nombre legacy) | `EDQ39PDNI931R` (`d3citl7gomy2ql.cloudfront.net`) | — (build **sin** `VITE_KRUMM_API_BASE`) | demo (decisión de producto) | tag `v*` o `workflow_dispatch` (humano) + smoke |
 
@@ -61,7 +61,7 @@ git tag v<version> && git push origin v<version>   # o: UI de GitHub → CD → 
 ### Preview (automático por PR)
 1. Crear PR desde rama del mismo repo (forks: GitHub no permite OIDC → el job falla, limitación conocida).
 2. `deploy-preview` crea/recrea `krumm-dev-frontend-pr-<N>` (website index+error-doc, policy pública solo `s3:GetObject`, BPA con ACLs bloqueadas) y sync del build.
-3. Comentario en el PR con la URL (se actualiza por push, no spamea).
+3. Comentario en el PR con la URL del endpoint S3 directo (`…/index.html`, TLS verificado desde la Pi). La config S3 *website* (index + error document) queda también activa como alternativa para deep routes (`…s3-website-us-east-1.amazonaws.com/`) — nota: el TLS del pool de IPs del website endpoint se resetea desde la egress de la Pi (ISP/path), no es configuración del bucket.
 4. Al cerrar (merge o close): `cleanup-preview` borra el bucket completo.
 5. **Barrido de huérfanos** (cierre forzado sin evento `closed`):
    ```bash

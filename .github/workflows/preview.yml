@@ -1,8 +1,12 @@
 # PR Preview — KRUMM test-mpfl (KRU-96)
 #
-# PR → build con API staging → bucket efímero `krumm-dev-frontend-pr-<N>` con
-# S3 website (index + error document → las deep routes de la SPA funcionan).
-# URL preview: https://krumm-dev-frontend-pr-<N>.s3-website-us-east-1.amazonaws.com/
+# PR → build con API staging → bucket efímero `krumm-dev-frontend-pr-<N>`
+# (S3 website: index + error document, para refresh en deep routes).
+# URL preview (endpoint S3 directo, TLS verificado):
+#   https://krumm-dev-frontend-pr-<N>.s3.us-east-1.amazonaws.com/index.html
+# (endpoint website `…s3-website-us-east-1.amazonaws.com` también configurado;
+#  el TLS desde la Pi se resetea por el pool de IPs del website endpoint —
+#  ver docs/ops/environments.md §Preview)
 #
 # Ciclo de vida:
 # - opened/synchronize/reopened → (re)deploy + comentario con la URL (se actualiza, no spamea).
@@ -97,9 +101,9 @@ jobs:
         with:
           script: |
             const pr = ${{ github.event.pull_request.number }};
-            const url = `https://${{ env.BUCKET }}.s3-website-us-east-1.amazonaws.com/`;
+            const url = `https://${{ env.BUCKET }}.s3.us-east-1.amazonaws.com/index.html`;
             const marker = '<!-- krumm-preview-url -->';
-            const body = `${marker}\n🔍 **Preview deploy** (build \`${context.sha.slice(0, 7)}\`)\n\n**URL:** ${url}\n\nModo real (API staging) · se borra al cerrar el PR.`;
+            const body = `${marker}\n🔍 **Preview deploy** (build \`${context.sha.slice(0, 7)}\`)\n\n**URL:** ${url}\n\nModo real (API staging) · entra siempre por la URL base (refresh en rutas profundas da 404 en S3 directo) · se borra al cerrar el PR.`;
             const pages = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
