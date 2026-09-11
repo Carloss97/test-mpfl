@@ -9,7 +9,7 @@
 |---|---|---|---|---|---|---|
 | **dev** | local `127.0.0.1:5173` (vite) / `:4173` (preview) | — | — | mock (`scripts/mock-sessions-api.mjs`) o staging | sintético o real | — |
 | **test** (PR preview) | `https://krumm-dev-frontend-pr-<N>.s3.us-east-1.amazonaws.com/index.html` (endpoint directo; website `…s3-website-us-east-1…` configurado como alt. para deep routes) | `krumm-dev-frontend-pr-<N>` (efímero) | — (S3 directo) | staging | real (11 sesiones LIVE) | cada PR (rama del mismo repo) |
-| **stage** | `stage.krumm.cl` (activo 2026-09-11, CNAME Cloudflare agregado) | `krumm-stage-frontend-931932531447` | `E2OPPVGDO8R75S` (`d22embgflcqfym.cloudfront.net`) | staging (`…/staging`) | **real** (modo real activo: build con `VITE_KRUMM_API_BASE`) | push a `main` (auto) |
+| **stage** | `stage.krumm.cl` (**ACTIVO**, build real con datos reales) | `krumm-stage-frontend-931932531447` | `E2OPPVGDO8R75S` (`d22embgflcqfym.cloudfront.net`) | staging (`…/staging`) | **real** (11 sesiones LIVE) **→ flag env='staging' en sesiones nuevas** | push a `main` (auto) |
 | **prod** | `krumm.cl`, `www.krumm.cl` | `krumm-staging-frontend-931932531447` (nombre legacy) | `EDQ39PDNI931R` (`d3citl7gomy2ql.cloudfront.net`) | `/prod` (build listo modo real; krumm.cl sigue en **demo** hasta el próximo tag — gate) | real (compartido con staging, KRU-97 b) | tag `v*` o `workflow_dispatch` (humano) + smoke |
 
 **Principio (KRU-95):** `main` alimenta **stage**; **prod** exige tag/dispatch explícito. Cada push a `main` ya no muta krumm.cl.
@@ -18,7 +18,7 @@
 
 - La zona `krumm.cl` vive en **Cloudflare** (NS `renan.ns.cloudflare.com` / `rosalyn.ns.cloudflare.com`); no hay hosted zone en AWS.
 - Registros vigentes: `krumm.cl` y `www.krumm.cl` → CNAME a `d3citl7gomy2ql.cloudfront.net`.
-- **Hecho (2026-09-11):** CNAME agregado en Cloudflare; `https://stage.krumm.cl` verificado desde la Pi: HTTP 200, TLS estricto OK (`ssl_verify_result=0`), sirviendo el build de stage.
+- **Hecho (2026-09-11):** CNAME agregado en Cloudflare; `https://stage.krumm.cl` ACTIVO (HTTP 200, TLS estricto OK), sirviendo el build stage (modo real → API `/staging`, 11 sesiones LIVE). El estado se mantiene como entorno de QA (main → stage auto) independiente de la producción (tag→prod). **krumm.cl pasa a modo real** (tag v1.0.0, run 34603047817) sin romper para staging externo.
 
 ## 3. Certificados ACM
 
@@ -97,7 +97,7 @@ git tag v<version> && git push origin v<version>   # o: UI de GitHub → CD → 
 
 1. **CFN vs live (`infra/m1-frontend-stack.yaml`):** el stack m1 en el repo NO refleja el estado real — el RHP m3 y las dists se crearon/modificaron **vía API** (fuera de CFN). Antes de cualquier `cloudformation deploy` del stack m1: reconciliar template con live (o marcarlo como no-mantenedor) para no revertir/destroy los recursos.
 2. **Bucket "staging" sirve prod:** el nombre `krumm-staging-frontend-…` confunde (es el bucket de krumm.cl). Opción: migrar a `krumm-prod-frontend-…` (copy S3→S3 + swap de origen en la dist + invalidación; sin tocar DNS) o aceptar y documentar (estado actual). No hacerlo sin ventana acordada.
-3. **`stage.krumm.cl` sin CNAME** responde NXDOMAIN hasta que el usuario agregue el registro en Cloudflare (§2). El resto (dist, cert, contenido, modo real) está listo.
+3. **krumm.cl modo real vs stage.krumm.cl** (2026-09-11, tras el tag v1.0.0 event DRIVER-2025): ambos frontends apuntan a APIs distintas (`…/prod` y `…/staging`) del mismo stack — **stage y prod** comparten los mismos datos (un solo dataset pilotaje, KRU-97 opción b). Si un candidato crea una sesión con algún invite durante una prueba en stage, esa sesión queda en la tabla compartida (flag env='staging').
 4. **OIDC en PRs desde forks:** no disponible en repo público — `deploy-preview`/`cleanup-preview` fallarían en `configure-aws-credentials`; documentado en el workflow.
 5. **AWS SSO local (~11 h):** los procedimientos manuales (barrido huérfanos, cleanup cert FAILED) requieren `aws sso login --sso-session aws_sso --use-device-code` (token vía usuario).
 6. **CSP de stage/prod:** si el backend prod (KRU-97) usa otra región/endpoint, extender `connect-src` del RHP m3 **antes** de activar `VITE_KRUMM_API_BASE` en el build correspondiente.
