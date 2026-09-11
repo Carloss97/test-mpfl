@@ -34,7 +34,7 @@ import {
   CONTROL_ROOM_FINAL,
 } from './controlRoomRules.js';
 import { createControlRoomEngine, CONTROL_ROOM_STATES } from './controlRoomEngine.js';
-import { COMM_DIMENSION_KEYS } from './controlRoomTaxonomy.js';
+import { buildControlRoomSessionPayload } from './controlRoomTelemetry.js';
 import './controlRoom.css';
 
 export const CONTROL_ROOM_GAME_DEFINITION = Object.freeze({
@@ -85,76 +85,6 @@ function formatTimer(ms) {
   if (ms == null) return '';
   const total = Math.max(0, Math.ceil(ms / 1000));
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
-}
-
-/** Agrega los resultados de escenarios evaluados al agregado de sesión (métricas 11 + dimensiones 7). */
-export function buildControlRoomSessionAggregate(results = []) {
-  const m = {
-    first_decision_latency_ms: null,
-    average_decision_latency_ms: null,
-    time_spent_reading_ms: 0,
-    pre_send_edit_count: 0,
-    pre_send_reorder_count: 0,
-    total_message_count: 0,
-    question_count: 0,
-    verification_count: 0,
-    confirmation_requested: false,
-    confirmation_given: false,
-    timeout_count: 0,
-  };
-  let first = null;
-  let latWeightedSum = 0;
-  let latWeight = 0;
-  const dim = Object.fromEntries(COMM_DIMENSION_KEYS.map((k) => [k, { opportunity: 0, success: 0 }]));
-  for (const r of results) {
-    const mm = r.metrics ?? {};
-    if (mm.first_decision_latency_ms != null) {
-      first = first == null ? mm.first_decision_latency_ms : Math.min(first, mm.first_decision_latency_ms);
-    }
-    if (mm.average_decision_latency_ms != null && (mm.total_message_count ?? 0) > 0) {
-      latWeightedSum += mm.average_decision_latency_ms * mm.total_message_count;
-      latWeight += mm.total_message_count;
-    }
-    m.time_spent_reading_ms += mm.time_spent_reading_ms || 0;
-    m.pre_send_edit_count += mm.pre_send_edit_count || 0;
-    m.pre_send_reorder_count += mm.pre_send_reorder_count || 0;
-    m.total_message_count += mm.total_message_count || 0;
-    m.question_count += mm.question_count || 0;
-    m.verification_count += mm.verification_count || 0;
-    m.confirmation_requested = m.confirmation_requested || mm.confirmation_requested === true;
-    m.confirmation_given = m.confirmation_given || mm.confirmation_given === true;
-    m.timeout_count += mm.timeout_count || 0;
-    for (const k of COMM_DIMENSION_KEYS) {
-      const d = r.dimensionStats?.[k];
-      if (d) { dim[k].opportunity += d.opportunity; dim[k].success += d.success; }
-    }
-  }
-  m.first_decision_latency_ms = first;
-  m.average_decision_latency_ms = latWeight > 0 ? Math.round(latWeightedSum / latWeight) : null;
-  const dimensions = Object.fromEntries(COMM_DIMENSION_KEYS.map((k) => (
-    [k, dim[k].opportunity > 0 ? Math.round((dim[k].success / dim[k].opportunity) * 100) : null]
-  )));
-  return {
-    aggregateSchemaVersion: 'control_room_aggregate_v1',
-    gameId: 'control_room',
-    completed: results.length > 0,
-    scenarioCount: results.length,
-    scoredCount: results.filter((r) => r.scored === true).length,
-    resolvedCount: results.filter((r) => r.resolved === true).length,
-    ...m,
-    dimensions,
-    scenarios: results.map((r) => ({
-      scenarioId: r.scenarioId,
-      form: r.form,
-      block: r.block,
-      scored: r.scored === true,
-      resolved: r.resolved === true,
-      timeout: (r.metrics?.timeout_count ?? 0) > 0,
-      integrityFlags: r.integrityFlags ?? [],
-    })),
-    integrityFlags: [...new Set(results.flatMap((r) => r.integrityFlags ?? []))],
-    aggregateOnly: true,
-  };
 }
 
 export default function ControlRoomGame({
@@ -267,18 +197,21 @@ export default function ControlRoomGame({
       });
       return;
     }
-    if (!isPractice) {
-      resultsRef.current.push({
-        scenarioId: engine.scenario.id,
-        form: engine.scenario.form ?? null,
-        block: engine.scenario.block,
-        scored: engine.scored === true,
-        resolved: engine.resolved === true,
-        metrics: engine.metrics(),
-        dimensionStats: engine.dimensionStats(),
-        integrityFlags: engine.integrityFlags(),
-      });
-    }
+    // C4: registrar TODOS los escenarios (práctica + evaluación) con eventBuffer para el
+    // payload de sesión versionado. La práctica se marca (practice:true) y NO entra al
+    // agregado evaluativo (Doc 1 §13.2/§17).
+    resultsRef.current.push({
+      scenarioId: engine.scenario.id,
+      form: engine.scenario.form ?? null,
+      block: engine.scenario.block,
+      practice: isPractice,
+      scored: engine.scored === true,
+      resolved: engine.resolved === true,
+      metrics: engine.metrics(),
+      dimensionStats: engine.dimensionStats(),
+      eventBuffer: engine.eventBuffer(),
+      integrityFlags: engine.integrityFlags(),
+    });
     const nextIndex = sessionIndex + 1;
     if (mode === 'tutorial') {
       if (nextIndex < list.length) setSessionIndex(nextIndex);
@@ -295,10 +228,10 @@ export default function ControlRoomGame({
     bump();
   }, [tick]);
 
-  // Final → onComplete con el agregado de sesión (12 escenarios evaluados).
+  // Final → onComplete con el PAYLOAD de sesión versionado (C4, §19).
   useEffect(() => {
     if (phase !== PHASE.FINAL) return;
-    onCompleteRef.current?.(buildControlRoomSessionAggregate(resultsRef.current));
+    onCompleteRef.current?.(buildControlRoomSessionPayload({ results: resultsRef.current }));
   }, [phase]);
 
   // ---------- Pantallas de flujo (modo sesión) ----------

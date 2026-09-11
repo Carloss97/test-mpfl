@@ -17,7 +17,8 @@ vi.mock('../originalGameSfx.js', async (importOriginal) => {
   return { ...actual, playSfx: vi.fn(() => true), getGameSfxEnabled: vi.fn(() => true), setGameSfxEnabled: vi.fn() };
 });
 
-import ControlRoomGame, { buildControlRoomSessionAggregate } from './controlRoomGame.jsx';
+import ControlRoomGame from './controlRoomGame.jsx';
+import { buildControlRoomSessionAggregate } from './controlRoomTelemetry.js';
 import { CONTROL_ROOM_TUTORIAL_NODES } from './controlRoomRules.js';
 
 function makeClock() {
