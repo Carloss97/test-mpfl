@@ -51,9 +51,13 @@ jobs:
       # gitleaks: regla por defecto + allowlist documentado en .gitleaks.toml
       # (única entrada: key Lambda histórica leak en f44a7e4, pendiente de
       # invalidación en el dashboard — ver docs/security/SECURITY.md).
+      # github-token: OBLIGATORIO desde gitleaks-action v2 en eventos
+      # pull_request (el diff del PR se obtiene vía API; sin token el job
+      # falla: "GITHUB_TOKEN is now required to scan pull requests").
       - name: gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITLEAKS_ENABLE_SUMMARY: "true"
         with:
           config: .gitleaks.toml
+          github-token: ${{ github.token }}
