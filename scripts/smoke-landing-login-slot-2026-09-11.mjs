@@ -52,7 +52,7 @@ function check(name, cond, detail) {
 
   const header = await page.evaluate(() => {
     const headerEl = document.querySelector('.landing__topbar');
-    const login = headerEl?.querySelector('.landing__header-actions .landing__nav-login--cta');
+    const login = headerEl?.querySelector('.landing__header-actions .landing__nav-login');
     const demoInHeader = headerEl?.querySelectorAll('a,button').length
       ? [...headerEl.querySelectorAll('a,button')].some((el) => /solicitar demo/i.test(el.textContent ?? ''))
       : null;
@@ -63,24 +63,24 @@ function check(name, cond, detail) {
       found: true,
       href: login.getAttribute('href'),
       inHeaderActions: !!login.closest('.landing__header-actions'),
+      isGoldCta: login.classList.contains('landing__cta--gold'),
+      hasArrow: !!login.querySelector('svg.landing__nav-login-arrow'),
       demoInHeader,
       demoCountInPage: demoAll,
       color: cs.color,
-      background: cs.backgroundColor,
-      fontSize: cs.fontSize,
-      fontWeight: cs.fontWeight,
-      rect: login.getBoundingClientRect(),
+      stops: cs.backgroundImage.match(/rgb\([^)]+\)/g) ?? [],
       overflow: document.documentElement.scrollWidth > window.innerWidth,
     };
   });
   results.desktop.header = header;
-  check('D1 login en header-actions', header.found && header.inHeaderActions && header.href === '#accesos',
-    `href=${header.href} bg=${header.background}`);
+  check('D1 login en header-actions, CTA gold completo + flecha (v2)', header.found && header.inHeaderActions && header.href === '#accesos' && header.isGoldCta && header.hasArrow,
+    `href=${header.href} gold=${header.isGoldCta} arrow=${header.hasArrow}`);
   check('D1 sin "Solicitar demo" en topbar', header.found && header.demoInHeader === false && header.demoCountInPage === 1,
     `demo en página (cierre): ${header.demoCountInPage}`);
-  if (header.found && header.color.startsWith('rgb') && header.background.startsWith('rgb')) {
-    const ratio = contrast(header.background, header.color);
-    check('D2 contraste login pill AA ≥4.5', ratio >= 4.5, `${ratio}:1 (bg ${header.background} / fg ${header.color})`);
+  if (header.found && header.color.startsWith('rgb') && header.stops.length === 2) {
+    const ratios = header.stops.map((s) => contrast(s, header.color));
+    check('D2 contraste CTA gold AA ≥4.5 (ambas paradas del gradiente)', Math.min(...ratios) >= 4.5,
+      `stops ${header.stops.join(' | ')} / ink ${header.color} → ${ratios.join(' y ')}:1`);
   }
   check('D3 sin overflow horizontal (desktop)', !header.overflow);
   await page.screenshot({ path: `${outDir}/desktop-topbar.png`, clip: { x: 0, y: 0, width: 1280, height: 200 } });
@@ -96,7 +96,7 @@ function check(name, cond, detail) {
   await page.goto(`${baseUrl}/`, { waitUntil: 'networkidle' });
 
   const mobile = await page.evaluate(() => {
-    const login = document.querySelector('.landing__header-actions .landing__nav-login--cta');
+    const login = document.querySelector('.landing__header-actions .landing__nav-login');
     const cs = login ? getComputedStyle(login) : null;
     return {
       loginVisible: !!login && cs.display !== 'none' && login.getBoundingClientRect().width > 0,

@@ -3,7 +3,8 @@
 // Verifica CONTRA EL DEV SERVER LOCAL:
 //   T1 underline nav: ::after scaleX(0) → hover → scaleX(1)
 //   T2 press CTA "Ver cómo funciona": :active escala 0.98 y regresa
-//   T3 click "Contacto": scroll suave (scrollY sube) + sección no queda bajo la topbar
+//   T3 click "Contacto": scroll suave + sección ASEGADA al top del viewport
+//      (sin offset: la topbar es absolute y se va con el scroll — feedback 2026-09-11)
 //   T4 móvil: dropdown cerrado (opacity 0/hidden) → abrir → fade (captura mid-animación) → opacity 1
 //   T5 móvil: hamburguesa→X morph (line-1 transform ≠ none con aria-expanded=true)
 // Uso: BASE_URL=http://127.0.0.1:5173 node scripts/smoke-landing-transitions-2026-09-11.mjs
@@ -90,8 +91,8 @@ function matrixA(transform) {
   check('T3 scroll suave al click (scrollY > 3000 y scroll-behavior smooth)',
     scroll.scrollY > 3000 && scroll.smooth === 'smooth',
     `scrollY=${scroll.scrollY} smooth=${scroll.smooth}`);
-  check('T3 sección #contacto no queda bajo la topbar (top ≥ 100px)',
-    scroll.sectionTop >= 100 && scroll.sectionTop <= 300,
+  check('T3 sección #contacto asienta al top del viewport (sin quedar "a mitad de pantalla")',
+    scroll.sectionTop >= -5 && scroll.sectionTop <= 60,
     `sectionTop=${scroll.sectionTop}px`);
   await page.screenshot({ path: `${outDir}/desktop-contacto-scrolled.png` });
   check('T4 sin console/page errors (desktop)', consoleErrors.length === 0,

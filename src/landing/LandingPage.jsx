@@ -133,9 +133,15 @@ export default function LandingPage() {
 
         {/* Fix 2026-09-11: "Iniciar sesión" ocupa el slot donde estaba el CTA
             "Solicitar demo" (eliminado de la topbar; sigue en la sección
-            HABLEMOS/cierre). */}
+            HABLEMOS/cierre). v2 (2026-09-11): estilo CTA gold completo
+            (gradiente + sombra + flecha), mismo lenguaje que el hero. */}
         <div className="landing__header-actions">
-          <a className="landing__nav-login landing__nav-login--cta" href="#accesos" onClick={closeMenu}>{t('Iniciar sesión', 'Log in')}</a>
+          <a className="landing__cta landing__cta--gold landing__cta--sm landing__nav-login" href="#accesos" onClick={closeMenu}>
+            {t('Iniciar sesión', 'Log in')}
+            <svg className="landing__nav-login-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 12h15M13 6l6 6-6 6" />
+            </svg>
+          </a>
         </div>
 
         <LanguageToggle />

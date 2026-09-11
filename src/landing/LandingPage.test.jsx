@@ -82,6 +82,9 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(login).toHaveAttribute('href', '#accesos');
       // Fix 2026-09-11: el login ocupa el slot donde estaba "Solicitar demo".
       expect(login.closest('.landing__header-actions')).not.toBeNull();
+      // v2: estilo CTA gold completo (gradiente) + flecha SVG.
+      expect(login).toHaveClass('landing__cta--gold');
+      expect(login.querySelector('svg.landing__nav-login-arrow')).not.toBeNull();
       // "Solicitar demo" eliminado de la topbar; queda solo el del cierre HABLEMOS.
       const demoLinks = screen.getAllByRole('link', { name: 'Solicitar demo' });
       expect(demoLinks).toHaveLength(1);
@@ -286,19 +289,19 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       remove();
     });
 
-    it('login pill en header-actions (ex slot "Solicitar demo", fix 2026-09-11): declaración ganadora = --k-btn-gold-ink', () => {
+    it('CTA gold login en header-actions (ex slot "Solicitar demo", v2 2026-09-11): declaración ganadora = --k-btn-gold-ink', () => {
       const remove = injectLandingStyles();
       renderLanding();
-      const login = document.querySelector('.landing__header-actions .landing__nav-login--cta');
+      const login = document.querySelector('.landing__header-actions .landing__cta--gold');
       expect(login).not.toBeNull();
       expect(getComputedStyle(login).color).toBe('var(--k-btn-gold-ink)');
       remove();
     });
 
-    it('login pill: declaración ganadora = --k-btn-gold-ink (regresión cascada .landing a { color: inherit })', () => {
+    it('login CTA: declaración ganadora = --k-btn-gold-ink (regresión cascada .landing a { color: inherit })', () => {
       const remove = injectLandingStyles();
       renderLanding();
-      const login = document.querySelector('.landing__nav-login--cta');
+      const login = document.querySelector('.landing__nav-login');
       expect(login).not.toBeNull();
       expect(getComputedStyle(login).color).toBe('var(--k-btn-gold-ink)');
       remove();
@@ -351,8 +354,11 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       // Easing moderno (cubic-bezier) y respeto a prefers-reduced-motion.
       expect(css).toContain('cubic-bezier(');
       expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
-      // Anclas bajo la topbar overlay.
-      expect(css).toMatch(/\.landing__section\s*\{[\s\S]*?scroll-margin-top:\s*190px/);
+      // Anclas: SIN scroll-margin. La topbar es position:absolute (no fixed)
+      // y se va con el scroll; con offset 190px la sección quedaba "a mitad
+      // de pantalla" (feedback usuario 2026-09-11). El padding de la sección
+      // (120px) da la respiración sobre el top del viewport.
+      expect(css).not.toContain('scroll-margin-top');
     });
   });
 

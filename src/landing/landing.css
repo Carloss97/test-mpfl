@@ -254,28 +254,15 @@
   padding: 0 24px;
 }
 
-/* Fix 2026-09-11: el botón "Iniciar sesión" se movió de la nav al slot de
-   header-actions (donde estaba "Solicitar demo"). font-size: 15px se declara
-   aquí porque ya no hereda de .landing__nav. */
-.landing__header-actions .landing__nav-login--cta {
-  background: var(--k-gold);
-  color: var(--k-btn-gold-ink);
-  padding: 0.5rem 1rem;
-  border-radius: var(--k-radius);
-  font-size: 15px;
-  font-weight: var(--k-font-weight-semibold);
-  text-decoration: none;
-  transition:
-    opacity var(--k-transition-fast),
-    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+/* Fix 2026-09-11 v2: "Iniciar sesión" con estilo CTA gold completo (clases
+   landing__cta landing__cta--gold landing__cta--sm; landing__nav-login es el
+   marcador). La flecha se desliza 3px a la derecha en hover. */
+.landing__nav-login-arrow {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.landing__header-actions .landing__nav-login--cta:hover {
-  opacity: 0.9;
-}
-
-.landing__header-actions .landing__nav-login--cta:active {
-  transform: scale(0.97);
+.landing__cta--gold:hover .landing__nav-login-arrow {
+  transform: translateX(3px);
 }
 
 /* Selector DOBLE (0,2,0): la regla base `.landing a { color: inherit }`
@@ -471,9 +458,6 @@
 .landing__section {
   padding: 120px 8vw;
   border-top: 1px solid var(--k-divider);
-  /* La topbar es overlay absoluto (172px): las anclas no deben quedar
-     ocultas bajo ella (2026-09-11). */
-  scroll-margin-top: 190px;
 }
 
 .landing__section--light {
@@ -897,7 +881,7 @@
 /* ── Móvil ≤800px (referencia) ── */
 @media (max-width: 800px) {
   .landing__topbar {
-    gap: 12px;
+    gap: 8px;
     min-height: 148px;
     padding: 16px 24px;
   }
@@ -907,8 +891,20 @@
   }
 
   .landing__brand-logo {
-    width: 116px;
-    height: 116px;
+    width: 104px;
+    height: 104px;
+  }
+
+  /* CTA login compacto en móvil (v2 2026-09-11): sin flecha, tighter,
+     para que la fila brand+CTA+idioma+hamburguesa quepa en 390px. */
+  .landing__header-actions .landing__cta {
+    min-height: 42px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+
+  .landing__nav-login-arrow {
+    display: none;
   }
 
   .landing__hero {
@@ -950,7 +946,6 @@
 
   .landing__section {
     padding: 72px 0;
-    scroll-margin-top: 160px;
   }
 
   /* Gutter móvil (design-system §5: 20-24px): el horizontal lo pone el
@@ -979,7 +974,7 @@
   .landing__nav,
   .landing__menu-button svg path,
   .landing__cta,
-  .landing__header-actions .landing__nav-login--cta,
+  .landing__nav-login-arrow,
   .landing__nav a,
   .landing__nav a::after {
     transition: none !important;
