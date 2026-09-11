@@ -133,6 +133,9 @@ jobs:
           DISTRIBUTION_ID: EDQ39PDNI931R
         run: bash scripts/deploy-frontend.sh
 
+      - name: Install (para el smoke Playwright)
+        run: npm ci
+
       - name: Playwright Chromium (+ system deps)
         run: npx playwright install --with-deps chromium
 
