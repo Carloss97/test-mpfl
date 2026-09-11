@@ -670,3 +670,62 @@ export const CONTROL_ROOM_EVALUATION_ORDER = Object.freeze(
       .map((s) => s.id),
   ),
 );
+
+// ----------------------------------------------------------------------------
+// C3: contenido de flujo (Doc 2 §4/§5/§15): bienvenida, tutorial T1-T5, salida del
+// tutorial, intros de bloque y pantalla final. ES fuente + EN. La UI (controlRoomGame)
+// consume estos textos; NINGUN copy vive en el componente.
+// ----------------------------------------------------------------------------
+
+/** §5.1 Pantalla de bienvenida. */
+export const CONTROL_ROOM_WELCOME = Object.freeze({
+  title: { es: 'Sala de Control', en: 'Control Room' },
+  sub: { es: 'Coordina incidentes comunicándote con personas en terreno.', en: 'Coordinate incidents by communicating with people in the field.' },
+  message: {
+    es: 'Revisa la información disponible, decide qué necesitas saber y envía instrucciones claras. En algunos casos tendrás que preguntar o corregir un malentendido antes de continuar.',
+    en: 'Review the available information, decide what you need to know, and send clear instructions. In some cases you will have to ask or correct a misunderstanding before continuing.',
+  },
+  cta: { es: 'Iniciar práctica', en: 'Start practice' },
+});
+
+/** §5.2 Nodos del tutorial guiado T1-T5 (overlay + acción esperada). */
+export const CONTROL_ROOM_TUTORIAL_NODES = Object.freeze({
+  T1: Object.freeze({ id: 'T1', focus: 'seleccion', copy: { es: 'Toca una respuesta para seleccionarla.', en: 'Tap a response to select it.' }, expected: { es: 'Elegir una tarjeta.', en: 'Pick a card.' } }),
+  T2: Object.freeze({ id: 'T2', focus: 'envio', copy: { es: 'Confirma cuando estés conforme. Después de enviar no podrás editar.', en: 'Confirm when you are ready. After sending you cannot edit.' }, expected: { es: 'Tap en Enviar.', en: 'Tap Send.' } }),
+  T3: Object.freeze({ id: 'T3', focus: 'pregunta', copy: { es: 'Si falta información importante, puedes preguntar antes de dar una instrucción.', en: 'If important information is missing, you can ask before giving an instruction.' }, expected: { es: 'Elegir pregunta crítica.', en: 'Pick the critical question.' } }),
+  T4: Object.freeze({ id: 'T4', focus: 'bloques', copy: { es: 'Toca los bloques para construir el mensaje. Puedes cambiar el orden antes de enviarlo.', en: 'Tap the blocks to build the message. You can reorder them before sending.' }, expected: { es: 'Agregar y reordenar.', en: 'Add and reorder.' } }),
+  T5: Object.freeze({ id: 'T5', focus: 'verificacion', copy: { es: 'A veces necesitarás confirmar que la instrucción fue entendida o ejecutada.', en: 'Sometimes you will need to confirm the instruction was understood or carried out.' }, expected: { es: 'Enviar verificación.', en: 'Send verification.' } }),
+});
+
+/** Escenarios de práctica que vehiculizan el tutorial (block 0, sin score). */
+export const CONTROL_ROOM_TUTORIAL_ORDER = Object.freeze(['CR-PRACTICE-01', 'CR-PRACTICE-02']);
+
+/** Nodos T1-T5 por escenario de práctica (para el overlay contextual de la UI). */
+export const CONTROL_ROOM_TUTORIAL_HINTS_BY_SCENARIO = Object.freeze({
+  'CR-PRACTICE-01': Object.freeze({ npc_open: ['T1', 'T2'], npc_confirm: ['T5'] }),
+  'CR-PRACTICE-02': Object.freeze({ npc_open: ['T3'], npc_color: ['T4'] }),
+});
+
+/** §5.3 Salida del tutorial (modal). */
+export const CONTROL_ROOM_TUTORIAL_EXIT = Object.freeze({
+  text: {
+    es: 'Práctica completada. A partir de ahora tus decisiones formarán parte de la evaluación. Lee con atención la información disponible y responde como lo harías en una situación real.',
+    en: 'Practice complete. From now on your decisions will be part of the evaluation. Read the available information carefully and respond as you would in a real situation.',
+  },
+  cta: { es: 'Comenzar evaluación', en: 'Start evaluation' },
+});
+
+/** Intros de bloque (Doc 2 §15 + matriz §10). Antes del primer escenario de cada bloque. */
+export const CONTROL_ROOM_BLOCK_INTROS = Object.freeze({
+  1: { es: 'Bloque 1 · Claridad. Da una instrucción específica con la información completa.', en: 'Block 1 · Clarity. Give a specific instruction using the full information.' },
+  2: { es: 'Bloque 2 · Relevancia. Hay más datos de los necesarios; comunica solo lo crítico.', en: 'Block 2 · Relevance. There is more data than needed; communicate only what is critical.' },
+  3: { es: 'Bloque 3 · Indagación. Falta un dato clave; pregunta antes de asumir.', en: 'Block 3 · Inquiry. A key data point is missing; ask before assuming.' },
+  4: { es: 'Bloque 4 · Reparación. Si el interlocutor interpreta mal, corrige con precisión.', en: 'Block 4 · Repair. If the contact misinterprets, correct them precisely.' },
+  5: { es: 'Bloque 5 · Adaptación. Ajusta el detalle y el registro al rol de la persona.', en: 'Block 5 · Adaptation. Adjust the detail and register to the person’s role.' },
+  6: { es: 'Bloque 6 · Integración bajo presión. Combina habilidades con tiempo limitado (45 s).', en: 'Block 6 · Integration under pressure. Combine skills with a time limit (45 s).' },
+});
+
+/** §15 / §4.4 Pantalla final neutra. */
+export const CONTROL_ROOM_FINAL = Object.freeze({
+  text: { es: 'Simulación finalizada. Tus respuestas fueron registradas correctamente.', en: 'Simulation complete. Your responses were recorded correctly.' },
+});

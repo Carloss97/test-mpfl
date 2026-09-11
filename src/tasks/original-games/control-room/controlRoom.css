@@ -275,6 +275,48 @@
   .control-room * { transition: none !important; animation: none !important; }
 }
 
+/* ---- C3: pantallas de flujo (welcome / tutorial_exit / block_intro / final) ---- */
+.control-room--screen {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 32px 24px;
+}
+.cr-screen__title { margin: 0; font-size: 2rem; font-weight: 800; letter-spacing: 0.02em; color: var(--cr-ink); }
+.cr-screen__sub { margin: 0; font-size: 1.1rem; color: var(--cr-accent); font-weight: 600; }
+.cr-screen__body { margin: 0; max-width: 560px; font-size: 1.05rem; color: var(--cr-ink-dim); overflow-wrap: anywhere; }
+.control-room--screen .cr-send { margin-top: 8px; min-width: 220px; }
+@media (max-width: 599px) {
+  .control-room--screen { padding: 24px 16px; }
+  .cr-screen__title { font-size: 1.6rem; }
+  .control-room--screen .cr-send { width: 100%; }
+}
+
+/* C3: hint de tutorial T1-T5 (overlay contextual, solo modo tutorial). */
+.cr-tutorial-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #241f12;
+  border: 1px solid var(--cr-accent);
+  border-radius: 10px;
+  font-size: 0.95em;
+}
+.cr-tutorial-hint__badge {
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.75em;
+  color: var(--cr-accent-ink);
+  background: var(--cr-accent);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.cr-tutorial-hint__text { color: var(--cr-ink); }
+
 /* Altura compacta (isCompactViewport, height <= 820): compactar paddings/tamaños para que
  * header + datos + NPC + respuesta + enviar QUEPAN sin scroll (p. ej. 1280x720). */
 @media (max-height: 820px) {

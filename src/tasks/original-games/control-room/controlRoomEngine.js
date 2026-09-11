@@ -429,6 +429,14 @@ export function createControlRoomEngine({
     }));
   }
 
+  /** Raw counts por dimensión (opportunity/success) para agregado a nivel de sesión (C3). */
+  function dimensionStats() {
+    return Object.fromEntries(COMM_DIMENSION_KEYS.map((k) => {
+      const { opportunity, success } = st.dimensionStats[k];
+      return [k, { opportunity, success }];
+    }));
+  }
+
   function eventCount(name) {
     return st.eventBuffer.filter((e) => e.event === name).length;
   }
