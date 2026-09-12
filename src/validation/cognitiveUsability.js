@@ -67,6 +67,9 @@ export const CONSTRUCT_AVAILABILITY = Object.freeze({
   // B6 (EXP-BOMB-001): espejo del mapa R-7B — constructo 9° experimental,
   // descriptive_only (sin score compuesto, spec §12.1/§17).
   proceduralWorkingMemory: 'descriptive_only',
+  // C6 (EXP-COMM-001): espejo del mapa R-7B — constructo 10° experimental,
+  // descriptive_only (sin score compuesto, spec §12.2/§17/§18).
+  appliedCommunication: 'descriptive_only',
 });
 
 const row = (r) =>

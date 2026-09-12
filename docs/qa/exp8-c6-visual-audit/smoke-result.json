@@ -1,0 +1,53 @@
+{
+  "spec": "docs/spec/EXP-COMM-001/ (Doc 1 v1.1 FINAL + Doc 2 v1.0.0)",
+  "card": "t_b17fd176 (C6, EXP-8) / KRU-107",
+  "date": "2026-09-12T01:01:24.726Z",
+  "baseUrl": "http://127.0.0.1:5173",
+  "viewportDesktop": "1280x720",
+  "viewportMobile": "390x844",
+  "runs": [
+    {
+      "shot": "a-01-welcome-1280x720"
+    },
+    {
+      "shot": "a-02-practice-response"
+    },
+    {
+      "shot": "a-03-post-send"
+    },
+    {
+      "run": "A: mundo desktop 1280x720 (welcome → práctica P1 → envío → post-envío)",
+      "ok": true
+    },
+    {
+      "shot": "b-04-report-fixture-1280x720"
+    },
+    {
+      "run": "B: reporte fixture original (10 constructos + card Sala de Control)",
+      "ok": true
+    },
+    {
+      "shot": "c-06-welcome-390x844"
+    },
+    {
+      "shot": "c-02-practice-response"
+    },
+    {
+      "shot": "c-03-post-send"
+    },
+    {
+      "run": "C: móvil 390x844 (mundo: welcome → práctica P1 → envío → post-envío)",
+      "ok": true
+    },
+    {
+      "shot": "d-08-report-390x844"
+    },
+    {
+      "run": "D: móvil 390x844 (reporte fixture 10 constructos)",
+      "ok": true
+    }
+  ],
+  "consoleErrors": [],
+  "failures": [],
+  "ok": true
+}

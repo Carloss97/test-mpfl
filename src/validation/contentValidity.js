@@ -37,6 +37,10 @@ export const CONSTRUCT_AVAILABILITY = Object.freeze({
   // B6 (EXP-BOMB-001): constructo 9° — módulo experimental, descriptive_only
   // (score null; sin score compuesto hasta pilotaje, spec §12.1/§17).
   proceduralWorkingMemory: 'descriptive_only',
+  // C6 (EXP-COMM-001): constructo 10° — módulo experimental, descriptive_only
+  // (score null; 7 sub-dimensiones, sin score compuesto hasta evidencia
+  // factorial, spec §12.2/§17/§18).
+  appliedCommunication: 'descriptive_only',
 });
 
 const row = (r) =>
@@ -274,6 +278,33 @@ export const PROVISIONAL_MATRIX = Object.freeze([
     omisiones: 'amplia', severidad: 'media', veredicto: 'revisar',
     origin: 'exp7_bomb_draft',
     comentario: 'Señal secundaria (inhibición/set shifting, spec §3.2): contexto único (L4) y conteo escaso — mantener contextual hasta la fase D (convergencia/discriminación).',
+  }),
+
+  // ── Comunicación aplicada en coordinación (descriptive_only — EXP-COMM-001
+  // experimental; rows de borrador C6, pending panel R-7B §5) ────────────────
+  row({
+    construct: 'appliedCommunication', feature: 'comm.clarity', task: 'Control Room',
+    demanda: 'Comunicar instrucciones con referencia específica y no ambigua a un receptor con información asimétrica (bloque 1).',
+    evidencia: 'adyacente', relevancia: 3, claridad: 3, contaminacion: 'media',
+    omisiones: 'parcial', severidad: 'media', veredicto: 'revisar',
+    origin: 'exp8_comm_draft',
+    comentario: 'Módulo experimental (EXP-COMM-001): descriptive_only, sin score compuesto hasta evidencia factorial (spec §12.2/§18). Riesgo alto declarado: medir lectura más que comunicación (spec §18) → textos breves, vocabulario controlado, sin countdown en bloques 1–5.',
+  }),
+  row({
+    construct: 'appliedCommunication', feature: 'comm.inquiry', task: 'Control Room',
+    demanda: 'Preguntar el dato crítico faltante antes de actuar (bloque 3; regla CRITICAL_REQUIRED §8.3).',
+    evidencia: 'adyacente', relevancia: 3, claridad: 3, contaminacion: 'media',
+    omisiones: 'parcial', severidad: 'media', veredicto: 'revisar',
+    origin: 'exp8_comm_draft',
+    comentario: 'La precisión de indagación (clarification_precision §12.1) distingue preguntar bien de preguntar mucho (redundancy_rate); mantener descriptivo hasta fase 5 (evidencia convergente, §17.1).',
+  }),
+  row({
+    construct: 'appliedCommunication', feature: 'comm.verification_closed_loop', task: 'Control Room',
+    demanda: 'Cerrar el bucle: confirmar que la instrucción fue entendida o ejecutada (verification_rate + repair_success_rate §12.1).',
+    evidencia: 'adyacente', relevancia: 3, claridad: 3, contaminacion: 'media',
+    omisiones: 'parcial', severidad: 'media', veredicto: 'revisar',
+    origin: 'exp8_comm_draft',
+    comentario: 'Incluye reparación tras malentendido fijado por blueprint (bloque 4, determinista §1.1/Doc 2 §13); la reparación no observada sale null (no oportunidad), nunca 0.',
   }),
 ]);
 
