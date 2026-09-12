@@ -72,6 +72,7 @@ const MOCK_GAMES = {
   team_coordination: MockGame,
   tangram_exp001: MockGame,
   bomb_defusal: MockGame,
+  control_room: MockGame,
 };
 
 // V5 (t_0184d2e6): la landing interna deprecada — el flujo se entra con
@@ -218,16 +219,17 @@ describe('PostulationDemoApp shell and flow', () => {
     startGames();
 
     expect(screen.getByRole('heading', { name: /Puzzle láser/i })).toBeInTheDocument();
-    expect(screen.getByText(/Juego 1 de 6/i)).toBeInTheDocument();
+    expect(screen.getByText(/Juego 1 de 7/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Completar laser_puzzle/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar balloon_risk/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar passenger_routes/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar team_coordination/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar tangram_exp001/i }));
     fireEvent.click(screen.getByRole('button', { name: /Completar bomb_defusal/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Completar control_room/i }));
 
     expect(screen.getByRole('heading', { name: /Reporte de sesión listo para revisión humana/i })).toBeInTheDocument();
-    expect(screen.getByText(/Completaste\s+6\s+de\s+6\s+juegos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Completaste\s+7\s+de\s+7\s+juegos/i)).toBeInTheDocument();
     expect(document.querySelector('[data-battery-mode="original_games"]')).toBeInTheDocument();
   });
 
@@ -236,13 +238,14 @@ describe('PostulationDemoApp shell and flow', () => {
     render(<PostulationDemoApp gameComponents={MOCK_GAMES} />);
 
     expect(screen.getByRole('heading', { name: /Reporte de muestra listo para revisión humana/i })).toBeInTheDocument();
-    expect(screen.getByText(/Completaste\s+6\s+de\s+6\s+juegos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Completaste\s+7\s+de\s+7\s+juegos/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Puzzle láser/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Globo de riesgo/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Optimización de rutas de pasajeros/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Operación Faro: coordinación de equipo/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Ensamblaje Geométrico/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Desactivación de secuencias/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Sala de Control/i })).toBeInTheDocument();
   });
 
   it('invite guard (M3): an expired invitation token blocks the flow with a specific message', async () => {

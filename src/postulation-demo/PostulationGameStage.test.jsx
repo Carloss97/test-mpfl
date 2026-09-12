@@ -194,7 +194,7 @@ describe('PostulationGameStage', () => {
   });
 
   describe('H2: indicador discreto de error de señal por juego (batería original, 6 juegos)', () => {
-    const ORIGINAL_GAMES = ['laser_puzzle', 'balloon_risk', 'passenger_routes', 'team_coordination', 'tangram_exp001', 'bomb_defusal'];
+    const ORIGINAL_GAMES = ['laser_puzzle', 'balloon_risk', 'passenger_routes', 'team_coordination', 'tangram_exp001', 'bomb_defusal', 'control_room'];
     const OK_SNAPSHOT = Object.freeze({ camera: 'ok', face: 'ok', signal: 'ok', events: 3, report: 'pending' });
     const ERROR_SNAPSHOT = Object.freeze({ camera: 'error', face: 'idle', signal: 'idle', events: 3, report: 'pending' });
     const WARNING_SNAPSHOT = Object.freeze({ camera: 'ok', face: 'warning', signal: 'warning', events: 3, report: 'pending' });

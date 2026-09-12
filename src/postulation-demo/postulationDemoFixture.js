@@ -10,6 +10,10 @@ import {
   buildBombBlockSummary,
   generateBombSyntheticSessionPayload,
 } from '../tasks/original-games/bomb/bombTelemetry.js';
+import {
+  buildControlRoomBlockSummary,
+  generateControlRoomSyntheticSessionPayload,
+} from '../tasks/original-games/control-room/controlRoomTelemetry.js';
 
 export const POSTULATION_DEMO_FIXTURE_RUN_ID = 'postulation-demo-fixture-v1';
 export const POSTULATION_DEMO_ORIGINAL_FIXTURE_RUN_ID = 'postulation-demo-original-games-fixture-v1';
@@ -132,6 +136,13 @@ function blockSummary(block, index) {
     const payload = generateBombSyntheticSessionPayload({ seed: 42 });
     return buildBombBlockSummary(payload, { state: 'SESSION_COMPLETE' });
   }
+  if (block.gameId === 'control_room') {
+    // C5: agregado GENUINO del motor (headless, reloj falso, guion óptimo sobre los 14
+    // escenarios — 2 práctica + 12 evaluación), no inventado a mano. Determinista: el
+    // contenido es fijo => mismo payload (EXP-COMM-001 §15).
+    const payload = generateControlRoomSyntheticSessionPayload({ runId: 'postulation-demo-original-games-fixture-v1' });
+    return buildControlRoomBlockSummary(payload, { state: 'SESSION_COMPLETE' });
+  }
   const accuracy = [0.88, 0.76, 0.82, 0.9][index] ?? 0.82;
   const score = [0.84, 0.72, 0.8, 0.87][index] ?? 0.8;
   const meanReactionTimeMs = [520, 610, 680, 740][index] ?? 620;
@@ -159,6 +170,7 @@ function fixtureResponse(block, index) {
   if (block.gameId === 'team_coordination') return { ...base, correct: true, outcome: 'structured_choice', teamCoordination: summary };
   if (block.gameId === 'tangram_exp001') return { ...base, correct: true, outcome: 'assembly_completed', tangram: summary };
   if (block.gameId === 'bomb_defusal') return { ...base, correct: true, outcome: 'sequence_completed', bombDefusal: summary };
+  if (block.gameId === 'control_room') return { ...base, correct: true, outcome: 'communication_completed', controlRoom: summary };
   return {
     ...base,
     pointerSummary: { pathEfficiency: 0.78 + (index * 0.03), correctionCount: index === 1 ? 2 : 0 },

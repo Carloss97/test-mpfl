@@ -125,6 +125,22 @@ function summarizeBomb(result = {}) {
   return baseSummary('bomb_defusal', 'low', 'no_instruction_signal_detected', diagnostics);
 }
 
+function summarizeControlRoom(result = {}) {
+  const scenarioCount = nonNegativeInteger(result.scenarioCount ?? 0) ?? 0;
+  const scoredCount = nonNegativeInteger(result.scoredCount ?? 0) ?? 0;
+  const messageCount = nonNegativeInteger(result.total_message_count ?? 0) ?? 0;
+  const diagnostics = { scenarioCount, scoredCount, messageCount };
+  // Escenarios puntuados sin mensajes = señal de riesgo de comprensión/interacción.
+  if (scoredCount > 0 && messageCount === 0) {
+    return baseSummary('control_room', 'review', 'no_messages_instruction_review', diagnostics);
+  }
+  // Escenarios presentados sin puntuar = revisión de comprensión de onboarding/tutorial.
+  if (scenarioCount > 0 && scoredCount === 0) {
+    return baseSummary('control_room', 'review', 'incomplete_scenarios_instruction_review', diagnostics);
+  }
+  return baseSummary('control_room', 'low', 'no_instruction_signal_detected', diagnostics);
+}
+
 function normalizeBlock(block = {}) {
   const gameId = block.gameId ?? block.block?.gameId ?? block.result?.gameId ?? block.summary?.gameId ?? 'unknown';
   const result = block.result ?? block.summary ?? block;
@@ -142,6 +158,7 @@ function summarizeGame(block = {}) {
   if (gameId === 'team_coordination') return summarizeTeamCoordination(result);
   if (gameId === 'tangram_exp001') return summarizeTangram(result);
   if (gameId === 'bomb_defusal') return summarizeBomb(result);
+  if (gameId === 'control_room') return summarizeControlRoom(result);
   return baseSummary(gameId, 'review', 'unsupported_game_for_instruction_check');
 }
 

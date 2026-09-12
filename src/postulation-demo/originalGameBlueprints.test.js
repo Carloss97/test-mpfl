@@ -10,6 +10,10 @@ import {
   buildBombBlockSummary,
   generateBombSyntheticSessionPayload,
 } from '../tasks/original-games/bomb/bombTelemetry.js';
+import {
+  buildControlRoomBlockSummary,
+  generateControlRoomSyntheticSessionPayload,
+} from '../tasks/original-games/control-room/controlRoomTelemetry.js';
 
 describe('original game integration blueprints', () => {
   it('declares the original games plus the structured team brief completion probe and the tangram module', () => {
@@ -20,13 +24,14 @@ describe('original game integration blueprints', () => {
       'team_coordination',
       'tangram_exp001',
       'bomb_defusal',
+      'control_room',
     ]);
   });
 
   it('keeps source paths, target roles, aggregate fields and human-review language explicit', () => {
     for (const blueprint of ORIGINAL_GAME_BLUEPRINTS) {
       expect(blueprint.label).toMatch(/\S/);
-      expect(blueprint.source.primary).toMatch(['team_coordination', 'tangram_exp001', 'bomb_defusal'].includes(blueprint.gameId) ? /src\/tasks\/original-games/ : /\/Test\/src\//);
+      expect(blueprint.source.primary).toMatch(['team_coordination', 'tangram_exp001', 'bomb_defusal', 'control_room'].includes(blueprint.gameId) ? /src\/tasks\/original-games/ : /\/Test\/src\//);
       expect(blueprint.postulation.skill).toMatch(/\S/);
       expect(blueprint.postulation.durationLabel).toMatch(/min|s/);
       expect(blueprint.allowedAggregateFields.length).toBeGreaterThanOrEqual(5);
@@ -43,6 +48,7 @@ describe('original game integration blueprints', () => {
       expect.objectContaining({ gameId: 'team_coordination', visible: false, phase: 'original_games_completion_probe', activationStatus: 'controlled_active' }),
       expect.objectContaining({ gameId: 'tangram_exp001', visible: false, phase: 'original_games_completion_probe', activationStatus: 'controlled_active' }),
       expect.objectContaining({ gameId: 'bomb_defusal', visible: false, phase: 'original_games_completion_probe', activationStatus: 'controlled_active' }),
+      expect.objectContaining({ gameId: 'control_room', visible: false, phase: 'original_games_completion_probe', activationStatus: 'controlled_active' }),
     ]);
   });
 
@@ -59,6 +65,22 @@ describe('original game integration blueprints', () => {
     expect(sanitized.completed).toBe(true);
     expect(sanitized.aggregateOnly).toBe(true);
     expect(typeof sanitized.retentionAccuracyRate).toBe('number');
+  });
+
+  it('control_room allowlist is a superset of buildControlRoomBlockSummary keys (anti-drift C5)', () => {
+    const blueprint = getOriginalGameBlueprint('control_room');
+    const payload = generateControlRoomSyntheticSessionPayload({ runId: 'allowlist-test' });
+    const summary = buildControlRoomBlockSummary(payload, { state: 'SESSION_COMPLETE' });
+    const allowed = new Set(blueprint.allowedAggregateFields);
+    const missing = Object.keys(summary).filter((key) => !allowed.has(key));
+    expect(missing).toEqual([]);
+    // El agregado sobrevive el sanitizer completo (solo escalares permitidos).
+    const sanitized = sanitizeOriginalGameAggregate('control_room', summary);
+    expect(sanitized.aggregateSchemaVersion).toBe('control_room_block_summary_v1');
+    expect(sanitized.completed).toBe(true);
+    expect(sanitized.aggregateOnly).toBe(true);
+    expect(sanitized.scenarioCount).toBe(12);
+    expect(typeof sanitized.clarity).toBe('number');
   });
 
   it('defines privacy-forbidden fields that must not leave game components', () => {

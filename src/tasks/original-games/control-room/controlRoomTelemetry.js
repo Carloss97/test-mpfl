@@ -22,9 +22,14 @@ import {
   CONTROL_ROOM_EXPERIENCE_ID,
   CONTROL_ROOM_BUILD_VERSION,
   CONTROL_ROOM_MANIFEST_VERSION,
+  buildControlRoomLevelSpec,
+  CONTROL_ROOM_TUTORIAL_ORDER,
+  CONTROL_ROOM_EVALUATION_ORDER,
 } from './controlRoomRules.js';
+import { createControlRoomEngine, CONTROL_ROOM_STATES } from './controlRoomEngine.js';
 
 export const CONTROL_ROOM_PAYLOAD_VERSION = 'control_room_session_v1';
+export const CONTROL_ROOM_BLOCK_AGGREGATE_SCHEMA = 'control_room_block_summary_v1';
 
 // Claves prohibidas en el payload (privacidad): nada reconstructivo.
 const FORBIDDEN_KEYS = Object.freeze([
@@ -252,4 +257,133 @@ export function buildControlRoomSessionPayload({
     },
   };
   return { ...payload, privacyValidation: validateControlRoomPayloadPrivacy(payload) };
+}
+
+// ---------------- Sesión sintética determinista (fixture C5) ----------------
+
+function createScriptedClock() {
+  let t = 0;
+  return { now: () => t, advance: (ms) => { t += Math.max(0, ms); } };
+}
+
+/**
+ * Juega un escenario de manera ÓPTIMA y determinista sobre el motor real (headless).
+ * En cada step de respuesta: compositor → agrega la secuencia óptima; cartas → selecciona
+ * la carta óptima (o la 1ª si no hay óptima). Envía, completa verificación y consecuencia.
+ * Determinista: mismo escenario => mismo guion => mismo resultado.
+ */
+function playOptimalScenario(engine, clock) {
+  const S2 = CONTROL_ROOM_STATES;
+  engine.start();
+  let guard = 0;
+  while (guard++ < 60) {
+    const st = engine.state;
+    if (st === S2.COMPLETE || st === S2.TECHNICAL_ERROR) break;
+    if (st === S2.RESPONSE) {
+      const step = engine.currentStep();
+      if (!step) break;
+      clock.advance(900); // lectura/decisión
+      if (step.composer) {
+        for (const b of step.composerVerdicts?.optimal ?? []) { engine.addBlock(b); clock.advance(150); }
+      } else {
+        const ids = Object.keys(step.verdicts ?? {});
+        let targetId = ids.find((id) => step.verdicts[id] === 'optimal');
+        if (!targetId) targetId = (step.cards ?? [])[0]?.id;
+        if (targetId) { engine.selectCard(targetId); clock.advance(250); }
+      }
+      clock.advance(300);
+      engine.send();
+      clock.advance(250);
+    } else if (st === S2.VERIFICATION) {
+      clock.advance(300);
+      engine.completeVerification();
+      clock.advance(150);
+    } else if (st === S2.CONSEQUENCE) {
+      clock.advance(2000);
+      engine.completeScenario();
+    } else {
+      break;
+    }
+  }
+  return engine;
+}
+
+/**
+ * Ejecuta el motor REAL headless (reloj falso + guion óptimo) sobre la sesión completa
+ * (2 práctica + 12 evaluación) y devuelve el payload §19 genuino. Determinista: el
+ * contenido es fijo (sin aleatoriedad) => misma sesión => mismo payload. Sirve para el
+ * fixture de la batería original (C5): su sessionPayload es genuino, reconstruible.
+ */
+export function generateControlRoomSyntheticSessionPayload({
+  runId = 'synthetic-control-room-fixture',
+  batteryId = null,
+} = {}) {
+  const clock = createScriptedClock();
+  const results = [];
+  const allIds = [...CONTROL_ROOM_TUTORIAL_ORDER, ...CONTROL_ROOM_EVALUATION_ORDER];
+  for (const id of allIds) {
+    const scenario = buildControlRoomLevelSpec(id);
+    if (!scenario) continue;
+    const engine = createControlRoomEngine({ scenario, now: clock.now, log: () => {} });
+    playOptimalScenario(engine, clock);
+    clock.advance(400);
+    results.push({
+      scenarioId: engine.scenario.id,
+      form: engine.scenario.form ?? null,
+      block: engine.scenario.block,
+      practice: engine.scenario.practice === true,
+      scored: engine.scored === true,
+      resolved: engine.resolved === true,
+      metrics: engine.metrics(),
+      dimensionStats: engine.dimensionStats(),
+      eventBuffer: engine.eventBuffer(),
+      integrityFlags: engine.integrityFlags(),
+    });
+  }
+  return buildControlRoomSessionPayload({ results, runId, batteryId });
+}
+
+/**
+ * Block summary ESCALAR (battery-facing, C5): extrae los campos escalares del payload §19.
+ * Es lo que el juego reporta vía onComplete para la batería; sanitizeOriginalGameAggregate
+ * (blueprint) lo filtra por allowlist y alimenta el feature vector. El payload §19 completo
+ * viaja aparte (artifacts), nunca por este allowlist (solo number/boolean/string).
+ */
+export function buildControlRoomBlockSummary(payload, { state = null } = {}) {
+  const metrics = payload?.metrics ?? {};
+  const dimensions = payload?.dimensions ?? {};
+  const session = payload?.session ?? {};
+  const integrity = payload?.integrity ?? {};
+  return {
+    aggregateSchemaVersion: CONTROL_ROOM_BLOCK_AGGREGATE_SCHEMA,
+    completed: (session.scoredCount ?? 0) > 0 || state === 'SESSION_COMPLETE',
+    state,
+    scenarioCount: session.evaluatedScenarioCount ?? 0,
+    scoredCount: session.scoredCount ?? 0,
+    resolvedCount: session.resolvedCount ?? 0,
+    resumeCount: session.resumeCount ?? 0,
+    // Métricas 11 (§12.1)
+    first_decision_latency_ms: metrics.first_decision_latency_ms ?? null,
+    average_decision_latency_ms: metrics.average_decision_latency_ms ?? null,
+    time_spent_reading_ms: metrics.time_spent_reading_ms ?? 0,
+    pre_send_edit_count: metrics.pre_send_edit_count ?? 0,
+    pre_send_reorder_count: metrics.pre_send_reorder_count ?? 0,
+    total_message_count: metrics.total_message_count ?? 0,
+    question_count: metrics.question_count ?? 0,
+    verification_count: metrics.verification_count ?? 0,
+    confirmation_requested: metrics.confirmation_requested ?? false,
+    confirmation_given: metrics.confirmation_given ?? false,
+    timeout_count: metrics.timeout_count ?? 0,
+    // Dimensiones 7 (§12.2) — 0-100 o null
+    clarity: dimensions.clarity ?? null,
+    relevance_and_synthesis: dimensions.relevance_and_synthesis ?? null,
+    inquiry: dimensions.inquiry ?? null,
+    verification_closed_loop: dimensions.verification_closed_loop ?? null,
+    adaptation: dimensions.adaptation ?? null,
+    repair: dimensions.repair ?? null,
+    receptive_understanding: dimensions.receptive_understanding ?? null,
+    integrityFlagCount: integrity.flags?.length ?? 0,
+    sessionPayloadVersion: payload?.payloadVersion ?? null,
+    aggregateOnly: true,
+  };
 }

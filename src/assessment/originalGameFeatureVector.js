@@ -58,6 +58,16 @@ export const ORIGINAL_GAME_FEATURE_ORDER = Object.freeze([
   'bomb.timeoutRate',
   'bomb.errorRecoveryLatencyMs',
   'bomb.timeMs',
+  // CONTROL ROOM (EXP-COMM-001, C5): delta aditivo — 7 dimensiones §12.2 → constructo
+  // aplicado appliedCommunication (10°). Sin breaking: las 53 keys anteriores conservan
+  // orden y semántica (featureDefinitionsVersion 2.3.0).
+  'comm.clarity',
+  'comm.relevance_and_synthesis',
+  'comm.inquiry',
+  'comm.verification_closed_loop',
+  'comm.adaptation',
+  'comm.repair',
+  'comm.receptive_understanding',
 ]);
 
 const FEATURE_UNITS = Object.freeze({
@@ -114,6 +124,13 @@ const FEATURE_UNITS = Object.freeze({
   'bomb.timeoutRate': 'ratio',
   'bomb.errorRecoveryLatencyMs': 'ms',
   'bomb.timeMs': 'ms',
+  'comm.clarity': 'ratio',
+  'comm.relevance_and_synthesis': 'ratio',
+  'comm.inquiry': 'ratio',
+  'comm.verification_closed_loop': 'ratio',
+  'comm.adaptation': 'ratio',
+  'comm.repair': 'ratio',
+  'comm.receptive_understanding': 'ratio',
 });
 
 export const ORIGINAL_GAME_FEATURE_DEFINITIONS = Object.freeze({
@@ -541,6 +558,65 @@ export const ORIGINAL_GAME_FEATURE_DEFINITIONS = Object.freeze({
     constructRelevance: 'Reviewer context and future validation covariate.',
     limitations: Object.freeze(['Device interruptions and reading speed affect time.', 'Not a speed norm.']),
   }),
+  // CONTROL ROOM (EXP-COMM-001, C5): 7 sub-dimensiones del constructo appliedCommunication
+  // (10°). Cada una = ratio de acciones exitosas en esa dimensión (spec §12.2), 0-1 en el
+  // vector. Provisorio, descriptivo, sin score global ni composite (spec §12.2).
+  'comm.clarity': Object.freeze({
+    sourceGame: 'control_room',
+    aggregateInputs: Object.freeze(['clarity']),
+    metricFormula: 'clarity_dimension / 100 (spec §12.2)',
+    metricRationale: 'Ratio of successful actions in the clarity dimension (specific, unambiguous instructions with correct references) across the coordination scenarios; a descriptive sub-dimension of applied communication.',
+    constructRelevance: 'Primary input for the experimental appliedCommunication construct (clarity sub-dimension, spec §12.2).',
+    limitations: Object.freeze(['Provisional; no norm, cut score, or composite.', 'Scenario-specific; not a general communication trait.']),
+  }),
+  'comm.relevance_and_synthesis': Object.freeze({
+    sourceGame: 'control_room',
+    aggregateInputs: Object.freeze(['relevance_and_synthesis']),
+    metricFormula: 'relevance_and_synthesis_dimension / 100 (spec §12.2)',
+    metricRationale: 'Ratio of successful actions separating critical information from distractors (block 2); the relevance/synthesis sub-dimension of applied communication.',
+    constructRelevance: 'Primary input for appliedCommunication (relevance/synthesis sub-dimension).',
+    limitations: Object.freeze(['Provisional; no norm or composite.', 'Depends on authored distractor quality.']),
+  }),
+  'comm.inquiry': Object.freeze({
+    sourceGame: 'control_room',
+    aggregateInputs: Object.freeze(['inquiry']),
+    metricFormula: 'inquiry_dimension / 100 (spec §12.2)',
+    metricRationale: 'Ratio of successful actions asking for missing critical data before assuming (block 3); the inquiry sub-dimension of applied communication.',
+    constructRelevance: 'Primary input for appliedCommunication (inquiry sub-dimension).',
+    limitations: Object.freeze(['Provisional; no norm or composite.', 'A question is not always optimal; context-dependent.']),
+  }),
+  'comm.verification_closed_loop': Object.freeze({
+    sourceGame: 'control_room',
+    aggregateInputs: Object.freeze(['verification_closed_loop']),
+    metricFormula: 'verification_closed_loop_dimension / 100 (spec §12.2)',
+    metricRationale: 'Ratio of successful closed-loop verifications (confirming the instruction was understood/executed); the verification sub-dimension of applied communication.',
+    constructRelevance: 'Primary input for appliedCommunication (verification/closed-loop sub-dimension).',
+    limitations: Object.freeze(['Provisional; no norm or composite.', 'Verification frequency is task-driven.']),
+  }),
+  'comm.adaptation': Object.freeze({
+    sourceGame: 'control_room',
+    aggregateInputs: Object.freeze(['adaptation']),
+    metricFormula: 'adaptation_dimension / 100 (spec §12.2)',
+    metricRationale: 'Ratio of successful adaptations of detail and register to the receiver role (block 5: technician/supervisor/client); the adaptation sub-dimension of applied communication.',
+    constructRelevance: 'Primary input for appliedCommunication (adaptation sub-dimension).',
+    limitations: Object.freeze(['Provisional; no norm or composite.', 'Register judgment is culturally contextual.']),
+  }),
+  'comm.repair': Object.freeze({
+    sourceGame: 'control_room',
+    aggregateInputs: Object.freeze(['repair']),
+    metricFormula: 'repair_dimension / 100 (spec §12.2)',
+    metricRationale: 'Ratio of successful repairs of the controlled, deterministic misunderstanding (block 4); the repair sub-dimension of applied communication.',
+    constructRelevance: 'Primary input for appliedCommunication (repair sub-dimension).',
+    limitations: Object.freeze(['Provisional; no norm or composite.', 'Few repair opportunities per session.']),
+  }),
+  'comm.receptive_understanding': Object.freeze({
+    sourceGame: 'control_room',
+    aggregateInputs: Object.freeze(['receptive_understanding']),
+    metricFormula: 'receptive_understanding_dimension / 100 (spec §12.2)',
+    metricRationale: 'Ratio of actions showing receptive understanding of the NPC message (not acting on misread context); the receptive sub-dimension of applied communication.',
+    constructRelevance: 'Primary input for appliedCommunication (receptive-understanding sub-dimension).',
+    limitations: Object.freeze(['Provisional; no norm or composite.', 'Inferred from action outcomes, not explicit comprehension.']),
+  }),
 });
 
 const FORBIDDEN_KEYS = Object.freeze([
@@ -636,6 +712,7 @@ function initializeFeatureState() {
       team_coordination: 'not_administered',
       tangram_exp001: 'not_administered',
       bomb_defusal: 'not_administered',
+      control_room: 'not_administered',
     },
     qualityFlags: [],
   };
@@ -884,6 +961,33 @@ function addBombFeatures(state, block) {
   setObserved(state, 'bomb.timeMs', Math.max(0, finite(result.timeMs) ?? 0));
 }
 
+// CONTROL ROOM (EXP-COMM-001, C5): 7 dimensiones §12.2 → comm.* (0-1). El block result es
+// el buildControlRoomBlockSummary (control_room_block_summary_v1): escalares, dimensions
+// 0-100 o null, scenarioCount > 0. Sin score global ni composite (spec §12.2).
+function addControlRoomFeatures(state, block) {
+  if (!block) return;
+  const result = block.result ?? {};
+  if (hasForbiddenKeys(result)) state.qualityFlags.push('control_room_contains_forbidden_raw_keys');
+  const scenarioCount = nonNegativeInteger(result.scenarioCount);
+  const aggregateOnly = result.aggregateOnly === true;
+  const dims = ['clarity', 'relevance_and_synthesis', 'inquiry', 'verification_closed_loop', 'adaptation', 'repair', 'receptive_understanding'];
+  const dimValid = dims.every((d) => result[d] == null || (Number(result[d]) >= 0 && Number(result[d]) <= 100));
+  const valid = aggregateOnly
+    && scenarioCount != null
+    && scenarioCount > 0
+    && dimValid
+    && !hasForbiddenKeys(result);
+  if (!valid) {
+    setInvalidGame(state, 'control_room', 'comm', 'invalid_aggregate');
+    return;
+  }
+  state.gameAvailability.control_room = result.completed === true ? 'measured_complete' : 'measured_partial';
+  for (const d of dims) {
+    const v = result[d];
+    if (v != null) setObserved(state, `comm.${d}`, Number(v) / 100);
+  }
+}
+
 export function validateOriginalGameFeatureVectorPrivacy(value = {}) {
   const violations = [];
   const visit = (node) => {
@@ -910,6 +1014,7 @@ export function buildOriginalGameFeatureVector({ blocks = [], runId = null, batt
   addTeamCoordinationFeatures(state, blockByGame(blocks, 'team_coordination'));
   addTangramFeatures(state, blockByGame(blocks, 'tangram_exp001'));
   addBombFeatures(state, blockByGame(blocks, 'bomb_defusal'));
+  addControlRoomFeatures(state, blockByGame(blocks, 'control_room'));
 
   const featureArray = ORIGINAL_GAME_FEATURE_ORDER.map((key) => {
     const value = state.featureMap[key];
@@ -919,7 +1024,7 @@ export function buildOriginalGameFeatureVector({ blocks = [], runId = null, batt
   const vector = {
     type: ORIGINAL_GAME_FEATURE_VECTOR_TYPE,
     version: ORIGINAL_GAME_FEATURE_VECTOR_VERSION,
-    featureDefinitionsVersion: '2.2.0',
+    featureDefinitionsVersion: '2.3.0',
     runId,
     batteryId,
     featureOrder: [...ORIGINAL_GAME_FEATURE_ORDER],

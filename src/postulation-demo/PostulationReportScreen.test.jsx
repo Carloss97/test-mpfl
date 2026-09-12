@@ -300,6 +300,7 @@ describe('PostulationReportScreen', () => {
       'team_coordination',
       'tangram_exp001',
       'bomb_defusal',
+      undefined, // control_room (C5): en batería, sin módulo de feedback (viene en C6)
     ]);
     expect(cards.map((card) => card.feedback?.displayCategory)).toEqual([
       'clear_solution',
@@ -308,6 +309,7 @@ describe('PostulationReportScreen', () => {
       'structured_coordination_signal',
       'efficient_assembly',
       'protocol_retained',
+      undefined, // control_room: feedback pendiente (C6)
     ]);
     expect(JSON.stringify(cards.map((card) => card.feedback))).not.toMatch(/beamCells|pumpSequence|fullRoute|visitedCells|rawGameEvents|pointerSamples|freeText|typedResponse|choiceSequence/i);
   });

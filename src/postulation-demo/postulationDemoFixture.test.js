@@ -44,7 +44,7 @@ describe('postulationDemoFixture', () => {
     });
 
     expect(fixture.summary.batteryMode).toBe('original_games');
-    expect(fixture.summary.completedCount).toBe(6);
+    expect(fixture.summary.completedCount).toBe(7);
     expect(fixture.summary.blocks.map((entry) => entry.block.gameId)).toEqual([
       'laser_puzzle',
       'balloon_risk',
@@ -52,9 +52,10 @@ describe('postulationDemoFixture', () => {
       'team_coordination',
       'tangram_exp001',
       'bomb_defusal',
+      'control_room',
     ]);
     expect(fixture.artifacts.batteryMode).toBe('original_games');
-    expect(fixture.artifacts.assessmentSession.blocks).toHaveLength(6);
+    expect(fixture.artifacts.assessmentSession.blocks).toHaveLength(7);
     expect(fixture.artifacts.payload.behavioral.gameResults.map((result) => result.gameId)).toEqual([
       'laser_puzzle',
       'balloon_risk',
@@ -62,6 +63,7 @@ describe('postulationDemoFixture', () => {
       'team_coordination',
       'tangram_exp001',
       'bomb_defusal',
+      'control_room',
     ]);
     // B5: el agregado del fixture es GENUINO del motor (payload §19, seed 42):
     // métricas §12 presentes y biometría off.

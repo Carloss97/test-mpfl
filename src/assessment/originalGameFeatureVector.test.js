@@ -121,7 +121,7 @@ describe('original_game_feature_vector_v1', () => {
     expect(vector).toMatchObject({
       type: 'original_game_feature_vector_v1',
       version: '1.0.0',
-      featureDefinitionsVersion: '2.2.0',
+      featureDefinitionsVersion: '2.3.0',
       runId: 'r6-vector-test',
       batteryId: 'krumm_postulation_demo_original_games_v1',
       encoding: { missingValue: 0, requiresObservedMask: true },
@@ -271,7 +271,7 @@ describe('original_game_feature_vector_v1', () => {
     const vector = buildOriginalGameFeatureVector({ blocks: originalBlocks, runId: 'b6-no-bomb' });
     // Sin BOMB: las 12 bomb.* en 0 + mask 0 + not_observed; el resto intacto.
     expect(vector.featureOrder[40]).toBe('tangram.totalTimeMs');
-    expect(vector.featureOrder.slice(41)).toEqual([
+    expect(vector.featureOrder.slice(41, 53)).toEqual([
       'bomb.completion',
       'bomb.retentionAccuracyRate',
       'bomb.serialPositionAccuracy',
@@ -285,7 +285,7 @@ describe('original_game_feature_vector_v1', () => {
       'bomb.errorRecoveryLatencyMs',
       'bomb.timeMs',
     ]);
-    expect(vector.featureArray).toHaveLength(53);
+    expect(vector.featureArray).toHaveLength(60);
     expect(vector.featureArray.every(Number.isFinite)).toBe(true);
     expect(vector.gameAvailability.bomb_defusal).toBe('not_administered');
     for (const key of vector.featureOrder.filter((feature) => feature.startsWith('bomb.'))) {
@@ -382,5 +382,87 @@ describe('original_game_feature_vector_v1', () => {
       }],
     });
     expect(outOfRange.gameAvailability.bomb_defusal).toBe('invalid');
+  });
+
+  it('adds CONTROL ROOM as an additive delta: first 53 keep order, 7 comm.* appended (no breaking)', () => {
+    const vector = buildOriginalGameFeatureVector({ blocks: originalBlocks, runId: 'c5-no-control-room' });
+    expect(vector.featureOrder[52]).toBe('bomb.timeMs');
+    expect(vector.featureOrder.slice(53)).toEqual([
+      'comm.clarity',
+      'comm.relevance_and_synthesis',
+      'comm.inquiry',
+      'comm.verification_closed_loop',
+      'comm.adaptation',
+      'comm.repair',
+      'comm.receptive_understanding',
+    ]);
+    expect(vector.featureArray).toHaveLength(60);
+    expect(vector.gameAvailability.control_room).toBe('not_administered');
+    for (const key of vector.featureOrder.filter((f) => f.startsWith('comm.'))) {
+      expect(vector.featureMap[key]).toBeNull();
+      expect(vector.featureArray[vector.featureOrder.indexOf(key)]).toBe(0);
+      expect(vector.featureAvailability[key]).toBe('not_observed');
+    }
+    expect(vector.featureMap['laser.solvedRate']).toBe(1); // features anteriores intactos
+  });
+
+  it('sets comm.* from a valid control_room block summary (dimension/100, 0-1)', () => {
+    const blocks = [
+      ...originalBlocks,
+      {
+        index: 4,
+        gameId: 'control_room',
+        status: 'completed',
+        result: {
+          aggregateSchemaVersion: 'control_room_block_summary_v1',
+          completed: true,
+          scenarioCount: 12,
+          scoredCount: 12,
+          resolvedCount: 10,
+          total_message_count: 40,
+          question_count: 6,
+          verification_count: 8,
+          timeout_count: 0,
+          clarity: 90,
+          relevance_and_synthesis: 75,
+          inquiry: 80,
+          verification_closed_loop: 70,
+          adaptation: 60,
+          repair: 50,
+          receptive_understanding: 85,
+          aggregateOnly: true,
+        },
+      },
+    ];
+    const vector = buildOriginalGameFeatureVector({ blocks, runId: 'c5-with-control-room' });
+    expect(vector.gameAvailability.control_room).toBe('measured_complete');
+    expect(vector.featureMap['comm.clarity']).toBeCloseTo(0.9, 5);
+    expect(vector.featureMap['comm.relevance_and_synthesis']).toBeCloseTo(0.75, 5);
+    expect(vector.featureMap['comm.inquiry']).toBeCloseTo(0.8, 5);
+    expect(vector.featureMap['comm.verification_closed_loop']).toBeCloseTo(0.7, 5);
+    expect(vector.featureMap['comm.adaptation']).toBeCloseTo(0.6, 5);
+    expect(vector.featureMap['comm.repair']).toBeCloseTo(0.5, 5);
+    expect(vector.featureMap['comm.receptive_understanding']).toBeCloseTo(0.85, 5);
+    expect(vector.observedMask[vector.featureOrder.indexOf('comm.clarity')]).toBe(1);
+    expect(vector.featureDefinitionsVersion).toBe('2.3.0');
+    expect(validateOriginalGameFeatureVectorPrivacy(vector)).toEqual({ ok: true, violations: [] });
+  });
+
+  it('marks an invalid control_room aggregate (dim out of range) invalid without fabricating comm.*', () => {
+    const invalid = buildOriginalGameFeatureVector({
+      blocks: [{
+        gameId: 'control_room',
+        status: 'completed',
+        result: {
+          aggregateSchemaVersion: 'control_room_block_summary_v1',
+          completed: true,
+          scenarioCount: 12,
+          clarity: 120, // fuera de rango [0,100]
+          aggregateOnly: true,
+        },
+      }],
+    });
+    expect(invalid.gameAvailability.control_room).toBe('invalid');
+    expect(invalid.featureAvailability['comm.clarity']).toBe('invalid');
   });
 });

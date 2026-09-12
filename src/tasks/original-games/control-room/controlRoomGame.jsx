@@ -34,7 +34,7 @@ import {
   CONTROL_ROOM_FINAL,
 } from './controlRoomRules.js';
 import { createControlRoomEngine, CONTROL_ROOM_STATES } from './controlRoomEngine.js';
-import { buildControlRoomSessionPayload } from './controlRoomTelemetry.js';
+import { buildControlRoomSessionPayload, buildControlRoomBlockSummary } from './controlRoomTelemetry.js';
 import './controlRoom.css';
 
 export const CONTROL_ROOM_GAME_DEFINITION = Object.freeze({
@@ -228,10 +228,12 @@ export default function ControlRoomGame({
     bump();
   }, [tick]);
 
-  // Final → onComplete con el PAYLOAD de sesión versionado (C4, §19).
+  // Final → onComplete con el BLOCK SUMMARY escalar (C5, batería: sanitize + feature vector).
+  // El payload §19 completo (C4) se genera aquí y viaja aparte en artifacts.
   useEffect(() => {
     if (phase !== PHASE.FINAL) return;
-    onCompleteRef.current?.(buildControlRoomSessionPayload({ results: resultsRef.current }));
+    const payload = buildControlRoomSessionPayload({ results: resultsRef.current });
+    onCompleteRef.current?.(buildControlRoomBlockSummary(payload, { state: 'SESSION_COMPLETE' }));
   }, [phase]);
 
   // ---------- Pantallas de flujo (modo sesión) ----------

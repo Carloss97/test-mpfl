@@ -58,6 +58,7 @@ describe('postulation demo config', () => {
       'team_coordination',
       'tangram_exp001',
       'bomb_defusal',
+      'control_room',
     ]);
     expect(POSTULATION_DEMO_BATTERY_ORIGINAL_GAMES.every((block) => block.visible === true)).toBe(true);
     expect(POSTULATION_DEMO_BATTERY_ORIGINAL_GAMES.every((block) => !Object.hasOwn(block, 'sourceGame'))).toBe(true);
