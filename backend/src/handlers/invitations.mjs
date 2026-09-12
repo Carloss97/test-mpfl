@@ -101,6 +101,8 @@ export async function handlePostInvitation(event, deps = {}) {
     return unprocessable('invalid_ttl_hours', ['ttlHours']);
   }
 
+  const language = body?.language === 'en' ? 'en' : 'es';
+
   try {
     const item = await createInvitation({
       docClient: deps.docClient,
@@ -117,10 +119,67 @@ export async function handlePostInvitation(event, deps = {}) {
       action: 'invitation.create',
       detail: { invitationId: item.invitationId },
     });
-    return json(201, { ...safeInvitation(item), status: 'pending' });
+
+    // A.1: envío real del email de invitación (best-effort). Si el sender no está
+    // configurado (tests / staging sin SES) no bloquea la creación: se registra
+    // `email.sent=false` con el motivo. Si el envío falla, se audita
+    // `invitation.email_failed` y la invitación igualmente queda creada (201).
+    const emailStatus = await deliverInvitationEmail({
+      deps,
+      item,
+      language,
+      ttlHours,
+      actor: actorFrom(event),
+    });
+
+    return json(201, { ...safeInvitation(item), status: 'pending', email: emailStatus });
   } catch (err) {
     if (err?.code === 'INVALID_EMAIL') return unprocessable('invalid_email', ['email']);
     throw err;
+  }
+}
+
+/**
+ * Envía el email de invitación vía `deps.sendInvitationEmail` (inyectado).
+ * Nunca lanza: toda falla se traduce en { sent:false, reason } (+ auditoría),
+ * porque la creación de la invitación es la operación principal y el email es
+ * derivada (best-effort).
+ */
+async function deliverInvitationEmail({ deps, item, language, ttlHours, actor }) {
+  const sender = deps.sendInvitationEmail;
+  if (typeof sender !== 'function') {
+    return { sent: false, reason: 'not_configured' };
+  }
+  try {
+    const out = await sender({
+      to: item.email,
+      token: item.invitationId,
+      appBaseUrl: deps.appBaseUrl ?? process.env.FRONTEND_BASE_URL ?? null,
+      language,
+      expiresInHours: ttlHours,
+      from: deps.fromEmail ?? process.env.SES_FROM_EMAIL ?? null,
+    });
+    return {
+      sent: true,
+      language,
+      messageId: out?.messageId ?? null,
+    };
+  } catch (err) {
+    // Sin PII: solo el code del error + invitationId (ya expuesto en la respuesta).
+    const code = String(err?.code ?? err?.name ?? 'send_error').slice(0, 60);
+    try {
+      await appendAuditLog({
+        docClient: deps.docClient,
+        auditId: makeAuditId(),
+        sessionId: null,
+        actor,
+        action: 'invitation.email_failed',
+        detail: { invitationId: item.invitationId, code },
+      });
+    } catch {
+      // la auditoría no debe enmascarar el resultado principal.
+    }
+    return { sent: false, reason: 'send_failed', code };
   }
 }
 

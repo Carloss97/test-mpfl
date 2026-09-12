@@ -9,6 +9,10 @@ Parameters:
     Type: String
     Default: staging
     AllowedValues: [staging, production]
+  FrontendBaseUrl:
+    Type: String
+    Default: 'https://stage.krumm.cl'
+    Description: 'Base URL del frontend para el link de la invitación (A.1). En prod usar https://krumm.cl.'
   RetentionDays:
     Type: Number
     Default: 30
@@ -26,6 +30,9 @@ Globals:
         AUDIT_LOG_TABLE: !Ref AuditLogTable
         INVITATIONS_TABLE: !Ref InvitationsTable
         KRUMM_RETENTION_DAYS: !Ref RetentionDays
+        # A.1: envío real de emails de invitación (SESv2, dominio krumm.cl).
+        SES_FROM_EMAIL: 'no-reply@krumm.cl'
+        FRONTEND_BASE_URL: !Ref FrontendBaseUrl
 
 Resources:
   # --- DynamoDB: sessions (aggregate-only, TTL 30d) ---
@@ -130,6 +137,13 @@ Resources:
                   - !Sub '${AuditLogTable.Arn}'
                   - !Sub '${AuditLogTable.Arn}/index/sessionId-index'
                   - !Sub '${InvitationsTable.Arn}'
+              # A.1: envío de email de invitación (scoped al identity del dominio,
+              # nunca ses:* global).
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                Resource:
+                  - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/krumm.cl'
 
   # --- Lambda ---
   SessionsFunction:

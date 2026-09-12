@@ -3,6 +3,7 @@
 // y routea según path. En tests se inyecta docClient; en producción se usa el real.
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { SESV2Client } from '@aws-sdk/client-sesv2';
 import {
   DynamoDBDocumentClient,
   PutCommand,
@@ -12,8 +13,11 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { routeSessions } from './handlers/sessions.mjs';
 import { routeInvitations } from './handlers/invitations.mjs';
+import { sendInvitationEmail } from './email/invitationEmail.mjs';
 
 const client = new DynamoDBClient({});
+// Cliente SESv2 (A.1): el constructor no hace red; el envío real ocurre en send().
+const sesClient = new SESV2Client({});
 const docClient = DynamoDBDocumentClient.from(client, {
   marshallOptions: { removeUndefinedValues: true, convertEmptyValues: false },
 });
@@ -29,8 +33,14 @@ const productionDocClient = Object.freeze({
 });
 
 export async function handler(event, context = {}) {
-  // Se permite inyectar un docClient vía context (tests / integración).
-  const deps = { docClient: context.docClient ?? productionDocClient };
+  // Se permite inyectar deps vía context (tests / integración).
+  const deps = {
+    docClient: context.docClient ?? productionDocClient,
+    // A.1: envío real de email de invitación (best-effort en el handler).
+    sendInvitationEmail: context.sendInvitationEmail ?? ((args) => sendInvitationEmail({ sesClient, ...args })),
+    appBaseUrl: process.env.FRONTEND_BASE_URL ?? null,
+    fromEmail: process.env.SES_FROM_EMAIL ?? null,
+  };
   try {
     const routeKey = event?.routeKey ?? event?.resource ?? '';
     if (routeKey.includes('/invitations')) {

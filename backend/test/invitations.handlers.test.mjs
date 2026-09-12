@@ -187,3 +187,92 @@ describe('backend invitations (RED -> GREEN)', () => {
     expect(JSON.parse(after.body).error).toBe('invitation_already_used');
   });
 });
+
+describe('A.1 — envío de email de invitación (best-effort)', () => {
+  function makeDeps({ sendInvitationEmail, appBaseUrl } = {}) {
+    const store = new Map();
+    const invitations = new Map();
+    const audit = [];
+    const docClient = {
+      async put({ TableName, Item }) {
+        if (TableName === 'krumm-audit-log') {
+          const existing = audit.find((a) => a.auditId === Item.auditId);
+          if (!existing) audit.push(Item);
+        } else if (TableName === 'krumm-invitations') {
+          invitations.set(Item.invitationId, { ...(invitations.get(Item.invitationId) ?? {}), ...Item });
+        } else {
+          store.set(Item.sessionId, Item);
+        }
+        return { Item };
+      },
+      async get({ TableName, Key }) {
+        if (TableName === 'krumm-invitations') {
+          const item = invitations.get(Key.invitationId);
+          return item ? { Item: item } : {};
+        }
+        return {};
+      },
+      async delete({ Key }) { store.delete(Key.sessionId); return {}; },
+      async scan() { return { Items: [] }; },
+    };
+    const deps = { docClient, audit, invitations };
+    if (sendInvitationEmail) deps.sendInvitationEmail = sendInvitationEmail;
+    if (appBaseUrl) deps.appBaseUrl = appBaseUrl;
+    return deps;
+  }
+
+  it('con sender: 201 + email.sent=true, sender recibe to/token/baseUrl/language/ttl', async () => {
+    const calls = [];
+    const d = makeDeps({
+      appBaseUrl: 'https://stage.krumm.cl',
+      sendInvitationEmail: async (args) => { calls.push(args); return { messageId: 'm-1' }; },
+    });
+    const res = await handlePostInvitation(event({ method: 'POST', route: 'POST /invitations', body: { email: 'cand@correo.cl', ttlHours: 48 } }), d);
+    expect(res.statusCode).toBe(201);
+    const body = JSON.parse(res.body);
+    expect(body.email).toMatchObject({ sent: true, language: 'es', messageId: 'm-1' });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({
+      to: 'cand@correo.cl',
+      appBaseUrl: 'https://stage.krumm.cl',
+      language: 'es',
+      expiresInHours: 48,
+    });
+    expect(calls[0].token).toBe(body.invitationId);
+  });
+
+  it('language: en se respeta en el sender y en la respuesta', async () => {
+    const calls = [];
+    const d = makeDeps({
+      appBaseUrl: 'https://krumm.cl',
+      sendInvitationEmail: async (args) => { calls.push(args); return {}; },
+    });
+    const res = await handlePostInvitation(event({ method: 'POST', route: 'POST /invitations', body: { email: 'c@d.cl', language: 'en' } }), d);
+    expect(JSON.parse(res.body).email).toMatchObject({ sent: true, language: 'en' });
+    expect(calls[0].language).toBe('en');
+  });
+
+  it('sender falla: 201 igual, email.sent=false reason=send_failed + auditoría invitation.email_failed', async () => {
+    const d = makeDeps({
+      appBaseUrl: 'https://krumm.cl',
+      sendInvitationEmail: async () => { const e = new Error('boom'); e.code = 'DomainNotVerified'; throw e; },
+    });
+    const res = await handlePostInvitation(event({ method: 'POST', route: 'POST /invitations', body: { email: 'c@d.cl' } }), d);
+    expect(res.statusCode).toBe(201);
+    const body = JSON.parse(res.body);
+    expect(body.email).toMatchObject({ sent: false, reason: 'send_failed', code: 'DomainNotVerified' });
+    const failed = d.audit.find((a) => a.action === 'invitation.email_failed');
+    expect(failed).toBeTruthy();
+    expect(failed.detail.invitationId).toBe(body.invitationId);
+    expect(failed.detail.code).toBe('DomainNotVerified');
+    // la auditoría NO debe contener el email completo (solo code + invitationId).
+    expect(JSON.stringify(failed)).not.toContain('c@d.cl');
+  });
+
+  it('sin sender configurado: 201 + email {sent:false, reason: not_configured}', async () => {
+    const d = makeDeps({ appBaseUrl: 'https://krumm.cl' });
+    const res = await handlePostInvitation(event({ method: 'POST', route: 'POST /invitations', body: { email: 'c@d.cl' } }), d);
+    expect(res.statusCode).toBe(201);
+    expect(JSON.parse(res.body).email).toMatchObject({ sent: false, reason: 'not_configured' });
+  });
+});
