@@ -63,11 +63,13 @@ La primera versión de C6 citaba secciones inexistentes (§13.2, §15.3, "30–5
 
 ## Gates finales (cierre de verificación)
 
-- `NODE_ENV=test vitest run` (suite completa, pool=threads): **Pendiente número final** —
-  ver commit message / kanban comment.
-- `oxlint` (postulation-demo, tasks, main.jsx, assessment, validation, v3): **0 errores**.
-- `npm run build`: **OK**.
-- Smoke/audit reporte fixture 7 juegos: **PASS** (arriba).
+- `NODE_ENV=test vitest run` (suite completa, pool=threads): **1282/1282 (145 archivos, 0 fallos)**.
+- `oxlint` (postulation-demo, tasks, main.jsx, assessment, validation, v3): **0 errores**
+  (1 warning preexistente en `ParticipantAssessmentFlow.jsx`, fuera de scope C6).
+- `npm run build`: **OK** (5.8 s).
+- Smoke/audit reporte fixture 7 juegos + mundo: **PASS 4/4** (0 fallos, 0 errores de consola,
+  0 overflow; 1280×720 + 390×844) — `docs/qa/exp8-c6-visual-audit/` (smoke-result.json ok:true),
+  script reproducible `scripts/audit-t_b17fd176-c6-comm-visual.mjs`.
 
 ## Decisiones / pendientes
 
