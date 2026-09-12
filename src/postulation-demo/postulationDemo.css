@@ -812,6 +812,8 @@
 }
 
 .visual-search-task__item {
+  min-width: 44px;
+  min-height: 44px;
   border: 1.5px solid var(--postulation-game-control-border);
   border-radius: var(--k-radius-iconbox);
   background: #ffffff;
@@ -2288,36 +2290,54 @@
   color: #881337;
 }
 
-.visual-search-task__panel-brief {
-  width: min(100%, 520px);
+/* FASE B.5: el brief standalone se retira (instrucción → header pill, fit en
+   stage 290/340 px — patrón B.4 CIP-P2-4). Feedback entre trials: chip
+   centrado con tone semántico (antes `.trial-feedback` solo estaba estilizada
+   bajo .simple-rt-task del tema oscuro → en batería renderizaba sin centrado). */
+.visual-search-task .task-header {
+  margin-bottom: 8px;
+}
+
+.visual-search-task__feedback {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 0 auto 8px;
-}
-
-.visual-search-task__panel-brief strong,
-.visual-search-task__panel-brief span {
-  min-height: 30px;
-  display: inline-flex;
-  align-items: center;
+  gap: 2px;
+  padding: 6px 16px;
   border-radius: var(--k-radius-pill);
-  padding: 6px 10px;
-  font-size: 0.82rem;
-  font-weight: 900;
+  border: 1px solid var(--postulation-game-control-border);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+  pointer-events: none;
 }
 
-.visual-search-task__panel-brief strong {
-  background: var(--k-tint-gold);
-  color: var(--k-ink-card);
+.visual-search-task__feedback strong {
+  font-size: 1.5rem;
+  font-weight: 950;
+  line-height: 1.1;
 }
 
-.visual-search-task__panel-brief span {
-  border: 1px solid rgba(15, 118, 110, 0.28);
-  background: #ccfbf1;
-  color: #134e4a;
+.visual-search-task__feedback--correct strong {
+  color: #047857;
+}
+
+.visual-search-task__feedback--incorrect strong {
+  color: #b91c1c;
+}
+
+.visual-search-task__feedback--timeout strong {
+  color: #b45309;
+}
+
+.visual-search-task__feedback .rt-display {
+  font-size: 0.8rem;
+  font-weight: 750;
+  color: var(--k-ink-medium);
 }
 
 .visual-search-task__tile {

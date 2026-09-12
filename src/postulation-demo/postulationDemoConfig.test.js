@@ -37,6 +37,16 @@ describe('postulation demo config', () => {
     });
   });
 
+  it('labels visual_search with an honest duration (FASE B.5 VSP-P3-1: 4 panels × (RT ~1-3 s + ITI) típicos; peor caso 4 timeouts × (10 s + 0.4 s) ≈ 42 s → "45 s", no "1 min")', () => {
+    expect(getPostulationDemoBlock('visual_search')).toMatchObject({
+      label: 'Búsqueda visual',
+      skill: 'visual_search_efficiency',
+      trialCount: 4,
+      visible: true,
+      durationLabel: '45 s',
+    });
+  });
+
   it('exposes visible progress blocks and lookup helpers', () => {
     expect(listVisiblePostulationBlocks().map((block) => block.gameId)).toEqual([
       'precision_targeting',

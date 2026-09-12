@@ -85,7 +85,10 @@ export const POSTULATION_DEMO_BATTERY_STABLE_DG = Object.freeze([
     shortLabelEn: 'Search',
     skill: 'visual_search_efficiency',
     phase: 'postulation_demo',
-    durationLabel: '1 min',
+    // FASE B.5 (VSP-P3-1): 4 panels × (RT ~1-3 s + ITI ~0.3 s) ≈ 6-14 s
+    // típicos; peor caso (4 timeouts) 4 × (10 s + 0.4 s) ≈ 42 s → "45 s"
+    // honesto (antes "1 min" sobrestimaba; mismo bug que GNP-P3-1/CIP-P3-1).
+    durationLabel: '45 s',
     trialCount: 4,
     visible: true,
     description: 'Encuentra un objetivo entre distractores con foco y eficiencia.',

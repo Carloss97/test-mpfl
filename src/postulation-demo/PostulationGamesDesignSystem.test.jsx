@@ -96,7 +96,10 @@ describe('H4.5 — chrome de juegos sobre design system', () => {
     expect(blockOf(css, '.passenger-route-task__side-panel')).toContain('background: var(--k-card-cream);');
     expect(blockOf(css, '.passenger-route-task__controls > strong')).toContain('color: var(--k-ink-terracotta);');
     expect(blockOf(css, '.color-interference-task__prompt')).toContain('color: var(--k-ink-terracotta);');
-    expect(blockOf(css, '.visual-search-task__panel-brief strong')).toContain('background: var(--k-tint-gold);');
+    // FASE B.5: el brief standalone de visual_search se retira (instrucción →
+    // header pill); el chrome de marca del juego ahora es el feedback chip.
+    expect(blockOf(css, '.visual-search-task__feedback')).toContain('border-radius: var(--k-radius-pill);');
+    expect(blockOf(css, '.visual-search-task__feedback .rt-display')).toContain('color: var(--k-ink-medium);');
     expect(blockOf(css, '.laser-puzzle-task')).toContain('color: var(--k-text-cream-dim);');
     expect(blockOf(css, '.team-coordination-task')).toContain('color: var(--k-ink-espresso);');
     const option = blockOf(css, '.team-coordination-task__option');
