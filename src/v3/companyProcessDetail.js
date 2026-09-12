@@ -42,6 +42,10 @@ import {
   generateBombSyntheticSessionPayload,
 } from '../tasks/original-games/bomb/bombTelemetry.js';
 import {
+  buildControlRoomBlockSummary,
+  generateControlRoomSyntheticSessionPayload,
+} from '../tasks/original-games/control-room/controlRoomTelemetry.js';
+import {
   WORKBOOK_TALENT_CONSTRUCT_ORDER,
   buildOriginalGameTalentFramework,
   getConstructDefinition,
@@ -354,6 +358,27 @@ function scaledSummary(gameId, f) {
       timeoutRate: summary.timeoutRate == null ? null : round4(summary.timeoutRate * (2 - qualityScale)),
     };
   }
+  if (gameId === 'control_room') {
+    // C6: agregado GENUINO del motor (12 escenarios evaluativos, guion óptimo, payload
+    // determinista — contenido fijo del manifest) con las 7 sub-dimensiones §12.2 y
+    // latencias escaladas por el factor de calidad del candidato demo (mismo patrón que
+    // bomb_defusal). Sin score compuesto (spec §12.2/§18).
+    const summary = buildControlRoomBlockSummary(generateControlRoomSyntheticSessionPayload({ runId: 'krumm-company-demo-control-room' }), { state: 'SESSION_COMPLETE' });
+    const qualityScale = 0.5 + 0.5 * f; // f=1 → valores reales del guion; f=0 → la mitad
+    const scaleDim = (value) => (value == null ? null : Math.round(value * qualityScale));
+    return {
+      ...summary,
+      clarity: scaleDim(summary.clarity),
+      relevance_and_synthesis: scaleDim(summary.relevance_and_synthesis),
+      inquiry: scaleDim(summary.inquiry),
+      verification_closed_loop: scaleDim(summary.verification_closed_loop),
+      adaptation: scaleDim(summary.adaptation),
+      repair: scaleDim(summary.repair),
+      receptive_understanding: scaleDim(summary.receptive_understanding),
+      average_decision_latency_ms: summary.average_decision_latency_ms == null ? null : Math.round(summary.average_decision_latency_ms * (2 - qualityScale)),
+      time_spent_reading_ms: Math.round(summary.time_spent_reading_ms * (2 - qualityScale)),
+    };
+  }
   return { gameId, completedTrialCount: 1, trialCount: 1, accuracy: round4(f), score: round4(f), meanReactionTimeMs: 600 };
 }
 
@@ -370,8 +395,9 @@ function demoGameEvents(blocks) {
     else if (block.gameId === 'passenger_routes') response = { correct: true, outcome: 'route_completed', reactionTimeMs: 420 + (index * 35), score: summary.score, passengerRoutes: summary };
     else if (block.gameId === 'team_coordination') response = { correct: true, outcome: 'structured_choice', reactionTimeMs: 420 + (index * 35), score: summary.score, teamCoordination: summary };
     else if (block.gameId === 'tangram_exp001') response = { correct: true, outcome: 'assembly_completed', reactionTimeMs: 420 + (index * 35), score: summary.score, tangram: summary };
-    else if (block.gameId === 'bomb_defusal') response = { correct: true, outcome: 'sequence_completed', reactionTimeMs: 420 + (index * 35), score: summary.score, bombDefusal: summary };
-    else response = { correct: true, outcome: 'completed', reactionTimeMs: 420 + (index * 35), score: summary.score };
+    else if (block.gameId === 'bomb_defusal') response = { correct: true, outcome: 'sequence_completed', reactionTimeMs: 420 + index * 35, score: summary.score, bombDefusal: summary };
+    else if (block.gameId === 'control_room') response = { correct: true, outcome: 'communication_completed', reactionTimeMs: 420 + index * 35, controlRoom: summary };
+    else response = { correct: true, outcome: 'completed', reactionTimeMs: 420 + index * 35, score: summary.score };
     return [
       {
         type: 'game_event_v1', eventType: 'stimulus_shown', gameId: block.gameId,

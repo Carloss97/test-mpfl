@@ -176,10 +176,10 @@ describe('B. Motor H4.3 — artifacts demo (builder del flujo, D3)', () => {
     expect(report.completedAt).toBe('2026-08-21T00:00:00.000Z');
   });
 
-  it('talentFramework: 9 constructos — 6 provisional_score + 3 descriptive_only (R-6)', () => {
+  it('talentFramework: 10 constructos — 6 provisional_score + 4 descriptive_only (R-6)', () => {
     const report = getDemoCandidateReport('supervisor', 'maria-gonzalez');
     const framework = report.artifacts.assessmentSession.talentFramework;
-    expect(framework.constructOrder).toHaveLength(9);
+    expect(framework.constructOrder).toHaveLength(10);
     const constructs = framework.constructs;
     expect(constructs.decisionMaking.availability).toBe('descriptive_only');
     expect(constructs.decisionMaking.score).toBeNull();
@@ -189,6 +189,16 @@ describe('B. Motor H4.3 — artifacts demo (builder del flujo, D3)', () => {
     expect(constructs.proceduralWorkingMemory.availability).toBe('descriptive_only');
     expect(constructs.proceduralWorkingMemory.score).toBeNull();
     expect(constructs.proceduralWorkingMemory.caveats).toContain('no_composite_score_weights_unfixed');
+    // C6: 10° constructo experimental (EXP-COMM-001) — descriptivo, 7 sub-dimensiones,
+    // score null, sin baremos (spec §12.2/§17).
+    expect(constructs.appliedCommunication.availability).toBe('descriptive_only');
+    expect(constructs.appliedCommunication.score).toBeNull();
+    expect(constructs.appliedCommunication.caveats).toContain('no_composite_score_subdimensions_only');
+    expect(constructs.appliedCommunication.evidence.length).toBeGreaterThan(0);
+    for (const entry of constructs.appliedCommunication.evidence) {
+      expect(entry.feature.startsWith('comm.')).toBe(true);
+      expect(Number.isFinite(entry.value)).toBe(true);
+    }
     const scored = framework.constructOrder
       .map((id) => constructs[id].score)
       .filter((value) => value != null);

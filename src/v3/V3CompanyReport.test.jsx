@@ -91,15 +91,15 @@ describe('G. Reporte demo ES (motor H4.3)', () => {
     expect(screen.getByText('Resumen ejecutivo HR')).toBeInTheDocument();
     expect(screen.getByText('Batería original: lectura preliminar controlada')).toBeInTheDocument();
     expect(screen.getByText('Listo para revisión humana')).toBeInTheDocument();
-    expect(screen.getByText('6/6 juegos completados')).toBeInTheDocument();
+    expect(screen.getByText('7/7 juegos completados')).toBeInTheDocument();
     expect(screen.getByText('Cómo usarlo')).toBeInTheDocument();
     expect(screen.getByText('Guía de entrevista')).toBeInTheDocument();
-    expect(screen.getByText('9 constructos con señal de prueba')).toBeInTheDocument();
-    expect(screen.getByText(/3 lectura\(s\) se mantienen descriptivas/)).toBeInTheDocument();
+    expect(screen.getByText('10 constructos con señal de prueba')).toBeInTheDocument();
+    expect(screen.getByText(/4 lectura\(s\) se mantienen descriptivas/)).toBeInTheDocument();
     expect(screen.getByText('Validar antes de comparar candidatos')).toBeInTheDocument();
   });
 
-  it('mapa de evidencia: 9 constructos (6 provisional + 3 descriptivos) + warning + score provisional', () => {
+  it('mapa de evidencia: 10 constructos (6 provisional + 4 descriptivos) + warning + score provisional', () => {
     renderReport('supervisor', 'maria-gonzalez');
     expect(screen.getByText('Mapa de evidencia KRUMM')).toBeInTheDocument();
     expect(screen.getByText('Scores provisionales no validados, sin baremos y no aptos para comparar personas.')).toBeInTheDocument();
@@ -107,20 +107,21 @@ describe('G. Reporte demo ES (motor H4.3)', () => {
     for (const score of ['99', '77', '89', '98', '87', '85']) {
       expect(screen.getAllByText(score).length).toBeGreaterThan(0);
     }
-    // los 3 descriptivos sin score (R-6: decisionMaking + adaptability + proceduralWorkingMemory)
-    expect(screen.getAllByText('Descriptivo')).toHaveLength(3);
-    expect(screen.getAllByText('Lectura descriptiva')).toHaveLength(3);
+    // los 4 descriptivos sin score (R-6: decisionMaking + adaptability +
+    // proceduralWorkingMemory + appliedCommunication)
+    expect(screen.getAllByText('Descriptivo')).toHaveLength(4);
+    expect(screen.getAllByText('Lectura descriptiva')).toHaveLength(4);
     expect(screen.getAllByText('Score provisional')).toHaveLength(6);
     expect(screen.getAllByText('Sin baremos · no comparable')).toHaveLength(6);
   });
 
-  it('resultados por juego: 6 juegos de la batería original, completados', () => {
+  it('resultados por juego: 7 juegos de la batería original, completados', () => {
     renderReport('supervisor', 'maria-gonzalez');
     expect(screen.getByText('Resultados por juego')).toBeInTheDocument();
-    for (const game of ['Puzzle láser', 'Globo de riesgo', 'Optimización de rutas de pasajeros', 'Operación Faro: coordinación de equipo', 'Ensamblaje Geométrico (Tangram)', 'Desactivación de secuencias (Bomba)']) {
+    for (const game of ['Puzzle láser', 'Globo de riesgo', 'Optimización de rutas de pasajeros', 'Operación Faro: coordinación de equipo', 'Ensamblaje Geométrico (Tangram)', 'Desactivación de secuencias (Bomba)', 'Sala de Control']) {
       expect(screen.getByText(game)).toBeInTheDocument();
     }
-    expect(screen.getAllByText('Completado')).toHaveLength(6);
+    expect(screen.getAllByText('Completado')).toHaveLength(7);
   });
 
   it('calidad (engine, fixture): 6 cards — integridad verificada, cámara/muestras/rostro/confianza/ensayos simulados', () => {
@@ -180,15 +181,16 @@ describe('H. Reporte demo EN', () => {
     expect(screen.getByText('HR executive summary')).toBeInTheDocument();
     expect(screen.getByText('Original battery: controlled preliminary reading')).toBeInTheDocument();
     expect(screen.getByText('Ready for human review')).toBeInTheDocument();
-    expect(screen.getByText('6/6 games completed')).toBeInTheDocument();
+    expect(screen.getByText('7/7 games completed')).toBeInTheDocument();
     expect(screen.getByText('KRUMM evidence map')).toBeInTheDocument();
     expect(screen.getByText('Unvalidated provisional scores, no norms, and not suitable for comparing people.')).toBeInTheDocument();
     expect(screen.getByText('Demo candidate')).toBeInTheDocument();
     expect(screen.getByText('Results by game')).toBeInTheDocument();
     expect(screen.getByText('Laser puzzle')).toBeInTheDocument();
     expect(screen.getByText('Sequence defusal (Bomb)')).toBeInTheDocument();
+    expect(screen.getByText('Control Room')).toBeInTheDocument();
     expect(screen.getAllByText('Provisional score')).toHaveLength(6);
-    expect(screen.getAllByText('Descriptive')).toHaveLength(3);
+    expect(screen.getAllByText('Descriptive')).toHaveLength(4);
     expect(screen.getByText('Excellent')).toBeInTheDocument();
     expect(screen.getByText('KRUMM score')).toBeInTheDocument();
   });

@@ -2,13 +2,18 @@
 // por sub-dimensión para el reporte.
 //
 // Especificación (ley): docs/spec/EXP-COMM-001/ Doc 1 §12.2 (7 dimensiones, sin score
-// compuesto), §14.3 (feedback inmediato), §15/§17 (validación, caveat), §13.2 (feedback
-// descriptivo sin score global). Doc 2 §15 (fin).
+// global hasta estructura factorial), §17/§17.1 (plan de validación psicométrica, 7
+// fases), §14.3 (privacidad), §18 (riesgo "score compuesto prematuro"). Doc 2 §2
+// (neutralidad evaluativa: el feedback describe consecuencias, no enseña la clave),
+// §16 (feedback), §20.1 (error evaluativo como consecuencia narrativa).
 //
 // Patrón: bombFeedback.js (EXP-BOMB-001). Consume SOLO campos escalares del agregado
 // control_room_block_summary_v1 (buildControlRoomBlockSummary); no exporta eventos crudos,
 // acciones, tarjetas, bloques, texto libre ni biometría. Lectura descriptiva: 7
 // sub-dimensiones por separado, SIN score compuesto ni baremos (spec §12.2).
+//
+// Semántica de señal ausente (R-6): dimensión null = NO observada → se omite, NUNCA 0
+// (guard explícito contra Number(null) === 0).
 
 const CONTROL_ROOM_FEEDBACK_FORBIDDEN_KEYS = Object.freeze([
   'rawPointerPath',
@@ -31,6 +36,8 @@ const CONTROL_ROOM_FEEDBACK_FORBIDDEN_KEYS = Object.freeze([
 ]);
 
 function finite(value) {
+  // R-6: null/undefined = señal ausente, nunca 0 (Number(null) === 0).
+  if (value == null) return null;
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : null;
 }
@@ -57,8 +64,8 @@ function unavailable(reason) {
     feedbackCategory: reason,
     candidateHint: 'No hay datos agregados suficientes para explicar la coordinación comunicativa.',
     candidateHintEn: 'There is not enough aggregate data to explain the communication coordination.',
-    reviewerCaveat: 'Módulo experimental en validación (EXP-COMM-001 spec §15/§17): lectura descriptiva sin baremos ni score compuesto; no es una norma de comunicación (spec §14.3/§17).',
-    reviewerCaveatEn: 'Experimental module under validation (EXP-COMM-001 spec §15/§17): descriptive reading without norms or composite score; not a communication norm (spec §14.3/§17).',
+    reviewerCaveat: 'Módulo experimental en validación (EXP-COMM-001 spec §17): lectura descriptiva sin baremos ni score compuesto (spec §12.2); no revela la respuesta correcta (Doc 2 §2/§20.1).',
+    reviewerCaveatEn: 'Experimental module under validation (EXP-COMM-001 spec §17): descriptive reading without norms or composite score (spec §12.2); does not reveal the correct answer (Doc 2 §2/§20.1).',
     nextDesignProbe: 'Completar una sesión evaluada de la Sala de Control para obtener las 7 sub-dimensiones agregadas.',
     nextDesignProbeEn: 'Complete an evaluated Control Room session to obtain the 7 aggregated sub-dimensions.',
     dimensionFeedback: [],
@@ -68,12 +75,12 @@ function unavailable(reason) {
 }
 
 const REVIEWER_CAVEAT = Object.freeze({
-  es: 'Módulo experimental en validación (EXP-COMM-001 spec §15/§17): 7 sub-dimensiones descriptivas por separado, SIN score compuesto ni baremos (pesos §12.2 no fijados hasta piloto); el feedback no revela qué respuesta era correcta ni se interpreta como norma de comunicación (spec §14.3/§17).',
-  en: 'Experimental module under validation (EXP-COMM-001 spec §15/§17): 7 descriptive sub-dimensions separately, NO composite score or norms (§12.2 weights unfixed until pilot); feedback does not reveal the correct answer and is not a communication norm (spec §14.3/§17).',
+  es: 'Módulo experimental en validación (EXP-COMM-001 spec §17): 7 sub-dimensiones descriptivas por separado, SIN score compuesto ni baremos (pesos §12.2 no fijados hasta piloto psicométrico §17.1); el feedback no revela qué respuesta era correcta (Doc 2 §2/§20.1).',
+  en: 'Experimental module under validation (EXP-COMM-001 spec §17): 7 descriptive sub-dimensions separately, NO composite score or norms (§12.2 weights unfixed until the psychometric pilot, §17.1); feedback does not reveal the correct answer (Doc 2 §2/§20.1).',
 });
 const NEXT_DESIGN_PROBE = Object.freeze({
-  es: 'Piloto psicométrico (EXP-COMM-001 spec §15.3): pilotaje con 30-50 participantes, convergencia/discriminación con evaluación externa por supervisor, antes de definir cualquier score compuesto.',
-  en: 'Psychometric pilot (EXP-COMM-001 spec §15.3): pilot with 30-50 participants, convergence/discriminant against external supervisor rating, before defining any composite score.',
+  es: 'Ejecutar las fases de validación psicométrica (EXP-COMM-001 spec §17.1): validez de contenido, entrevistas cognitivas, piloto técnico, piloto psicométrico, evidencia convergente, criterial y equidad — antes de definir cualquier score compuesto (spec §12.2/§18).',
+  en: 'Run the psychometric validation phases (EXP-COMM-001 spec §17.1): content validity, cognitive interviews, technical pilot, psychometric pilot, convergent, criterion and fairness evidence — before defining any composite score (spec §12.2/§18).',
 });
 
 // 7 sub-dimensiones §12.2: etiqueta + "¿por qué aparece esta señal?" (descriptivo).

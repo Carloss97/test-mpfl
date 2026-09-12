@@ -183,6 +183,17 @@ describe('PostulationReportScreen', () => {
       { label: 'Tiempo total', value: expect.stringMatching(/s|ms/) },
     ]));
     expect(bomb.metrics.map((metric) => metric.label)).not.toContain('Precisión');
+    // CONTROL ROOM (C6): escalares del block summary (fixture óptimo 12/12), sin
+    // campo "Precisión" genérico ni "Ensayos: 0" del fallback.
+    const controlRoom = cards.find((card) => card.id === 'control_room');
+    expect(controlRoom.metrics).toEqual(expect.arrayContaining([
+      { label: 'Escenarios evaluados', value: '12/12' },
+      { label: 'Incidentes resueltos', value: '12' },
+      { label: 'Mensajes enviados', value: '26' },
+      { label: 'Tiempo de lectura', value: expect.stringMatching(/s|ms/) },
+    ]));
+    expect(controlRoom.metrics.map((metric) => metric.label)).not.toContain('Precisión');
+    expect(controlRoom.metrics.map((metric) => metric.label)).not.toContain('Ensayos');
     expect(JSON.stringify(cards.map((card) => card.metrics))).not.toMatch(/"value":"—"/);
   });
 
@@ -241,7 +252,7 @@ describe('PostulationReportScreen', () => {
     expect(screen.getAllByText(/sin guardar texto libre/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Liderazgo/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Comunicación/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Tangram y Desactivación aportan señales agregadas/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tangram, Desactivación y Sala de Control aportan señales agregadas/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Coordinación estructurada/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Completaste una ruta eficiente/i)).toBeInTheDocument();
     expect(screen.getByText(/no equivale a liderazgo logístico/i)).toBeInTheDocument();

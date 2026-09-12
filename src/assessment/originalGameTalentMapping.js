@@ -504,8 +504,8 @@ function buildAppliedCommunication(vector) {
     return baseConstruct('appliedCommunication', {
       availability: 'not_measured',
       caveats: ['experimental_module_not_administered', 'provisional_mapping_requires_validation'],
-      nextStep: 'Fases de validación psicométrica (EXP-COMM-001 spec §15/§17): contenido, usabilidad técnica, piloto, convergencia/discriminación, confiabilidad, validez de criterio, fairness. Lectura descriptiva.',
-      nextStepEn: 'Psychometric validation phases (EXP-COMM-001 spec §15/§17): content, technical usability, pilot, convergence/discriminant, reliability, criterion validity, fairness. Descriptive reading.',
+      nextStep: 'Fases de validación psicométrica (EXP-COMM-001 spec §17.1): validez de contenido, entrevistas cognitivas, piloto técnico, piloto psicométrico, evidencia convergente, criterial y equidad. Lectura descriptiva.',
+      nextStepEn: 'Psychometric validation phases (EXP-COMM-001 spec §17.1): content validity, cognitive interviews, technical pilot, psychometric pilot, convergent, criterion and fairness evidence. Descriptive reading.',
       narrative: 'No medido: la sesión no administra la Sala de Control (batería original, 7° juego) o su agregado fue inválido. Módulo experimental (EXP-COMM-001).',
       narrativeEn: 'Not measured: the session does not administer the Control Room (original battery, 7th game) or its aggregate was invalid. Experimental module (EXP-COMM-001).',
     });
@@ -540,8 +540,8 @@ function buildAppliedCommunication(vector) {
     confidence: 0.2,
     evidence,
     caveats,
-    nextStep: 'Fases de validación psicométrica (EXP-COMM-001 spec §15/§17): validación de contenido, usabilidad técnica, piloto psicométrico, convergencia/discriminación, confiabilidad, validez de criterio, fairness. Descriptivo: sin baremos ni score compuesto.',
-    nextStepEn: 'Psychometric validation phases (EXP-COMM-001 spec §15/§17): content validation, technical usability, psychometric pilot, convergence/discriminant, reliability, criterion validity, fairness. Descriptive: no norms, no composite score.',
+    nextStep: 'Fases de validación psicométrica (EXP-COMM-001 spec §17.1): validez de contenido, entrevistas cognitivas, piloto técnico, piloto psicométrico, evidencia convergente, criterial y equidad. Descriptivo: sin baremos ni score compuesto (spec §12.2/§18).',
+    nextStepEn: 'Psychometric validation phases (EXP-COMM-001 spec §17.1): content validity, cognitive interviews, technical pilot, psychometric pilot, convergent, criterion and fairness evidence. Descriptive: no norms, no composite score (spec §12.2/§18).',
     narrative: 'Lectura descriptiva de comunicación aplicada en coordinación (EXP-COMM-001): claridad, relevancia/síntesis, indagación, verificación en bucle cerrado, adaptación, reparación y comprensión receptiva. 7 sub-dimensiones, sin score compuesto ni baremos (spec §12.2).',
     narrativeEn: 'Descriptive reading of applied communication in coordination (EXP-COMM-001): clarity, relevance/synthesis, inquiry, closed-loop verification, adaptation, repair and receptive understanding. 7 sub-dimensions, no composite score or norms (spec §12.2).',
   });

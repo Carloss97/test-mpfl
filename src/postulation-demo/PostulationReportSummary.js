@@ -94,6 +94,15 @@ function getOriginalGameMetrics(t, gameId, result = {}, fallbackTrialCount = 0) 
     pushMetric(metrics, t('Tiempo total', 'Total time'), formatDurationMs(result.timeMs));
     return metrics;
   }
+  // C6 (EXP-COMM-001): escalares del block summary control_room_block_summary_v1
+  // (allowlist blueprint). Ninguno es un score de persona: conteos de la sesión.
+  if (gameId === 'control_room') {
+    pushMetric(metrics, t('Escenarios evaluados', 'Evaluated scenarios'), `${result.scoredCount ?? 0}/${result.scenarioCount ?? fallbackTrialCount ?? 12}`);
+    pushMetric(metrics, t('Incidentes resueltos', 'Incidents resolved'), `${result.resolvedCount ?? 0}`);
+    pushMetric(metrics, t('Mensajes enviados', 'Messages sent'), result.total_message_count ?? 0);
+    pushMetric(metrics, t('Tiempo de lectura', 'Reading time'), formatDurationMs(result.time_spent_reading_ms));
+    return metrics;
+  }
   return metrics;
 }
 
@@ -210,6 +219,11 @@ const CONSTRUCT_DEMO_EXPLANATIONS = Object.freeze({
   proceduralWorkingMemory: Object.freeze({
     reason: { es: 'El módulo de desactivación (EXP-BOMB-001) es experimental: retiene y ejecuta un protocolo bajo retención ciega, pero aún no hay validación psicométrica (fases A–G) ni pesos de score compuesto (spec §12.1); la lectura es descriptiva y los errores no se interpretan como déficit de memoria (spec §3.3).', en: 'The defusal module (EXP-BOMB-001) is experimental: it retains and executes a protocol under blind delay, but there is no psychometric validation yet (phases A–G) and no composite-score weights (spec §12.1); the reading is descriptive and errors are not interpreted as a memory deficit (spec §3.3).' },
     nextStep: { es: 'Ejecutar las fases A–G de la spec §17.1 (contenido, usabilidad técnica, piloto psicométrico, convergencia/discriminación, confiabilidad, validez de criterio, fairness) antes de usarlo para comparar personas.', en: 'Run spec §17.1 phases A–G (content, technical usability, psychometric pilot, convergence/discriminant, reliability, criterion validity, fairness) before using it to compare people.' },
+  }),
+  // C6 (EXP-COMM-001): 10° constructo experimental — comunicación aplicada en coordinación.
+  appliedCommunication: Object.freeze({
+    reason: { es: 'El módulo de coordinación (EXP-COMM-001) es experimental: resuelve incidentes comunicando con un interlocutor en terreno (preguntas, instrucciones y mensajes por bloques), pero aún no hay validación psicométrica (fases §17.1) ni estructura factorial confirmada para un score compuesto (spec §12.2/§18); la lectura es descriptiva con 7 sub-dimensiones por separado.', en: 'The coordination module (EXP-COMM-001) is experimental: it resolves incidents by communicating with a field interlocutor (questions, instructions and block messages), but there is no psychometric validation yet (§17.1 phases) and no confirmed factorial structure for a composite score (spec §12.2/§18); the reading is descriptive with 7 sub-dimensions shown separately.' },
+    nextStep: { es: 'Ejecutar las fases de validación de la spec §17.1 (validez de contenido, entrevistas cognitivas, piloto técnico, piloto psicométrico, evidencia convergente, criterial y equidad) antes de usarlo para comparar personas.', en: 'Run the spec §17.1 validation phases (content validity, cognitive interviews, technical pilot, psychometric pilot, convergent, criterion and fairness evidence) before using it to compare people.' },
   }),
 });
 
@@ -367,7 +381,7 @@ export function getPostulationExecutiveSummary(t, artifacts = null, completedDem
         label: t('Qué se observó', 'What was observed'),
         title: `${completedCount}/${totalCount} ${t('juegos completados', 'games completed')}`,
         body: isOriginalBattery
-          ? t('Laser, Balloon, Rutas, Operación Faro, Tangram y Desactivación aportan señales agregadas: reglas, riesgo/recompensa, planificación, ensamblaje y memoria de trabajo procedimental.', 'Laser, Balloon, Routes, Operation Faro, Tangram, and Defusal provide aggregated signals: rules, risk/reward, planning, assembly, and procedural working memory.')
+          ? t('Laser, Balloon, Rutas, Operación Faro, Tangram, Desactivación y Sala de Control aportan señales agregadas: reglas, riesgo/recompensa, planificación, ensamblaje, memoria de trabajo procedimental y coordinación comunicativa.', 'Laser, Balloon, Routes, Operation Faro, Tangram, Defusal, and Control Room provide aggregated signals: rules, risk/reward, planning, assembly, procedural working memory, and communication coordination.')
           : t('La batería estable aporta señales agregadas de desempeño en tareas cortas de atención, control e interferencia.', 'The stable battery provides aggregated performance signals from short attention, control, and interference tasks.'),
       },
       {
