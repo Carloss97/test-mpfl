@@ -9,10 +9,12 @@
 // real (GET /sessions) el dato ya no es ficticio y el workspace pasa "Sesiones
 // reales (staging)" + aviso humanReviewOnly; default = demo (V0 intacto).
 // El contenido de cada página (V2–V4) entra como children.
+// FeedbackWidget: botón flotante para bugs/sugerencias (Fase E.4).
 import React, { useEffect, useRef, useState } from 'react';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
 import { useV3Copy } from './v3Copy.js';
 import V3Dialog from './V3Dialog.jsx';
+import FeedbackWidget from './FeedbackWidget.jsx';
 
 const COMPANY_SIDEBAR_ID = 'v3-company-sidebar';
 const COMPANY_MAIN_ID = 'v3-company-main';
@@ -260,6 +262,7 @@ export default function CompanyShell({ section, active, children, note } = {}) {
         labelId="v3-co-dialog-title"
         descId="v3-co-dialog-desc"
       />
+      <FeedbackWidget />
     </div>
   );
 }

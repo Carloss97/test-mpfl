@@ -2,10 +2,12 @@
 // Chrome: skip link + topbar (logo → /, breadcrumb, EN|ES, Help) + footer
 // (© 2026 KRUMM + Privacy/Terms) + diálogo de Help/Privacy/Terms.
 // El contenido de cada página (V1: home, acceso, jobs) entra como children.
+// FeedbackWidget: botón flotante para bugs/sugerencias (Fase E.4).
 import React, { useState } from 'react';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
 import { useV3Copy } from './v3Copy.js';
 import V3Dialog from './V3Dialog.jsx';
+import FeedbackWidget from './FeedbackWidget.jsx';
 
 const CANDIDATE_MAIN_ID = 'v3-candidate-main';
 
@@ -61,6 +63,7 @@ export default function CandidateShell({ breadcrumb, children }) {
         labelId="v3-cp-dialog-title"
         descId="v3-cp-dialog-desc"
       />
+      <FeedbackWidget />
     </div>
   );
 }

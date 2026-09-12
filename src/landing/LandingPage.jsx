@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
+import FeedbackWidget from '../v3/FeedbackWidget.jsx';
 import './landing.css';
 
 /* ── Íconos lineales (stroke currentColor, sin relleno) ─────────────────── */
@@ -368,6 +369,7 @@ export default function LandingPage() {
           <span>{t('Tecnología para la evaluación de talento', 'Technology for talent assessment')}</span>
         </div>
       </footer>
+      <FeedbackWidget />
     </div>
   );
 }
