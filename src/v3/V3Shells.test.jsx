@@ -267,7 +267,8 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
     for (const route of V3_ROUTES) {
       const pathname = route.path
         .replace(':id', 'supervisor')
-        .replace(':sessionId', 'ses-1');
+        .replace(':sessionId', 'ses-1')
+        .replace(':slug', 'analista-control-planta');
       const { container } = renderV3Route(pathname);
       expect(container.querySelector('h1'), pathname).not.toBeNull();
       // shell correcto según el registro
@@ -279,8 +280,8 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
       if (route.shell === 'portal') expect(container.querySelector('.v3-portal'), pathname).not.toBeNull();
       if (route.shell === 'companyLogin') expect(container.querySelector('.v3-company-login'), pathname).not.toBeNull();
       // t_482f57b2 (V1): /candidato y /candidato/acceso son páginas reales
-      // (home de la referencia + form de acceso); el resto candidato
-      // (/empleos) sigue placeholder honesto con el título del diccionario.
+      // (home de la referencia + form de acceso); /empleos y /empleos/:slug
+      // son páginas reales con datos de jobsData.js (t_7aad621f FASE A.3).
       // t_84f00355 (V3): /empresa/proceso/:id es real (h1 = cargo; :id
       // sustituido por 'supervisor' arriba); el reporte con :sessionId='ses-1'
       // (desconocido en demo) cae al not-found que conserva el título de la
@@ -289,18 +290,27 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
         ? V3_COPY.es.cp_title
         : route.page === 'candidateAccess'
           ? V3_COPY.es.cp_access
-          : route.page === 'processDetail'
-            ? V3_COPY.es.company_supervisor
-            : V3_COPY.es.pages[route.page].title;
+          : route.page === 'jobs'
+            ? V3_COPY.es.pages.jobs.title
+            : route.page === 'jobDetail'
+              ? 'Analista de Control de Planta' // h1 del detalle = título de la oferta (slug analista-control-planta)
+              : route.page === 'processDetail'
+                ? V3_COPY.es.company_supervisor
+                : V3_COPY.es.pages[route.page].title;
       expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent), pathname).toContain(expectedTitle);
     }
   });
 
-  it('rutas candidato: /empleos placeholder (note + back al hub); el hub ya no es placeholder', () => {
+  it('rutas candidato: /empleos job board real (lista de ofertas, sin placeholder); el hub ya no es placeholder', () => {
     const { container } = renderV3Route('/empleos');
-    expect(container.querySelector('.v3-placeholder__eyebrow')).toHaveTextContent(V3_COPY.es.cp_eyebrow);
-    expect(screen.getByText(V3_COPY.es.pages.jobs.note)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: V3_COPY.es.pages.jobs.backLabel })).toHaveAttribute('href', '/candidato');
+    expect(container.querySelector('.v3-candidate')).not.toBeNull();
+    expect(container.querySelector('.v3-placeholder')).toBeNull();
+    expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.pages.jobs.title })).toBeInTheDocument();
+    // job board real renderiza cards de ofertas
+    expect(container.querySelector('.v3-jobs-grid')).not.toBeNull();
+    expect(container.querySelectorAll('.v3-job-card')).toHaveLength(4);
+    // back link al hub
+    expect(screen.getByRole('link', { name: V3_COPY.es.cp_back })).toHaveAttribute('href', '/candidato');
     // el hub /candidato (V1: home real) no muestra back a sí mismo
     const { container: hubContainer } = renderV3Route('/candidato');
     expect(hubContainer.querySelector('.v3-back')).toBeNull();

@@ -38,6 +38,8 @@ import CompanyNewRequestPage from './CompanyNewRequestPage.jsx';
 import CompanyRequestDesignPage from './CompanyRequestDesignPage.jsx';
 import CompanyRequestUploadPage from './CompanyRequestUploadPage.jsx';
 import { useCompanyData } from './useCompanyData.js';
+import JobsPage from './JobsPage.jsx';
+import JobDetailPage from './JobDetailPage.jsx';
 import './v3Shells.css';
 
 function IconBuilding() {
@@ -215,13 +217,17 @@ export default function V3RootApp() {
   if (resolved.shell === V3_SHELLS.CANDIDATE) {
     // t_482f57b2 (V1): /candidato (home, 2 cards de la referencia) y
     // /candidato/acceso (form → guard de invitación de /postulaciones) son
-    // páginas reales; /empleos conserva el placeholder honesto "próxima
-    // iteración" (idéntico a jobs.html de la referencia).
+    // páginas reales; /empleos (JobsPage) y /empleos/:slug (JobDetailPage)
+    // son páginas reales con datos de jobsData.js (t_7aad621f FASE A.3).
     let content;
     if (resolved.page === 'candidateHome') {
       content = <CandidateHomePage />;
     } else if (resolved.page === 'candidateAccess') {
       content = <CandidateAccessPage />;
+    } else if (resolved.page === 'jobs') {
+      content = <JobsPage />;
+    } else if (resolved.page === 'jobDetail') {
+      content = <JobDetailPage params={resolved.params} />;
     } else {
       content = (
         <V3Placeholder

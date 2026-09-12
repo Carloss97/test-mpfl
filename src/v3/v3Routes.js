@@ -2,8 +2,8 @@
 // SPA actual sin react-router: main.jsx selecciona el RootApp por pathname
 // (mismo patrón que postulationDemoRoute.js). resolveV3Route es puro y testable.
 //
-// Las 12 rutas de la fase:
-//   /portal, /candidato, /candidato/acceso, /empleos,
+// Las 13 rutas de la fase:
+//   /portal, /candidato, /candidato/acceso, /empleos, /empleos/:slug,
 //   /empresa/acceso, /empresa, /empresa/procesos, /empresa/proceso/:id,
 //   /empresa/proceso/:id/candidatos/:sessionId, /empresa/nueva-solicitud,
 //   /empresa/nueva-solicitud/diseño, /empresa/nueva-solicitud/subida.
@@ -24,6 +24,7 @@ export const V3_ROUTES = Object.freeze([
   Object.freeze({ path: '/candidato', shell: V3_SHELLS.CANDIDATE, page: 'candidateHome', breadcrumbKey: 'cp_candidatePortal' }),
   Object.freeze({ path: '/candidato/acceso', shell: V3_SHELLS.CANDIDATE, page: 'candidateAccess', breadcrumbKey: 'cp_access' }),
   Object.freeze({ path: '/empleos', shell: V3_SHELLS.CANDIDATE, page: 'jobs', breadcrumbKey: 'cp_jobs' }),
+  Object.freeze({ path: '/empleos/:slug', shell: V3_SHELLS.CANDIDATE, page: 'jobDetail', breadcrumbKey: 'cp_jobs' }),
   Object.freeze({ path: '/empresa/acceso', shell: V3_SHELLS.COMPANY_LOGIN, page: 'companyAccess' }),
   Object.freeze({ path: '/empresa', shell: V3_SHELLS.COMPANY, page: 'dashboard', sectionKey: 'company_dashboard', navActive: 'dashboard' }),
   Object.freeze({ path: '/empresa/procesos', shell: V3_SHELLS.COMPANY, page: 'processes', sectionKey: 'company_processesTitle', navActive: 'processes' }),

@@ -282,12 +282,16 @@ describe('V3RootApp — integración V1 (recorrido del lado candidato)', () => {
     expect(container.querySelector('.v3-placeholder')).toBeNull();
   });
 
-  it('/empleos: job board honesto "próxima iteración" (placeholder, igual que la ref)', () => {
+  it('/empleos: job board real (lista de ofertas, sin placeholder, igual a la ref)', () => {
     const { container } = renderV3Route('/empleos');
-    expect(container.querySelector('.v3-placeholder')).not.toBeNull();
+    expect(container.querySelector('.v3-candidate')).not.toBeNull();
+    expect(container.querySelector('.v3-placeholder')).toBeNull();
     expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.pages.jobs.title })).toBeInTheDocument();
-    expect(screen.getByText(V3_COPY.es.pages.jobs.note)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: V3_COPY.es.pages.jobs.backLabel })).toHaveAttribute('href', '/candidato');
+    // job board real renderiza cards de ofertas
+    expect(container.querySelector('.v3-jobs-grid')).not.toBeNull();
+    expect(container.querySelectorAll('.v3-job-card')).toHaveLength(4);
+    // back link al hub
+    expect(screen.getByRole('link', { name: V3_COPY.es.cp_back })).toHaveAttribute('href', '/candidato');
   });
 
   it('recorrido home → acceso: la card de invitación lleva al form', () => {
