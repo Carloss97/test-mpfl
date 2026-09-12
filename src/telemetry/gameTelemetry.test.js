@@ -117,4 +117,29 @@ describe('gameTelemetry v1', () => {
     expect(JSON.stringify(summary)).not.toContain('samples');
     expect(JSON.stringify(summary)).not.toContain('items');
   });
+
+  it('counts measurable kinematics responses in the motor aggregate (touch vs mouse)', () => {
+    const events = [
+      normalizeGameEvent({
+        timestamp: 100, gameId: 'precision_targeting', trialId: 'p-1', eventType: 'response',
+        response: { correct: true, outcome: 'hit', reactionTimeMs: 420, score: 1, pointerSummary: { pathEfficiency: 1, sampleCount: 2 } },
+      }),
+      normalizeGameEvent({
+        timestamp: 500, gameId: 'precision_targeting', trialId: 'p-2', eventType: 'response',
+        response: { correct: true, outcome: 'hit', reactionTimeMs: 400, score: 1, pointerSummary: { pathEfficiency: 0.9, sampleCount: 40 } },
+      }),
+      normalizeGameEvent({
+        timestamp: 900, gameId: 'simple_rt', trialId: 's-1', eventType: 'response',
+        response: { correct: true, outcome: 'hit', reactionTimeMs: 380, score: 1, pointerSummary: { pathEfficiency: 0.8 } },
+      }),
+    ];
+
+    const summary = summarizeGameEvents(events);
+
+    // Two responses carry pointerSummary with sampleCount (one touch-degenerate,
+    // one measurable) plus one legacy summary without sampleCount (treated as
+    // unknown, not flagged).
+    expect(summary.motor.kinematicsResponseCount).toBe(3);
+    expect(summary.motor.kinematicsMeasuredCount).toBe(2);
+  });
 });

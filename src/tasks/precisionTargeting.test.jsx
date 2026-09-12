@@ -187,6 +187,93 @@ describe('PrecisionTargetingTask', () => {
 
     expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ totalTrials: 1, accuracy: 1, meanScore: 1 }));
   });
+
+  it('marks kinematics as not measurable and uses a neutral route label for a touch-like trial (2 samples)', async () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const onGameEvent = vi.fn();
+    const onComplete = vi.fn();
+
+    render(<PrecisionTargetingTask active trialCount={1} width={600} height={400} onGameEvent={onGameEvent} onComplete={onComplete} />);
+
+    const startPad = screen.getByTestId('precision-start-pad');
+    await act(async () => {
+      now = 50;
+      fireEvent.click(startPad, { clientX: 300, clientY: 200 });
+    });
+
+    const target = screen.getByTestId('precision-target');
+    const taskArea = screen.getByTestId('precision-task-area');
+    const x = Number(target.dataset.x);
+    const y = Number(target.dataset.y);
+    // Touch tap: no pointermove between the start pad and the response.
+    await act(async () => {
+      now = 300;
+      fireEvent.click(taskArea, { clientX: x, clientY: y });
+      vi.runOnlyPendingTimers();
+    });
+
+    const responseEvent = onGameEvent.mock.calls.map(([event]) => event).find((event) => event.eventType === 'response');
+    expect(responseEvent.response.pointerSummary.sampleCount).toBe(2);
+    expect(responseEvent.response.adaptivePrecision.measurable).toBe(false);
+    expect(responseEvent.response.adaptivePrecision.routeLabel).toBe('Ruta registrada');
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps measurable kinematics and the quality route label for a mouse-like trial (real path)', async () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const onGameEvent = vi.fn();
+
+    render(<PrecisionTargetingTask active trialCount={1} width={600} height={400} onGameEvent={onGameEvent} />);
+
+    const startPad = screen.getByTestId('precision-start-pad');
+    await act(async () => {
+      now = 50;
+      fireEvent.click(startPad, { clientX: 300, clientY: 200 });
+    });
+
+    const target = screen.getByTestId('precision-target');
+    const taskArea = screen.getByTestId('precision-task-area');
+    const x = Number(target.dataset.x);
+    const y = Number(target.dataset.y);
+    fireEvent.pointerMove(taskArea, { clientX: 320, clientY: 210 });
+    now = 250;
+    fireEvent.pointerMove(taskArea, { clientX: 380, clientY: 240 });
+    await act(async () => {
+      now = 300;
+      fireEvent.click(taskArea, { clientX: x, clientY: y });
+      vi.runOnlyPendingTimers();
+    });
+
+    const responseEvent = onGameEvent.mock.calls.map(([event]) => event).find((event) => event.eventType === 'response');
+    expect(responseEvent.response.pointerSummary.sampleCount).toBeGreaterThanOrEqual(4);
+    expect(responseEvent.response.adaptivePrecision.measurable).toBe(true);
+    expect(responseEvent.response.adaptivePrecision.routeLabel).not.toBe('Ruta registrada');
+  });
+
+  it('does not reset an in-flight trial when the stage re-measures the viewport mid-trial', () => {
+    const onGameEvent = vi.fn();
+    const { rerender } = render(<PrecisionTargetingTask active trialCount={1} width={600} height={400} onGameEvent={onGameEvent} />);
+
+    fireEvent.click(screen.getByTestId('precision-start-pad'), { clientX: 300, clientY: 200 });
+    const targetBefore = screen.getByTestId('precision-target');
+    const xBefore = targetBefore.dataset.x;
+    const yBefore = targetBefore.dataset.y;
+    const taskArea = screen.getByTestId('precision-task-area');
+
+    // The stage re-measures (window resize / rotation) mid-trial.
+    rerender(<PrecisionTargetingTask active trialCount={1} width={520} height={290} onGameEvent={onGameEvent} />);
+
+    // Locked geometry: no reset, no duplicate stimulus, canvas keeps its size.
+    expect(screen.getByTestId('precision-target').dataset.x).toBe(xBefore);
+    expect(screen.getByTestId('precision-target').dataset.y).toBe(yBefore);
+    expect(screen.getByTestId('precision-start-pad')).toBeDisabled();
+    expect(taskArea.style.width).toBe('600px');
+    expect(taskArea.style.height).toBe('400px');
+    const stimulusEvents = onGameEvent.mock.calls.filter(([event]) => event.eventType === 'stimulus_shown');
+    expect(stimulusEvents).toHaveLength(1);
+  });
 });
 
 describe('PrecisionTargetingTask EN copy (t_42978412)', () => {

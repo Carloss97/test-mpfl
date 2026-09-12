@@ -362,12 +362,6 @@ export function buildPostulationDemoArtifacts({
     buildRouteEdgeAIResult({ gameSummary, gameCorrelation, signalContext, qualitySummary: baseQualitySummary }),
     batteryMode,
   );
-  const qualitySummary = qualityFromSignalSnapshot(signalSnapshot, {
-    gameSummary,
-    gameCorrelation,
-    edgeAIResult,
-    additionalCaveats: modeCaveats,
-  });
   const featureVectorV2 = buildPostulationFeatureVectorV2({
     runId,
     generatedAt,
@@ -375,6 +369,18 @@ export function buildPostulationDemoArtifacts({
     gameCorrelation,
     edgeAIResult,
     signalContext,
+  });
+  // Kinemáticas sobre touch (taps) producen solo 2 muestras de puntero por
+  // trial: la trayectoria degenera (línea recta trivial) y no debe leerse
+  // como "ruta perfecta" (R-6: señal ausente = desconocida/caveated).
+  const kinematicsCaveats = featureVectorV2?.qualityFlags?.includes('kinematics_insufficient_samples')
+    ? ['kinematics_insufficient_samples']
+    : [];
+  const qualitySummary = qualityFromSignalSnapshot(signalSnapshot, {
+    gameSummary,
+    gameCorrelation,
+    edgeAIResult,
+    additionalCaveats: [...modeCaveats, ...kinematicsCaveats],
   });
   const originalGameFeatureVector = batteryMode === POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES
     ? buildOriginalGameFeatureVector({ blocks: fallbackBlocks, runId, batteryId })

@@ -1,3 +1,10 @@
+// Menor número de muestras de puntero para considerar una trayectoria
+// medible. Con <3 muestras (p. ej. un tap touch: origen + click) las
+// cinemáticas son degeneradas (línea recta trivial) y no deben leerse
+// como "ruta perfecta": se marcan como no medibles (R-6: señal ausente =
+// desconocida/caveated, nunca desempeño bajo ni perfecto).
+export const MIN_KINEMATICS_SAMPLES = 3;
+
 const EMPTY_POINTER_SUMMARY = Object.freeze({
   sampleCount: 0,
   durationMs: 0,

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { buildPointerKinematics, normalizePointerSample } from './kinematics.js';
+import { buildPointerKinematics, MIN_KINEMATICS_SAMPLES, normalizePointerSample } from './kinematics.js';
+
+describe('MIN_KINEMATICS_SAMPLES', () => {
+  it('requires at least 3 pointer samples for a path to be measurable', () => {
+    expect(MIN_KINEMATICS_SAMPLES).toBe(3);
+  });
+});
 
 describe('normalizePointerSample', () => {
   it('keeps only timestamp and coordinates from a raw pointer event', () => {

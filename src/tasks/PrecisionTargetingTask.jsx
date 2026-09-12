@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GameRuntime from './GameRuntime.jsx';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { createPointerSampler, appendPointerSample } from '../telemetry/pointerSampler.js';
-import { summarizePointerTrial } from '../telemetry/kinematics.js';
+import { summarizePointerTrial, MIN_KINEMATICS_SAMPLES } from '../telemetry/kinematics.js';
 
 const DEFAULT_WIDTH = 600;
 const DEFAULT_HEIGHT = 400;
@@ -17,6 +17,7 @@ const ROUTE_LABEL_EN = Object.freeze({
   'Ruta con correcciones': 'Route with corrections',
   'Ruta precisa': 'Precise route',
   'Ruta estable': 'Stable route',
+  'Ruta registrada': 'Route recorded',
 });
 const PRECISION_HEADLINE_EN = Object.freeze({
   'Precisión estable': 'Stable precision',
@@ -99,10 +100,16 @@ export function buildPrecisionResponseAggregate({ pointerSummary = {}, clickDist
   const dwellTimeMs = Math.max(0, Math.round(Number(pointerSummary.dwellTimeMs ?? 0) || 0));
   const deviationRmsPx = round(Number(pointerSummary.deviationRmsPx ?? 0), 2);
   const clickDistance = clickDistanceToTargetPx === null ? null : round(Number(clickDistanceToTargetPx) || 0, 2);
+  // <MIN_KINEMATICS_SAMPLES (p. ej. tap touch: origen + click) = trayectoria
+  // no medible: sin claims de calidad de ruta (R-6). Agregados legacy sin
+  // sampleCount se tratan como medibles (desconocido, no insuficiente).
+  const sampleCount = Number(pointerSummary.sampleCount ?? MIN_KINEMATICS_SAMPLES);
+  const measurable = sampleCount >= MIN_KINEMATICS_SAMPLES;
   const needsCorrection = overshootCount > 0 || correctionCount > 1 || pathEfficiency < 0.75 || deviationRmsPx > 18;
-  const routeLabel = needsCorrection ? 'Ruta con correcciones' : pathEfficiency >= 0.9 ? 'Ruta precisa' : 'Ruta estable';
+  const routeLabel = !measurable ? 'Ruta registrada' : needsCorrection ? 'Ruta con correcciones' : pathEfficiency >= 0.9 ? 'Ruta precisa' : 'Ruta estable';
   return {
     routeLabel,
+    measurable,
     pathEfficiency,
     overshootCount,
     correctionCount,
@@ -156,9 +163,25 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
   const [feedback, setFeedback] = useState(null);
   const trialsRef = useRef([]);
   const startTimeRef = useRef(0);
+  const itimerRef = useRef(null);
   const pointerSamplerRef = useRef(createPointerSampler({ maxSamples: 900, sessionId: 'precision_targeting' }));
-  const trials = useMemo(() => buildPrecisionTrials({ width, height, count: trialCount }), [width, height, trialCount]);
+  // Geometría bloqueada al montar (tamaño inicial del stage): la re-medición del
+  // viewport a mitad de trial (resize/rotación) NO reinicia un trial en curso
+  // ni genera estímulo huérfano/duplicado (FASE B.2, PRE-P2-1). El canvas
+  // conserva su tamaño inicial; si el contenedor se encoge, el clip residual
+  // se resuelve con un click (miss) — nunca deja el trial irresoluble.
+  const initialSizeRef = useRef(null);
+  if (initialSizeRef.current === null) initialSizeRef.current = { width, height };
+  const initialSize = initialSizeRef.current;
+  const trials = useMemo(() => buildPrecisionTrials({ width: initialSize.width, height: initialSize.height, count: trialCount }), [initialSize, trialCount]);
   const trial = trials[current];
+
+  useEffect(() => () => {
+    if (itimerRef.current !== null) {
+      window.clearTimeout(itimerRef.current);
+      itimerRef.current = null;
+    }
+  }, []);
 
   useEffect(() => { emitRef.current = emit; }, [emit]);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
@@ -297,7 +320,8 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
       emitRef.current({ eventType: 'game_end', timestamp: now, gameState: { score: completed.reduce((sum, item) => sum + item.score, 0), level: trials.length, difficulty: trial.fittsId } });
       onCompleteRef.current?.(summary);
     } else {
-      window.setTimeout(() => {
+      itimerRef.current = window.setTimeout(() => {
+        itimerRef.current = null;
         setCurrent(next);
       }, 450);
     }
@@ -342,7 +366,7 @@ function PrecisionTargetingInner({ emit, trialCount, width, height, onComplete }
         ref={areaRef}
         className="task-area"
         data-testid="precision-task-area"
-        style={{ width, height, position: 'relative', cursor: phase === 'target' ? 'crosshair' : 'default' }}
+        style={{ width: initialSize.width, height: initialSize.height, position: 'relative', cursor: phase === 'target' ? 'crosshair' : 'default' }}
         onPointerMove={recordPointer}
         onClick={finishTrial}
       >

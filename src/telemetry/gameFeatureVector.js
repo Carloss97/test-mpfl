@@ -83,6 +83,10 @@ function qualityFlags({ gameSummary = {}, gameCorrelation = {}, edgeModelOutput 
   if (trialCount > 0 && completedTrialCount / trialCount < 0.8) flags.push('incomplete_game_coverage');
   if ((gameCorrelation.aggregate?.completedTrialCount ?? 0) <= 0 && trialCount > 0) flags.push('missing_game_correlation');
   if (modelConfidence > 0 && modelConfidence < 0.55) flags.push('low_model_confidence');
+  const motor = gameSummary.motor ?? {};
+  const kinematicsResponses = Number(motor.kinematicsResponseCount ?? 0);
+  const kinematicsMeasured = Number(motor.kinematicsMeasuredCount ?? 0);
+  if (kinematicsResponses > 0 && kinematicsMeasured < kinematicsResponses) flags.push('kinematics_insufficient_samples');
   return flags;
 }
 

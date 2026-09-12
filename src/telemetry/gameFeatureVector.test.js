@@ -176,6 +176,32 @@ describe('buildGameFeatureVectorV2', () => {
     expect(vector.qualityFlags).toContain('low_model_confidence');
     expect(vector.featureArray.every(Number.isFinite)).toBe(true);
   });
+
+  it('flags kinematics_insufficient_samples when pointer responses lack measurable paths', () => {
+    const mixed = buildGameFeatureVectorV2({
+      gameSummary: {
+        performance: { trialCount: 1, completedTrialCount: 1, accuracy: 1 },
+        motor: { kinematicsResponseCount: 2, kinematicsMeasuredCount: 1 },
+      },
+    });
+    expect(mixed.qualityFlags).toContain('kinematics_insufficient_samples');
+
+    const allMeasured = buildGameFeatureVectorV2({
+      gameSummary: {
+        performance: { trialCount: 1, completedTrialCount: 1, accuracy: 1 },
+        motor: { kinematicsResponseCount: 2, kinematicsMeasuredCount: 2 },
+      },
+    });
+    expect(allMeasured.qualityFlags).not.toContain('kinematics_insufficient_samples');
+
+    const noPointer = buildGameFeatureVectorV2({
+      gameSummary: {
+        performance: { trialCount: 1, completedTrialCount: 1, accuracy: 1 },
+        motor: { kinematicsResponseCount: 0, kinematicsMeasuredCount: 0 },
+      },
+    });
+    expect(noPointer.qualityFlags).not.toContain('kinematics_insufficient_samples');
+  });
 });
 
 describe('assessmentFeatureVector v2 integration', () => {

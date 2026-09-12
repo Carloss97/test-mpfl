@@ -6,6 +6,8 @@
  * persist raw pointer trajectories.
  */
 
+import { MIN_KINEMATICS_SAMPLES } from './kinematics.js';
+
 export const GAME_EVENT_TYPE = 'game_event_v1';
 export const GAME_SESSION_SCHEMA = 'game_telemetry_session_v1';
 export const GAME_SUMMARY_SCHEMA = 'game_telemetry_summary_v1';
@@ -211,6 +213,8 @@ export function summarizeGameEvents(events = []) {
       trackingRmsErrorPx: mean(trackingSummaries.map((summary) => summary.rmsErrorPx), 2),
       trackingLossRatio: mean(trackingSummaries.map((summary) => summary.lossRatio), 4),
       smoothPursuitScore: mean(trackingSummaries.map((summary) => summary.smoothPursuitScore), 4),
+      kinematicsResponseCount: pointerSummaries.length,
+      kinematicsMeasuredCount: pointerSummaries.filter((summary) => Number(summary.sampleCount ?? MIN_KINEMATICS_SAMPLES) >= MIN_KINEMATICS_SAMPLES).length,
     },
     fitts: {
       meanIndexDifficulty: mean(fittsSummaries.map((summary) => summary.indexDifficulty), 4),

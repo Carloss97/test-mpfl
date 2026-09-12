@@ -327,4 +327,54 @@ describe('postulationDemoSessionBuilder', () => {
     expect(artifacts.assessmentSession.gameSummary.performance.completedTrialCount).toBe(8);
     expect(artifacts.practice.practiceRunCount).toBe(0);
   });
+
+  it('caveats quality and flags the feature vector when kinematics are insufficient (touch battery)', () => {
+    const touchCompletedDemo = {
+      completedCount: 1,
+      totalCount: 1,
+      blocks: [
+        {
+          block: { gameId: 'precision_targeting', label: 'Precisión visomotora', skill: 'visuomotor_precision', trialCount: 4 },
+          summary: { completedTrialCount: 4, trialCount: 4, accuracy: 0.9, score: 0.82, meanReactionTimeMs: 520 },
+        },
+      ],
+    };
+    // Every response is a touch-like tap: exactly 2 pointer samples (origin + click).
+    const touchGameEvents = [1, 2, 3, 4].map((n) => ({
+      type: 'game_event_v1',
+      eventType: 'response',
+      gameId: 'precision_targeting',
+      trialId: `p${n}`,
+      timestamp: 300 + (n * 200),
+      response: { correct: true, outcome: 'hit', reactionTimeMs: 520 - (n * 10), score: 0.8, pointerSummary: { pathEfficiency: 1, sampleCount: 2 } },
+    }));
+    const artifacts = buildPostulationDemoArtifacts({
+      completedDemo: touchCompletedDemo,
+      gameEvents: touchGameEvents,
+      signalSnapshot: { sampleCount: 48, facePresenceRatio: 0.9, meanConfidence: 0.82, fpsEstimate: 15, caveats: [] },
+      generatedAt: '2026-07-09T17:33:00.000Z',
+      runId: 'postulation-demo-touch-test',
+    });
+
+    expect(artifacts.assessmentSession.gameSummary.motor.kinematicsResponseCount).toBe(4);
+    expect(artifacts.assessmentSession.gameSummary.motor.kinematicsMeasuredCount).toBe(0);
+    expect(artifacts.payload.behavioral.featureVectorV2.qualityFlags).toContain('kinematics_insufficient_samples');
+    expect(artifacts.assessmentSession.qualitySummary.caveats).toContain('kinematics_insufficient_samples');
+    expect(artifacts.payload.validation.ok).toBe(true);
+
+    // Mouse-like battery: no kinematics caveat.
+    const mouseGameEvents = touchGameEvents.map((event, index) => ({
+      ...event,
+      response: { ...event.response, pointerSummary: { pathEfficiency: 0.9, sampleCount: 40 + index } },
+    }));
+    const mouseArtifacts = buildPostulationDemoArtifacts({
+      completedDemo: touchCompletedDemo,
+      gameEvents: mouseGameEvents,
+      signalSnapshot: { sampleCount: 48, facePresenceRatio: 0.9, meanConfidence: 0.82, fpsEstimate: 15, caveats: [] },
+      generatedAt: '2026-07-09T17:34:00.000Z',
+      runId: 'postulation-demo-mouse-test',
+    });
+    expect(mouseArtifacts.assessmentSession.qualitySummary.caveats).not.toContain('kinematics_insufficient_samples');
+    expect(mouseArtifacts.payload.behavioral.featureVectorV2.qualityFlags).not.toContain('kinematics_insufficient_samples');
+  });
 });
