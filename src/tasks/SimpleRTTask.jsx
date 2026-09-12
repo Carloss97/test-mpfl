@@ -143,6 +143,14 @@ export default function SimpleRTTask({ active = false, trialCount = TRIAL_COUNT,
             meanRT: sh.reduce((sum, x) => sum + x.reactionTimeMs, 0) / sh.length,
           } : { accuracy: 0, meanRT: 0 },
         };
+        // Contrato game_event_v1: los 6 tasks de stable_dg emiten game_end
+        // (fix auditoría pre-lanzamiento 2026-09-12; SimpleRT era el único
+        // que no lo hacía).
+        emitGameEvent({
+          eventType: 'game_end',
+          timestamp: performance.now(),
+          gameState: { score: Math.round(summary.accuracy * 100), level: trialCount, difficulty: 'baseline', combo: 0 },
+        });
         triggerRender({ phase: 'finished', scores: summary });
         onCompleteRef.current?.(summary);
       } else {

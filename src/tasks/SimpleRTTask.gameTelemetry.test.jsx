@@ -71,4 +71,49 @@ describe('SimpleRTTask rich game telemetry', () => {
     });
     expect(JSON.stringify(responseEvent)).not.toContain('samples');
   });
+
+  it('emite game_end al completar la batería con resúmen agregado (contrato game_event_v1)', async () => {
+    const clock = setupPerformanceNow();
+    const onComplete = vi.fn();
+    const onGameEvent = vi.fn();
+
+    render(
+      <SimpleRTTask
+        active
+        trialCount={1}
+        onComplete={onComplete}
+        onGameEvent={onGameEvent}
+        width={600}
+        height={400}
+      />,
+    );
+
+    await act(async () => {
+      clock.setNow(1000);
+      vi.advanceTimersByTime(250);
+    });
+
+    const taskArea = document.querySelector('.task-area');
+    await act(async () => {
+      clock.setNow(1250);
+      fireEvent.click(taskArea, { clientX: 300, clientY: 200 });
+    });
+
+    // ITI (600-1000ms) → completado: game_end antes de onComplete.
+    await act(async () => {
+      clock.setNow(2500);
+      vi.advanceTimersByTime(1100);
+    });
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    const endEvent = onGameEvent.mock.calls.map(([event]) => event).find((event) => event.eventType === 'game_end');
+    expect(endEvent).toBeTruthy();
+    expect(endEvent).toMatchObject({ type: 'game_event_v1', gameId: 'simple_rt' });
+    expect(endEvent.gameState).toMatchObject({ score: 100, level: 1, difficulty: 'baseline' });
+    // game_end se emite una sola vez y tras el último response.
+    const events = onGameEvent.mock.calls.map(([event]) => event.eventType);
+    expect(events.filter((type) => type === 'game_end')).toHaveLength(1);
+    expect(events.indexOf('game_end')).toBeGreaterThan(events.lastIndexOf('response'));
+    expect(JSON.stringify(endEvent)).not.toContain('samples');
+  });
 });

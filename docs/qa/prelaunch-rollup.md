@@ -1,0 +1,49 @@
+# FASE B — Rollup de auditoría pre-lanzamiento (12 juegos)
+
+**Fecha base:** 2026-09-12
+**Epic:** Linear KRU-116 · Kanban t_0aeb2bbe
+**Plan:** `docs/plans/2026-09-12-next-phase-comprehensive-plan.md` §FASE B
+**Criterio de cierre por juego:** reporte en `docs/qa/prelaunch/<fecha>-<juego>.md` + tests focales GREEN + oxlint 0 + build OK + smoke 2 viewports + fixture válido + constructo resuelto en reporte + doc módulo actualizado.
+
+## 8 dimensiones (todas por juego)
+
+1. **Toma de muestras** — capturas de estímulo/respuesta (timestamps rAF/event), muestras por trial, reset por trial, práctica/calibración (G.2), calidad (min/max trials), sin pérdida de muestras.
+2. **Telemetría** — eventos `game_event_v1` (`game_start`, `stimulus_shown`, `response`, `game_end`), payload versionado, allowlist-only, privacidad (nada raw: pointer samples, landmarks, logs crudos), tests de telemetría.
+3. **Sincronización** — máquina de estados, timers (timeout/ITI) injectables, cleanup (desactivación/unmount/repetir), secuencia de batería, sin drift, sin race.
+4. **Gameplay** — reglas según spec, edge cases (timeout, input inválido, foco perdido, abandono), práctica completatable, tutorial/bienvenida, dificultad, sin estados irresolubles/hang.
+5. **Inferencia** — chain R-6 completa (constructo → demanda → conducta → telemetría agregada → feature versionada → regla provisional → disponibilidad/confianza → narrativa), doc módulo en `docs/design/modulos/<juego>.md`, `score: null` si no hay señal, sin claims HR no soportados, flags calibration/scored correctos.
+6. **Assets** — 0 404s, fuentes/íconos/SFX cargados, sin dependencias externas bloqueadas por CSP, sizes dentro de budget, íconos SVG (no unicode-tofu en dispositivos reales).
+7. **Responsividad** — 1280×720 y 390×844: sin overflow horizontal, touch targets ≥44px AA, breakpoints (<900/<560), teclado, `prefers-reduced-motion`.
+8. **Fluidez** — 60fps objetivo (rAF sin bloqueos), latencia input (respuesta registrada en el evento), sin layout thrash, sesión larga (GC), SFX no bloquea hilo principal.
+
+## Estado por juego
+
+| # | Juego (gameId) | Batería | Auditoría | Veredicto | P0 | P1 | P2 | P3 | Cerrado |
+|---|----------------|---------|-----------|-----------|----|----|----|----|---------|
+| 1 | SimpleRT (`simple_rt`) | stable_dg (warmup, visible:false) | [2026-09-12](2026-09-12-simple-rt.md) | 🟡 1 P1 abierto (doc módulo) + 3 P2 + 2 P3 | 0 | 1 | 3 | 2 | ❌ (game_end cerrado) |
+| 2 | PrecisionTargeting (`precision_targeting`) | stable_dg | pendiente | — | | | | | |
+| 3 | GoNoGo (`go_nogo`) | stable_dg | pendiente | — | | | | | |
+| 4 | ColorInterference (`color_interference`) | stable_dg | pendiente | — | | | | | |
+| 5 | VisualSearch (`visual_search`) | stable_dg | pendiente | — | | | | | |
+| 6 | BalloonRisk (`balloon_risk`) | original | pendiente | — | | | | | |
+| 7 | LaserPuzzle (`laser_puzzle`) | original | pendiente | — | | | | | |
+| 8 | PassengerRoute (`caminos` / passenger_route) | original | pendiente | — | | | | | |
+| 9 | Tangram (`tangram_exp001`) | original | pendiente | — | | | | | |
+| 10 | TeamCoordination (`team_coordination`) | original | pendiente | — | | | | | |
+| 11 | BOMB (`bomb_defusal`) | original | pendiente (validar; Exp 7 B1–B6 done) | — | | | | | |
+| 12 | ControlRoom (`control_room`) | original | pendiente (validar; Exp 8 C1–C6 done) | — | | | | | |
+
+## Criterios de veredicto
+
+- ✅ **PASS**: sin hallazgos P0/P1 abiertos; P2/P3 documentados y con decisión.
+- 🟡 **CONDICIONAL**: P1 abiertos con fix planificado (card kanban + Linear).
+- 🔴 **BLOQUEADO**: P0 abierto (break de contrato, privacidad, hang, datos raw expuestos).
+
+## Notas de auditoría (aprendizajes para los juegos restantes)
+
+- Contrato `game_end`: SimpleRT era el único de stable_dg que no lo emitía (fix 2026-09-12). Verificar en todos: `grep -ln 'game_end' src/tasks/*.jsx`.
+- Docs de módulo: solo existen para los 7 juegos original (`docs/design/modulos/`); los 5 de stable_dg NO tienen doc R-6 → P1 sistemático para 2-5.
+- `sanitizeGameResults` no expone role calibration/scored → P2 para todo juego con `visible:false` (warmups).
+- Íconos unicode en juegos: verificar en dispositivo real (patrón del fix `t_25009e33` del landing).
+- Viewport responsive: `getPostulationGameViewport` (clamp 240×280..620×340) — verificar márgenes/canvas por juego.
+- SFX: solo juegos original tienen SFX (toggle global en GameStage, persistido en localStorage).
