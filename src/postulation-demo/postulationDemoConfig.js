@@ -68,7 +68,10 @@ export const POSTULATION_DEMO_BATTERY_STABLE_DG = Object.freeze([
     shortLabelEn: 'Stroop',
     skill: 'interference_control',
     phase: 'postulation_demo',
-    durationLabel: '1 min',
+    // FASE B.4 CIP-P3-1: 8 trials × (RT ~1-1.5 s + ITI ~0.2 s) ≈ 10-17 s
+    // típicos; peor caso (todos timeout) 8 × 3.45 s ≈ 28 s → "30 s" honesto
+    // (antes "1 min" sobrestimaba, mismo bug que GNP-P3-1 en B.3).
+    durationLabel: '30 s',
     trialCount: 8,
     visible: true,
     description: 'Selecciona el color real de la palabra y gestiona conflicto atencional.',

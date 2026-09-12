@@ -143,6 +143,80 @@ describe('gameTelemetry v1', () => {
     });
   });
 
+  it('aggregates the neutral Stroop condition and computes conflict cost vs neutral (FASE B.4 CIP-P1-1/P2-2)', () => {
+    const events = [
+      normalizeGameEvent({
+        timestamp: 100, gameId: 'color_interference', trialId: 'c-1', eventType: 'response',
+        response: { correct: true, outcome: 'correct', reactionTimeMs: 200, score: 1, interference: { condition: 'congruent', congruent: true, ink: 'red', expectedResponse: 'red' } },
+      }),
+      normalizeGameEvent({
+        timestamp: 500, gameId: 'color_interference', trialId: 'c-2', eventType: 'response',
+        response: { correct: true, outcome: 'correct', reactionTimeMs: 320, score: 1, interference: { condition: 'incongruent', congruent: false, ink: 'green', expectedResponse: 'green' } },
+      }),
+      normalizeGameEvent({
+        timestamp: 900, gameId: 'color_interference', trialId: 'c-3', eventType: 'response',
+        response: { correct: true, outcome: 'correct', reactionTimeMs: 250, score: 1, interference: { condition: 'neutral', congruent: null, ink: 'blue', expectedResponse: 'blue' } },
+      }),
+    ];
+
+    const summary = summarizeGameEvents(events);
+    expect(summary.interference).toMatchObject({
+      congruentAccuracy: 1,
+      incongruentAccuracy: 1,
+      neutralAccuracy: 1,
+      congruentRT: 200,
+      incongruentRT: 320,
+      neutralRT: 250,
+      // Stroop clásico: costo = RT incongruente − RT neutral (no − congruente).
+      conflictCostMs: 70,
+      errorRate: 0,
+    });
+  });
+
+  it('keeps conflictCostMs non-negative when a condition has no correct RT (FASE B.4 CIP-P3-7) and classifies legacy boolean payloads', () => {
+    const events = [
+      normalizeGameEvent({
+        timestamp: 100, gameId: 'color_interference', trialId: 'c-1', eventType: 'response',
+        response: { correct: true, outcome: 'correct', reactionTimeMs: 200, score: 1, interference: { condition: 'congruent', congruent: true, ink: 'red', expectedResponse: 'red' } },
+      }),
+      normalizeGameEvent({
+        timestamp: 500, gameId: 'color_interference', trialId: 'c-2', eventType: 'response',
+        response: { correct: false, outcome: 'incorrect', reactionTimeMs: 380, score: 0, interference: { condition: 'incongruent', congruent: false, ink: 'green', expectedResponse: 'green' } },
+      }),
+      normalizeGameEvent({
+        timestamp: 900, gameId: 'color_interference', trialId: 'c-3', eventType: 'response',
+        response: { correct: true, outcome: 'correct', reactionTimeMs: 250, score: 1, interference: { condition: 'neutral', congruent: null, ink: 'blue', expectedResponse: 'blue' } },
+      }),
+      // Payload legado (solo booleano `congruent`, sin `condition`): sigue
+      // clasificándose por el booleano (backward compat con eventos viejos).
+      normalizeGameEvent({
+        timestamp: 1300, gameId: 'color_interference', trialId: 'c-4', eventType: 'response',
+        response: { correct: true, outcome: 'correct', reactionTimeMs: 310, score: 1, interference: { congruent: false, expectedResponse: 'green' } },
+      }),
+    ];
+
+    const summary = summarizeGameEvents(events);
+    // Sin RT de acierto incongruente (legacy c-4 cuenta: 310) → con la legacy,
+    // sí hay incongruente correcta; se prueba el guard con neutral ausente:
+    expect(summary.interference.conflictCostMs).toBeGreaterThanOrEqual(0);
+    expect(summary.interference.incongruentRT).toBe(310);
+    expect(summary.interference.incongruentAccuracy).toBe(0.5);
+
+    const noNeutral = summarizeGameEvents([
+      normalizeGameEvent({
+        timestamp: 100, gameId: 'color_interference', trialId: 'n-1', eventType: 'response',
+        response: { correct: true, outcome: 'correct', reactionTimeMs: 320, score: 1, interference: { condition: 'incongruent', congruent: false, ink: 'green', expectedResponse: 'green' } },
+      }),
+      normalizeGameEvent({
+        timestamp: 200, gameId: 'color_interference', trialId: 'n-2', eventType: 'response',
+        response: { correct: true, outcome: 'correct', reactionTimeMs: 200, score: 1, interference: { condition: 'congruent', congruent: true, ink: 'red', expectedResponse: 'red' } },
+      }),
+    ]);
+    // Sin condición neutral: no hay baseline → costo 0 (antes: negativo).
+    expect(noNeutral.interference.conflictCostMs).toBe(0);
+    expect(noNeutral.interference.neutralRT).toBe(0);
+  });
+
   it('counts measurable kinematics responses in the motor aggregate (touch vs mouse)', () => {
     const events = [
       normalizeGameEvent({

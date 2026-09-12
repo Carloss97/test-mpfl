@@ -183,11 +183,21 @@ export function summarizeGameEvents(events = []) {
   const visualSearchSummaries = responses.map((response) => response.visualSearch).filter(Boolean);
   const inhibitionResponses = responses.filter((response) => response.inhibition || ['correct_go', 'correct_withhold', 'commission_error', 'omission_error'].includes(response.outcome));
   const interferenceResponses = responses.filter((response) => response.interference);
+  // FASE B.4 (CIP-P1-1/P2-2): 3 condiciones Stroop. Clasificación por el campo
+  // `condition` cuando existe (congruent/incongruent/neutral), con fallback al
+  // booleano legado `congruent` para eventos viejos sin `condition`.
+  const interferenceCondition = (response) => response.interference?.condition
+    ?? (response.interference?.congruent === true ? 'congruent' : response.interference?.congruent === false ? 'incongruent' : null);
+  const congruentResponses = interferenceResponses.filter((response) => interferenceCondition(response) === 'congruent');
+  const incongruentResponses = interferenceResponses.filter((response) => interferenceCondition(response) === 'incongruent');
+  const neutralResponses = interferenceResponses.filter((response) => interferenceCondition(response) === 'neutral');
+  const correctRtOf = (list) => mean(list.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2);
+  const congruentRT = correctRtOf(congruentResponses);
+  const incongruentRT = correctRtOf(incongruentResponses);
+  const neutralRT = correctRtOf(neutralResponses);
 
   const noGoResponses = inhibitionResponses.filter((response) => response.inhibition?.responseRequired === false || ['commission_error', 'correct_withhold'].includes(response.outcome));
   const goResponses = inhibitionResponses.filter((response) => response.inhibition?.responseRequired === true || ['correct_go', 'omission_error'].includes(response.outcome));
-  const congruentResponses = interferenceResponses.filter((response) => response.interference?.congruent === true);
-  const incongruentResponses = interferenceResponses.filter((response) => response.interference?.congruent === false);
 
   return {
     schemaVersion: GAME_SUMMARY_SCHEMA,
@@ -229,9 +239,15 @@ export function summarizeGameEvents(events = []) {
     interference: {
       congruentAccuracy: rate(congruentResponses.filter((response) => response.correct === true).length, congruentResponses.length),
       incongruentAccuracy: rate(incongruentResponses.filter((response) => response.correct === true).length, incongruentResponses.length),
-      congruentRT: mean(congruentResponses.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2),
-      incongruentRT: mean(incongruentResponses.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2),
-      conflictCostMs: round(mean(incongruentResponses.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2) - mean(congruentResponses.filter((response) => response.correct === true).map((response) => response.reactionTimeMs), 2), 2),
+      neutralAccuracy: rate(neutralResponses.filter((response) => response.correct === true).length, neutralResponses.length),
+      congruentRT,
+      incongruentRT,
+      neutralRT,
+      // Stroop clásico: costo de interferencia = RT incongruente − RT neutral
+      // (antes: − congruente, que no es la métrica canónica). Sin baseline en
+      // cualquiera de las dos condiciones → 0, nunca negativo (CIP-P3-7: un
+      // costo negativo se leería como desempeño óptimo en conflictScore).
+      conflictCostMs: incongruentRT > 0 && neutralRT > 0 ? round(incongruentRT - neutralRT, 2) : 0,
       errorRate: rate(interferenceResponses.filter((response) => response.correct === false).length, interferenceResponses.length),
     },
     visualSearch: {

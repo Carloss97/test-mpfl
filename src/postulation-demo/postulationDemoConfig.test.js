@@ -27,6 +27,16 @@ describe('postulation demo config', () => {
     expect(POSTULATION_DEMO_BATTERY.every((block) => block.durationLabel)).toBe(true);
   });
 
+  it('labels color_interference with an honest duration (FASE B.4 CIP-P3-1: 8 trials × ~1-3.5 s ≈ 10-30 s, no "1 min")', () => {
+    expect(getPostulationDemoBlock('color_interference')).toMatchObject({
+      label: 'Interferencia cognitiva',
+      skill: 'interference_control',
+      trialCount: 8,
+      visible: true,
+      durationLabel: '30 s',
+    });
+  });
+
   it('exposes visible progress blocks and lookup helpers', () => {
     expect(listVisiblePostulationBlocks().map((block) => block.gameId)).toEqual([
       'precision_targeting',
