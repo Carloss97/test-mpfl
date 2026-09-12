@@ -4,6 +4,7 @@ import { buildPassengerConstraintFeedback } from '../tasks/original-games/passen
 import { buildTeamCoordinationFeedback } from '../tasks/original-games/teamCoordinationFeedback.js';
 import { buildTangramReportFeedback } from '../tasks/original-games/tangramReportFeedback.js';
 import { buildBombDefusalFeedback } from '../tasks/original-games/bomb/bombFeedback.js';
+import { buildControlRoomFeedback } from '../tasks/original-games/control-room/controlRoomFeedback.js';
 import { getOriginalGameBlueprint } from './originalGameBlueprints.js';
 import { getPostulationDemoBlock } from './postulationDemoConfig.js';
 import { getConstructDefinition } from '../assessment/originalGameTalentMapping.js';
@@ -115,6 +116,7 @@ function buildOriginalGameFeedback(gameId, result) {
   if (gameId === 'team_coordination') return buildTeamCoordinationFeedback(result);
   if (gameId === 'tangram_exp001') return buildTangramReportFeedback(result);
   if (gameId === 'bomb_defusal') return buildBombDefusalFeedback(result);
+  if (gameId === 'control_room') return buildControlRoomFeedback(result);
   return null;
 }
 
@@ -144,6 +146,9 @@ const FEEDBACK_CATEGORY_LABELS = Object.freeze({
   partial_sequence_execution: { es: 'Ejecución parcial de secuencia', en: 'Partial sequence execution' },
   sequence_not_completed: { es: 'Secuencia no completada', en: 'Sequence not completed' },
   incomplete_session: { es: 'Sesión incompleta', en: 'Incomplete session' },
+  coordination_effective: { es: 'Coordinación efectiva', en: 'Effective coordination' },
+  partial_coordination: { es: 'Coordinación parcial', en: 'Partial coordination' },
+  coordination_review: { es: 'Coordinación a revisar', en: 'Coordination to review' },
 });
 
 function normalizeFeedback(t, feedback = null) {

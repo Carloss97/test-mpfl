@@ -101,13 +101,13 @@ describe('krumm_workbook_talent_framework_v1', () => {
       classification: { strengths: null, watchAreas: null, availability: 'not_available_without_norms' },
     });
     expect(framework.constructOrder).toEqual(WORKBOOK_TALENT_CONSTRUCT_ORDER);
-    expect(WORKBOOK_TALENT_CONSTRUCT_ORDER).toHaveLength(9);
-    expect(WORKBOOK_TALENT_CONSTRUCT_ORDER.at(-1)).toBe('proceduralWorkingMemory');
+    expect(WORKBOOK_TALENT_CONSTRUCT_ORDER).toHaveLength(10);
+    expect(WORKBOOK_TALENT_CONSTRUCT_ORDER.at(-1)).toBe('appliedCommunication');
     const descriptiveOnly = new Set(['decisionMaking', 'adaptability']);
     for (const id of WORKBOOK_TALENT_CONSTRUCT_ORDER) {
       // B6: sin BOMB en la sesión, el 9° constructo queda not_measured
       // (señal ausente ≠ bajo desempeño; la batería original lo administra).
-      if (id === 'proceduralWorkingMemory') {
+      if (id === 'proceduralWorkingMemory' || id === 'appliedCommunication') {
         expect(framework.constructs[id].availability).toBe('not_measured');
         expect(framework.constructs[id].score).toBeNull();
         expect(framework.constructs[id].caveats).toContain('experimental_module_not_administered');

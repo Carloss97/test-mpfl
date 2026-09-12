@@ -280,7 +280,7 @@ export default function PostulationReportScreen({
             <div>
               <h2>{t('Mapa de evidencia KRUMM', 'KRUMM evidence map')}</h2>
               <p>{completeWorkbookCoverage
-                ? t('Cobertura de tareas: los nueve constructos tienen señal de juego (score provisional o lectura descriptiva) con confianza por constructo.', 'Task coverage: the nine constructs have game signal (provisional score or descriptive reading) with per-construct confidence.')
+                ? t('Cobertura de tareas: los diez constructos tienen señal de juego (score provisional o lectura descriptiva) con confianza por constructo.', 'Task coverage: the ten constructs have game signal (provisional score or descriptive reading) with per-construct confidence.')
                 : t('Lectura observacional: muestra qué capacidades tienen señales de juego y cuáles requieren evidencia adicional.', 'Observational reading: shows which capabilities have game signals and which need additional evidence.')}</p>
             </div>
           </div>

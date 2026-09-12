@@ -14,6 +14,9 @@ export const WORKBOOK_TALENT_CONSTRUCT_ORDER = Object.freeze([
   // descriptive_only (score null): NO se fija score compuesto (spec §12.1);
   // nextStep = fases A–G de validación (spec §17.1).
   'proceduralWorkingMemory',
+  // C6 (EXP-COMM-001): 10° constructo PROVISIONAL — comunicación aplicada en
+  // coordinación. descriptive_only, 7 sub-dimensiones §12.2, SIN score compuesto.
+  'appliedCommunication',
 ]);
 
 export const CONSTRUCT_DEFINITIONS = Object.freeze({
@@ -79,6 +82,13 @@ export const CONSTRUCT_DEFINITIONS = Object.freeze({
     workbookRow: 11,
     description: 'Retención, actualización y ejecución serial de un protocolo de acciones bajo retención ciega y presión temporal (EXP-BOMB-001). Módulo experimental en validación (fases A–G, spec §17); sin score compuesto (pesos §12.1 no fijados).',
     descriptionEn: 'Retention, updating and serial execution of an action protocol under blind delay and time pressure (EXP-BOMB-001). Experimental module under validation (phases A–G, spec §17); no composite score (§12.1 weights unfixed).',
+  }),
+  appliedCommunication: Object.freeze({
+    label: 'Comunicación aplicada (coordinación)',
+    labelEn: 'Applied communication (coordination)',
+    workbookRow: 12,
+    description: 'Coordinación comunicativa aplicada: claridad, relevancia/síntesis, indagación, verificación en bucle cerrado, adaptación, reparación y comprensión receptiva (EXP-COMM-001). Módulo experimental descriptivo: 7 sub-dimensiones, sin score compuesto ni baremos.',
+    descriptionEn: 'Applied communication coordination: clarity, relevance/synthesis, inquiry, closed-loop verification, adaptation, repair and receptive understanding (EXP-COMM-001). Experimental descriptive module: 7 sub-dimensions, no composite score or norms.',
   }),
 });
 
@@ -486,6 +496,57 @@ function buildProceduralWorkingMemory(vector) {
   });
 }
 
+function buildAppliedCommunication(vector) {
+  const availability = vector?.gameAvailability?.control_room;
+  if (availability !== 'measured_complete' && availability !== 'measured_partial') {
+    // No administrado (sesión sin control_room) o agregado inválido: señal
+    // ausente = no medido/caveated, nunca desempeño bajo (R-6).
+    return baseConstruct('appliedCommunication', {
+      availability: 'not_measured',
+      caveats: ['experimental_module_not_administered', 'provisional_mapping_requires_validation'],
+      nextStep: 'Fases de validación psicométrica (EXP-COMM-001 spec §15/§17): contenido, usabilidad técnica, piloto, convergencia/discriminación, confiabilidad, validez de criterio, fairness. Lectura descriptiva.',
+      nextStepEn: 'Psychometric validation phases (EXP-COMM-001 spec §15/§17): content, technical usability, pilot, convergence/discriminant, reliability, criterion validity, fairness. Descriptive reading.',
+      narrative: 'No medido: la sesión no administra la Sala de Control (batería original, 7° juego) o su agregado fue inválido. Módulo experimental (EXP-COMM-001).',
+      narrativeEn: 'Not measured: the session does not administer the Control Room (original battery, 7th game) or its aggregate was invalid. Experimental module (EXP-COMM-001).',
+    });
+  }
+  // Evidencia = las 7 sub-dimensiones §12.2 observadas (separadas, SIN score
+  // compuesto — spec §12.2: pesos NO fijados hasta pilotaje).
+  const evidence = [];
+  for (const key of [
+    'comm.clarity',
+    'comm.relevance_and_synthesis',
+    'comm.inquiry',
+    'comm.verification_closed_loop',
+    'comm.adaptation',
+    'comm.repair',
+    'comm.receptive_understanding',
+  ]) {
+    const value = getFeature(vector, key);
+    if (value !== null) evidence.push({ feature: key, value });
+  }
+  const caveats = [
+    'experimental_module_validation_pending',
+    'no_composite_score_subdimensions_only',
+    'scenario_specific_not_trait',
+    'descriptive_not_normative',
+    'provisional_mapping_requires_validation',
+  ];
+  if (availability === 'measured_partial') caveats.push('incomplete_session');
+  return baseConstruct('appliedCommunication', {
+    availability: 'descriptive_only',
+    score: null,
+    confidenceCeiling: 0.2,
+    confidence: 0.2,
+    evidence,
+    caveats,
+    nextStep: 'Fases de validación psicométrica (EXP-COMM-001 spec §15/§17): validación de contenido, usabilidad técnica, piloto psicométrico, convergencia/discriminación, confiabilidad, validez de criterio, fairness. Descriptivo: sin baremos ni score compuesto.',
+    nextStepEn: 'Psychometric validation phases (EXP-COMM-001 spec §15/§17): content validation, technical usability, psychometric pilot, convergence/discriminant, reliability, criterion validity, fairness. Descriptive: no norms, no composite score.',
+    narrative: 'Lectura descriptiva de comunicación aplicada en coordinación (EXP-COMM-001): claridad, relevancia/síntesis, indagación, verificación en bucle cerrado, adaptación, reparación y comprensión receptiva. 7 sub-dimensiones, sin score compuesto ni baremos (spec §12.2).',
+    narrativeEn: 'Descriptive reading of applied communication in coordination (EXP-COMM-001): clarity, relevance/synthesis, inquiry, closed-loop verification, adaptation, repair and receptive understanding. 7 sub-dimensions, no composite score or norms (spec §12.2).',
+  });
+}
+
 function withCameraCaveat(construct, signalQuality) {
   if (!signalQuality || Number(signalQuality.sampleCount ?? 0) > 0) return construct;
   return {
@@ -514,6 +575,7 @@ export function buildOriginalGameTalentFramework({
     leadership: buildLeadership(T),
     communication: buildCommunication(T),
     proceduralWorkingMemory: buildProceduralWorkingMemory(vector),
+    appliedCommunication: buildAppliedCommunication(vector),
   };
 
   const constructsWithCameraCaveats = Object.fromEntries(

@@ -10,7 +10,7 @@ export function usePostulationDemoCopy() {
       'Short games, on-device processing, and a report for human review.',
     ),
     description: t(
-      'Una experiencia gamificada donde cada actividad aporta métricas agregadas y KRUMM prepara un reporte de 9 constructos con señal de prueba para revisión humana.',
+      'Una experiencia gamificada donde cada actividad aporta métricas agregadas y KRUMM prepara un reporte de 10 constructos con señal de prueba para revisión humana.',
       'A gamified experience where each activity contributes aggregated metrics and KRUMM prepares a 9-construct assessment-signal report for human review.',
     ),
     timeEstimate: t('6-8 min', '6-8 min'),
