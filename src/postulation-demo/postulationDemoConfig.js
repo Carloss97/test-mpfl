@@ -54,7 +54,7 @@ export const POSTULATION_DEMO_BATTERY_STABLE_DG = Object.freeze([
     shortLabelEn: 'Go/No-Go',
     skill: 'inhibitory_control',
     phase: 'postulation_demo',
-    durationLabel: '1 min',
+    durationLabel: '15 s',
     trialCount: 8,
     visible: true,
     description: 'Responde a señales GO e inhibe respuestas ante señales NO-GO.',

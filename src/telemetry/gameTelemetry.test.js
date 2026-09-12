@@ -118,6 +118,31 @@ describe('gameTelemetry v1', () => {
     expect(JSON.stringify(summary)).not.toContain('items');
   });
 
+  it('aggregates per-response postErrorSlowingMs into the inhibition summary (FASE B.3 GNP-P2-2)', () => {
+    const events = [
+      normalizeGameEvent({
+        timestamp: 100, gameId: 'go_nogo', trialId: 'g-1', eventType: 'response',
+        response: { correct: true, outcome: 'correct_go', reactionTimeMs: 300, score: 1, inhibition: { cue: 'GO', responseRequired: true } },
+      }),
+      normalizeGameEvent({
+        timestamp: 500, gameId: 'go_nogo', trialId: 'g-2', eventType: 'response',
+        response: { correct: false, outcome: 'commission_error', reactionTimeMs: 180, score: 0, inhibition: { cue: 'NO-GO', responseRequired: false } },
+      }),
+      normalizeGameEvent({
+        timestamp: 900, gameId: 'go_nogo', trialId: 'g-3', eventType: 'response',
+        response: { correct: true, outcome: 'correct_go', reactionTimeMs: 340, score: 1, postErrorSlowingMs: 40, inhibition: { cue: 'GO', responseRequired: true } },
+      }),
+    ];
+
+    const summary = summarizeGameEvents(events);
+    expect(summary.inhibition).toMatchObject({
+      commissionErrorRate: 1,
+      omissionErrorRate: 0,
+      correctGoRT: 320,
+      postErrorSlowingMs: 40,
+    });
+  });
+
   it('counts measurable kinematics responses in the motor aggregate (touch vs mouse)', () => {
     const events = [
       normalizeGameEvent({

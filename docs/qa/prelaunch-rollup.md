@@ -22,7 +22,7 @@
 |---|----------------|---------|-----------|-----------|----|----|----|----|---------|
 | 1 | SimpleRT (`simple_rt`) | stable_dg (warmup, visible:false) | [2026-09-12](2026-09-12-simple-rt.md) | 🟡 1 P1 abierto (doc módulo) + 3 P2 + 2 P3 | 0 | 1 | 3 | 2 | ❌ (game_end cerrado) |
 | 2 | PrecisionTargeting (`precision_targeting`) | stable_dg | [2026-09-12](2026-09-12-precision-targeting.md) | ✅ PASS (2 P1 + 1 P2 + 1 P3 cerrados: kinemáticas touch, doc módulo, reset por resize, ITI cleanup; 2 P2 + 8 P3 decisionados) | 0 | 0 | 2 | 8 | ✅ |
-| 3 | GoNoGo (`go_nogo`) | stable_dg | pendiente | — | | | | | |
+| 3 | GoNoGo (`go_nogo`) | stable_dg | [2026-09-12](2026-09-12-go-nogo.md) | ✅ PASS (2 P1 + 4 P2 cerrados: cues aleatorizados p=0.35 piso 2, doc módulo, contrato summary, post-error por respuesta, height prop, ITI jitter; 7 P3 cerrados/decisionados) | 0 | 0 | 0 | 4 | ✅ |
 | 4 | ColorInterference (`color_interference`) | stable_dg | pendiente | — | | | | | |
 | 5 | VisualSearch (`visual_search`) | stable_dg | pendiente | — | | | | | |
 | 6 | BalloonRisk (`balloon_risk`) | original | pendiente | — | | | | | |
@@ -50,3 +50,5 @@
 - **Kinemáticas touch degeneradas (B.2, cerrado en PrecisionTargeting):** un tap = 2 muestras de puntero → pathEfficiency 1.0 trivial. Fix: `MIN_KINEMATICS_SAMPLES=3` (kinematics.js) + `motor.kinematicsMeasuredCount/kinematicsResponseCount` (gameTelemetry) + `qualityFlags: kinematics_insufficient_samples` (gameFeatureVector) + caveat qualitySummary (postulationDemoSessionBuilder). **Re-verificar en SimpleRT (B.1 — el warmup también emite pointerSummary; el fix es agregado y ya lo cubre, pero su reporte no lo documenta).**
 - **Geometría dependiente de viewport mid-trial (B.2, cerrado en PrecisionTargeting):** `useMemo(trials, [width, height, trialCount])` + reset effect dependiente de la identidad del objeto trial → resize/rotación re-mede el stage y resetea el trial en curso (stimulus huérfano). Fix: lock de geometría al montar (`initialSizeRef`). **B.5 `visual_search` tiene el mismo patrón (línea 138) — aplicar/verificar.**
 - **Pantalla finished invisible en batería:** `onComplete` monta el siguiente juego en el mismo batch — el smoke debe esperar la superficie siguiente, no el testid `*-finished` (B.1 y B.2 verificado).
+- **Orden de eventos hijo-ante-padre (B.3):** el effect del hijo corre antes que el del padre → `stimulus_shown` precede a `game_start` (GameRuntime) en TODOS los juegos stable_dg. Los tests no deben asertar orden entre ambos (sistémico; documentado en `docs/design/modulos/go_nogo.md` §10/§17).
+- **Secuencias de cues aleatorizadas (B.3 GoNoGo):** los tests de componente que dependen de qué trial es GO/NO-GO deben inyectar `rng` (prop del juego) o usar counts donde el piso de NO-GO fuerce la secuencia (count=2 → GO,NO-GO garantizado). Smoke E2E: asertar propiedades (no-alternancia, rango), no la secuencia exacta.
