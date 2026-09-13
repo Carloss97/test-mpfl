@@ -195,6 +195,9 @@ Resources:
   RecruiterAuthorizer:
     Type: AWS::ApiGatewayV2::Authorizer
     Properties:
+      # ApiId es REQUIRED (y create-only) en el recurso CFN — el authorizer
+      # vive pegado a la API HTTP.
+      ApiId: !Ref SessionsApi
       Name: krumm-recruiters-jwt
       AuthorizerType: JWT
       IdentitySource:
@@ -217,46 +220,59 @@ Resources:
         AllowHeaders: ['content-type', 'authorization', 'x-invitation-id']
 
   # --- A.2 (KRU-113): rutas HR nativas con JWT authorizer Cognito ---
-  # Target 'lambda:path/2015-03-31/functions/.../invocations' → integración
-  # proxy (payload 1.0), misma semántica que los eventos SAM de la función.
+  # Limitaciones CFN nativas (schema, no el modelo API):
+  # 1) La ruta NO acepta Authorizer:{Name,Type} → AuthorizationType +
+  #    AuthorizerId (string generado por APIGW). El recurso Authorizer no
+  #    expone GetAtt → el ID queda hardcoded (8dpjid = krumm-recruiters-jwt,
+  #    creado por ESTE stack). Si se recrea el authorizer: actualizar vía
+  #    get_authorizers(ApiId) antes de redeploy.
+  # 2) La ruta NO acepta el ARN de Lambda directo → Target debe ser
+  #    'integrations/<id>' de un AWS::ApiGatewayV2::Integration.
+  # 3) !GetAtt Api.ExecutionArn no existe → el ARN execute-api se construye
+  #    con !Ref Api (= id corto de la API).
   # NOTA deploy: al cambiar rutas hay que re-deploy manual del stage 'prod'
   # (ver note KRU-97 abajo).
+  # Integración proxy única (compartida por las 4 rutas HR) → Lambda.
+  SessionsLambdaIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref SessionsApi
+      IntegrationType: AWS_PROXY
+      IntegrationMethod: POST
+      PayloadFormatVersion: '1.0'
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SessionsFunction.Arn}/invocations'
   SessionsListRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref SessionsApi
       RouteKey: GET /sessions
-      Target: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SessionsFunction.Arn}/invocations'
-      Authorizer:
-        Type: JWT
-        Name: krumm-recruiters-jwt
+      Target: !Sub 'integrations/${SessionsLambdaIntegration}'
+      AuthorizationType: JWT
+      AuthorizerId: 8dpjid
   SessionItemRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref SessionsApi
       RouteKey: ANY /sessions/{id}
-      Target: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SessionsFunction.Arn}/invocations'
-      Authorizer:
-        Type: JWT
-        Name: krumm-recruiters-jwt
+      Target: !Sub 'integrations/${SessionsLambdaIntegration}'
+      AuthorizationType: JWT
+      AuthorizerId: 8dpjid
   InvitationsRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref SessionsApi
       RouteKey: POST /invitations
-      Target: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SessionsFunction.Arn}/invocations'
-      Authorizer:
-        Type: JWT
-        Name: krumm-recruiters-jwt
+      Target: !Sub 'integrations/${SessionsLambdaIntegration}'
+      AuthorizationType: JWT
+      AuthorizerId: 8dpjid
   InvitationRevokeRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref SessionsApi
       RouteKey: POST /invitations/{token}/revoke
-      Target: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SessionsFunction.Arn}/invocations'
-      Authorizer:
-        Type: JWT
-        Name: krumm-recruiters-jwt
+      Target: !Sub 'integrations/${SessionsLambdaIntegration}'
+      AuthorizationType: JWT
+      AuthorizerId: 8dpjid
   # Invocación Lambda para las rutas nativas (las de eventos SAM ya traen su
   # permiso propio; este cubre todas las rutas con ExecutionArn/*).
   SessionsFunctionApiInvokePermission:
@@ -265,8 +281,8 @@ Resources:
       FunctionName: !Ref SessionsFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      # HTTP API: SourceArn exige stage/method/resource (3 niveles de wildcard).
-      SourceArn: !Sub '${SessionsApi.ExecutionArn}/*/*/*'
+      # HTTP API: stage/method/resource (3 niveles de wildcard).
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SessionsApi}/*/*/*'
 
   # --- KRU-97 (opción b): stage 'prod' sobre la MISMA API/Lambda/tablas ---
   # /prod y /staging comparten dataset (decisión de datos 2026-09-11: un solo
