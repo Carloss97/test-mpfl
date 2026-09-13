@@ -243,6 +243,38 @@ describe('original_game_feature_vector_v1', () => {
     expect(vector.qualityFlags).toContain('passenger_routes_delivery_count_clamped');
   });
 
+  it('clamps over-range balloon riskEfficiency instead of invalidating the whole risk signal (B.6)', () => {
+    // Payloads históricos (u óptimos de 8 rondas) pueden llevar riskEfficiency > 1
+    // (máximo real 816 pts vs denominador nominal 800). Patrón del fix passenger
+    // (skill pitfall #71): clamp defensivo + quality flag, nunca invalidar el juego.
+    const vector = buildOriginalGameFeatureVector({
+      blocks: [{
+        gameId: 'balloon_risk',
+        status: 'completed',
+        result: {
+          aggregateSchemaVersion: 'balloon_risk_aggregate_v1',
+          completed: true,
+          roundsCompleted: 8,
+          totalRounds: 8,
+          averagePumps: 8.5,
+          cashoutCount: 8,
+          popCount: 0,
+          postPopAdjustment: 0,
+          postPopAdjustmentCount: 0,
+          riskEfficiency: 1.02,
+          timeMs: 90_000,
+          aggregateOnly: true,
+        },
+      }],
+    });
+
+    expect(vector.gameAvailability.balloon_risk).toBe('measured_complete');
+    expect(vector.featureMap['balloon.riskEfficiency']).toBe(1);
+    expect(vector.featureAvailability['balloon.riskEfficiency']).toBe('observed');
+    expect(vector.observedMask[vector.featureOrder.indexOf('balloon.riskEfficiency')]).toBe(1);
+    expect(vector.qualityFlags).toContain('balloon_risk_riskEfficiency_clamped');
+  });
+
   // ── BOMB (EXP-BOMB-001, B6): delta aditivo en original_game_feature_vector ──
 
   const validBombResult = Object.freeze({

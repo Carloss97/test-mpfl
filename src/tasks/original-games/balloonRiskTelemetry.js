@@ -67,7 +67,13 @@ export function buildBalloonResponseAggregate({
   const total = Math.max(1, Math.round(Number(totalRounds) || 1));
   const averagePumps = mean(pumpCounts, 2);
   const points = Math.max(0, Math.round(Number(totalScore) || 0));
-  const riskEfficiency = round((points / Math.max(1, total * 100)) * (1 - Math.min(0.6, Number(popCount) * 0.12)), 4);
+  // FASE B.6 (BLN-P1-1): el denominador nominal (total*100) puede ser menor que el
+  // máximo alcanzable de la configuración (8 rondas: Σ(threshold-1)*pointValue = 816 > 800)
+  // → un jugador óptimo emitía riskEfficiency 1.02 y el feature vector invalidaba el
+  // bloque completo (validRatio [0,1]). Clamp [0,1] en la fuente; el feature vector
+  // mantiene un clamp defensivo con quality flag para payloads históricos.
+  const rawEfficiency = (points / Math.max(1, total * 100)) * (1 - Math.min(0.6, Number(popCount) * 0.12));
+  const riskEfficiency = round(Math.min(1, Math.max(0, rawEfficiency)), 4);
   return {
     aggregateSchemaVersion: 'balloon_risk_aggregate_v1',
     score: riskEfficiency,

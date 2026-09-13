@@ -98,6 +98,46 @@ describe('BalloonRiskPostulationTask', () => {
     }
   });
 
+  it('ignores pump/secure input after the round settled (FX window) — single response per round (B.6)', () => {
+    vi.useFakeTimers();
+    try {
+      const onGameEvent = vi.fn();
+      const onComplete = vi.fn();
+      renderWithLanguage(<BalloonRiskPostulationTask active width={606} height={338} trialCount={2} onGameEvent={onGameEvent} onComplete={onComplete} />);
+      skipIntro();
+      const task = document.querySelector('.balloon-risk-task');
+      // Round 1 threshold is 7 pumps -> pop.
+      for (let index = 0; index < 7; index += 1) {
+        fireEvent.click(screen.getByRole('button', { name: /Inflar/i }));
+      }
+      // Aún dentro de la ventana pop FX (900 ms): teclado y puntero deben ser no-ops
+      // (repetición de tecla / doble click tras el pop). Sin guard: respuesta duplicada
+      // + popCount doble-contado + agregado corrupto (cashouts+pops > roundsCompleted).
+      fireEvent.keyDown(task, { key: ' ' });
+      fireEvent.click(screen.getByRole('button', { name: /Inflar/i }));
+
+      const round1Responses = onGameEvent.mock.calls
+        .map(([event]) => event)
+        .filter((event) => event.eventType === 'response' && event.trialId === 'balloon-risk-0');
+      expect(round1Responses).toHaveLength(1);
+
+      act(() => { vi.advanceTimersByTime(900); });
+      expect(screen.getByText(/Ronda 2 de 2/i)).toBeInTheDocument();
+      // Round 2: asegurar de inmediato.
+      fireEvent.click(screen.getByRole('button', { name: /Asegurar puntos/i }));
+      act(() => { vi.advanceTimersByTime(500); });
+
+      expect(onComplete).toHaveBeenCalledTimes(1);
+      expect(onComplete.mock.calls[0][0]).toMatchObject({
+        roundsCompleted: 2,
+        popCount: 1,
+        cashoutCount: 1,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('shows tension from the second pump onward without revealing thresholds (W2)', () => {
     renderWithLanguage(<BalloonRiskPostulationTask active width={606} height={338} trialCount={1} onGameEvent={vi.fn()} />);
     skipIntro();

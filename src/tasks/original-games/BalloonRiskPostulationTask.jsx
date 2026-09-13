@@ -42,6 +42,12 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete, practic
   const popsRef = useRef(0);
   const postPopAdjustmentsRef = useRef([]);
   const previousPopPumpRef = useRef(null);
+  // FASE B.6 (BLN-P1-2): guard de input post-settle. Entre finishRound y el avance
+  // de ronda hay una ventana FX (pop 900 ms / cashout 500 ms) en la que click/teclado
+  // seguían activos → segunda respuesta por ronda, popCount doble-contado y agregado
+  // corrupto (cashouts+pops > roundsCompleted → feature vector invalido). La entrada
+  // queda como no-op hasta `advanceToNextRound`.
+  const settledRoundRef = useRef(null);
   const timeoutsRef = useRef([]);
   const pushTimeout = (fn, ms) => {
     const id = window.setTimeout(fn, ms);
@@ -103,6 +109,7 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete, practic
   }, [practice, rounds.length]);
 
   const finishRound = useCallback((outcome, finalPumpCount, gainedPoints) => {
+    settledRoundRef.current = round.roundId;
     const nextPumpCounts = [...pumpCountsRef.current, finalPumpCount];
     pumpCountsRef.current = nextPumpCounts;
     if (outcome === 'cashout') cashoutsRef.current += 1;
@@ -143,6 +150,7 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete, practic
 
     const nextIndex = roundIndex + 1;
     const advanceToNextRound = () => {
+      settledRoundRef.current = null;
       setPopFx(false);
       setCashFx(false);
       if (nextIndex >= rounds.length) {
@@ -178,6 +186,7 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete, practic
 
   const pump = useCallback(() => {
     if (!introDone || !round || finished) return;
+    if (settledRoundRef.current === round.roundId) return;
     const nextPump = pumpCount + 1;
     if (nextPump >= round.threshold) {
       setPumpCount(nextPump);
@@ -194,6 +203,7 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete, practic
 
   const cashout = useCallback(() => {
     if (!introDone || !round || finished) return;
+    if (settledRoundRef.current === round.roundId) return;
     setStatus(t('Puntos asegurados.', 'Points secured.'));
     finishRound('cashout', pumpCount, roundPoints);
   }, [finishRound, finished, introDone, pumpCount, round, roundPoints]);
@@ -256,8 +266,8 @@ function BalloonRiskInner({ emit, trialCount, width, height, onComplete, practic
         </div>
       </div>
       <div className="balloon-risk-task__controls" style={{ gap: metrics.controlsGap }}>
-        <button type="button" className="primary" onClick={pump}>{t('Inflar', 'Inflate')}</button>
-        <button type="button" className="secondary" onClick={cashout}>{t('Asegurar puntos', 'Secure points')}</button>
+        <button type="button" className="primary" disabled={popFx || cashFx} onClick={pump}>{t('Inflar', 'Inflate')}</button>
+        <button type="button" className="secondary" disabled={popFx || cashFx} onClick={cashout}>{t('Asegurar puntos', 'Secure points')}</button>
       </div>
       <p className="balloon-risk-task__status" role="status">{status} <small className="balloon-risk-task__keyboard-hint">{t(GAME_KEYBOARD.balloon.hintEs, GAME_KEYBOARD.balloon.hintEn)}</small></p>
     </div>

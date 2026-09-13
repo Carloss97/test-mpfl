@@ -776,7 +776,14 @@ function addBalloonFeatures(state, block) {
   const totalRounds = nonNegativeInteger(result.totalRounds);
   const cashoutCount = nonNegativeInteger(result.cashoutCount ?? 0);
   const popCount = nonNegativeInteger(result.popCount ?? 0);
-  const riskEfficiency = finite(result.riskEfficiency ?? result.score);
+  // FASE B.6 (BLN-P1-1): payloads históricos u óptimos de 8 rondas pueden traer
+  // riskEfficiency > 1 (máximo real 816 pts vs denominador nominal 800). Mismo patrón
+  // que passenger: clamp defensivo + quality flag, nunca invalidar el bloque entero.
+  let riskEfficiency = finite(result.riskEfficiency ?? result.score);
+  if (riskEfficiency != null && riskEfficiency > 1) {
+    riskEfficiency = 1;
+    state.qualityFlags.push('balloon_risk_riskEfficiency_clamped');
+  }
   const aggregateOnly = result.aggregateOnly === true;
   const valid = aggregateOnly
     && totalRounds != null

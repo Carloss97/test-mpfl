@@ -297,6 +297,20 @@
   transform: translateY(-1px);
 }
 
+/* B.6: la ronda settle + FX deshabilita los controles (guard de doble input);
+   la variante secondary no tenía estados disabled/focus-visible (BALLOON usa
+   ambas: Inflar=primary, Asegurar=secondary). */
+.balloon-risk-task__controls .secondary:focus-visible {
+  outline: 3px solid var(--postulation-game-focus-ring);
+  outline-offset: 3px;
+}
+
+.balloon-risk-task__controls .secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 /* ---------- Passenger: "Urbano" — city map accents ---------- */
 
 .passenger-route-task {

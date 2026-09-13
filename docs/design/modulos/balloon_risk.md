@@ -56,9 +56,9 @@ Evaluar **conducta observable de estrategia riesgo/recompensa y ajuste ante feed
 
 | Constructo (provisional) | Feature vector key(s) | Disponibilidad | Caveat / evidencia |
 |---|---|---|---|
-| `riskFeedbackProfile` (riesgo/feedback) | `balloon.riskEfficiency`, `balloon.cashoutRate`, `balloon.popRate` | `insufficient` | Feature `balloon.riskEfficiency` + cashout/pop; descriptivo, sin normas (originalGameTalentMapping.test.js). |
-| `decision_strategy` (riesgo/recompensa) | `balloon.cashoutRate`, `balloon.popRate`, `balloon.averagePumpsNormalized` | `sufficient*` | *Agregados cashoutRate/popRate/averagePumpsNormalized; no dirección normativa. |
-| `feedback_adjustment` (ajuste post-pérdida) | `balloon.postLossAdjustment`, `balloon.postLossAdjustmentObserved` | `insufficient` | Requiere oportunidad post-pérdida observada; si no, `unknown` (no bajo). |
+| `riskFeedbackProfile` (riesgo/feedback) | `balloon.riskEfficiency`, `balloon.cashoutRate`, `balloon.popRate`, `balloon.averagePumpsNormalized` | `provisional_score` (confianza ≤0.55) con bloque válido; `insufficient` si Balloon falta o es inválido | Scored en `originalGameTalentMapping.buildRiskFeedback` con caveats `frustration_tolerance_not_measured`, `risk_index_not_personality_trait`, `game_strategy_score_not_normative_trait`. Nunca tolerancia a la frustración (R-6). |
+| `decisionMaking` (riesgo/recompensa) | `balloon.riskEfficiency` (evidencia parcial junto a `passengerComposite` y `team.decisionQualityScore`) | `descriptive_only` (confianza ≤0.20) | Composite solo como evidencia agregada descriptiva (T.4 #11); sin dirección normativa. |
+| Ajuste post-pérdida | `balloon.postLossAdjustment`, `balloon.postLossAdjustmentObserved` | máscara de evidencia (sin constructo propio) | Requiere oportunidad post-pérdida observada; si no, `not_observed`/`unknown` (nunca "bajo"). |
 | `leadership / communication` | — | `not_measured` | Tarea individual; no medido en batería actual. |
 
 ### 1.3. Alcance IN / OUT (del módulo)
@@ -109,6 +109,7 @@ Evaluar **conducta observable de estrategia riesgo/recompensa y ajuste ante feed
 | Cashout | Guarda `roundPoints` acumulados; ronda exitosa (`correct: true`). |
 | Pop | Pierde `roundPoints` de la ronda; `correct: false`. |
 | Penalización agregada | `riskEfficiency` descuenta hasta 0.6 por pops: `(1 - min(0.6, popCount*0.12))`. |
+| **Clamp riskEfficiency (FASE B.6, 2026-09-12)** | El máximo alcanzable en 8 rondas = Σ(threshold-1)*pointValue = 60+108+98+110+96+140+120+84 = 816 > denominador nominal 8*100=800. Sin clamp, un jugador óptimo (0 pops) emitía 1.02, invalidando el bloque aguas abajo (validRatio [0,1]). Se aplica `Math.min(1, ...)` en `buildBalloonResponseAggregate` y clamp defensivo + quality flag `balloon_risk_riskEfficiency_clamped` en `addBalloonFeatures`. Normalización por máximo real (v2) pendiente de calibración con normas. |
 
 ---
 
@@ -153,6 +154,7 @@ GAME_END             -> buildBalloonResponseAggregate + game_end + onComplete(ag
 |---|---|---|---|
 | `GAME_RUNTIME_ACTIVE` | `active=true` | ronda 0 | sin tutorial aislado |
 | `ROUND_LOOP` | `stimulus_shown` | `response` por ronda | emite game_event_v1 |
+| `ROUND_SETTLED` | pop/cashout → `finishRound` | agregado intermedio + `response` | **input locked (settledRoundRef)** hasta `advanceToNextRound` (B.6) |
 | `GAME_END` | `roundIndex+1 >= rounds.length` | agregado `balloon_risk_aggregate_v1` | aggregate-only |
 
 ---
@@ -215,7 +217,7 @@ Layout: `getBalloonRiskLayoutMetrics({width,height})` → `compact / maxBalloonS
 | Métrica (feature vector key) | Fórmula / definición | Constructo provisional | Caveat | Fuente agregado |
 |---|---|---|---|---|
 | `balloon.completion` | `completed ? 1 : 0` | disponibilidad de evidencia | No es score de calidad. | `completed` |
-| `balloon.riskEfficiency` | agregado `riskEfficiency` en [0,1] | `riskFeedbackProfile` | No es personalidad ni frustración. | `riskEfficiency` |
+| `balloon.riskEfficiency` | agregado `riskEfficiency` en [0,1] | `riskFeedbackProfile` | No es personalidad ni frustración. | `riskEfficiency` | **Clamp [0,1] aplicado (B.6): el máximo real 816 > 800 nominal; sin clamp un óptimo emitía 1.02 e invalidaba el bloque.** |
 | `balloon.cashoutRate` | `cashoutCount / totalRounds` | estrategia riesgo/recompensa | Sin dirección normativa. | `cashoutCount`, `totalRounds` |
 | `balloon.popRate` | `popCount / totalRounds` | exposición a pérdida | No es impulsividad. | `popCount`, `totalRounds` |
 | `balloon.averagePumpsNormalized` | `min(1, averagePumps / 12)` | intensidad de acumulación | Cap provisional. | `averagePumps` |
@@ -321,6 +323,7 @@ Layout: `getBalloonRiskLayoutMetrics({width,height})` → `compact / maxBalloonS
 - [x] `descriptive_only` (R-6): sin percentiles/cortes/ranking/apto-no-apto.
 - [x] Feedback comprehension explícito: "Las pérdidas dependen del azar y de la estructura del juego; no son fracaso personal, impulsividad clínica ni tolerancia a la frustración."
 - [x] Leadership/communication = `not_measured`.
+- [x] **FASE B.6 (2026-09-12):** riskEfficiency clamp [0,1] (816 > 800); input lock post-settle (FX 900/500 ms) para prevenir doble respuesta y agregado corrupto.
 
 ---
 
@@ -349,10 +352,16 @@ npm audit --audit-level=high --omit=dev
 git diff --check
 ```
 
-- [ ] Tests RED→GREEN: agregado allowlist + campos prohibidos del payload = 0 (ver `balloonRiskFeedback.test.js` hasForbiddenKeys).
-- [ ] Browser smoke (stable/original + fixtures, 1280×720 y 390×844): consola limpia, page errors 0, request failures 0, 0 overflow, semántica "No medido" donde aplica.
-- [ ] Feature vector `original_game_feature_vector_v1` con `featureArray` finito y `qualityFlags`.
-- [ ] Payload sin raw fields prohibidos (`pumpSequence`, `rawPointerPath`, etc.).
+- [x] Tests RED→GREEN: agregado allowlist + campos prohibidos del payload = 0 (ver `balloonRiskFeedback.test.js` hasForbiddenKeys).
+- [x] Tests RED→GREEN: riskEfficiency clamp [0,1] para 8 rondas (B.6, BLN-P1-1).
+- [x] Tests RED→GREEN: input lock post-settle (B.6, BLN-P1-2) — single response por ronda.
+- [x] Tests RED→GREEN: feature vector clamp defensivo + quality flag (B.6, patrón passenger).
+- [x] oxlint 0 en archivos tocados (telemetry + component + themes/animations CSS).
+- [x] Build OK.
+- [x] Browser smoke (stable/original + fixtures, 1280×720 y 390×844): consola limpia, page errors 0, request failures 0, 0 overflow, semántica "No medido" donde aplica — ejecutado 2026-09-12 (FASE B.6, `scripts/smoke-b6-balloon-risk-2026-09-12.mjs`; original vivo + fixture, ver `docs/qa/prelaunch/2026-09-12-balloon-risk.md`).
+- [x] Fixture válido: warmup no visible en progreso (Game X of N lo omite) — verificado en config (visible:false + listVisiblePostulationBlocks).
+- [x] Constructo en reporte: chain R-6 completa (doc módulo actualizada a R-6d) — verificada en código (note (b) del reporte B.6) y E2E en smoke fixture (riskFeedbackProfile "Lectura preliminar" + caveats; decisionMaking "Lectura descriptiva"; cero "No medido").
+- [x] Doc módulo `balloon_risk.md` actualizada (versión `balloon_risk_aggregate_v1`, revisión 2026-09-12 FASE B.6).
 
 ---
 

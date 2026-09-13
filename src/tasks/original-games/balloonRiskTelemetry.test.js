@@ -48,6 +48,27 @@ describe('balloon risk postulation telemetry helpers', () => {
     expect(JSON.stringify(aggregate)).not.toMatch(/rawGameEvents|clickTrace|pointerSamples|pumpSequence/i);
   });
 
+  it('clamps riskEfficiency to [0,1] when the 8-round true max exceeds the nominal denominator (B.6)', () => {
+    // Máximo alcanzable con 8 rondas = Σ (threshold - 1) * pointValue
+    // = 60+108+98+110+96+140+120+84 = 816 > 8*100 (denominador nominal).
+    // Un jugador óptimo (0 pops) NO debe invalidar el bloque aguas abajo
+    // (validRatio [0,1] en originalGameFeatureVector).
+    const aggregate = buildBalloonResponseAggregate({
+      roundsCompleted: 8,
+      totalRounds: 8,
+      pumpCounts: [6, 9, 7, 11, 8, 10, 12, 7],
+      cashoutCount: 8,
+      popCount: 0,
+      totalScore: 816,
+      postPopAdjustments: [],
+      timeMs: 90_000,
+    });
+
+    expect(aggregate.completed).toBe(true);
+    expect(aggregate.riskEfficiency).toBeLessThanOrEqual(1);
+    expect(aggregate.score).toBeLessThanOrEqual(1);
+  });
+
   it('sanitizes response payload and strips reconstructive pump/click traces', () => {
     const payload = sanitizeBalloonResponsePayload({
       correct: true,

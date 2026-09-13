@@ -129,8 +129,8 @@
   right: 0;
   bottom: calc(100% + 8px);
   z-index: 6;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border: 1px solid var(--k-divider);
   border-radius: var(--k-radius-pill);
   background: var(--k-card-cream);
