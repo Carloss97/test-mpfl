@@ -47,21 +47,36 @@ jobs:
             echo "url=https://stage.krumm.cl/" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Instalar Lighthouse
-        run: npm i -g lighthouse
+      - name: Instalar Lighthouse (pinned a v12)
+        run: npm i -g lighthouse@12
 
       - name: Lighthouse budgets (/, /portal, /candidato)
         run: |
+          set -u
           BASE="${{ steps.base.outputs.url }}"
           for path in "" "portal" "candidato"; do
             u="${BASE%/}/${path}"
-            f="lh-${path:-home}.json"
+            f="$PWD/lh-${path:-home}.json"
             echo "=== Lighthouse $u"
-            lighthouse "$u" \
-              --chrome-flags="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage" \
-              --only-categories=performance,accessibility,best-practices,seo \
-              --output=json --output-path="$f" \
-              --max-wait-for-load=60000
+            ok=0
+            for attempt in 1 2; do
+              lighthouse "$u" \
+                --chrome-flags="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage" \
+                --only-categories=performance,accessibility,best-practices,seo \
+                --output=json --output-path="$f" \
+                --max-wait-for-load=60000 || true
+              # Validación dura del reporte (un crash silencioso del CLI ya
+              # dejó exit 0 sin archivo — el check es el archivo, no el exit).
+              if [ -s "$f" ] && node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$f" 2>/dev/null; then
+                ok=1; break
+              fi
+              echo "Intento $attempt sin reporte válido para $u — reintentando…"
+              rm -f "$f"
+            done
+            if [ "$ok" != "1" ]; then
+              echo "Lighthouse no produjo reporte válido para $u tras 2 intentos"
+              exit 1
+            fi
             node -e '
               const r = require(process.argv[1]);
               const budgets = { performance: 90, accessibility: 100, "best-practices": 100, seo: 90 };
@@ -74,3 +89,12 @@ jobs:
               process.exit(bad ? 1 : 0);
             ' "$f"
           done
+
+      - name: Subir reportes (solo en failure, para depurar)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports-${{ github.event.pull_request.number || github.sha }}
+          path: |
+            lh-*.json
+          if-no-files-found: ignore
