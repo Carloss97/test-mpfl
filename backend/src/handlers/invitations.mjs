@@ -20,6 +20,7 @@ import {
   revokeInvitation,
 } from '../db/invitationsRepository.mjs';
 import { makeAuditId, appendAuditLog } from '../db/sessionsRepository.mjs';
+import { sendPosthogEvent } from '../analytics/posthog.mjs';
 
 const CORS_HEADERS = {
   'content-type': 'application/json',
@@ -131,6 +132,14 @@ export async function handlePostInvitation(event, deps = {}) {
       ttlHours,
       actor: actorFrom(event),
     });
+
+    // F.2 (KRU-118): evento producto `invite_received` — solo cuando el email
+    // se envió de verdad (sent=true). Best-effort con timeout interno; nunca
+    // altera la respuesta 201. Sin PII (solo idioma agregado).
+    if (emailStatus.sent === true) {
+      const phOpts = deps.posthog ?? {};
+      await sendPosthogEvent('invite_received', { language }, phOpts);
+    }
 
     return json(201, { ...safeInvitation(item), status: 'pending', email: emailStatus });
   } catch (err) {

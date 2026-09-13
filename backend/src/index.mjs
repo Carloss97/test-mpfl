@@ -52,12 +52,29 @@ export function jwtClaims(event) {
   return authorizer?.claims ?? authorizer?.jwt?.claims ?? null;
 }
 
+/**
+ * Parsea el claim `cognito:groups` en TODOS los formatos que APIGW entrega:
+ * - array real: ['recruiters','admins'] (formato 2.0)
+ * - string plano: 'recruiters' (1 solo grupo)
+ * - string comas: 'recruiters,admins'
+ * - string APIGW 1.0 multi: '[recruiters admins]' (corchetes + espacios —
+ *   el formato REAL observado en staging 2026-09-13; split(',') lo rompía)
+ * - string JSON: '["recruiters","admins"]'
+ */
+export function parseGroupClaim(raw) {
+  if (Array.isArray(raw)) return raw.map((g) => String(g).trim()).filter(Boolean);
+  if (typeof raw !== 'string' || !raw.trim()) return [];
+  let s = raw.trim();
+  if (s.startsWith('[') && s.endsWith(']')) s = s.slice(1, -1);
+  return s.split(/[\s,]+/)
+    .map((p) => p.trim().replace(/^['"]+|['"]+$/g, ''))
+    .filter(Boolean);
+}
+
 export function isRecruiter(event) {
   const claims = jwtClaims(event);
   if (!claims) return false;
-  const raw = claims['cognito:groups'];
-  // Cognito entrega el claim como array (multi-grupo) o string (1 grupo).
-  const groups = Array.isArray(raw) ? raw : raw ? String(raw).split(',') : [];
+  const groups = parseGroupClaim(claims['cognito:groups']);
   return groups.some((g) => g === 'recruiters' || g === 'admins');
 }
 
@@ -102,6 +119,9 @@ export async function handler(event, context = {}) {
     sendInvitationEmail: context.sendInvitationEmail ?? ((args) => sendInvitationEmail({ sesClient, ...args })),
     appBaseUrl,
     fromEmail: process.env.SES_FROM_EMAIL ?? null,
+    // F.2: eventos PostHog server-side (invite_received). En tests se inyecta
+    // {apiKey, fetchImpl, log}; en Lambda usa env POSTHOG_API_KEY + fetch global.
+    posthog: context.posthog ?? {},
   };
   try {
     // A.2: gate de grupo (recruiters/admins) sobre las rutas HR.

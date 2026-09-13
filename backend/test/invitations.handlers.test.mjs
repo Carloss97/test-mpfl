@@ -189,7 +189,7 @@ describe('backend invitations (RED -> GREEN)', () => {
 });
 
 describe('A.1 — envío de email de invitación (best-effort)', () => {
-  function makeDeps({ sendInvitationEmail, appBaseUrl } = {}) {
+  function makeDeps({ sendInvitationEmail, appBaseUrl, posthog } = {}) {
     const store = new Map();
     const invitations = new Map();
     const audit = [];
@@ -218,6 +218,7 @@ describe('A.1 — envío de email de invitación (best-effort)', () => {
     const deps = { docClient, audit, invitations };
     if (sendInvitationEmail) deps.sendInvitationEmail = sendInvitationEmail;
     if (appBaseUrl) deps.appBaseUrl = appBaseUrl;
+    if (posthog) deps.posthog = posthog;
     return deps;
   }
 
@@ -274,5 +275,69 @@ describe('A.1 — envío de email de invitación (best-effort)', () => {
     const res = await handlePostInvitation(event({ method: 'POST', route: 'POST /invitations', body: { email: 'c@d.cl' } }), d);
     expect(res.statusCode).toBe(201);
     expect(JSON.parse(res.body).email).toMatchObject({ sent: false, reason: 'not_configured' });
+  });
+
+  // ── F.2 (KRU-118): evento invite_received (PostHog server-side, best-effort) ──
+  it('F.2: email enviado → invite_received a /capture/ con idioma, distinct_id de servicio y SIN PII', async () => {
+    const phCalls = [];
+    const d = makeDeps({
+      appBaseUrl: 'https://stage.krumm.cl',
+      sendInvitationEmail: async () => ({ messageId: 'm-ph' }),
+      posthog: {
+        apiKey: 'phc_test',
+        apiHost: 'https://us.posthog.com',
+        fetchImpl: async (url, init) => { phCalls.push({ url, init }); return { ok: true, status: 200 }; },
+        log: () => {},
+      },
+    });
+    const res = await handlePostInvitation(event({ method: 'POST', route: 'POST /invitations', body: { email: 'cand@correo.cl', ttlHours: 24, language: 'en' } }), d);
+    expect(res.statusCode).toBe(201);
+    expect(JSON.parse(res.body).email).toMatchObject({ sent: true });
+    expect(phCalls).toHaveLength(1);
+    expect(phCalls[0].url).toBe('https://us.posthog.com/capture/');
+    const payload = JSON.parse(phCalls[0].init.body);
+    expect(payload.event).toBe('invite_received');
+    expect(payload.distinct_id).toBe('krumm-backend');
+    expect(payload.api_key).toBe('phc_test');
+    expect(payload.properties).toEqual({ language: 'en' });
+    expect(typeof payload.timestamp).toBe('string');
+    // Sin PII: el email del candidato no viaja a PostHog ni en la URL.
+    expect(phCalls[0].init.body).not.toContain('cand@correo.cl');
+    expect(phCalls[0].url).not.toContain('cand@correo.cl');
+  });
+
+  it('F.2: email NO enviado (not_configured / send_failed) → sin evento PostHog', async () => {
+    let calls = 0;
+    const spy = {
+      apiKey: 'phc_test',
+      fetchImpl: async () => { calls += 1; return { ok: true, status: 200 }; },
+      log: () => {},
+    };
+    // 1) sin sender
+    const d1 = makeDeps({ appBaseUrl: 'https://krumm.cl', posthog: spy });
+    await handlePostInvitation(event({ method: 'POST', route: 'POST /invitations', body: { email: 'a@b.cl' } }), d1);
+    // 2) sender falla
+    const d2 = makeDeps({
+      appBaseUrl: 'https://krumm.cl',
+      posthog: spy,
+      sendInvitationEmail: async () => { const e = new Error('boom'); e.code = 'DomainNotVerified'; throw e; },
+    });
+    await handlePostInvitation(event({ method: 'POST', route: 'POST /invitations', body: { email: 'c@d.cl' } }), d2);
+    expect(calls).toBe(0);
+  });
+
+  it('F.2: PostHog caído → la creación sigue 201 (best-effort no bloquea)', async () => {
+    const d = makeDeps({
+      appBaseUrl: 'https://krumm.cl',
+      sendInvitationEmail: async () => ({ messageId: 'm-1' }),
+      posthog: {
+        apiKey: 'phc_test',
+        fetchImpl: async () => { throw new Error('network down'); },
+        log: () => {},
+      },
+    });
+    const res = await handlePostInvitation(event({ method: 'POST', route: 'POST /invitations', body: { email: 'c@d.cl' } }), d);
+    expect(res.statusCode).toBe(201);
+    expect(JSON.parse(res.body).email).toMatchObject({ sent: true });
   });
 });

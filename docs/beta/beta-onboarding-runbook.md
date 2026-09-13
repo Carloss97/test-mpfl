@@ -61,7 +61,13 @@ Desde el dashboard `/empresa` → panel **Invitar a un candidato**:
 3. El link es **single-use y expira en 72 h**. Si el candidato no lo usa a tiempo: crear una invitación nueva (el token viejo queda `expired`).
 4. Si el email no se pudo enviar (variante visible en el panel): compartir el link manual.
 
-Ciclo del candidato: abre el link → setup (consentimiento, cámara opcional) → batería `stable_dg` (5 juegos, ~14-16 min) → reporte final → la sesión queda en el dashboard de la empresa (estado `in_progress` → `ready`).
+Ciclo del candidato: abre el link → setup (consentimiento, cámara opcional) → batería `stable_dg` (5 juegos, ~14-16 min) → reporte final → la sesión queda en el dashboard de la empresa (estado `in_progress` → `ready`). Al terminar, el reporte del candidato muestra una **encuesta NPS opcional (1-10)** (F.2) — responder no es requisito para nada.
+
+> **Analytics (F.1/F.2):** en la primera visita al sitio aparece un banner de
+> consentimiento de analytics de producto (PostHog, opt-in, cookie 1 año). Es
+> opcional: sin aceptarlo todo funciona igual (solo no se recogen métricas de
+> ese usuario). Nunca viajan datos biométricos, contenido de respuestas, tokens
+> ni datos personales — ver `docs/ops/metrics.md` y la política de privacidad.
 
 ## 5. Leer reportes
 
@@ -80,6 +86,7 @@ Ciclo del candidato: abre el link → setup (consentimiento, cámara opcional) �
 | API 403 | Token válido pero sin grupo recruiters/admins → agregar grupo (sección 2, paso 2) |
 | Revocar una invitación | API: `POST {api}/staging/invitations/<token>/revoke` con Bearer del reclutador (UI pendiente, KRU en fase A) |
 | Revisar estado de una invitación | API pública: `GET {api}/staging/invitations/<token>` (sin auth) → `valid/used/expired/revoked` |
+| El usuario no entiende el banner de analytics | Es opcional (opt-in): sin aceptar, todo funciona igual. Solo métricas de producto agregadas (páginas, funnel, NPS); sin biometría, contenido ni PII — `docs/ops/metrics.md` |
 
 ## 7. Límite conocido de la beta (gestionar expectativas)
 

@@ -29,6 +29,15 @@ Parameters:
     Type: String
     Default: '7vpliahah8jbc5fh0d59qbjgej'
     Description: 'A.2: client SPA (audience del JWT). Solo con groups recruiters/admins pasa el authorizer.'
+  PosthogKey:
+    Type: String
+    Default: ''
+    NoEcho: true
+    Description: >-
+      F.2 (KRU-118): PostHog project key (phc_) para eventos server-side
+      (invite_received). Es la misma key publica que viaja en el bundle del
+      frontend (no es secreta), pero no se hardcodea en el repo (gitleaks).
+      Vacio por defecto = sin eventos (no-op seguro).
 
 Globals:
   Function:
@@ -46,6 +55,12 @@ Globals:
         SES_FROM_EMAIL: 'no-reply@krumm.cl'
         FRONTEND_BASE_URL: !Ref FrontendBaseUrl
         FRONTEND_BASE_URL_PROD: !Ref FrontendBaseUrlProd
+        # F.2 (KRU-118): eventos PostHog server-side (invite_received).
+        # Key de proyecto via parámetro NoEcho (vacio = no-op seguro).
+        # US Cloud (host us.posthog.com); si el proyecto migra a EU:
+        # app.eu.posthog.com + sam deploy con PosthogKey nueva.
+        POSTHOG_API_KEY: !Ref PosthogKey
+        POSTHOG_API_HOST: 'https://us.posthog.com'
 
 Resources:
   # --- DynamoDB: sessions (aggregate-only, TTL 30d) ---
