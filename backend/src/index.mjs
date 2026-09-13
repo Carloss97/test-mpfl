@@ -3,7 +3,7 @@
 // y routea según path. En tests se inyecta docClient; en producción se usa el real.
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { SESV2Client } from '@aws-sdk/client-sesv2';
+import { SESv2Client } from '@aws-sdk/client-sesv2';
 import {
   DynamoDBDocumentClient,
   PutCommand,
@@ -17,7 +17,7 @@ import { sendInvitationEmail } from './email/invitationEmail.mjs';
 
 const client = new DynamoDBClient({});
 // Cliente SESv2 (A.1): el constructor no hace red; el envío real ocurre en send().
-const sesClient = new SESV2Client({});
+const sesClient = new SESv2Client({});
 const docClient = DynamoDBDocumentClient.from(client, {
   marshallOptions: { removeUndefinedValues: true, convertEmptyValues: false },
 });
@@ -34,11 +34,17 @@ const productionDocClient = Object.freeze({
 
 export async function handler(event, context = {}) {
   // Se permite inyectar deps vía context (tests / integración).
+  // A.1: el link del email depende del stage de entrada (KRU-97: /staging y
+  // /prod comparten Lambda/tablas): prod → krumm.cl, lo demás → stage.krumm.cl.
+  const stage = event?.requestContext?.stage ?? '';
+  const appBaseUrl = stage === 'prod'
+    ? (process.env.FRONTEND_BASE_URL_PROD ?? process.env.FRONTEND_BASE_URL ?? null)
+    : (process.env.FRONTEND_BASE_URL ?? null);
   const deps = {
     docClient: context.docClient ?? productionDocClient,
     // A.1: envío real de email de invitación (best-effort en el handler).
     sendInvitationEmail: context.sendInvitationEmail ?? ((args) => sendInvitationEmail({ sesClient, ...args })),
-    appBaseUrl: process.env.FRONTEND_BASE_URL ?? null,
+    appBaseUrl,
     fromEmail: process.env.SES_FROM_EMAIL ?? null,
   };
   try {

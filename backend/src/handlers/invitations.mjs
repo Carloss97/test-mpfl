@@ -154,7 +154,7 @@ async function deliverInvitationEmail({ deps, item, language, ttlHours, actor })
     const out = await sender({
       to: item.email,
       token: item.invitationId,
-      appBaseUrl: deps.appBaseUrl ?? process.env.FRONTEND_BASE_URL ?? null,
+      appBaseUrl: deps.appBaseUrl ?? null,
       language,
       expiresInHours: ttlHours,
       from: deps.fromEmail ?? process.env.SES_FROM_EMAIL ?? null,

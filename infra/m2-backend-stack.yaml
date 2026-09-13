@@ -13,6 +13,10 @@ Parameters:
     Type: String
     Default: 'https://stage.krumm.cl'
     Description: 'Base URL del frontend para el link de la invitación (A.1). En prod usar https://krumm.cl.'
+  FrontendBaseUrlProd:
+    Type: String
+    Default: 'https://krumm.cl'
+    Description: 'Base URL para invitaciones creadas vía el stage /prod (KRU-97: misma Lambda/tablas).'
   RetentionDays:
     Type: Number
     Default: 30
@@ -33,6 +37,7 @@ Globals:
         # A.1: envío real de emails de invitación (SESv2, dominio krumm.cl).
         SES_FROM_EMAIL: 'no-reply@krumm.cl'
         FRONTEND_BASE_URL: !Ref FrontendBaseUrl
+        FRONTEND_BASE_URL_PROD: !Ref FrontendBaseUrlProd
 
 Resources:
   # --- DynamoDB: sessions (aggregate-only, TTL 30d) ---
