@@ -139,11 +139,15 @@ export async function sendInvitationEmail({ sesClient, from, to, token, appBaseU
   const command = new SendEmailCommand({
     FromEmailAddress: from || DEFAULT_FROM,
     Destination: { ToAddresses: [to] },
+    // Shape SESv2 real: Content.Simple.{Subject,Body} (verificado en vivo
+    // 2026-09-13: send directo con MessageId OK; sin 'Simple' → BadRequest).
     Content: {
-      Subject: { Data: content.subject, Charset: 'UTF-8' },
-      Body: {
-        Text: { Data: content.text, Charset: 'UTF-8' },
-        Html: { Data: content.html, Charset: 'UTF-8' },
+      Simple: {
+        Subject: { Data: content.subject, Charset: 'UTF-8' },
+        Body: {
+          Text: { Data: content.text, Charset: 'UTF-8' },
+          Html: { Data: content.html, Charset: 'UTF-8' },
+        },
       },
     },
   });

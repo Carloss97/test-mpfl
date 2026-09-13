@@ -87,9 +87,11 @@ describe('invitationEmail (A.1 — email de invitación real)', () => {
       expect(out).toMatchObject({ messageId: 'msg-123', language: 'es' });
       expect(captured.input.FromEmailAddress).toBe(DEFAULT_FROM);
       expect(captured.input.Destination.ToAddresses).toEqual(['candidato@correo.cl']);
-      expect(captured.input.Content.Subject.Charset).toBe('UTF-8');
-      expect(captured.input.Content.Body.Text.Charset).toBe('UTF-8');
-      expect(captured.input.Content.Body.Html.Data).toContain('https://krumm.cl/postulaciones?invite=tok-1');
+      // shape SESv2 real: Content.Simple (sin el anidamiento → BadRequestException)
+      expect(Object.keys(captured.input.Content)).toEqual(['Simple']);
+      expect(captured.input.Content.Simple.Subject.Charset).toBe('UTF-8');
+      expect(captured.input.Content.Simple.Body.Text.Charset).toBe('UTF-8');
+      expect(captured.input.Content.Simple.Body.Html.Data).toContain('https://krumm.cl/postulaciones?invite=tok-1');
     });
 
     it('usa from inyectado si se proporciona', async () => {
