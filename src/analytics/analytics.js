@@ -19,7 +19,12 @@
 // Env VITE_POSTHOG_API: la credencial pública del proyecto PostHog.
 // Inyectada en CI/CD (secrets POSTHOG_PROJECT_API_KEY); sin ella = analytics off.
 const POSTHOG_ID = import.meta.env.VITE_POSTHOG_API || '';
-const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.posthog.com';
+const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com';
+// IMPORTANTE: variante no-external (docs oficiales de PostHog): NO carga
+// scripts externos (config.js remote, recorder, surveys, site-apps,
+// conversations) → session replay IMPOSIBLE por construcción (privacy), sin
+// expansión de script-src en la CSP, bundle determinista. En la CSP solo
+// requiere connect-src a us.i.posthog.com + us.posthog.com (flags/decide).
 
 export const CONSENT_COOKIE = 'cookie_consent';
 const CONSENT_MAX_AGE_S = 60 * 60 * 24 * 365; // 1 año (tabla de cookies de la política)
@@ -124,7 +129,7 @@ export function sanitizeProperties(props = {}) {
 async function bootstrap() {
   if (!POSTHOG_ID || consentFromStorage() !== 'granted') return null;
   if (!posthogPromise) {
-    posthogPromise = import('posthog-js')
+    posthogPromise = import('posthog-js/dist/module.no-external.js')
       .then((mod) => {
         const posthog = mod.default ?? mod;
         posthog.init(POSTHOG_ID, {

@@ -43,7 +43,7 @@ jobs:
           VITE_KRUMM_API_BASE: https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/staging
           # F.1 (KRU-118): analytics PostHog opt-in (sin secret = analytics off)
           VITE_POSTHOG_API: ${{ secrets.POSTHOG_PROJECT_API_KEY }}
-          VITE_POSTHOG_HOST: https://us.posthog.com
+          VITE_POSTHOG_HOST: https://us.i.posthog.com
         run: NODE_ENV=production npm run build
       - name: Build (prod) — VITE_KRUMM_API_BASE /prod (modo real, KRU-97 opción b)
         if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
@@ -51,7 +51,7 @@ jobs:
           VITE_KRUMM_API_BASE: https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/prod
           # F.1 (KRU-118): analytics PostHog opt-in (sin secret = analytics off)
           VITE_POSTHOG_API: ${{ secrets.POSTHOG_PROJECT_API_KEY }}
-          VITE_POSTHOG_HOST: https://us.posthog.com
+          VITE_POSTHOG_HOST: https://us.i.posthog.com
         run: NODE_ENV=production npm run build
       - name: Set output
         id: build

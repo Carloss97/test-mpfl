@@ -6,11 +6,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-// posthog-js MOCKEADO: sin el mock, el test "Aceptar analytics" carga la
-// librería REAL en jsdom (setConsent → bootstrap → import) → rejection
-// no controlada que rompe CI (timing-dependente). Factory estable (se
-// cachea) + vi.clearAllMocks() entre tests.
-vi.mock('posthog-js', () => ({
+// posthog-js mocked (variante no-external, la MISMA ruta que importa
+// analytics.js): sin el mock, el test "Aceptar analytics" carga la librería
+// REAL en jsdom (setConsent → bootstrap → import) → rejection no controlada
+// que rompe CI (timing-dependente). Factory estable (se cachea) +
+// vi.clearAllMocks() entre tests.
+vi.mock('posthog-js/dist/module.no-external.js', () => ({
   default: { init: vi.fn(), page: vi.fn(), capture: vi.fn(), reset: vi.fn() },
 }));
 

@@ -10,8 +10,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // posthog-js mocked. NOTA: el factory de vi.mock se cachea (no re-ejecuta en
 // cada resetModules) → se devuelve SIEMPRE el mismo objeto mock; el historial
 // de llamadas se limpia con vi.clearAllMocks() entre tests.
+// El mock debe apuntar a la MISMA ruta que importa analytics.js
+// (variante no-external).
 const posthogState = { mock: null };
-vi.mock('posthog-js', () => {
+vi.mock('posthog-js/dist/module.no-external.js', () => {
   if (!posthogState.mock) {
     posthogState.mock = { init: vi.fn(), page: vi.fn(), capture: vi.fn(), reset: vi.fn() };
   }
@@ -52,7 +54,7 @@ describe('gates (key + consent + fixture)', () => {
 
   it('con key + consent: track envía vía posthog', async () => {
     vi.stubEnv('VITE_POSTHOG_API', 'test_project_credential');
-    vi.stubEnv('VITE_POSTHOG_HOST', 'https://us.posthog.com');
+    vi.stubEnv('VITE_POSTHOG_HOST', 'https://us.i.posthog.com');
     await freshAnalytics();
     a.setConsent(true);
     expect(a.hasAnalyticsConsent()).toBe(true);
@@ -63,7 +65,7 @@ describe('gates (key + consent + fixture)', () => {
     const [apiKey, options] = ph.init.mock.calls[0];
     expect(apiKey).toBe('test_project_credential');
     expect(options).toMatchObject({
-      api_host: 'https://us.posthog.com',
+      api_host: 'https://us.i.posthog.com',
       autocapture: false,
       capture_pageview: false,
       person_profiles: 'never',
