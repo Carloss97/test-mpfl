@@ -353,6 +353,38 @@ describe('PostulationReportScreen', () => {
     expect(screen.queryByTestId('session-status-note')).not.toBeInTheDocument();
   });
 
+  describe('F.2 — encuesta NPS opcional post-reporte (1-10)', () => {
+    it('reporte real: muestra la encuesta con 10 opciones; al elegir, agradece y oculta los botones', () => {
+      const artifacts = buildArtifacts();
+      render(<PostulationReportScreen artifacts={artifacts} completedDemo={completedDemo} onRestart={() => {}} />);
+
+      expect(screen.getByTestId('nps-survey')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /¿Cómo fue tu experiencia\?/i })).toBeInTheDocument();
+      const buttons = screen.getAllByTestId(/^nps-score-\d+$/);
+      expect(buttons).toHaveLength(10);
+      expect(buttons.map((b) => b.textContent)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
+
+      fireEvent.click(screen.getByTestId('nps-score-8'));
+      expect(screen.getByText(/¡Gracias por tu retroalimentación!/i)).toBeInTheDocument();
+      expect(screen.queryByTestId('nps-score-8')).not.toBeInTheDocument();
+    });
+
+    it('reporte fixture (demo sintética): NO muestra la encuesta (no contaminar métrica)', () => {
+      const fixture = buildPostulationDemoFixture({ batteryMode: POSTULATION_DEMO_BATTERY_MODES.ORIGINAL_GAMES });
+      render(<PostulationReportScreen artifacts={fixture.artifacts} completedDemo={fixture.summary} />);
+      expect(screen.queryByTestId('nps-survey')).not.toBeInTheDocument();
+    });
+
+    it('no es obligatoria: el reporte y sus descargas funcionan sin responder el NPS', () => {
+      const artifacts = buildArtifacts();
+      const onDownloadFile = vi.fn();
+      render(<PostulationReportScreen artifacts={artifacts} completedDemo={completedDemo} onDownloadFile={onDownloadFile} />);
+      fireEvent.click(screen.getByRole('button', { name: /Descargar reporte local/i }));
+      expect(onDownloadFile).toHaveBeenCalled();
+      expect(screen.getByTestId('nps-survey')).toBeInTheDocument(); // sigue disponible
+    });
+  });
+
   describe('H3.2 — LanguageToggle en el reporte', () => {
     beforeEach(() => {
       window.localStorage.clear();

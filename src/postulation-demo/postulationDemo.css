@@ -2133,6 +2133,54 @@
   transform: none;
 }
 
+/* F.2: encuesta NPS opcional post-reporte (1-10). */
+.postulation-demo__nps {
+  margin: 26px 22px;
+  padding: 18px 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: var(--k-radius-card);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.postulation-demo__nps h2 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+
+.postulation-demo__nps p {
+  margin: 0 0 14px;
+  color: var(--postulation-ink);
+  opacity: 0.75;
+}
+
+.postulation-demo__nps-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.postulation-demo__nps-btn {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--postulation-ink);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.postulation-demo__nps-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(15, 23, 42, 0.4);
+}
+
+.postulation-demo__nps-thanks {
+  margin: 0;
+  font-weight: 600;
+}
+
 .postulation-demo__game-progress strong {
   color: var(--postulation-ink);
 }

@@ -131,13 +131,14 @@ describe('rutas excluidas (/postulaciones* y /dev*)', () => {
       expect(ph.capture).not.toHaveBeenCalled();
     }
   });
-  it('en ruta excluida: whitelist de funnel SÍ pasa (consent_accepted, game_N_completed, report_viewed, invite_opened)', async () => {
+  it('en ruta excluida: whitelist de funnel SÍ pasa (consent_accepted, game_N_completed, report_viewed, invite_opened, nps_submitted)', async () => {
     await active();
     const ctx = { path: '/postulaciones', search: '?invite=x' };
     expect(await a.track('consent_accepted', {}, ctx)).toBe(true);
     expect(await a.track('game_3_completed', { game_index: 3 }, ctx)).toBe(true);
     expect(await a.track('report_viewed', { viewer: 'candidate' }, ctx)).toBe(true);
     expect(await a.track('invite_opened', {}, ctx)).toBe(true);
+    expect(await a.track('nps_submitted', { score: 8 }, ctx)).toBe(true);
   });
 
   it('en ruta excluida: evento fuera de whitelist bloqueado', async () => {

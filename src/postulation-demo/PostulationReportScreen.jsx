@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
 import { track } from '../analytics/analytics.js';
@@ -126,6 +126,10 @@ export default function PostulationReportScreen({
   onDownloadAll,
 } = {}) {
   const { t } = useLanguage();
+  // F.2: encuesta NPS opcional (1-10) post-reporte. Solo el score viaja a
+  // analytics (métrica agregada, sin PII); en fixture (demo sintética) no se
+  // muestra para no contaminar la métrica con datos no reales.
+  const [npsScore, setNpsScore] = useState(null);
   // F.1: funnel report_viewed (candidato, al ver su reporte al terminar).
   const reportTrackedRef = useRef(false);
   useEffect(() => {
@@ -168,6 +172,11 @@ export default function PostulationReportScreen({
   const downloadBundle = () => {
     if (!validationOk) return;
     onDownloadAll?.(descriptors);
+  };
+
+  const handleNps = (score) => {
+    setNpsScore(score);
+    void track('nps_submitted', { score });
   };
 
   if (reportError) {
@@ -330,6 +339,26 @@ export default function PostulationReportScreen({
         onDownloadAll={onDownloadAll}
         t={t}
       />
+
+      {!isFixture && (
+        <section className="postulation-demo__nps" aria-label={t('Encuesta de experiencia (opcional)', 'Experience survey (optional)')} data-testid="nps-survey">
+          <h2>{t('¿Cómo fue tu experiencia?', 'How was your experience?')}</h2>
+          {npsScore === null ? (
+            <>
+              <p>{t('Opcional: tu retroalimentación nos ayuda a mejorar la evaluación. (1 = muy deficiente, 10 = excelente)', 'Optional: your feedback helps us improve the assessment. (1 = very poor, 10 = excellent)')}</p>
+              <div className="postulation-demo__nps-row" role="group" aria-label={t('Califica de 1 a 10', 'Rate from 1 to 10')}>
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((score) => (
+                  <button key={score} type="button" className="postulation-demo__nps-btn" data-testid={`nps-score-${score}`} aria-label={`${t('Calificación', 'Rating')} ${score} ${t('de', 'of')} 10`} onClick={() => handleNps(score)}>
+                    {score}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="postulation-demo__nps-thanks" role="status">{t('¡Gracias por tu retroalimentación!', 'Thanks for your feedback!')}</p>
+          )}
+        </section>
+      )}
 
       <div className="postulation-demo__report-actions">
         <button type="button" className="postulation-demo__primary" disabled={!validationOk || !primaryReport} onClick={downloadPrimaryReport}>{t('Descargar reporte local', 'Download local report')}</button>

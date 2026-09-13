@@ -7,7 +7,8 @@
 //   (sin red, sin cargar el chunk de posthog-js).
 // - Rutas exclusas: /postulaciones* (candidato) y /dev* (labs) NO emiten
 //   pageview ni autocapture; solo el whitelist de eventos de funnel
-//   (invite_opened, consent_accepted, game_N_completed, report_viewed).
+//   (invite_opened, consent_accepted, game_N_completed, report_viewed,
+//   nps_submitted).
 // - NUNCA sale: datos biométricos, contenido de respuestas/telemetría, tokens
 //   de invitación, datos personales. Las propiedades pasan por un scrubber de
 //   doble barrera (patrones prohibidos en keys + truncamiento).
@@ -30,7 +31,9 @@ export const CONSENT_COOKIE = 'cookie_consent';
 const CONSENT_MAX_AGE_S = 60 * 60 * 24 * 365; // 1 año (tabla de cookies de la política)
 const EXCLUDED_PREFIXES = ['/postulaciones', '/dev/'];
 // Whitelist de eventos permitidos en rutas exclusas (funnel de candidato).
-const EXCLUDED_ROUTE_WHITELIST = new Set(['invite_opened', 'consent_accepted', 'report_viewed']);
+// nps_submitted (F.2): encuesta opcional 1-10 al final del reporte; solo viaja
+// el score (métrica agregada, sin PII).
+const EXCLUDED_ROUTE_WHITELIST = new Set(['invite_opened', 'consent_accepted', 'report_viewed', 'nps_submitted']);
 const GAME_COMPLETED_RE = /^game_[1-9][0-9]*_completed$/;
 // Doble barrera: si una key de propiedad matchea, no viaja NUNCA.
 const FORBIDDEN_KEY_RE =

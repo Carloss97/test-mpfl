@@ -114,6 +114,10 @@ export default function PostulationGameStage({
   const componentMap = useMemo(() => ({ ...DEFAULT_GAME_COMPONENTS, ...gameComponents }), [gameComponents]);
   const CurrentGame = currentBlock ? componentMap[currentBlock.gameId] : null;
   const gameViewport = usePostulationGameViewport();
+  // F.2: reloj de partida para duration_s (tiempo por juego, p50/p95 en
+  // PostHog). Se reinicia al cambiar de juego. Métrica agregada (sin PII).
+  const gameStartRef = useRef(Date.now());
+  useEffect(() => { gameStartRef.current = Date.now(); }, [currentBlock]);
 
   useEffect(() => { onGameEventRef.current = onGameEvent; }, [onGameEvent]);
   useEffect(() => { onCompleteDemoRef.current = onCompleteDemo; }, [onCompleteDemo]);
@@ -129,12 +133,15 @@ export default function PostulationGameStage({
   const completeBlock = useCallback((summary = {}) => {
     if (!currentBlock) return;
     const gameIndex = currentIndex + 1;
-    // F.1: funnel game_N_completed. Solo id/index/flag práctica del juego —
-    // NUNCA el `summary` (contenido de partida/telemetría no viaja).
+    // F.1/F.2: funnel game_N_completed. Solo id/index/flag práctica +
+    // duration_s (métrica agregada de tiempo por juego) — NUNCA el `summary`
+    // (contenido de partida/telemetría no viaja).
+    const durationS = Math.max(0, Math.round((Date.now() - gameStartRef.current) / 1000));
     void track(`game_${gameIndex}_completed`, {
       game_id: currentBlock.gameId,
       game_index: gameIndex,
       practice: currentBlock.practice === true,
+      duration_s: durationS,
     });
     const nextCompleted = [...completed, { block: currentBlock, summary }];
     setCompleted(nextCompleted);

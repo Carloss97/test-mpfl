@@ -4,6 +4,7 @@ import {
   isProtectedRoute,
   isRecruiter,
   jwtClaims,
+  parseGroupClaim,
 } from '../src/index.mjs';
 
 // A.1 (KRU-112): el link del email de invitación depende del stage de entrada.
@@ -176,6 +177,24 @@ describe('A.2 — gate de grupo recruiters/admins (KRU-113)', () => {
     });
     it('string coma-separated → true', () => {
       expect(isRecruiter(evt({ 'cognito:groups': 'other,admins' }))).toBe(true);
+    });
+    it('string APIGW 1.0 multi-grupo "[a b]" (formato REAL observado en staging 2026-09-13) → true', () => {
+      expect(isRecruiter(evt({ 'cognito:groups': '[recruiters admins]' }))).toBe(true);
+      expect(isRecruiter(evt({ 'cognito:groups': '[auditors beta-testers]' }))).toBe(false);
+    });
+    it('string JSON serializada → true', () => {
+      expect(isRecruiter(evt({ 'cognito:groups': '["recruiters","admins"]' }))).toBe(true);
+      expect(isRecruiter(evt({ 'cognito:groups': '["auditors"]' }))).toBe(false);
+    });
+    it('parseGroupClaim: todos los formatos', () => {
+      expect(parseGroupClaim(['a', ' b '])).toEqual(['a', 'b']);
+      expect(parseGroupClaim('a')).toEqual(['a']);
+      expect(parseGroupClaim('a,b')).toEqual(['a', 'b']);
+      expect(parseGroupClaim('[a b]')).toEqual(['a', 'b']);
+      expect(parseGroupClaim('["a","b"]')).toEqual(['a', 'b']);
+      expect(parseGroupClaim('  ')).toEqual([]);
+      expect(parseGroupClaim(null)).toEqual([]);
+      expect(parseGroupClaim(undefined)).toEqual([]);
     });
     it('sin grupo recruiter/admin → false', () => {
       expect(isRecruiter(evt({ 'cognito:groups': ['beta-testers'] }))).toBe(false);
