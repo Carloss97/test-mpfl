@@ -131,7 +131,6 @@ describe('rutas excluidas (/postulaciones* y /dev*)', () => {
       expect(ph.capture).not.toHaveBeenCalled();
     }
   });
-
   it('en ruta excluida: whitelist de funnel SÍ pasa (consent_accepted, game_N_completed, report_viewed, invite_opened)', async () => {
     await active();
     const ctx = { path: '/postulaciones', search: '?invite=x' };
@@ -150,10 +149,10 @@ describe('rutas excluidas (/postulaciones* y /dev*)', () => {
     if (ph) expect(ph.capture).not.toHaveBeenCalled();
   });
 
-  it('en ruta normal: pageview pasa vía ph.page', async () => {
+  it('en ruta normal: pageview pasa como capture($pageview)', async () => {
     await active();
     expect(await a.trackPageView('/candidato', '')).toBe(true);
-    expect(posthogState.mock.page).toHaveBeenCalledWith('/candidato');
+    expect(posthogState.mock.capture).toHaveBeenCalledWith('$pageview', { path: '/candidato' });
   });
 });
 

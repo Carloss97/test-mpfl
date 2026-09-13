@@ -164,7 +164,12 @@ export async function track(event, properties = {}, context = {}) {
   return true;
 }
 
-/** Pageview manual (el auto de posthog está desactivado). */
+/**
+ * Pageview manual (el auto de posthog está desactivado). Usa
+ * capture('$pageview', ...) en vez de page(): en posthog-js 1.4xx la
+ * llamada page() tras init inmediato no llegó a fluir en smoke live,
+ * mientras que capture() sí (mismo pageViewManager.doPageView interno).
+ */
 export async function trackPageView(pathArg, searchArg) {
   const path = pathArg ?? (typeof window !== 'undefined' ? window.location.pathname : '');
   const search = searchArg ?? (typeof window !== 'undefined' ? window.location.search : '');
@@ -173,7 +178,7 @@ export async function trackPageView(pathArg, searchArg) {
   if (isExcludedRoute(path)) return false;
   const posthog = await bootstrap();
   if (!posthog) return false;
-  posthog.page(path);
+  posthog.capture('$pageview', sanitizeProperties({ path }));
   return true;
 }
 
