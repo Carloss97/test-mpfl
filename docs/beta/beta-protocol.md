@@ -39,9 +39,11 @@
 
 ### 3.1 Onboarding Empresa (Semana 0)
 1. Firma contrato + DPA (docs/legal/piloto-b2b-contrato-template.md).
-2. KRUMM crea tenant en staging + credenciales Cognito.
+2. KRUMM crea credenciales Cognito del reclutador (runbook: `docs/beta/beta-onboarding-runbook.md` §2 — usuario + grupo `recruiters` + password temporal).
 3. Sesión de onboarding 30 min (screen share): crear proceso, invitar candidatos, ver reportes, exports.
 4. Empresa configura 1–2 procesos reales.
+
+> Nota (2026-09-13): multi-tenancy por empresa es G.5 (pendiente); en la beta cerrada de 2 empresas comparten dataset — mitigación operativa en el runbook §7.
 
 ### 3.2 Invitación Candidatos (Semana 1–2)
 1. Empresa envía invitaciones desde dashboard (email real via SES).
