@@ -154,7 +154,7 @@ export default function CompanyShell({ section, active, children, note } = {}) {
         className={`v3-co-sidebar${sidebarOpen ? ' is-open' : ''}`}
       >
         <a className="v3-co-brand" href="/portal" aria-label={copy.common_logoAlt}>
-          <img src="/assets/krumm-logo-borderless-no-text.png" alt={copy.common_logoAlt} />
+          <img src="/assets/krumm-logo-borderless-no-text.webp" alt={copy.common_logoAlt} />
         </a>
         <p className="v3-co-workspace">{copy.company_workspace}</p>
         <nav className="v3-co-navigation" aria-label={copy.company_portalNavigation}>

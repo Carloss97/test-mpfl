@@ -75,7 +75,7 @@ describe('CandidateShell (ref candidate.html)', () => {
     expect(skip).toHaveAttribute('href', '#v3-candidate-main');
     const logo = screen.getByRole('link', { name: V3_COPY.es.common_logoAlt });
     expect(logo).toHaveAttribute('href', '/');
-    expect(within(logo).getByAltText(V3_COPY.es.common_logoAlt)).toHaveAttribute('src', '/assets/krumm-logo-borderless-no-text.png');
+    expect(within(logo).getByAltText(V3_COPY.es.common_logoAlt)).toHaveAttribute('src', '/assets/krumm-logo-borderless-no-text.webp');
     expect(screen.getByRole('group', { name: /Idioma/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: V3_COPY.es.cp_help })).toBeInTheDocument();
     const breadcrumb = screen.getByRole('navigation', { name: V3_COPY.es.cp_breadcrumb });

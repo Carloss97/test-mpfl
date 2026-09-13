@@ -23,7 +23,7 @@ export default function CandidateShell({ breadcrumb, children }) {
 
       <header className="v3-cp-header">
         <a className="v3-cp-brand" href="/" aria-label={copy.common_logoAlt}>
-          <img src="/assets/krumm-logo-borderless-no-text.png" alt={copy.common_logoAlt} />
+          <img src="/assets/krumm-logo-borderless-no-text.webp" alt={copy.common_logoAlt} />
         </a>
         {breadcrumb ? (
           <nav className="v3-cp-breadcrumb" aria-label={copy.cp_breadcrumb}>

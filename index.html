@@ -11,6 +11,9 @@
     <!-- G.1 (KRU): fuentes de marca self-hosted (Archivo display + Manrope body):
          src/styles/fonts.css + public/fonts/*.woff2 — reemplaza el CSS externo
          de Google Fonts (render-blocking ~800 ms en Lighthouse, 3er-party). -->
+    <!-- G.1 (LCP): preload del peso del hero H1 (Archivo 900) — el swap de
+         fuente era el LCP text en el landing. -->
+    <link rel="preload" href="/fonts/Archivo-900-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>KRUMM · Evaluación Gamificada</title>
   </head>

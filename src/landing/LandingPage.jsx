@@ -114,7 +114,7 @@ export default function LandingPage() {
         <a className="landing__brand" href="/" aria-label={t('KRUMM - Inicio', 'KRUMM - Home')} onClick={closeMenu}>
           <img
             className="landing__brand-logo"
-            src="/assets/krumm-logo-borderless-no-text.png"
+            src="/assets/krumm-logo-borderless-no-text.webp"
             alt=""
             width="152"
             height="152"

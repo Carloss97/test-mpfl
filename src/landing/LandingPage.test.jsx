@@ -73,7 +73,7 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       renderLanding();
       const logo = screen.getByRole('link', { name: /KRUMM - Inicio/i });
       expect(logo).toHaveAttribute('href', '/');
-      expect(logo.querySelector('img')).toHaveAttribute('src', '/assets/krumm-logo-borderless-no-text.png');
+      expect(logo.querySelector('img')).toHaveAttribute('src', '/assets/krumm-logo-borderless-no-text.webp');
       expect(screen.getByRole('link', { name: 'Producto' })).toHaveAttribute('href', '#producto');
       expect(screen.getByRole('link', { name: 'Cómo funciona' })).toHaveAttribute('href', '#como-funciona');
       expect(screen.getByRole('link', { name: 'Tecnología' })).toHaveAttribute('href', '#tecnologia');

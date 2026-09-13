@@ -75,7 +75,7 @@ function PortalPage() {
       <a className="v3-skip" href="#v3-portal-main">{copy.common_skipContent}</a>
       <header className="v3-bare-header">
         <a className="v3-bare-brand" href="/" aria-label={copy.common_logoAlt}>
-          <img src="/assets/krumm-logo-borderless-no-text.png" alt={copy.common_logoAlt} />
+          <img src="/assets/krumm-logo-borderless-no-text.webp" alt={copy.common_logoAlt} />
         </a>
         <LanguageToggle />
       </header>
@@ -181,7 +181,7 @@ function CompanyLoginPage() {
       <a className="v3-skip" href="#v3-company-login-main">{copy.common_skipContent}</a>
       <header className="v3-bare-header">
         <a className="v3-bare-brand" href="/" aria-label={copy.common_logoAlt}>
-          <img src="/assets/krumm-logo-borderless-no-text.png" alt={copy.common_logoAlt} />
+          <img src="/assets/krumm-logo-borderless-no-text.webp" alt={copy.common_logoAlt} />
         </a>
         <LanguageToggle />
       </header>
