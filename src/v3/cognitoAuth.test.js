@@ -235,14 +235,14 @@ describe('cognitoAuth (A.2 — login Cognito empresas)', () => {
       expect(navigate).toHaveBeenCalledWith('/empresa/acceso?error=auth_state_mismatch');
     });
 
-    it('exchange falla → clear + error auth_exchange_failed', async () => {
+    it('exchange falla → clear + error con código de causa', async () => {
       const { navigate, params } = setup();
       savePendingAuth({ state: 'st-1', verifier: 'ver-1', redirectUri: 'r' });
       const exchange = vi.fn(async () => { throw Object.assign(new Error('x'), { code: 'invalid_grant' }); });
       const out = await handleAuthCallback({ searchParams: params('code=c-1&state=st-1'), exchange, navigate });
       expect(out).toMatchObject({ ok: false, reason: 'exchange_failed', code: 'invalid_grant' });
       expect(getStoredAuth()).toBeNull();
-      expect(navigate).toHaveBeenCalledWith('/empresa/acceso?error=auth_exchange_failed');
+      expect(navigate).toHaveBeenCalledWith('/empresa/acceso?error=auth_exchange_failed_invalid_grant');
     });
 
     it('sin pending (tab cerrada / refresh) → error missing_pending', async () => {

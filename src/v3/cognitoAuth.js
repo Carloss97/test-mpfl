@@ -250,8 +250,9 @@ export async function handleAuthCallback({
     return { ok: true };
   } catch (err) {
     clear();
-    navigate?.('/empresa/acceso?error=auth_exchange_failed');
-    return { ok: false, reason: 'exchange_failed', code: err?.code ?? 'unknown' };
+    const code = err?.code ?? 'unknown';
+    navigate?.(`/empresa/acceso?error=auth_exchange_failed_${code}`);
+    return { ok: false, reason: 'exchange_failed', code };
   }
 }
 

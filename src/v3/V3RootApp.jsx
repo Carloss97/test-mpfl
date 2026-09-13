@@ -126,10 +126,12 @@ function CompanyLoginPage() {
   const page = copy.pages.companyAccess;
   const [authed, setAuthed] = useState(() => getStoredAuth());
   const [authError, setAuthError] = useState(false);
+  const [authDetail, setAuthDetail] = useState(null);
   const [busy, setBusy] = useState(false);
 
   // Retorno del hosted UI: ?code=&state= (o ?error=). Exchange + store +
-  // navegación a /empresa; en fallo, estado de error visible con reintento.
+  // navegación a /empresa; en fallo, estado de error visible con reintento
+  // y con el código de causa (invalid_grant, etc.) para diagnóstico.
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
     const params = new URLSearchParams(window.location.search);
@@ -142,12 +144,16 @@ function CompanyLoginPage() {
         navigate: (to) => { window.location.replace(to); },
       }).then((out) => {
         setAuthed(getStoredAuth());
+        if (!out.ok) setAuthDetail(out.reason === 'exchange_failed' ? out.code : out.reason);
         setAuthError(!out.ok);
         setBusy(false);
       });
       return undefined;
     }
-    if (params.get('error')) setAuthError(true);
+    if (params.get('error')) {
+      setAuthError(true);
+      setAuthDetail(params.get('error'));
+    }
     return undefined;
   }, []);
 
@@ -184,6 +190,9 @@ function CompanyLoginPage() {
           <div className="v3-portal-intro" role="alert">
             <h1>{page.errorTitle}</h1>
             <p>{page.errorText}</p>
+            {authDetail ? (
+              <p className="v3-company-login-error-detail"><code>{authDetail}</code></p>
+            ) : null}
           </div>
         ) : (
           <div className="v3-portal-intro">
