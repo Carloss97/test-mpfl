@@ -6,6 +6,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 
+// posthog-js MOCKEADO: sin el mock, el test "Aceptar analytics" carga la
+// librería REAL en jsdom (setConsent → bootstrap → import) → rejection
+// no controlada que rompe CI (timing-dependente). Factory estable (se
+// cachea) + vi.clearAllMocks() entre tests.
+vi.mock('posthog-js', () => ({
+  default: { init: vi.fn(), page: vi.fn(), capture: vi.fn(), reset: vi.fn() },
+}));
+
 // Key de build simulada ANTES del import del módulo (lee import.meta.env al cargar).
 vi.stubEnv('VITE_POSTHOG_API', 'test_project_credential');
 const { default: ConsentBanner } = await import('./ConsentBanner.jsx');
@@ -20,6 +28,7 @@ function renderBanner() {
 }
 
 beforeEach(() => {
+  vi.clearAllMocks();
   // jsdom: borrar cookie con 'expires' en el pasado (max-age=0 no siempre respeta).
   document.cookie = 'cookie_consent=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
 });
