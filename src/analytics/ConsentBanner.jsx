@@ -4,12 +4,16 @@
 // Se renderiza una vez (mientras no exista la cookie); tras responder, nunca más.
 import React, { useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
-import { consentFromStorage, setConsent, trackPageView } from './analytics.js';
+import { consentFromStorage, isAnalyticsConfigured, setConsent, trackPageView } from './analytics.js';
 import './consentBanner.css';
 
 export default function ConsentBanner() {
   const { t } = useLanguage();
-  const [visible, setVisible] = useState(() => consentFromStorage() === 'unknown');
+  // Solo se muestra si analytics está configurado (key de build): sin key no
+  // hay analítica que consentir (evita pedir opt-in "muerto" en previews).
+  const [visible, setVisible] = useState(
+    () => isAnalyticsConfigured() && consentFromStorage() === 'unknown',
+  );
   if (!visible) return null;
 
   const respond = (granted) => {

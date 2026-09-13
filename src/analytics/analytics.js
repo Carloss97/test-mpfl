@@ -70,6 +70,11 @@ export function isExcludedRoute(path = '') {
   return EXCLUDED_PREFIXES.some((prefix) => path === prefix || path.startsWith(prefix));
 }
 
+/** ¿Hay key de build? (false → no existe analytics para consentir). */
+export function isAnalyticsConfigured() {
+  return !!POSTHOG_ID;
+}
+
 /**
  * ¿Analytics activo para esta petición? Key de build + consent + no modo fixture.
  */
