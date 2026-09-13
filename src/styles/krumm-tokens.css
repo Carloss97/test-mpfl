@@ -53,6 +53,10 @@
                                        oscuras (landing __accesos). */
   --k-ink-terracotta-brand: #9a7355; /* valor oficial referencia (dark surfaces) */
   --k-ink-card: #3a2c20;       /* títulos dentro de cards claras */
+  /* G.1 (a11y→100): kicker + body en cards claras (arena/crema). El terracotta
+     brand (#9a7355) y el AA global (#704f39) no llegan a 4.5:1 sobre arena
+     (#d8c2a6: 2.45 / 4.25); este valor da 5.33:1 arena, 7.59:1 crema. */
+  --k-ink-card-strong: #5f4130;
 
   /* ── Componentes ─────────────────────────────────────────────── */
   --k-cta-bg: #d8b38c;         /* CTA primario dorado (sólido fallback) */

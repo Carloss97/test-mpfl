@@ -1,5 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import './styles/fonts.css';
 import './styles/krumm-tokens.css';
 // G.1 (FASE PRE-BETA, hallazgo plan 2026-09-12): code-splitting por app raíz.
 // El chunk principal medía 1,177 kB (330 kB gzip) porque main.jsx importaba

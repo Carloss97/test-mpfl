@@ -626,6 +626,12 @@
   border-radius: var(--k-radius-card);
   padding: 40px 36px;
   border: 1px solid var(--k-divider);
+  /* G.1 (a11y→100): el terracotta brand de la section oscura (#9a7355) se
+     filtraba a estas cards claras y fallaba AA (2.45:1 sobre arena). Token
+     --k-ink-card-strong: 5.33:1 sobre arena, 7.59:1 sobre crema (kicker) y
+     reemplaza a --k-ink-medium (p, 15px): 4.23:1 → 5.33:1 sobre arena. */
+  --k-ink-terracotta: var(--k-ink-card-strong);
+  --k-ink-medium: var(--k-ink-card-strong);
 }
 
 .landing__acceso-card--empresa {
