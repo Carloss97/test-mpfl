@@ -3,6 +3,7 @@ import SignalErrorHint from './SignalErrorHint.jsx';
 import { usePostulationDemoCopy } from './postulationDemoCopy.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
+import { track } from '../analytics/analytics.js';
 
 export default function PostulationConsentSetup({
   backgroundActive = false,
@@ -52,7 +53,11 @@ export default function PostulationConsentSetup({
               type="checkbox"
               data-testid="postulation-explicit-consent"
               checked={consentAccepted}
-              onChange={(event) => setConsentAccepted(event.target.checked)}
+              onChange={(event) => {
+              setConsentAccepted(event.target.checked);
+              // F.1: funnel consent_accepted (aceptación explícita del candidato).
+              if (event.target.checked) void track('consent_accepted');
+            }}
             />
             <span>{t('He leído la información y acepto los términos de esta evaluación.', 'I have read this information and accept the terms of this assessment.')}</span>
           </label>

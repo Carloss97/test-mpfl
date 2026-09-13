@@ -16,6 +16,7 @@ import { POSTULATION_DEMO_BATTERY, listVisiblePostulationBlocks } from './postul
 import PostulationProgressHeader from './PostulationProgressHeader.jsx';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { getGameSfxEnabled, setGameSfxEnabled } from '../tasks/original-games/originalGameSfx.js';
+import { track } from '../analytics/analytics.js';
 
 const DEFAULT_GAME_COMPONENTS = Object.freeze({
   simple_rt: SimpleRTTask,
@@ -127,6 +128,14 @@ export default function PostulationGameStage({
 
   const completeBlock = useCallback((summary = {}) => {
     if (!currentBlock) return;
+    const gameIndex = currentIndex + 1;
+    // F.1: funnel game_N_completed. Solo id/index/flag práctica del juego —
+    // NUNCA el `summary` (contenido de partida/telemetría no viaja).
+    void track(`game_${gameIndex}_completed`, {
+      game_id: currentBlock.gameId,
+      game_index: gameIndex,
+      practice: currentBlock.practice === true,
+    });
     const nextCompleted = [...completed, { block: currentBlock, summary }];
     setCompleted(nextCompleted);
 

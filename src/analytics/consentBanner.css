@@ -1,0 +1,61 @@
+/* F.1 (KRU-118): banner de consentimiento de analytics (opt-in).
+   Barra inferior fija, tokens de marca, responsive (390px+), no cubre el CTA
+   principal (margen inferior generoso en móvil). */
+.consent-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  background: var(--k-panel, #fffdf9);
+  border-top: 1px solid var(--k-line, #e6ddd0);
+  box-shadow: 0 -8px 24px rgba(56, 39, 29, 0.12);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+.consent-banner__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.consent-banner__text {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--k-ink, #2c241b);
+}
+.consent-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.consent-banner__primary,
+.consent-banner__secondary {
+  appearance: none;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.consent-banner__primary {
+  background: var(--k-cta-bg, #b98a3f);
+  color: var(--k-cta-ink, #fff);
+  border: 1px solid transparent;
+}
+.consent-banner__primary:hover { filter: brightness(1.05); }
+.consent-banner__secondary {
+  background: transparent;
+  color: var(--k-ink, #2c241b);
+  border: 1px solid var(--k-line, #d8cbb8);
+}
+.consent-banner__secondary:hover { background: var(--k-bg-soft, #f4ede1); }
+@media (max-width: 560px) {
+  .consent-banner__inner { gap: 8px; }
+  .consent-banner__actions { justify-content: stretch; }
+  .consent-banner__primary,
+  .consent-banner__secondary { flex: 1 1 auto; text-align: center; }
+}

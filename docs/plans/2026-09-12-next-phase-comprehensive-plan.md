@@ -691,6 +691,7 @@ FASE A (Plataforma)
 **Estado:** `[ ] Por implementar` | **Prioridad:** Alta (los inversores preguntan por funnel y retención)
 
 ### F.1 Instrumentación PostHog
+**[x] Implementada 2026-09-13 (KRU-118):** `src/analytics/` (analytics.js + ConsentBanner) — posthog-js lazy (solo tras consentir; DCE lo elimina de builds sin key), opt-in vía banner + `cookie_consent` (1 año, forma de la política de privacidad), rutas excluidas `/postulaciones*` y `/dev*` (sin pageview/autocapture; solo whitelist funnel: invite_opened, consent_accepted, game_N_completed, report_viewed), scrubber de doble barrera (keys prohibidas: biometría/PII/tokens), `person_profiles:'never'`, sin identify. Env de build: `VITE_POSTHOG_API` + `VITE_POSTHOG_HOST` (cd.yml, secret `POSTHOG_PROJECT_API_KEY`; host us.posthog.com — si el proyecto es EU, cambiar a app.eu.posthog.com). Eventos: funnel completo en frontend menos `invite_received` (servicio: PostHog python backend, pendiente). Smoke live: `scripts/smoke-f1-posthog-2026-09-13.mjs`.
 - `posthog-js` en main.jsx: `VITE_POSTHOG_KEY` + `VITE_POSTHOG_HOST` (opt-out respetado vía cookie consent E.1; **nunca** capturar datos biométricos ni contenido de respuestas — `autocapture` desactivado en `/postulaciones/*`, solo pageviews + eventos de navegación)
 - Funnel explícito: `invite_received` → `invite_opened` → `consent_accepted` → `game_N_completed` (×7) → `report_viewed` → `recruiter_login` → `export_downloaded`
 - Tests: con PostHog disabled en jsdom (mock no-op); smoke verifica que NO se captura en modo fixture

@@ -13,6 +13,8 @@
 // Overrides por env Vite: VITE_KRUMM_COGNITO_HOST / VITE_KRUMM_COGNITO_CLIENT.
 
 const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+// F.1 (KRU-118): funnel recruiter_login. En tests no hay key → no-op total.
+import { track } from '../analytics/analytics.js';
 
 export const COGNITO_CONFIG = Object.freeze({
   poolId: env.VITE_KRUMM_COGNITO_POOL ?? 'us-east-1_FX1VyzTTA',
@@ -245,6 +247,8 @@ export async function handleAuthCallback({
       redirectUri: pending.redirectUri,
     });
     store(tokens);
+    // F.1: funnel recruiter_login (login Cognito exitoso).
+    void track('recruiter_login');
     clearPendingAuth();
     navigate?.('/empresa');
     return { ok: true };

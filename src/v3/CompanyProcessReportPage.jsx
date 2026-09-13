@@ -10,9 +10,10 @@
 // (agregados contract v1), cobertura/calidad/estado e integridad
 // (validateRealSessionRowPrivacy). Identidad = alias (nunca nombre real).
 // D7: sesión/proceso desconocidos → estado honesto sin expedir el par raw.
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { useV3Copy } from './v3Copy.js';
+import { track } from '../analytics/analytics.js';
 import {
   formatPostulationScore,
   getPostulationCaveats,
@@ -66,6 +67,14 @@ function NotFound({ copy, processId, backLabel, notFound, notFoundText }) {
 export default function CompanyProcessReportPage({ data, processId, sessionId } = {}) {
   const { language, t } = useLanguage();
   const copy = useV3Copy();
+  // F.1: funnel report_viewed (reclutador, al abrir el reporte de una sesión).
+  const reportTrackedRef = useRef(false);
+  useEffect(() => {
+    if (reportTrackedRef.current) return undefined;
+    reportTrackedRef.current = true;
+    void track('report_viewed', { viewer: 'recruiter' });
+    return undefined;
+  }, []);
   const source = data?.source ?? 'demo';
   const checking = source === 'checking';
   const isReal = source === 'real';

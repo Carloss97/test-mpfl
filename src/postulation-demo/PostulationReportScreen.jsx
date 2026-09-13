@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
+import { track } from '../analytics/analytics.js';
 import {
   formatPostulationScore,
   getPostulationExecutiveSummary,
@@ -125,6 +126,14 @@ export default function PostulationReportScreen({
   onDownloadAll,
 } = {}) {
   const { t } = useLanguage();
+  // F.1: funnel report_viewed (candidato, al ver su reporte al terminar).
+  const reportTrackedRef = useRef(false);
+  useEffect(() => {
+    if (reportTrackedRef.current) return undefined;
+    reportTrackedRef.current = true;
+    void track('report_viewed', { viewer: 'candidate' });
+    return undefined;
+  }, []);
   const sessionNote = sessionStatus === 'saved'
     ? t('Evaluación registrada para revisión humana.', 'Assessment registered for human review.')
     : sessionStatus === 'error'

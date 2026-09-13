@@ -13,6 +13,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { useV3Copy } from './v3Copy.js';
 import V3Dialog from './V3Dialog.jsx';
+import { track } from '../analytics/analytics.js';
 import {
   buildDraftProcessDetail,
   buildRealProcessDetail,
@@ -224,6 +225,8 @@ export default function CompanyProcessDetailPage({ data, processId } = {}) {
   const briefStamp = () => new Date().toISOString().slice(0, 10);
 
   const handleExportCsv = () => {
+    // F.1: funnel export_downloaded (solo formato; sin ids de proceso/candidato).
+    void track('export_downloaded', { format: 'csv' });
     const candidates = [...realModels.values()];
     downloadText(
       `krumm-brief-${detail.id}-${briefStamp()}.csv`,
@@ -235,6 +238,8 @@ export default function CompanyProcessDetailPage({ data, processId } = {}) {
   const handleBriefMd = (candidateId) => {
     const model = realModels.get(candidateId);
     if (!model) return;
+    // F.1: funnel export_downloaded (brief individual).
+    void track('export_downloaded', { format: 'md' });
     downloadText(
       `krumm-brief-${detail.id}-${model.alias ?? candidateId}-${briefStamp()}.md`,
       buildBriefMarkdown({

@@ -8,6 +8,7 @@ import { buildPostulationDemoArtifacts } from './postulationDemoSessionBuilder.j
 import { getPostulationDemoBattery, getPostulationDemoBatteryId, KRUMM_API_BASE, listVisiblePostulationBlocks, normalizePostulationDemoBatteryMode, resolvePostulationDemoBatteryMode } from './postulationDemoConfig.js';
 import { parseInviteToken, runIdForInvitation, INVITATION_STATUS, INVITATION_GUARD_MESSAGES, validateInvitationToken } from './postulationDemoInvite.js';
 import { candidateHomeRedirectUrl } from './postulationDemoRoute.js';
+import { track } from '../analytics/analytics.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
 import './postulationDemo.css';
@@ -166,6 +167,8 @@ export default function PostulationDemoApp({ gameComponents, batteryMode: reques
   useEffect(() => {
     if (phase !== 'invite-check' || !inviteToken) return undefined;
     let cancelled = false;
+    // F.1: funnel invite_opened (el candidato abrió un link de invitación).
+    void track('invite_opened');
     (async () => {
       const result = await validateInvitationToken({ token: inviteToken, endpoint: KRUMM_API_BASE });
       if (cancelled) return;

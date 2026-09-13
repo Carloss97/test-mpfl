@@ -17,6 +17,10 @@ import {
 } from './postulation-demo/postulationDemoRoute.js';
 import { LanguageProvider } from './i18n/LanguageContext.jsx';
 import { resolveV3Route } from './v3/v3Routes.js';
+// F.1 (KRU-118): analytics PostHog privacy-safe (opt-in + exclusiones de ruta)
+// y banner de consentimiento (forma documentada en política de privacidad).
+import ConsentBanner from './analytics/ConsentBanner.jsx';
+import { startRouteObserver, trackPageView } from './analytics/analytics.js';
 
 const App = React.lazy(() => import('./App.jsx'));
 const PostulationDemoApp = React.lazy(() => import('./postulation-demo/PostulationDemoApp.jsx'));
@@ -103,6 +107,16 @@ createRoot(document.getElementById('root')).render(
       <React.Suspense fallback={<RootLoadingFallback />}>
         {v5Cutover ? null : <RootApp />}
       </React.Suspense>
+      <ConsentBanner />
     </LanguageProvider>
   </React.StrictMode>,
 );
+
+// F.1: pageview por cambio de ruta (no-op si no hay key/consent, ruta excluida
+// /postulaciones* y /dev*, o modo fixture). Las navegaciónes por
+// location.assign/replace recargan la página: el pageview inicial las cubre.
+if (typeof window !== 'undefined') {
+  startRouteObserver((path) => {
+    void trackPageView(path);
+  });
+}
