@@ -28,6 +28,13 @@ jobs:
       - name: Install
         run: npm ci
 
+      # El vitest de raíz incluye backend/test/*.test.mjs (suite unificada,
+      # ver AGENTS). Los tests de index.handler/invitationEmail importan
+      # @aws-sdk/*, que vive en backend/node_modules — sin este paso el CI
+      # falla en transform (2026-09-13, A.1).
+      - name: Install backend deps
+        run: cd backend && npm ci
+
       - name: Unit tests (vitest, NODE_ENV=test)
         run: NODE_ENV=test npx vitest run --pool=threads --reporter=default
 
