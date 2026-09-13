@@ -709,9 +709,13 @@ FASE A (Plataforma)
 
 **Estado:** `[ ] Por implementar` | **Prioridad:** Alta antes de beta externa
 
-### G.1 Lighthouse CI en PRs
-- `.github/workflows/lighthouse.yml`: budget performance ≥90, accessibility 100, best-practices 100, SEO ≥90 sobre `/`, `/portal`, `/candidato`
-- Bundle budget: `main.*.js` < 500 KB gzip en CI (falla si excede)
+### G.1 Lighthouse CI en PRs ✅ (2026-09-13; commits 3b4a163, d31c993, 3e71e53, 40a8cf1, db0fb41, 36101cc)
+- `.github/workflows/lighthouse.yml`: budget performance ≥90, accessibility 100, best-practices 100, SEO ≥90 sobre `/`, `/portal`, `/candidato` (PR → PR preview; main → stage post-CD; retries + validación dura del reporte + reports como artifact)
+- Bundle budget: `main.*.js` < 500 KB gzip en CI (falla si excede) — entry actual 73 kB
+- Runner GH: **Chrome 151 pinned** (el Chrome 152+ del runner rompe lighthouse 12.x: "FCP/LCP All Frames not implemented in lantern")
+- Quick wins implementados: a11y landing 96→100 (token `--k-ink-card-strong`, contraste cards accesos); Google Fonts → **self-hosted** (11 woff2 latin 325 kB; render-blocking ~800 ms eliminado); logo de marca 717 kB PNG → **49 kB WebP** (456 px = 3× del display 152, alpha intacto); preloads de los pesos hero (Archivo 900 landing + 600 v3)
+- Scores oficiales (GH, Chrome 151): baseline 59/71/59 → post-quick-wins (db0fb41) / 99 · /portal 98 · /candidato 86 (LCP 3.7 s = swap de fuente Archivo-600) → **36101cc (preload 600): GATE VERDE** — perf 98 / 98 / 98, a11y 100, BP 100, SEO 92 en las 3 rutas (run 34789048615, PASS 1m8s)
+- G.1 CERRADO. G.1b no requerido (todas las rutas ≥90)
 
 ### G.2 Error tracking (Sentry)
 - Sentry cloud free (o self-hosted GlitchTip en la Pi — decisión operativa): `VITE_SENTRY_DSN` opcional; `ErrorBoundary` + `window.onerror` + `unhandledrejection`
