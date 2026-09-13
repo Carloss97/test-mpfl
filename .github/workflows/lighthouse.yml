@@ -1,0 +1,76 @@
+# G.1 (FASE G, plan 2026-09-12) — Lighthouse CI.
+# Budgets por URL (/, /portal, /candidato):
+#   performance >= 90 · accessibility 100 · best-practices 100 · seo >= 90
+# - PRs (main): corre contra la PR Preview (preview.yml; OIDC — los forks no
+#   tienen preview, documentado en preview.yml).
+# - Push a main: corre contra stage.krumm.cl DESPUÉS de que CD termine
+#   (workflow_run), para medir el build realmente desplegado.
+name: Lighthouse
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_run:
+    workflows: [CD]
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: lighthouse-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    if: github.event_name == 'pull_request' ||
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Resolver URL base (PR → preview esperando deploy; main → stage)
+        id: base
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR=${{ github.event.pull_request.number }}
+            URL="https://krumm-dev-frontend-pr-${PR}.s3-website-us-east-1.amazonaws.com/"
+            for i in $(seq 1 48); do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$URL" || echo 000)
+              if [ "$code" = "200" ]; then
+                echo "url=$URL" >> "$GITHUB_OUTPUT"
+                echo "Preview disponible (t+$((i * 10))s)"
+                exit 0
+              fi
+              sleep 10
+            done
+            echo "::error::Preview no disponible tras 8 min. PRs de forks no generan preview (OIDC restringido a ramas del repo — ver preview.yml)."
+            exit 1
+          else
+            echo "url=https://stage.krumm.cl/" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Instalar Lighthouse
+        run: npm i -g lighthouse
+
+      - name: Lighthouse budgets (/, /portal, /candidato)
+        run: |
+          BASE="${{ steps.base.outputs.url }}"
+          for path in "" "portal" "candidato"; do
+            u="${BASE%/}/${path}"
+            f="lh-${path:-home}.json"
+            echo "=== Lighthouse $u"
+            lighthouse "$u" \
+              --chrome-flags="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage" \
+              --only-categories=performance,accessibility,best-practices,seo \
+              --output=json --output-path="$f" \
+              --max-wait-for-load=60000
+            node -e '
+              const r = require(process.argv[1]);
+              const budgets = { performance: 90, accessibility: 100, "best-practices": 100, seo: 90 };
+              let bad = false;
+              for (const [k, min] of Object.entries(budgets)) {
+                const s = Math.round(r.categories[k].score * 100);
+                console.log(`  ${k}: ${s} (mínimo ${min})`);
+                if (s < min) bad = true;
+              }
+              process.exit(bad ? 1 : 0);
+            ' "$f"
+          done

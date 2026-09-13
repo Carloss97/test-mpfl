@@ -44,6 +44,17 @@ jobs:
       - name: Build (production)
         run: NODE_ENV=production npm run build
 
+      # G.1: bundle budget — el chunk de entrada no puede crecer sin aviso.
+      # 500 kB gzip (G.1 lo fijó a propósito holgado: hoy ~73 kB; el objetivo
+      # es detectar regresiones grandes, no micro-optimizar).
+      - name: Bundle budget (entry < 500 kB gzip)
+        run: |
+          f=$(ls dist/assets/index-*.js | head -1)
+          size=$(gzip -c "$f" | wc -c)
+          limit=$((500 * 1024))
+          echo "$(basename "$f"): $size bytes gzip (límite $limit)"
+          [ "$size" -lt "$limit" ] || { echo "BUNDLE BUDGET EXCEEDED: entry >= 500 kB gzip"; exit 1; }
+
       - name: Audit (high, prod deps)
         run: npm audit --audit-level=high --omit=dev
 
