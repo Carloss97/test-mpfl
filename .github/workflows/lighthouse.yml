@@ -68,7 +68,7 @@ jobs:
             f="$PWD/lh-${path:-home}.json"
             echo "=== Lighthouse $u"
             ok=0
-            for attempt in 1 2; do
+            for attempt in 1 2 3; do
               lighthouse "$u" \
                 --chrome-flags="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage" \
                 --only-categories=performance,accessibility,best-practices,seo \
@@ -81,9 +81,12 @@ jobs:
               fi
               echo "Intento $attempt sin reporte válido para $u — reintentando…"
               rm -f "$f"
+              sleep 5
             done
             if [ "$ok" != "1" ]; then
-              echo "Lighthouse no produjo reporte válido para $u tras 2 intentos"
+              echo "Lighthouse no produjo reporte válido para $u tras 3 intentos"
+              lighthouse --version 2>/dev/null || true
+              "${CHROME_PATH:-google-chrome}" --version 2>/dev/null || true
               exit 1
             fi
             node -e '
