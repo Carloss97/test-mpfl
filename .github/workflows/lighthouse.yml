@@ -50,6 +50,15 @@ jobs:
       - name: Instalar Lighthouse (pinned a v12)
         run: npm i -g lighthouse@12
 
+      # El Chrome preinstalado del runner (152+) rompe lighthouse 12.x:
+      # "FCP/LCP All Frames not implemented in lantern" (crash en metricas,
+      # sin reporte). Chrome for Testing 151 = la version probada en la Pi
+      # (playwright chromium-1234) y en los runs locales.
+      - name: Chrome 151 (compatible con lighthouse 12.x)
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: 151
+
       - name: Lighthouse budgets (/, /portal, /candidato)
         run: |
           set -u
