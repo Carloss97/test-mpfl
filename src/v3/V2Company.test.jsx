@@ -698,10 +698,11 @@ describe('E. V3RootApp — /empresa y /empresa/procesos son páginas reales (V2)
     expect(screen.getByRole('link', { name: V3_COPY.es.pl_back })).toHaveAttribute('href', '/empresa/procesos');
   });
 
-  it('/empresa/acceso intacto (V0): coming soon + CTA al demo', () => {
+  it('/empresa/acceso (A.2): login real Cognito + CTA demo', () => {
     renderV3Route('/empresa/acceso');
-    expect(screen.getByText(V3_COPY.es.pages.companyAccess.comingSoon)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: V3_COPY.es.pages.companyAccess.cta })).toHaveAttribute('href', '/empresa');
+    expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.pages.companyAccess.title })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: V3_COPY.es.pages.companyAccess.loginCta })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: V3_COPY.es.pages.companyAccess.demoCta })).toHaveAttribute('href', '/empresa');
   });
 });
 

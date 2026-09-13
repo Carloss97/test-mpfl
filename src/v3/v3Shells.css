@@ -946,6 +946,24 @@
   align-items: center;
 }
 .v3-portal-intro { margin-bottom: 40px; }
+/* A.2: acciones del login empresa (CTA real + demo + logout). Columna centrada;
+   en pantallas angostas los botones ocupan el ancho disponible. */
+.v3-company-login-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 40px;
+  width: 100%;
+  max-width: 420px;
+}
+.v3-company-login-actions .v3-cta-gold,
+.v3-company-login-actions .v3-co-text-button { width: 100%; }
+@media (min-width: 640px) {
+  .v3-company-login-actions { flex-direction: row; justify-content: center; max-width: none; }
+  .v3-company-login-actions .v3-cta-gold,
+  .v3-company-login-actions .v3-co-text-button { width: auto; }
+}
 .v3-portal-intro h1 {
   font-family: var(--k-font-display);
   font-weight: 600;

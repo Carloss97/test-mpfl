@@ -262,12 +262,19 @@ export function filterRealProcesses(processes, { dateRange = 'all', status = '' 
 
 // ── Fetch real (mismo contract que hr-dashboard v1; D9: módulo propio) ─────
 
-export async function fetchCompanySessions({ apiBase, fetchImpl = globalThis.fetch, limit = 50 } = {}) {
+export async function fetchCompanySessions({
+  apiBase,
+  fetchImpl = globalThis.fetch,
+  limit = 50,
+  headers = {},
+  onResponse,
+} = {}) {
   if (!apiBase || typeof fetchImpl !== 'function') return null;
   try {
     const response = await fetchImpl(`${apiBase}/sessions?limit=${Number(limit) || 50}`, {
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', ...headers },
     });
+    if (onResponse) onResponse(response);
     if (!response.ok) return null;
     const body = typeof response.json === 'function' ? await response.json() : null;
     const candidates = Array.isArray(body?.candidates) ? body.candidates : null;

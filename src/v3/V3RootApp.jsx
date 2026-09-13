@@ -21,13 +21,20 @@
 //
 // Las páginas bare (/portal y /empresa/acceso) replican el chrome estático de
 // la referencia (portal.html, login-company.html): brand + toggle + main.
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import LanguageToggle from '../i18n/LanguageToggle.jsx';
 import { useV3Copy } from './v3Copy.js';
 import { resolveV3Route, V3_SHELLS } from './v3Routes.js';
 import CandidateShell from './CandidateShell.jsx';
 import CompanyShell from './CompanyShell.jsx';
 import V3Placeholder from './V3Placeholder.jsx';
+import {
+  beginCognitoLogin,
+  clearAuth,
+  cognitoLogoutUrl,
+  getStoredAuth,
+  handleAuthCallback,
+} from './cognitoAuth.js';
 import CandidateHomePage from './CandidateHomePage.jsx';
 import CandidateAccessPage from './CandidateAccessPage.jsx';
 import CompanyDashboardPage from './CompanyDashboardPage.jsx';
@@ -109,12 +116,60 @@ function PortalPage() {
   );
 }
 
-// /empresa/acceso — login empresa demo (referencia login-company.html:
-// "coming soon" + CTA que lleva al demo workspace; sin credenciales reales,
-// plan maestro §4 riesgo 3).
+// /empresa/acceso — LOGIN REAL empresa (A.2, KRU-113): Cognito code flow +
+// PKCE (cognitoAuth.js). Al retornar (?code=&state=) se hace el exchange, se
+// persiste en sessionStorage y se navega a /empresa (useCompanyData usa el
+// token como Bearer). Se conserva el acceso demo público (showcase krumm.cl):
+// "Explorar demo" → /empresa sin auth (fuente demo si la API exige token).
 function CompanyLoginPage() {
   const copy = useV3Copy();
   const page = copy.pages.companyAccess;
+  const [authed, setAuthed] = useState(() => getStoredAuth());
+  const [authError, setAuthError] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  // Retorno del hosted UI: ?code=&state= (o ?error=). Exchange + store +
+  // navegación a /empresa; en fallo, estado de error visible con reintento.
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const stateParam = params.get('state');
+    if (code && stateParam) {
+      setBusy(true);
+      handleAuthCallback({
+        searchParams: params,
+        navigate: (to) => { window.location.replace(to); },
+      }).then((out) => {
+        setAuthed(getStoredAuth());
+        setAuthError(!out.ok);
+        setBusy(false);
+      });
+      return undefined;
+    }
+    if (params.get('error')) setAuthError(true);
+    return undefined;
+  }, []);
+
+  const startLogin = () => {
+    if (typeof window === 'undefined') return;
+    setBusy(true);
+    beginCognitoLogin({
+      origin: window.location.origin,
+      navigate: (url) => { window.location.assign(url); },
+    }).catch(() => {
+      setBusy(false);
+      setAuthError(true);
+    });
+  };
+
+  const doLogout = () => {
+    clearAuth();
+    setAuthed(null);
+    setAuthError(false);
+    window.location.assign(cognitoLogoutUrl());
+  };
+
   return (
     <div className="v3-bare v3-company-login">
       <a className="v3-skip" href="#v3-company-login-main">{copy.common_skipContent}</a>
@@ -125,12 +180,37 @@ function CompanyLoginPage() {
         <LanguageToggle />
       </header>
       <main className="v3-bare-main" id="v3-company-login-main" tabIndex={-1}>
-        <div className="v3-portal-intro">
-          <span className="v3-portal-label">{page.comingSoon}</span>
-          <h1>{page.title}</h1>
-          <p>{page.preview}</p>
+        {authError ? (
+          <div className="v3-portal-intro" role="alert">
+            <h1>{page.errorTitle}</h1>
+            <p>{page.errorText}</p>
+          </div>
+        ) : (
+          <div className="v3-portal-intro">
+            <span className="v3-portal-label">{page.accessLabel}</span>
+            <h1>{page.title}</h1>
+            <p>{page.loginSubtitle}</p>
+          </div>
+        )}
+        <div className="v3-company-login-actions">
+          {authed && !authError ? (
+            <>
+              <a className="v3-cta-gold" href="/empresa" data-testid="v3-company-authed-cta">{page.authedCta}</a>
+              <button type="button" className="v3-co-text-button" onClick={doLogout} data-testid="v3-company-logout">
+                <span>{page.logoutCta}</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" className="v3-cta-gold" onClick={startLogin} disabled={busy} data-testid="v3-company-login">
+                {busy ? page.loginBusy : page.loginCta}
+              </button>
+              <a className="v3-co-text-button" href="/empresa" data-testid="v3-company-demo">
+                <span>{page.demoCta}</span>
+              </a>
+            </>
+          )}
         </div>
-        <a className="v3-cta-gold" href="/empresa">{page.cta}</a>
         <a className="v3-back v3-back--bare" href="/portal">{page.backLabel}</a>
       </main>
     </div>

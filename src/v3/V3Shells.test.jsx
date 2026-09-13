@@ -344,11 +344,12 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
     expect(screen.getByRole('link', { name: V3_COPY.es.common_backHome })).toHaveAttribute('href', '/');
   });
 
-  it('/empresa/acceso: coming soon + CTA demo (referencia login-company) + back portals', () => {
+  it('/empresa/acceso (A.2): login real + demo + back portals', () => {
     renderV3Route('/empresa/acceso');
-    expect(screen.getByText(V3_COPY.es.pages.companyAccess.comingSoon)).toBeInTheDocument();
-    expect(screen.getByText(V3_COPY.es.pages.companyAccess.preview)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: V3_COPY.es.pages.companyAccess.cta })).toHaveAttribute('href', '/empresa');
+    expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.pages.companyAccess.title })).toBeInTheDocument();
+    expect(screen.getByText(V3_COPY.es.pages.companyAccess.loginSubtitle)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: V3_COPY.es.pages.companyAccess.loginCta })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: V3_COPY.es.pages.companyAccess.demoCta })).toHaveAttribute('href', '/empresa');
     expect(screen.getByRole('link', { name: V3_COPY.es.pages.companyAccess.backLabel })).toHaveAttribute('href', '/portal');
   });
 

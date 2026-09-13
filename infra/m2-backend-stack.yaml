@@ -21,6 +21,14 @@ Parameters:
     Type: Number
     Default: 30
     Description: Días de retención antes del TTL (EventBridge Scheduler refuerza).
+  CognitoPoolId:
+    Type: String
+    Default: 'us-east-1_FX1VyzTTA'
+    Description: 'A.2 (KRU-113): user pool del login empresa (issuer del JWT authorizer).'
+  CognitoClientId:
+    Type: String
+    Default: '7vpliahah8jbc5fh0d59qbjgej'
+    Description: 'A.2: client SPA (audience del JWT). Solo con groups recruiters/admins pasa el authorizer.'
 
 Globals:
   Function:
@@ -164,36 +172,39 @@ Resources:
             ApiId: !Ref SessionsApi
             Path: /sessions
             Method: POST
-        SessionsList:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref SessionsApi
-            Path: /sessions
-            Method: GET
-        SessionItem:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref SessionsApi
-            Path: /sessions/{id}
-            Method: ANY
-        Invitations:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref SessionsApi
-            Path: /invitations
-            Method: POST
         InvitationItem:
           Type: HttpApi
           Properties:
             ApiId: !Ref SessionsApi
             Path: /invitations/{token}
             Method: GET
-        InvitationRevoke:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref SessionsApi
-            Path: /invitations/{token}/revoke
-            Method: POST
+            # PÚBLICO por diseño: el candidato valida su token single-use sin login.
+        # A.2 (KRU-113): las rutas HR (GET /sessions, ANY /sessions/{id},
+        # POST /invitations, POST /invitations/{token}/revoke) viven como
+        # AWS::ApiGatewayV2::Route nativos con authorizer JWT Cognito — los
+        # eventos HttpApi de SAM no soportan Authorizer (solo Auth/IAM).
+
+  # --- A.2 (KRU-113): Cognito JWT authorizer (validación de borde) ---
+  # El authorizer valida en el borde: firma (JWKS), issuer, audience y exp.
+  # HALLAZGO 2026-09-13: el modelo API actual de APIGW ya NO soporta
+  # JwtConfiguration.Claims (ver botocore 1.43.x: solo Audience[lista]+Issuer)
+  # → la restricción de grupo (cognito:groups ∈ recruiters/admins) se enforcea
+  # en la Lambda (backend/src/index.mjs: isProtectedRoute + isRecruiter), que
+  # lee los claims YA VALIDADOS en requestContext.authorizer.claims.
+  # Público por diseño: POST /sessions y GET /invitations/{token} (candidato).
+  RecruiterAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      Name: krumm-recruiters-jwt
+      AuthorizerType: JWT
+      IdentitySource:
+        - $request.header.Authorization
+      JwtConfiguration:
+        # Audience es LISTA en el modelo actual (mín. 1 entry; el JWT aud debe
+        # matchear al menos una).
+        Audience:
+          - !Ref CognitoClientId
+        Issuer: !Sub 'https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoPoolId}'
 
   # --- API Gateway HTTP ---
   SessionsApi:
@@ -204,6 +215,58 @@ Resources:
         AllowMethods: [GET, POST, DELETE, OPTIONS]
         AllowOrigins: ['*']
         AllowHeaders: ['content-type', 'authorization', 'x-invitation-id']
+
+  # --- A.2 (KRU-113): rutas HR nativas con JWT authorizer Cognito ---
+  # Target 'lambda:path/2015-03-31/functions/.../invocations' → integración
+  # proxy (payload 1.0), misma semántica que los eventos SAM de la función.
+  # NOTA deploy: al cambiar rutas hay que re-deploy manual del stage 'prod'
+  # (ver note KRU-97 abajo).
+  SessionsListRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SessionsApi
+      RouteKey: GET /sessions
+      Target: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SessionsFunction.Arn}/invocations'
+      Authorizer:
+        Type: JWT
+        Name: krumm-recruiters-jwt
+  SessionItemRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SessionsApi
+      RouteKey: ANY /sessions/{id}
+      Target: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SessionsFunction.Arn}/invocations'
+      Authorizer:
+        Type: JWT
+        Name: krumm-recruiters-jwt
+  InvitationsRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SessionsApi
+      RouteKey: POST /invitations
+      Target: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SessionsFunction.Arn}/invocations'
+      Authorizer:
+        Type: JWT
+        Name: krumm-recruiters-jwt
+  InvitationRevokeRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref SessionsApi
+      RouteKey: POST /invitations/{token}/revoke
+      Target: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SessionsFunction.Arn}/invocations'
+      Authorizer:
+        Type: JWT
+        Name: krumm-recruiters-jwt
+  # Invocación Lambda para las rutas nativas (las de eventos SAM ya traen su
+  # permiso propio; este cubre todas las rutas con ExecutionArn/*).
+  SessionsFunctionApiInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref SessionsFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      # HTTP API: SourceArn exige stage/method/resource (3 niveles de wildcard).
+      SourceArn: !Sub '${SessionsApi.ExecutionArn}/*/*/*'
 
   # --- KRU-97 (opción b): stage 'prod' sobre la MISMA API/Lambda/tablas ---
   # /prod y /staging comparten dataset (decisión de datos 2026-09-11: un solo
