@@ -3,6 +3,8 @@ dist/
 .DS_Store
 *.log
 .vite/
+# SAM build artifacts (sam build --build-dir infra/.aws-sam/build)
+infra/.aws-sam/
 # AWS installer binaries
 awscliv2.zip
 session-manager-plugin.deb
