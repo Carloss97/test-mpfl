@@ -1,11 +1,13 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles/krumm-tokens.css';
-import App from './App.jsx';
-import PostulationDemoApp from './postulation-demo/PostulationDemoApp.jsx';
+// G.1 (FASE PRE-BETA, hallazgo plan 2026-09-12): code-splitting por app raíz.
+// El chunk principal medía 1,177 kB (330 kB gzip) porque main.jsx importaba
+// ESTÁTICAMENTE las 6 apps (legacy /tecnico, postulación, 2 labs dev y v3):
+// todo viajaba en la entrada aunque la ruta usara una sola.
+// LandingPage queda EAGER (público, primer paint es lo crítico); el resto se
+// resuelve SOLO cuando la ruta lo pide (React.lazy + Suspense).
 import LandingPage from './landing/LandingPage.jsx';
-import BombDevStage from './dev/BombDevStage.jsx';
-import ControlRoomDevStage from './dev/ControlRoomDevStage.jsx';
 import {
   isPostulationDemoPath,
   isLegacyPostulationPath,
@@ -14,8 +16,35 @@ import {
   resolveV5Cutover,
 } from './postulation-demo/postulationDemoRoute.js';
 import { LanguageProvider } from './i18n/LanguageContext.jsx';
-import V3RootApp from './v3/V3RootApp.jsx';
 import { resolveV3Route } from './v3/v3Routes.js';
+
+const App = React.lazy(() => import('./App.jsx'));
+const PostulationDemoApp = React.lazy(() => import('./postulation-demo/PostulationDemoApp.jsx'));
+const BombDevStage = React.lazy(() => import('./dev/BombDevStage.jsx'));
+const ControlRoomDevStage = React.lazy(() => import('./dev/ControlRoomDevStage.jsx'));
+const V3RootApp = React.lazy(() => import('./v3/V3RootApp.jsx'));
+
+// Fallback mínimo (pinta mientras carga el chunk de la ruta): tokens de marca,
+// sin CSS extra, bilingüe neutro.
+function RootLoadingFallback() {
+  return (
+    <div
+      role="status"
+      aria-label="Cargando"
+      style={{
+        minHeight: '100vh',
+        display: 'grid',
+        placeItems: 'center',
+        background: 'var(--k-bg, #f7f2ea)',
+        color: 'var(--k-ink, #2c241b)',
+        fontFamily: 'var(--k-font-sans, sans-serif)',
+        fontSize: '0.875rem',
+      }}
+    >
+      <span aria-hidden="true" style={{ opacity: 0.6 }}>Cargando…</span>
+    </div>
+  );
+}
 
 // Redirige rutas legacy /postulaciones-demo* a producción conservando query/hash.
 const currentPath = window.location.pathname;
@@ -71,7 +100,9 @@ const RootApp = isPostulationDemoPath(effectivePath)
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <LanguageProvider>
-      {v5Cutover ? null : <RootApp />}
+      <React.Suspense fallback={<RootLoadingFallback />}>
+        {v5Cutover ? null : <RootApp />}
+      </React.Suspense>
     </LanguageProvider>
   </React.StrictMode>,
 );
