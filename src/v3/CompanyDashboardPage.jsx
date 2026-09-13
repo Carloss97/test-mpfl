@@ -9,8 +9,10 @@
 // tests. `data` sin source válido (tests aislados) → modo demo.
 import React from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
+import { KRUMM_API_BASE } from '../postulation-demo/postulationDemoConfig.js';
 import { useV3Copy } from './v3Copy.js';
 import { buildCompanyKpis, localizeProcessRole } from './companyData.js';
+import CompanyInvitePanel from './CompanyInvitePanel.jsx';
 
 function IconFolder() {
   return (
@@ -112,6 +114,9 @@ export default function CompanyDashboardPage({ data } = {}) {
           icon={<IconCheck />}
         />
       </section>
+
+      {/* A.1 (KRU-112): invitaciones reales solo en modo auth (no demo). */}
+      {source === 'real' ? <CompanyInvitePanel apiBase={KRUMM_API_BASE} /> : null}
 
       <section className="v3-co-panel" aria-labelledby="v2-dash-active-heading">
         <div className="v3-co-section-heading">

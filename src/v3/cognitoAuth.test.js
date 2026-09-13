@@ -21,6 +21,7 @@ import {
   pkceChallenge,
   refreshAccessToken,
   refreshStoredAuth,
+  resolveValidToken,
   savePendingAuth,
   storeAuth,
 } from './cognitoAuth.js';
@@ -167,6 +168,17 @@ describe('cognitoAuth (A.2 — login Cognito empresas)', () => {
       expect(await refreshStoredAuth({ ...auth, refreshToken: null }, { fetchImpl })).toBeNull();
       const badFetch = async () => ({ ok: false, status: 400, json: async () => ({ error: 'expired_token' }) });
       expect(await refreshStoredAuth(auth, { fetchImpl: badFetch })).toBeNull();
+    });
+
+    it('resolveValidToken: fresco→token; expirado+rt→refresca; expirado sin rt→null; sin sesión→null', async () => {
+      expect(await resolveValidToken({})).toBeNull();
+      storeAuth(tokens());
+      expect(await resolveValidToken({})).toBe('at-1');
+      sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ accessToken: 'at-old', refreshToken: 'rt-1', exp: Date.now() - 1000, obtainedAt: 0 }));
+      const fetchImpl = async () => ({ ok: true, status: 200, json: async () => tokens({ access_token: 'at-new' }) });
+      expect(await resolveValidToken({ fetchImpl })).toBe('at-new');
+      sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ accessToken: 'at-old', refreshToken: null, exp: Date.now() - 1000, obtainedAt: 0 }));
+      expect(await resolveValidToken({ fetchImpl })).toBeNull();
     });
   });
 

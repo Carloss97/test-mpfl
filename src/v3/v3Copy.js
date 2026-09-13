@@ -284,6 +284,21 @@ const EN = Object.freeze({
   portal_candidateDescription: 'Access your assessments and KRUMM experiences.',
   portal_candidateCta: 'Explore candidate portal →',
       dev_directAccess: 'Direct game access',
+      // ── A.1 (KRU-112): panel de invitaciones (solo modo real) ──────────────
+      invite: Object.freeze({
+        title: 'Invite a candidate',
+        subtitle: 'Create a single-use invitation and email them the assessment link.',
+        emailLabel: 'Candidate email',
+        emailPlaceholder: 'name@example.com',
+        send: 'Send invitation',
+        sending: 'Sending…',
+        success: 'Invitation created: the candidate will receive the assessment link by email.',
+        successEmailFailed: 'Invitation created, but the email could not be sent. Share the link manually.',
+        manualLink: 'Assessment link:',
+        note: 'The link is single-use and expires in 72 hours.',
+        error: 'Could not create the invitation. Please try again.',
+        again: 'Invite another →',
+      }),
       // ── placeholders por ruta (plan maestro §2: contenido real en V1–V4) ─────
   pages: Object.freeze({
     candidateHome: Object.freeze({
@@ -621,6 +636,21 @@ const ES = Object.freeze({
   portal_candidateDescription: 'Accede a tus evaluaciones y experiencias KRUMM.',
   portal_candidateCta: 'Explorar portal candidato →',
       dev_directAccess: 'Acceso directo a juegos',
+      // ── A.1 (KRU-112): panel de invitaciones (solo modo real) ──────────────
+      invite: Object.freeze({
+        title: 'Invitar a un candidato',
+        subtitle: 'Crea una invitación de uso único y recíbele por email el link de evaluación.',
+        emailLabel: 'Email del candidato',
+        emailPlaceholder: 'nombre@correo.com',
+        send: 'Enviar invitación',
+        sending: 'Enviando…',
+        success: 'Invitación creada: el candidato recibirá el link de evaluación por email.',
+        successEmailFailed: 'Invitación creada, pero no se pudo enviar el email. Comparte el link manualmente.',
+        manualLink: 'Link de evaluación:',
+        note: 'El link es de uso único y expira en 72 horas.',
+        error: 'No se pudo crear la invitación. Intenta nuevamente.',
+        again: 'Invitar a otro →',
+      }),
       // ── placeholders por ruta ────────────────────────────────────────────────
   pages: Object.freeze({
     candidateHome: Object.freeze({

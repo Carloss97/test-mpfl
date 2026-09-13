@@ -265,3 +265,14 @@ export async function refreshStoredAuth(auth, { fetchImpl } = {}) {
     return null;
   }
 }
+
+// A.1-UI (KRU-112): resuelve un token válido para llamadas fetch (fresco o
+// refresh único). null = sin sesión recuperable (el caller redirige al login).
+export async function resolveValidToken({ fetchImpl } = {}) {
+  const authed = getStoredAuth();
+  if (!authed) return null;
+  if (isTokenFresh(authed)) return authed.accessToken;
+  if (!authed.refreshToken) return null;
+  const refreshed = await refreshStoredAuth(authed, { fetchImpl });
+  return refreshed?.accessToken ?? null;
+}
