@@ -100,8 +100,8 @@ Resources:
     Type: AWS::CloudFront::ResponseHeadersPolicy
     Properties:
       ResponseHeadersPolicyConfig:
-        Name: krumm-staging-rhp-m6
-        Comment: KRUMM staging - security headers v6 (CSP + Cognito + PostHog connect-src)
+        Name: krumm-staging-rhp-m7
+        Comment: KRUMM stage+prod - security headers v7 (m6 + Sentry ingest, G.2)
         SecurityHeadersConfig:
           # CSP: same-origin + modelos MediaPipe (storage.googleapis.com) +
           # API backend KRUMM (B1, 2026-09-06): rwm08ik23m.execute-api.us-east-1
@@ -126,8 +126,15 @@ Resources:
           # ahí. CREADA VÍA API y referenciada por las DOS distribuciones:
           # E2OPPVGDO8R75S (stage.krumm.cl) y EDQ39PDNI931R (krumm.cl/www).
           # m5 (8263ab37-…), m4 (f2c09a22-…) y m3 (aaac7f10-…) eliminadas.
+          # m7 (2026-09-13, G.2 KRU-137): + https://o4512081787486208.ingest.us.sentry.io
+          # en connect-src (ingestión de errores Sentry: envelopes + client
+          # reports). CREADA VÍA API (c6118757-2b24-4468-abf1-8b4f3ca051e0) y
+          # referenciada por las DOS distribuciones; m6 (33553c61-…) eliminada.
+          # Google Fonts (style-src/font-src) se CONSERVA: prod (tag v*) aún
+          # carga fonts.googleapis/gstatic — retirlas en la próxima m* tras
+          # re-deploy prod (fuentes ya self-hosted en stage, G.1).
           # m1 (24c8a9d6-…, época B1) = orphan, sin referenciar, no tocada.
-          # ATTENCIÓN CFN: el próximo update del stack m1 intentará crear m6
+          # ATTENCIÓN CFN: el próximo update del stack m1 intentará crear m7
           # (AlreadyExists si sigue en live) — antes de ese deploy, reconciliar
           # (procedimiento (a)/(b) en docs/plans/2026-09-07-handoff-h46b-audit-
           # marca-v2.md §CFN). Los deploys de frontend no tocan la
@@ -138,7 +145,7 @@ Resources:
           # + app.eu.posthog.com + eu-assets.i.posthog.com (y VITE_POSTHOG_HOST)
           # en la próxima versión.
           ContentSecurityPolicy:
-            ContentSecurityPolicy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://storage.googleapis.com https://rwm08ik23m.execute-api.us-east-1.amazonaws.com https://krumm-staging-recruiters.auth.us-east-1.amazoncognito.com https://us.i.posthog.com https://us.posthog.com https://us-assets.i.posthog.com; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+            ContentSecurityPolicy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://storage.googleapis.com https://rwm08ik23m.execute-api.us-east-1.amazonaws.com https://krumm-staging-recruiters.auth.us-east-1.amazoncognito.com https://us.i.posthog.com https://us.posthog.com https://us-assets.i.posthog.com https://o4512081787486208.ingest.us.sentry.io; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
             Override: true
           # X-Frame-Options: DENY (anti clickjacking)
           FrameOptions:

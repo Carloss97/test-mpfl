@@ -717,9 +717,15 @@ FASE A (Plataforma)
 - Scores oficiales (GH, Chrome 151): baseline 59/71/59 → post-quick-wins (db0fb41) / 99 · /portal 98 · /candidato 86 (LCP 3.7 s = swap de fuente Archivo-600) → **36101cc (preload 600): GATE VERDE** — perf 98 / 98 / 98, a11y 100, BP 100, SEO 92 en las 3 rutas (run 34789048615, PASS 1m8s)
 - G.1 CERRADO. G.1b no requerido (todas las rutas ≥90)
 
-### G.2 Error tracking (Sentry)
-- Sentry cloud free (o self-hosted GlitchTip en la Pi — decisión operativa): `VITE_SENTRY_DSN` opcional; `ErrorBoundary` + `window.onerror` + `unhandledrejection`
-- Regla: SIN breadcrumbs que contengan payloads de sesión (solo rutas/códigos de error); sanitización estricta documentada en `docs/security/error-tracking.md`
+### G.2 Error tracking (Sentry) ✅ (2026-09-13/14, KRU-137; commit 199f754)
+- **Decisión operativa (usuario): Sentry cloud free** (plan Developer: 5,000 errores/mes, 1 user, retención 30 días) — proyecto "krumm" (org o4512081787486208, US)
+- Frontend: `@sentry/react` (`src/observability/sentry.js` + `SentryFallback`) — DSN opcional `VITE_SENTRY_DSN` (GH secret `SENTRY_DSN`; inyectado solo en builds de CD; local/demo = no-op), `ErrorBoundary` de marca, auto onerror/unhandledrejection/console
+- Backend: `@sentry/node` en Lambda — `captureException` SOLO en 500 (catch del handler) con tags `code`+`route`, sin payloads; env `SENTRY_DSN` vía parámetro CFN `SENTRYDSN` (NoEcho)
+- Privacidad (`docs/security/error-tracking.md`): sendDefaultPii false, sin replay/traces (`tracesSampleRate: 0`), breadcrumbs sanitizados (categorías `krumm-session/telemetry/bio/answer` prohibidas, strings ≤500, sin objetos), `beforeSend` filtra tags sesión/PII/bio
+- **CSP m7** (`c6118757-2b24-4468-abf1-8b4f3ca051e0`): + `o4512081787486208.ingest.us.sentry.io` en connect-src — stage+prod Deployed, m6 (33553c61) eliminada, yaml m1 sincronizado. Google Fonts se conserva en la CSP (prod aún la carga hasta el próximo tag v*)
+- **E2E PASS** (`scripts/smoke-g2-sentry-2026-09-13.mjs`): error inyectado en stage → envelope `/api/…/envelope/` → 200/207, 0 bloqueos CSP
+- Tests: 11 nuevos (8 frontend + 3 backend); entry 250 kB (gzip 78.5) < 500 kB
+- **Acción usuario (una vez):** Sentry UI → Settings → Data Management → IP Addresses: "Do Not Store"
 
 ### G.3 Seguridad avanzada
 - Rate limiting API Gateway: usage plan 10 req/min/IP en `/invitations` y `/sessions` (SAM)
