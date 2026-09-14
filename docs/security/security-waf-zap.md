@@ -85,15 +85,20 @@ no serializa los cambios):
 - CLI instalado local sin sudo: `~/bin/aws` (2.36.44) — el de `/usr/local` (2.36.38)
   es anterior a la migración.
 
-**Verificación (en curso):** sondas XSS/SQLi/sqlmap-UA devolvieron 200 y las
-métricas CloudWatch aún no aparecen (`CloudWatchMetricsEnabled` se activó a las
-03:02 UTC; la latencia de métricas WAF es de hasta 15 min). Verificar:
-- CloudWatch: namespace `AWS/WAF`, dimensión `WebACL=krumm-cf-waf, Scope=CLOUDFRONT`
-  (`EvaluatedRequests`/`BlockedRequests`/`CountedRequests` por regla).
-- Consola AWS → CloudFront → distribución → pestaña **WAF** (inspector de
-  requests, sin necesidad de métricas).
-Si tras 15 min sigue sin evaluación: recrear la Web ACL desde la consola (la API
-CLI 2026 puede estar en migración) — el resto del G.3 no depende de ello.
+**Verificación (final, 03:25 UTC):** el edge **aún no está evaluando** el ACL:
+~35 min con `CloudWatchMetricsEnabled` activo → **0 definiciones de métricas WAF**
+(namespace `AWS/WAF` íntegramente vacío; verificado que no migró a `AWS/CloudFront`)
+y 8 probes known-bad (XSS/SQLi/path-traversal/sqlmap-UA) → todos 200. Patrón
+coherente con el rechazo de WebACL→API GW: **migración service-side de WAF 2026**
+(el ACL es válido y visible vía API WAF; la aplicación en el edge no rinde efecto).
+**Vía consola (usuario, ~3 min):** AWS Console → CloudFront → distribución
+`E2OPPVGDO8R75S` (stage) → pestaña **Web ACL** → inspector "Recent WAF requests":
+si el ACL no aparece activo / sin requests, crear el ACL directamente en la
+consola (managed rulesets `AWSManagedRulesCommonRuleSet` +
+`AWSManagedRulesKnownBadInputsRuleSet`, default action block) y asociarlo desde
+ella (usa la vía de servicio vigente); en ese caso `krumm-cf-waf` (creado por CLI)
+queda para eliminar o reutilizar. La protección central no depende de esto:
+rate limit API (verificado E2E) + CSP estricta + ZAP limpio.
 
 **Costo:** ~$1-2/mes (web ACL + evaluación sobre tráfico mínimo; dentro del budget
 de $25/mes).

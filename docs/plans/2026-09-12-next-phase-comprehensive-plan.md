@@ -731,7 +731,7 @@ FASE A (Plataforma)
 ### G.3 Seguridad avanzada — [x] CERRADA 2026-09-14 (KRU-138)
 - Rate limiting 10 req/min/IP en `/invitations` y `/sessions` — ✅ E2E verificado (10×200 + 2×429, `retry-after`).
   **Desviación del plan**: proponía usage plan/rate-based rule WAF en API GW; la API WAF 2026 rechaza la asociación WebACL→API Gateway en 6 formatos de ARN → rate limit en la **Lambda** + tabla DDB `krumm-staging-rate-limit` (TTL 3 min, shared staging+prod).
-- AWS WAF básico (Common + KnownBadInputs) en distributions CloudFront — ⚠️ desplegado: `krumm-cf-waf` (reglas 2026: `*RuleSet`, `OverrideAction: None`) asociado a stage+prod **vía ARN**; verificación de evaluación/bloqueo pendiente (métricas ~15 min).
+- **AWS WAF básico (Common + KnownBadInputs) en distributions CloudFront** — ⚠️ desplegado: `krumm-cf-waf` (reglas 2026: `*RuleSet`, `OverrideAction: None`) asociado a stage+prod **vía ARN** — 03:25 UTC: el edge aún no lo evalúa (0 métricas WAF en ~35 min + probes 200; coherente con la migración service-side WAF 2026 que también rompió WAF↔API GW) → verificación/creación por consola pendiente del usuario.
 - OWASP ZAP baseline contra stage — ✅ **0 critical/high** (ZAP 2.17, 3 quickscans; 1 Medium CSP `style-src 'unsafe-inline'` aceptado, 1 Low header `Server` AWS aceptado) → reportes en `docs/security/g3-zap-baseline-2026-09-14/`.
 - `.gitleaks.toml` → PR-blocking — ✅ `--redact` activo por defecto (gitleaks-action v3; verificado, sin cambios).
 - **E8**: `docs/security/security-waf-zap.md` (evidencia + lecciones API WAF/CFN/ZAP 2026); entrada en `SECURITY.md` §Parches; costo WAF CF (+$1-2/mes) en `finops.md`.
