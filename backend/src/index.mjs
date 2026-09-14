@@ -12,10 +12,16 @@ import {
   GetCommand,
   ScanCommand,
   DeleteCommand,
+  UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { routeSessions } from './handlers/sessions.mjs';
 import { routeInvitations } from './handlers/invitations.mjs';
 import { sendInvitationEmail } from './email/invitationEmail.mjs';
+import {
+  checkRateLimit,
+  clientIpFromEvent,
+  rateBucketForRoute,
+} from './rateLimit.mjs';
 
 const client = new DynamoDBClient({});
 // Cliente SESv2 (A.1): el constructor no hace red; el envío real ocurre en send().
@@ -32,6 +38,8 @@ const productionDocClient = Object.freeze({
   get: (input) => docClient.send(new GetCommand(input)),
   scan: (input) => docClient.send(new ScanCommand(input)),
   delete: (input) => docClient.send(new DeleteCommand(input)),
+  // G.3: incremento condicional del rate limit (tabla rate-limit).
+  update: (input) => docClient.send(new UpdateCommand(input)),
 });
 
 // G.2 (KRU): Sentry backend — solo si hay DSN (parámetro CFN SENTRYDSN NoEcho).
@@ -139,6 +147,26 @@ export async function handler(event, context = {}) {
     posthog: context.posthog ?? {},
   };
   try {
+    // G.3 (KRU-138): rate limit 10 req/min/IP en invitations+sessions.
+    // ANTES del gate de auth: se cuentan todas las peticiones que llegan a la
+    // Lambda (brute force incluido). Sin tabla configurada = no-op.
+    const rl = await checkRateLimit({
+      docClient: deps.docClient,
+      table: context.rateLimitTable ?? process.env.RATE_LIMIT_TABLE ?? null,
+      ip: clientIpFromEvent(event),
+      bucket: rateBucketForRoute(event?.routeKey ?? event?.resource ?? ''),
+    });
+    if (!rl.allowed) {
+      return {
+        statusCode: 429,
+        headers: {
+          'content-type': 'application/json',
+          'retry-after': String(rl.retryAfter),
+          'access-control-allow-origin': process.env.CORS_ORIGIN ?? '*',
+        },
+        body: JSON.stringify({ error: 'rate_limited', code: 'too_many_requests' }),
+      };
+    }
     // A.2: gate de grupo (recruiters/admins) sobre las rutas HR.
     // En API GW el JWT authorizer ya rechazó token inválido (401/403); aquí
     // se verifica el claim de grupo que el authorizer no puede comprobar.

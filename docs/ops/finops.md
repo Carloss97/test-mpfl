@@ -24,6 +24,11 @@
 - ⚠️ **Alarmas 80/100 %** del presupuesto $25: el SDK de la Pi (botocore clásico)
   no expone las notificaciones de la API nueva de budgets → verificar en
   consola Billing → Budgets → `krumm-staging-monthly-billing`.
+- **2026-09-14 (G.3)**: WAF CloudFront `krumm-cf-waf` (CommonRuleSet +
+  KnownBadInputsRuleSet en stage+prod) → +$1-2/mes (web ACL + evaluación sobre
+  tráfico mínimo). Rate limiting API: ≈$0 (DDB on-demand, volumen mínimo).
+  El forecast del stack pasa de ~$0.27 a ~$1.5-2.5/mes — sigue muy dentro del
+  budget de $25. Verificar costo real en el cierre de septiembre.
 
 ### Uso medido (CloudWatch, 1→13 sep)
 

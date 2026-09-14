@@ -71,6 +71,9 @@ Globals:
         POSTHOG_API_HOST: 'https://us.posthog.com'
         # G.2 (KRU): error tracking Sentry (vacio = no-op seguro).
         SENTRY_DSN: !Ref SENTRYDSN
+        # G.3 (KRU-138): tabla de rate limit per-IP (10 req/min en
+        # invitations+sessions). Vacio/imposible: si faltara, no-op seguro.
+        RATE_LIMIT_TABLE: !Ref RateLimitTable
 
 Resources:
   # --- DynamoDB: sessions (aggregate-only, TTL 30d) ---
@@ -170,11 +173,13 @@ Resources:
                   - dynamodb:DeleteItem
                   - dynamodb:Query
                   - dynamodb:Scan
+                  - dynamodb:UpdateItem  # G.3: incremento condicional rate limit
                 Resource:
                   - !Sub '${SessionsTable.Arn}'
                   - !Sub '${AuditLogTable.Arn}'
                   - !Sub '${AuditLogTable.Arn}/index/sessionId-index'
                   - !Sub '${InvitationsTable.Arn}'
+                  - !Sub '${RateLimitTable.Arn}'  # G.3: rate limit per-IP
               # A.1: envío de email de invitación (scoped al identity del dominio,
               # nunca ses:* global).
               - Effect: Allow
@@ -332,6 +337,30 @@ Resources:
       ApiId: !Ref SessionsApi
       DeploymentId: !Ref ProdApiDeployment
 
+  # --- G.3 (KRU-138): rate limit 10 req/min/IP (DynamoDB, en la Lambda) ---
+  # Nota: el plan original era AWS WAF con rate-based rule sobre API GW; en la
+  # API WAF 2026 la asociación WebACL→API Gateway se rechaza ("ARN isn't
+  # valid"; 6 formatos probados: sin stage, /staging, /staging/*, /$default,
+  # estilo v1). El rate limit vive en la Lambda (backend/src/rateLimit.mjs):
+  # token por minuto vía writes condicionales (Put condicional + Update
+  # condicional), tabla con TTL 3 min. Costo ≈$0 (on-demand, volumen mínimo).
+  RateLimitTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    # Nota: el TTL no va por CFN (AWS::DynamoDB::Table no tiene TTLSpecification);
+    # se activa post-deploy: aws dynamodb update-time-to-live
+    #   --table-name krumm-staging-rate-limit
+    #   --time-to-live-specification AttributeName=expireAt,Enabled=true
+    Properties:
+      TableName: !Sub 'krumm-${Environment}-rate-limit'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: key
+          KeyType: HASH
+
 Outputs:
   SessionsApiEndpoint:
     Description: Endpoint base de la API /sessions
@@ -340,3 +369,5 @@ Outputs:
     Value: !Ref SessionsTable
   AuditLogTableName:
     Value: !Ref AuditLogTable
+  RateLimitTableName:
+    Value: !Ref RateLimitTable
