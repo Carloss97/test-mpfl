@@ -11,11 +11,13 @@
     <!-- G.1 (KRU): fuentes de marca self-hosted (Archivo display + Manrope body):
          src/styles/fonts.css + public/fonts/*.woff2 — reemplaza el CSS externo
          de Google Fonts (render-blocking ~800 ms en Lighthouse, 3er-party). -->
-    <!-- G.1 (LCP): preloads de los pesos de los hero h1 (Archivo 900 landing,
-         Archivo 600 v3) — el swap de fuente era el LCP text (3.7s en
-         /candidato sin el preload de 600). -->
+    <!-- G.1 (LCP): preloads de los pesos que definen el LCP del hero —
+         Archivo 900 (H1), Archivo 600 (heroes v3), Manrope 400 (párrafo
+         hero-copy, el LCP text en runners de red lenta: sin preload el
+         swap de fuente demoraba el LCP a 3.2-4.3 s). -->
     <link rel="preload" href="/fonts/Archivo-900-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/Archivo-600-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/Manrope-400-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>KRUMM · Evaluación Gamificada</title>
   </head>
