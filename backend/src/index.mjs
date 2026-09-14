@@ -4,6 +4,8 @@
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { SESv2Client } from '@aws-sdk/client-sesv2';
+// G.2 (KRU): error tracking — Sentry (init opcional: sin SENTRY_DSN no-op).
+import * as Sentry from '@sentry/node';
 import {
   DynamoDBDocumentClient,
   PutCommand,
@@ -31,6 +33,19 @@ const productionDocClient = Object.freeze({
   scan: (input) => docClient.send(new ScanCommand(input)),
   delete: (input) => docClient.send(new DeleteCommand(input)),
 });
+
+// G.2 (KRU): Sentry backend — solo si hay DSN (parámetro CFN SENTRYDSN NoEcho).
+// Sin PII (sendDefaultPii: false); captureException SOLO en el catch del
+// handler con tag `code` (nunca payloads crudos) — ver
+// docs/security/error-tracking.md.
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    sendDefaultPii: false,
+    tracesSampleRate: 0,
+    environment: process.env.ENV || 'staging',
+  });
+}
 
 // ── A.2 (KRU-113): gate de grupo recruiters/admins (enforcement en Lambda) ──
 // El JWT authorizer de API Gateway valida en el borde (firma/issuer/audience/
@@ -138,6 +153,12 @@ export async function handler(event, context = {}) {
   } catch (err) {
     // Sin PII en el mensaje de error: logueamos el código, no el stack completo.
     const code = err?.code ?? err?.name ?? 'internal_error';
+    // G.2 (KRU): el 500 va a Sentry con tag `code` + ruta (sin payload crudo).
+    if (process.env.SENTRY_DSN) {
+      Sentry.captureException(err, {
+        tags: { code, route: String(event?.resource ?? '') },
+      });
+    }
     console.error('handler_error', code); // no loguear payloads crudos
     return {
       statusCode: 500,

@@ -22,6 +22,12 @@ import { resolveV3Route } from './v3/v3Routes.js';
 // y banner de consentimiento (forma documentada en política de privacidad).
 import ConsentBanner from './analytics/ConsentBanner.jsx';
 import { startRouteObserver, trackPageView } from './analytics/analytics.js';
+// G.2 (KRU): error tracking Sentry (DSN opcional: sin él, no-op seguro).
+// Reglas de privacidad: docs/security/error-tracking.md.
+import { initSentry, ErrorBoundary } from './observability/sentry.js';
+import SentryFallback from './observability/SentryFallback.jsx';
+
+initSentry();
 
 const App = React.lazy(() => import('./App.jsx'));
 const PostulationDemoApp = React.lazy(() => import('./postulation-demo/PostulationDemoApp.jsx'));
@@ -104,12 +110,14 @@ const RootApp = isPostulationDemoPath(effectivePath)
 // en su header (landing: nav) para evitar el botón flotante sobre contenido.
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <LanguageProvider>
-      <React.Suspense fallback={<RootLoadingFallback />}>
-        {v5Cutover ? null : <RootApp />}
-      </React.Suspense>
-      <ConsentBanner />
-    </LanguageProvider>
+    <ErrorBoundary fallback={<SentryFallback />}>
+      <LanguageProvider>
+        <React.Suspense fallback={<RootLoadingFallback />}>
+          {v5Cutover ? null : <RootApp />}
+        </React.Suspense>
+        <ConsentBanner />
+      </LanguageProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 );
 

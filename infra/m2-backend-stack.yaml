@@ -38,6 +38,14 @@ Parameters:
       (invite_received). Es la misma key publica que viaja en el bundle del
       frontend (no es secreta), pero no se hardcodea en el repo (gitleaks).
       Vacio por defecto = sin eventos (no-op seguro).
+  SENTRYDSN:
+    Type: String
+    Default: ''
+    NoEcho: true
+    Description: >-
+      G.2 (KRU): Sentry DSN para error tracking server-side (captureException
+      en 500 del handler, tag `code`, sin payloads). NoEcho: no se muestra en
+      consola. Vacio por defecto = sin Sentry (no-op seguro).
 
 Globals:
   Function:
@@ -61,6 +69,8 @@ Globals:
         # app.eu.posthog.com + sam deploy con PosthogKey nueva.
         POSTHOG_API_KEY: !Ref PosthogKey
         POSTHOG_API_HOST: 'https://us.posthog.com'
+        # G.2 (KRU): error tracking Sentry (vacio = no-op seguro).
+        SENTRY_DSN: !Ref SENTRYDSN
 
 Resources:
   # --- DynamoDB: sessions (aggregate-only, TTL 30d) ---
