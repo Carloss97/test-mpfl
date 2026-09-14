@@ -736,10 +736,10 @@ FASE A (Plataforma)
 - `.gitleaks.toml` → PR-blocking — ✅ `--redact` activo por defecto (gitleaks-action v3; verificado, sin cambios).
 - **E8**: `docs/security/security-waf-zap.md` (evidencia + lecciones API WAF/CFN/ZAP 2026); entrada en `SECURITY.md` §Parches; costo WAF CF (+$1-2/mes) en `finops.md`.
 
-### G.4 Backup + DR
-- DynamoDB PITR en todas las tablas (sessions, invitations, audit_log) — SAM update
-- Runbook `scripts/dr-restore.sh` + ejercicio simulado con fecha documentada (<1 h RTO)
-- S3 versioning ya activo (M1); documentar
+### G.4 Backup + DR — [x] CERRADA 2026-09-14 (KRU-139)
+- DynamoDB PITR en todas las tablas — ✅ verificado live: sessions/audit-log/invitations = **ENABLED 35 días** (restorable desde 2026-09-06; ya estaba declarado en m2 yaml y activo desde la creación — el "gap" aparente era migración de API 2026: el status pasó de `describe-table` a `dynamodb describe-continuous-backups`, y habilitar a `update-continuous-backups`). `rate-limit` excluida (contadores efímeros TTL 3 min — documentado).
+- Runbook + ejercicio — ✅ `scripts/dr-restore.sh` + `docs/ops/dr-backup.md` (estrategia, RPO ≈5 min / RTO <1 h, procedimiento de incidente, log de ejercicios). **Ejercicio simulado 2026-09-14 03:36:47 UTC: PASS** (sessions → tabla temporal: 11/11 items, **RTO medido 223 s**, temporal eliminada).
+- S3 versioning — ✅ verificado **Enabled** en los buckets frontend live (`krumm-stage-frontend-…`, `krumm-staging-frontend-…`); bucket dev out of scope pre-beta.
 
 ### G.5 Multi-tenancy real
 - Backend: `companyId` obligatorio en invitations + sesiones nuevas; GSI `companyId-index` en tabla sessions; migración/alias para las 11 sesiones staging existentes (todas → `companyId: 'krumm-demo'`)
