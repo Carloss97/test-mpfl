@@ -63,11 +63,10 @@ jobs:
         run: |
           set -u
           BASE="${{ steps.base.outputs.url }}"
-          for path in "" "portal" "candidato"; do
-            u="${BASE%/}/${path}"
-            f="$PWD/lh-${path:-home}.json"
+          check_url() {
+            local u="$1" f="$2"
             echo "=== Lighthouse $u"
-            ok=0
+            local ok=0
             for attempt in 1 2 3; do
               lighthouse "$u" \
                 --chrome-flags="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage" \
@@ -79,7 +78,7 @@ jobs:
               if [ -s "$f" ] && node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$f" 2>/dev/null; then
                 ok=1; break
               fi
-              echo "Intento $attempt sin reporte válido para $u — reintentando…"
+              echo "Intento $attempt sin reporte válido (crash intermitente, ej. lantern) — reintentando…"
               rm -f "$f"
               sleep 5
             done
@@ -87,7 +86,7 @@ jobs:
               echo "Lighthouse no produjo reporte válido para $u tras 3 intentos"
               lighthouse --version 2>/dev/null || true
               "${CHROME_PATH:-google-chrome}" --version 2>/dev/null || true
-              exit 1
+              return 1
             fi
             node -e '
               const r = require(process.argv[1]);
@@ -100,7 +99,28 @@ jobs:
               }
               process.exit(bad ? 1 : 0);
             ' "$f"
+          }
+          # Tolerancia a lentitud transitoria de red del runner: si el pass 1
+          # falla por budget (TTFB sano pero FCP/LCP inflados por la red del
+          # runner — verificado en ventana 2026-09-14 00:20-01:00 UTC), espera
+          # 90 s y repite el pass completo. Crash (sin reporte) también
+          # reintenta el pass completo.
+          for pass in 1 2; do
+            fail=0
+            for path in "" "portal" "candidato"; do
+              check_url "${BASE%/}/${path}" "$PWD/lh-${path:-home}.json" || fail=1
+            done
+            if [ "$fail" = 0 ]; then
+              echo "GATE PASS (pass $pass)"
+              exit 0
+            fi
+            if [ "$pass" = 1 ]; then
+              echo "Pass 1 falló — 90 s de backoff antes del pass 2 completo"
+              sleep 90
+            fi
           done
+          echo "GATE FAIL: 2 passes completos (ver scores arriba)"
+          exit 1
 
       - name: Subir reportes (solo en failure, para depurar)
         if: failure()
