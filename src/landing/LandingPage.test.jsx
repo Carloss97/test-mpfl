@@ -59,7 +59,7 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       renderLanding();
       const photo = document.querySelector('.landing__hero-photo');
       expect(photo).not.toBeNull();
-      expect(photo).toHaveAttribute('src', '/assets/hero-photo.jpg');
+      expect(photo).toHaveAttribute('src', '/assets/hero-photo.webp');
       // El mock de reporte y las stat cards flotantes fueron retirados en la referencia v2
       // (docs/plans/2026-09-07-landing-brand-port-plan.md); el hallazgo H4.6 de oclusión
       // queda superado por este port (ver commit 9062ccf y docs/qa/h46-visual-audit/).

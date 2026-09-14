@@ -213,7 +213,7 @@ export default function LandingPage() {
           <div className="landing__hero-visual">
             <img
               className="landing__hero-photo"
-              src="/assets/hero-photo.jpg"
+              src="/assets/hero-photo.webp"
               alt={t('Equipo utilizando la tecnología KRUMM', 'Team using KRUMM technology')}
             />
           </div>
