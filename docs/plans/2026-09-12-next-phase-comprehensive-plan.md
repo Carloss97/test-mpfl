@@ -716,6 +716,7 @@ FASE A (Plataforma)
 - Quick wins implementados: a11y landing 96→100 (token `--k-ink-card-strong`, contraste cards accesos); Google Fonts → **self-hosted** (11 woff2 latin 325 kB; render-blocking ~800 ms eliminado); logo de marca 717 kB PNG → **49 kB WebP** (456 px = 3× del display 152, alpha intacto); preloads de los pesos hero (Archivo 900 landing + 600 v3)
 - Scores oficiales (GH, Chrome 151): baseline 59/71/59 → post-quick-wins (db0fb41) / 99 · /portal 98 · /candidato 86 (LCP 3.7 s = swap de fuente Archivo-600) → **36101cc (preload 600): GATE VERDE** — perf 98 / 98 / 98, a11y 100, BP 100, SEO 92 en las 3 rutas (run 34789048615, PASS 1m8s)
 - G.1 CERRADO. G.1b no requerido (todas las rutas ≥90)
+- **Estabilización posterior (2026-09-14, commits 2d2c932/40b88a9/05f91dc):** ventana de red lenta de los runners GH (00:20-01:00 UTC, 5 runs 71-82 con TTFB 50-220ms y TBT 30-380ms sanos — egress del runner, no la página). Fixes permanentes: preload Manrope-400 (el LCP text del landing era `p.hero-copy`, cuyo swap de fuente inflaba el LCP en red lenta) + hero-photo.jpg 160kB → **37kB WebP** (−77%). Gate endurecido: **2 passes completos con backoff 90s** (tolerancia a lentitud transitoria) sobre los 3 retries por URL.
 
 ### G.2 Error tracking (Sentry) ✅ (2026-09-13/14, KRU-137; commit 199f754)
 - **Decisión operativa (usuario): Sentry cloud free** (plan Developer: 5,000 errores/mes, 1 user, retención 30 días) — proyecto "krumm" (org o4512081787486208, US)
