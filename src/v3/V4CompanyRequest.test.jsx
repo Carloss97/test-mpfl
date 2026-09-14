@@ -41,6 +41,7 @@ import {
   useCompanyDraftProcesses,
 } from './companyProcessStore.js';
 import { useCompanyData } from './useCompanyData.js';
+import { storeAuth } from './cognitoAuth.js';
 
 // jsdom: mock de localStorage (mismo patrón V0–V3).
 const storage = {};
@@ -88,6 +89,7 @@ afterEach(() => {
   resetCompanyProcessStore();
   window.history.pushState({}, '', '/');
   localStorage.clear();
+  sessionStorage.clear();
   document.body.innerHTML = '';
 });
 
@@ -268,7 +270,8 @@ describe('C. useCompanyData (integración D2)', () => {
     expect(result.current.source).toBe('demo');
   });
 
-  it('real (GET /sessions): los drafts NO se mergean (D2)', async () => {
+  it('real (authed, GET /sessions): los drafts NO se mergean (D2)', async () => {
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     const fetchImpl = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({

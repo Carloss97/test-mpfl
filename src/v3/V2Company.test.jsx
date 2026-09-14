@@ -39,6 +39,7 @@ import {
   UNSPECIFIED_PROCESS_ID,
 } from './companyData.js';
 import { useCompanyData } from './useCompanyData.js';
+import { storeAuth } from './cognitoAuth.js';
 
 // jsdom: mock de localStorage (mismo patrón que V0/V1).
 const storage = {};
@@ -71,6 +72,7 @@ function cardIds() {
 afterEach(() => {
   window.history.pushState({}, '', '/');
   localStorage.clear();
+  sessionStorage.clear();
   document.body.innerHTML = '';
 });
 
@@ -386,14 +388,16 @@ describe('B. useCompanyData — fuente de datos del workspace empresa', () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it('apiBase + fetch pendiente: checking con lista vacía (sin parpadeo demo→real)', () => {
+  it('apiBase + fetch pendiente (authed): checking con lista vacía (sin parpadeo demo→real)', () => {
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     const fetchImpl = vi.fn(() => new Promise(() => {})); // nunca resuelve
     const { result } = renderHook(() => useCompanyData({ apiBase: 'https://api.test', fetchImpl }));
     expect(result.current.source).toBe('checking');
     expect(result.current.processes).toEqual([]);
   });
 
-  it('apiBase + ok: real con procesos derivados de /sessions', async () => {
+  it('apiBase + ok (authed): real con procesos derivados de /sessions', async () => {
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ candidates: FIXTURE_SESSIONS, total: 5, hasMore: false }) });
     const { result } = renderHook(() => useCompanyData({ apiBase: 'https://api.test', fetchImpl }));
     await waitFor(() => expect(result.current.source).toBe('real'));
@@ -401,7 +405,17 @@ describe('B. useCompanyData — fuente de datos del workspace empresa', () => {
     expect(result.current.processes.map((process) => process.id)).toEqual(['maintenance-tech', 'operations-analyst', UNSPECIFIED_PROCESS_ID]);
   });
 
-  it('apiBase + fallo/vacío: fallback a demo (nunca error vacío, patrón v1)', async () => {
+  it('apiBase + visitante (sin auth): demo directo sin fetch (A.2: /sessions protegido por JWT)', async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error('no debe llamarse'));
+    const { result } = renderHook(() => useCompanyData({ apiBase: 'https://api.test', fetchImpl }));
+    await waitFor(() => expect(result.current.source).toBe('demo'));
+    expect(fetchImpl).not.toHaveBeenCalled();
+    // V4 (t_9319e84d, D2): demo derivado (array, no la ref de DEMO_PROCESSES)
+    expect(result.current.processes).toEqual(DEMO_PROCESSES);
+  });
+
+  it('apiBase + authed + fallo: fallback a demo (nunca error vacío, patrón v1)', async () => {
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     const { result } = renderHook(() => useCompanyData({
       apiBase: 'https://api.test',
       fetchImpl: vi.fn().mockRejectedValue(new Error('network down')),

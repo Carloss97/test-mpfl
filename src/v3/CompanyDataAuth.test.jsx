@@ -70,13 +70,12 @@ describe('A.2 — useCompanyData: autenticación Cognito (Bearer / refresh / 401
   beforeEach(() => { sessionStorage.clear(); });
   afterEach(() => { vi.unstubAllGlobals(); });
 
-  it('visitante sin auth: GET /sessions sin Authorization; real si responde 200', async () => {
+  it('visitante sin auth: SIN fetch a /sessions (protegido por JWT desde A.2), directo a demo', async () => {
     const { fetchImpl, calls } = makeFetch([{ ok: true, status: 200, body: okBody }]);
     renderProbe(fetchImpl, navigate());
-    await waitFor(() => { expect(document.querySelector('[data-testid=probe-src]').textContent).toBe('real'); });
-    expect(calls.sessions).toHaveLength(1);
-    expect(calls.sessions[0].url).toBe('https://api.test/sessions?limit=50');
-    expect(calls.sessions[0].init.headers.Authorization).toBeUndefined();
+    await waitFor(() => { expect(document.querySelector('[data-testid=probe-src]').textContent).toBe('demo'); });
+    expect(calls.sessions).toHaveLength(0); // fix 2026-09-14: el showcase no llama la API
+    expect(calls.token).toHaveLength(0);
   });
 
   it('authed con token fresco: Authorization Bearer en el fetch', async () => {
@@ -152,11 +151,12 @@ describe('A.2 — useCompanyData: autenticación Cognito (Bearer / refresh / 401
     expect(getStoredAuth()).toBeNull();
   });
 
-  it('visitante sin auth + 401 (authorizer activo): fallback demo, sin redirect', async () => {
+  it('visitante sin auth: demo directo, sin redirect al login (nunca un redirect forzado a visitante)', async () => {
     const nav = vi.fn();
-    const { fetchImpl } = makeFetch([{ ok: false, status: 401, body: {} }]);
+    const { fetchImpl, calls } = makeFetch([{ ok: false, status: 401, body: {} }]);
     renderProbe(fetchImpl, nav);
     await waitFor(() => { expect(document.querySelector('[data-testid=probe-src]').textContent).toBe('demo'); });
-    expect(nav).not.toHaveBeenCalled();
+    expect(nav).not.toHaveBeenCalled(); // el visitante NO se redirige al login
+    expect(calls.sessions).toHaveLength(0); // (fix 2026-09-14) sin fetch a /sessions
   });
 });

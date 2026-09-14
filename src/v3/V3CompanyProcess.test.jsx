@@ -68,6 +68,7 @@ afterEach(() => {
   cleanup();
   window.history.pushState({}, '', '/');
   localStorage.clear();
+  sessionStorage.clear();
   document.body.innerHTML = '';
   resetDemoReportCache();
   vi.unstubAllGlobals();
@@ -518,6 +519,7 @@ vi.mock('../postulation-demo/postulationDemoConfig.js', async (importOriginal) =
 });
 
 import V3RootApp from './V3RootApp.jsx'; // eslint-disable-line import/first
+import { storeAuth } from './cognitoAuth.js'; // eslint-disable-line import/first
 
 function fixtureSessionV3({ id, role = null, status, completedAt, scores }) {
   return {
@@ -558,6 +560,7 @@ describe('F2. V3RootApp — detalle en modo real', () => {
       ok: true,
       json: async () => ({ candidates: FIXTURE_SESSIONS_V3, total: 5, hasMore: false }),
     }));
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     renderRouteV3('/empresa/proceso/operations-analyst');
     await waitFor(() => expect(screen.getByText(V3_COPY.es.company_liveBadge)).toBeInTheDocument());
     expect(screen.getByRole('heading', { level: 1, name: 'Operations Analyst' })).toBeInTheDocument();
@@ -595,6 +598,7 @@ describe('F2. V3RootApp — detalle en modo real', () => {
       ok: true,
       json: async () => ({ candidates: FIXTURE_SESSIONS_V3, total: 5, hasMore: false }),
     }));
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     renderRouteV3('/empresa/proceso/no-existe');
     await waitFor(() => expect(screen.getByText(V3_COPY.es.company_liveBadge)).toBeInTheDocument());
     expect(screen.getByText(V3_COPY.es.pd_notFound)).toBeInTheDocument();

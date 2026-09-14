@@ -23,6 +23,7 @@ import {
   getDemoCandidateReport,
   getDemoProcessDetail,
 } from './companyProcessDetail.js';
+import { storeAuth } from './cognitoAuth.js';
 
 // jsdom: mock de localStorage (mismo patrón que V0/V1/V2).
 const storage = {};
@@ -52,6 +53,7 @@ afterEach(() => {
   cleanup();
   window.history.pushState({}, '', '/');
   localStorage.clear();
+  sessionStorage.clear();
   document.body.innerHTML = '';
   vi.unstubAllGlobals();
   vi.clearAllMocks();
@@ -277,6 +279,7 @@ describe('J. Reporte real (GET /sessions → mismo data-model)', () => {
       ok: true,
       json: async () => ({ candidates: FIXTURE_SESSIONS_V3, total: 2, hasMore: false }),
     }));
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     const { container } = renderRouteV3('/empresa/proceso/operations-analyst/candidatos/s1');
     await waitFor(() => expect(screen.getByText(V3_COPY.es.company_liveBadge)).toBeInTheDocument());
     expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.pd_report })).toBeInTheDocument();
@@ -294,6 +297,7 @@ describe('J. Reporte real (GET /sessions → mismo data-model)', () => {
       ok: true,
       json: async () => ({ candidates: FIXTURE_SESSIONS_V3, total: 2, hasMore: false }),
     }));
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     renderRouteV3('/empresa/proceso/operations-analyst/candidatos/s1');
     await screen.findByRole('heading', { level: 1, name: V3_COPY.es.pd_report });
     await screen.findAllByText('Evidencia insuficiente');
@@ -311,6 +315,7 @@ describe('J. Reporte real (GET /sessions → mismo data-model)', () => {
       ok: true,
       json: async () => ({ candidates: FIXTURE_SESSIONS_V3, total: 2, hasMore: false }),
     }));
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     renderRouteV3('/empresa/proceso/operations-analyst/candidatos/s1');
     await screen.findByRole('heading', { level: 1, name: V3_COPY.es.pd_report });
     expect(screen.getByText('Presencia facial baja durante la captura.')).toBeInTheDocument();
@@ -329,6 +334,7 @@ describe('J. Reporte real (GET /sessions → mismo data-model)', () => {
       ok: true,
       json: async () => ({ candidates: FIXTURE_SESSIONS_V3, total: 2, hasMore: false }),
     }));
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     renderRouteV3('/empresa/proceso/operations-analyst/candidatos/s99');
     await waitFor(() => expect(screen.getByText(V3_COPY.es.company_liveBadge)).toBeInTheDocument());
     expect(screen.getByText('Informe no encontrado')).toBeInTheDocument();
@@ -348,6 +354,7 @@ describe('K. V3RootApp — integración modo real (detalle + reporte)', () => {
 
   it('/empresa/proceso/operations-analyst: detalle real sin placeholder + breadcrumb "Detalle del proceso"', async () => {
     vi.stubGlobal('fetch', okFetchStub());
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     cleanup();
     window.history.pushState({}, '', '/empresa/proceso/operations-analyst');
     render(<LanguageProvider><V3RootApp /></LanguageProvider>);
@@ -358,6 +365,7 @@ describe('K. V3RootApp — integración modo real (detalle + reporte)', () => {
 
   it('/empresa/proceso/operations-analyst/candidatos/s1: reporte real sin placeholder + breadcrumb "Informe del candidato"', async () => {
     vi.stubGlobal('fetch', okFetchStub());
+    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
     cleanup();
     window.history.pushState({}, '', '/empresa/proceso/operations-analyst/candidatos/s1');
     render(<LanguageProvider><V3RootApp /></LanguageProvider>);

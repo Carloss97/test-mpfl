@@ -9,8 +9,10 @@
 // A.2 (KRU-113): si hay sesión Cognito en sessionStorage (cognitoAuth), el
 // GET /sessions lleva `Authorization: Bearer *** Token fresco o refresh único;
 // si authada y la API responde 401 tras refresh → clearAuth + redirect al login
-// (nunca demo silencioso bajo credenciales). Sin auth: comportamiento previo
-// (showcase público → demo fallback).
+// (nunca demo silencioso bajo credenciales). Sin auth: demo directo SIN fetch
+// (fix 2026-09-14: GET /sessions es ruta protegida por JWT → el fetch de
+// visitante devolvía 401 en consola y rompía el smoke prod; showcase público
+// = demo, igual que antes de A.2).
 // useCompanyData corre en CompanyWorkspace (V3RootApp), no en cada página: un
 // fetch por mount y el shell necesita el source para el banner (plan V2 D4).
 // t_9319e84d (V4): en modo demo la lista se DERIVA de mergeDemoProcesses(drafts)
@@ -73,6 +75,13 @@ export function useCompanyData({
         // Authada pero sin token recuperable (refresh falló/expiró).
         clearAuth();
         redirectToLogin();
+        return;
+      }
+      if (!token) {
+        // Visitante (sin sesión Cognito): el showcase público NO llama a la
+        // API protegida (A.2: GET /sessions exige JWT → 401 en consola +
+        // ruido en rate limit/audit). Demo directo, sin fetch.
+        if (!cancelled) setState({ source: 'demo', processes: [], sessions: [] });
         return;
       }
       let status = null;

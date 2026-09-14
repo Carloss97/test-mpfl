@@ -23,6 +23,11 @@ import { LanguageProvider } from '../i18n/LanguageContext.jsx';
 import { V3_COPY } from './v3Copy.js';
 import V3RootApp from './V3RootApp.jsx';
 import { buildCompanyDataFromSessions } from './companyData.js';
+import { storeAuth } from './cognitoAuth.js';
+
+// A.2: en modo real GET /sessions exige JWT — los casos 'real' necesitan una
+// sesión Cognito en sessionStorage (token fresco, sin paso por token endpoint).
+const freshAuth = () => storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
 
 // jsdom: mock de localStorage (mismo patrón que V0/V1).
 const storage = {};
@@ -76,6 +81,7 @@ afterEach(() => {
   cleanup();
   window.history.pushState({}, '', '/');
   localStorage.clear();
+  sessionStorage.clear();
   document.body.innerHTML = '';
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -83,8 +89,9 @@ afterEach(() => {
 });
 
 describe('V2CompanyReal — modo real (VITE_KRUMM_API_BASE + GET /sessions)', () => {
-  it('/empresa real: banner "Sesiones reales (staging)" + aviso humanReviewOnly + KPIs derivados (3/4/75%/3)', async () => {
+  it('/empresa real (authed): banner "Sesiones reales (staging)" + aviso humanReviewOnly + KPIs derivados (3/4/75%/3)', async () => {
     vi.stubGlobal('fetch', okFetch);
+    freshAuth();
     const { container } = renderRoute('/empresa');
     // el fetch es async: esperar el badge real (sale de 'checking')
     await screen.findByText(V3_COPY.es.company_liveBadge);
@@ -104,8 +111,9 @@ describe('V2CompanyReal — modo real (VITE_KRUMM_API_BASE + GET /sessions)', ()
     expect(container.querySelector('.v3-placeholder')).toBeNull();
   });
 
-  it('/empresa/procesos real: selects department/location ocultos + 3 cards + count', async () => {
+  it('/empresa/procesos real (authed): selects department/location ocultos + 3 cards + count', async () => {
     vi.stubGlobal('fetch', okFetch);
+    freshAuth();
     renderRoute('/empresa/procesos');
     await screen.findByText(V3_COPY.es.company_liveBadge);
     expect(screen.queryByLabelText(V3_COPY.es.pd_department)).toBeNull();
@@ -118,10 +126,12 @@ describe('V2CompanyReal — modo real (VITE_KRUMM_API_BASE + GET /sessions)', ()
     expect(analyst).toHaveTextContent('75%');
   });
 
-  it('fetch falla → fallback demo: badge demo + KPIs 3/85/81%/24 (patrón v1, sin error vacío)', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('staging down')));
+  it('visitante (sin auth): demo directo, SIN fetch a la API protegida (fix 2026-09-14)', async () => {
+    const noFetch = vi.fn().mockRejectedValue(new Error('no debe llamarse'));
+    vi.stubGlobal('fetch', noFetch);
     const { container } = renderRoute('/empresa');
     await waitFor(() => expect(screen.getByText(V3_COPY.es.company_demoNotice)).toBeInTheDocument());
+    expect(noFetch).not.toHaveBeenCalled(); // el showcase público no toca /sessions
     const metrics = screen.getByRole('region', { name: V3_COPY.es.company_overview });
     expect(within(metrics).getByText('85')).toBeInTheDocument();
     expect(within(metrics).getByText('81%')).toBeInTheDocument();
@@ -129,11 +139,24 @@ describe('V2CompanyReal — modo real (VITE_KRUMM_API_BASE + GET /sessions)', ()
     expect(screen.getByText(V3_COPY.es.company_supervisor)).toBeInTheDocument();
   });
 
-  it('fetch vacío → fallback demo (mismo que fallo)', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ candidates: [], total: 0 }) }));
+  it('visitante (sin auth): fetch vacío/fallo no aplica — demo directo (mismo que antes del fetch)', async () => {
+    const noFetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ candidates: [], total: 0 }) });
+    vi.stubGlobal('fetch', noFetch);
     renderRoute('/empresa');
     await waitFor(() => expect(screen.getByText(V3_COPY.es.company_demoNotice)).toBeInTheDocument());
+    expect(noFetch).not.toHaveBeenCalled();
     expect(screen.queryByText(V3_COPY.es.company_liveBadge)).toBeNull();
+  });
+
+  it('authed + fetch falla: fallback demo (nunca error vacío, patrón v1)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('staging down')));
+    freshAuth();
+    const { container } = renderRoute('/empresa');
+    await waitFor(() => expect(screen.getByText(V3_COPY.es.company_demoNotice)).toBeInTheDocument());
+    const metrics = screen.getByRole('region', { name: V3_COPY.es.company_overview });
+    expect(within(metrics).getByText('85')).toBeInTheDocument();
+    expect(within(metrics).getByText('81%')).toBeInTheDocument();
+    expect(container.querySelectorAll('.v3-co-table tbody tr')).toHaveLength(3);
   });
 
   it('placeholder empresa (V4) con API: enabled=false → no fetch, banner demo', async () => {
@@ -145,8 +168,9 @@ describe('V2CompanyReal — modo real (VITE_KRUMM_API_BASE + GET /sessions)', ()
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('V3: /empresa/proceso/:id real ahora fetcha (detalle por rol) y no es placeholder', async () => {
+  it('V3 (authed): /empresa/proceso/:id real ahora fetcha (detalle por rol) y no es placeholder', async () => {
     vi.stubGlobal('fetch', okFetch);
+    freshAuth();
     renderRoute('/empresa/proceso/operations-analyst');
     await screen.findByRole('heading', { level: 1, name: 'Operations Analyst' });
     expect(okFetch).toHaveBeenCalledTimes(1);
@@ -162,8 +186,9 @@ describe('V2CompanyReal — modo real (VITE_KRUMM_API_BASE + GET /sessions)', ()
 // ── B3 (KRU-50): filtros modo real + brief de entrevista + exports ──────────
 
 describe('B3 (KRU-50) — filtros real + brief + exports', () => {
-  it('/empresa/procesos real: selects Periodo + Estado presentes; badge por realStatus derivado', async () => {
+  it('/empresa/procesos real (authed): selects Periodo + Estado presentes; badge por realStatus derivado', async () => {
     vi.stubGlobal('fetch', okFetch);
+    freshAuth();
     renderRoute('/empresa/procesos');
     await screen.findByText(V3_COPY.es.company_liveBadge);
     expect(screen.getByLabelText(V3_COPY.es.pl_period)).toBeInTheDocument();
@@ -173,16 +198,19 @@ describe('B3 (KRU-50) — filtros real + brief + exports', () => {
     expect(screen.getByTestId('v2-card-maintenance-tech')).toHaveTextContent(V3_COPY.es.pl_status_completed);
   });
 
-  it('demo (fetch falla): selects Periodo/Estado ausentes (solo modo real)', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('staging down')));
+  it('visitante (sin auth): selects Periodo/Estado ausentes (solo modo real authed), sin fetch', async () => {
+    const noFetch = vi.fn().mockRejectedValue(new Error('no debe llamarse'));
+    vi.stubGlobal('fetch', noFetch);
     renderRoute('/empresa/procesos');
     await waitFor(() => expect(screen.getByText(V3_COPY.es.company_demoNotice)).toBeInTheDocument());
+    expect(noFetch).not.toHaveBeenCalled();
     expect(screen.queryByLabelText(V3_COPY.es.pl_period)).toBeNull();
     expect(screen.queryByLabelText(V3_COPY.es.pl_status)).toBeNull();
   });
 
-  it('filtro Estado: in_progress → solo el grupo con sesiones en curso; reset restaura', async () => {
+  it('filtro Estado (authed): in_progress → solo el grupo con sesiones en curso; reset restaura', async () => {
     vi.stubGlobal('fetch', okFetch);
+    freshAuth();
     renderRoute('/empresa/procesos');
     await screen.findByText(V3_COPY.es.company_liveBadge);
     fireEvent.change(screen.getByLabelText(V3_COPY.es.pl_status), { target: { value: 'in_progress' } });
@@ -193,7 +221,7 @@ describe('B3 (KRU-50) — filtros real + brief + exports', () => {
     expect(screen.getByTestId('v2-process-count')).toHaveTextContent('3');
   });
 
-  it('filtro Periodo: 7d conserva solo procesos recientes (fixture determinista)', async () => {
+  it('filtro Periodo (authed): 7d conserva solo procesos recientes (fixture determinista)', async () => {
     const now = Date.now();
     const iso = (daysAgo) => new Date(now - daysAgo * 86400000).toISOString().slice(0, 10);
     const sessions = [
@@ -201,6 +229,7 @@ describe('B3 (KRU-50) — filtros real + brief + exports', () => {
       fixtureSession({ id: 'r2', role: 'Old Role', status: 'ready', completedAt: `${iso(20)}T10:00:00.000Z`, scores: [70, 70, 70, 70, 70, 70, 70, 70] }),
     ];
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ candidates: sessions, total: 2, hasMore: false }) }));
+    freshAuth();
     renderRoute('/empresa/procesos');
     await screen.findByText(V3_COPY.es.company_liveBadge);
     fireEvent.change(screen.getByLabelText(V3_COPY.es.pl_period), { target: { value: '7d' } });
@@ -212,8 +241,9 @@ describe('B3 (KRU-50) — filtros real + brief + exports', () => {
     expect(screen.getByTestId('v2-process-count')).toHaveTextContent('2');
   });
 
-  it('detalle real: columna Brief + botón export CSV (BOM, header, null = celda vacía)', async () => {
+  it('detalle real (authed): columna Brief + botón export CSV (BOM, header, null = celda vacía)', async () => {
     vi.stubGlobal('fetch', okFetch);
+    freshAuth();
     renderRoute('/empresa/proceso/operations-analyst');
     await screen.findByRole('heading', { level: 1, name: 'Operations Analyst' });
     expect(screen.getByRole('columnheader', { name: V3_COPY.es.pd_brief })).toBeInTheDocument();
@@ -240,8 +270,9 @@ describe('B3 (KRU-50) — filtros real + brief + exports', () => {
     expect(text).toMatch(/,c1,L,,insufficient,/);
   });
 
-  it('detalle real: expandir brief → disclaimer + prompts + notas descriptivas + MD por candidato', async () => {
+  it('detalle real (authed): expandir brief → disclaimer + prompts + notas descriptivas + MD por candidato', async () => {
     vi.stubGlobal('fetch', okFetch);
+    freshAuth();
     renderRoute('/empresa/proceso/operations-analyst');
     await screen.findByRole('heading', { level: 1, name: 'Operations Analyst' });
     const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-md');
@@ -276,10 +307,12 @@ describe('B3 (KRU-50) — filtros real + brief + exports', () => {
     expect(text).toContain('sin señal en esta batería');
   });
 
-  it('detalle demo: sin columna Brief ni export (los datos demo no son sesiones reales)', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('sin api')));
+  it('detalle visitante (sin auth): demo directo, sin columna Brief ni export', async () => {
+    const noFetch = vi.fn().mockRejectedValue(new Error('no debe llamarse'));
+    vi.stubGlobal('fetch', noFetch);
     renderRoute('/empresa/proceso/supervisor');
     await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.company_supervisor })).toBeInTheDocument());
+    expect(noFetch).not.toHaveBeenCalled();
     expect(screen.queryByRole('columnheader', { name: V3_COPY.es.pd_brief })).toBeNull();
     expect(screen.queryByTestId('v3-pd-export-csv')).toBeNull();
   });
