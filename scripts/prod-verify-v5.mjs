@@ -36,7 +36,14 @@ async function openPage(tag, path, viewport = { width: 1280, height: 720 }) {
   const errors = [];
   page.on('console', (msg) => { if (msg.type() === 'error') errors.push(`console ${msg.text()}`); });
   page.on('pageerror', (err) => errors.push(`pageerror ${err.message}`));
-  page.on('requestfailed', (req) => errors.push(`requestfailed ${req.url()} ${req.failure()?.errorText ?? ''}`));
+  page.on('requestfailed', (req) => {
+    const et = req.failure()?.errorText ?? '';
+    // net::ERR_ABORTED = request interrumpida por navegación (cutover redirect,
+    // page unload): comportamiento normal del navegador (p. ej. envelope de
+    // Sentry en vuelo) — false positive, no se cuenta.
+    if (et === 'net::ERR_ABORTED') return;
+    errors.push(`requestfailed ${req.url()} ${et}`);
+  });
   await page.goto(`${baseUrl}${path}`, { waitUntil: 'networkidle', timeout: 45000 });
   return { context, page, errors };
 }
