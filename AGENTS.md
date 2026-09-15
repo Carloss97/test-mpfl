@@ -51,7 +51,7 @@
 6. **Rotar key personal PostHog `phx_`** (pasó por chat) → actualizar `POSTHOG_PERSONAL_API_KEY` en `~/.hermes/.env` (la key actual autentica; sigue pendiente invalidar la anterior).
 7. **Modo real krumm.cl**: [CERRADO — prod en v1.2.2 (run 34818083797 verde), modo real con el stack completo G.1-G.4 + A.1/A.2 + F].
 **Ambiental / por instrucción (sin acción):**
-8. **Lighthouse pendiente de ajuste de tooling** — rerun `34818149690` (2026-09-15) reproduce `FCP/LCP All Frames not implemented in lantern` en Lighthouse 12 + Chrome 151; no es un fallo de presupuesto del producto. Hay que ajustar la combinación Lighthouse/Chrome del workflow y repetir el gate.
+8. **Lighthouse cerrado 2026-09-15** — `cde774d` fija Lighthouse `11.7.1` y tres passes con backoff sin cambiar budgets; run `34920469075` PASS en stage (performance/accessibility/best-practices/SEO). El run anterior `34818149690` quedó como evidencia del fallo de Lighthouse 12 + Chrome 151 (`FCP/LCP All Frames`).
 9. **B.7–B.12** — bloqueadas por instrucción (B.7 en triage `t_c07fe437`).
 10. **G.5** (multi-tenancy `companyId`) — post-pilot; sin card en kanban.
 ## Skills obligatorias según tarea
