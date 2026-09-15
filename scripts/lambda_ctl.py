@@ -4,6 +4,13 @@ Uso: lambda_ctl.py status | down
 """
 import json, os, sys, urllib.request
 
+# Force IPv4: Lambda API IPv6 egress blackholes on this Pi.
+import socket
+_orig_getaddrinfo = socket.getaddrinfo
+def _ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    return _orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+socket.getaddrinfo = _ipv4_getaddrinfo
+
 HOME = os.path.expanduser("~")
 API = "https://cloud.lambdalabs.com/api/v1"
 NAME_TAG = "hermes-krumm-qwen"

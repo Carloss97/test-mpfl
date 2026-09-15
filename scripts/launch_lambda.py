@@ -23,6 +23,13 @@ Uso: python3 launch_lambda.py  ->  imprime ip/id y escribe ~/.hermes/gpu_state.j
 """
 import json, os, sys, time, urllib.request
 
+# Lambda API IPv6 egress can blackhole on this Pi; force IPv4 for urllib.
+import socket
+_orig_getaddrinfo = socket.getaddrinfo
+def _ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    return _orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+socket.getaddrinfo = _ipv4_getaddrinfo
+
 HOME = os.path.expanduser("~")
 STATE = os.path.join(HOME, ".hermes/gpu_state.json")
 API = "https://cloud.lambdalabs.com/api/v1"
