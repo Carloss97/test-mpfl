@@ -24,6 +24,7 @@ SSH_KEY = os.path.join(HOME, ".ssh", "lambda_key")
 SSH_KEY_NAME = "wsl_hermes_lambda"
 NAME = "hermes-krumm-qwen"
 IMAGE = "vllm/vllm-openai:v0.28.0-cu129"
+LAUNCHED_ID = None
 
 _orig_getaddrinfo = socket.getaddrinfo
 def _ipv4(host, port, family=0, type=0, proto=0, flags=0):
@@ -74,9 +75,38 @@ def wait_ssh(ip, timeout=300):
 
 def current():
     for item in api("GET", "instances").get("data", []):
-        if item.get("name") == NAME and item.get("status") in ("active", "booting"):
+        if item.get("status") not in ("active", "booting"):
+            continue
+        # Match by canonical name OR mounted filesystem: a stale differently
+        # named instance with qwen-storage must block a second billable launch.
+        filesystems = item.get("file_system_names") or [x.get("name") for x in item.get("file_systems", [])]
+        if item.get("name") == NAME or FS_NAME in filesystems:
             return item
     return None
+
+
+def ensure_capacity():
+    catalog = api("GET", "instance-types").get("data", {})
+    info = catalog.get(INSTANCE_TYPE, {}) if isinstance(catalog, dict) else {}
+    regions = info.get("regions_with_capacity_available")
+    if regions is not None and REGION not in regions:
+        raise RuntimeError(f"Sin capacidad {INSTANCE_TYPE} en {REGION}; no se lanza instancia")
+
+
+def terminate_failed_launch():
+    global LAUNCHED_ID
+    if not LAUNCHED_ID:
+        return
+    try:
+        api("POST", "instance-operations/terminate", {"instance_ids": [LAUNCHED_ID]})
+        print(f"Instancia {LAUNCHED_ID} terminada tras fallo de bootstrap", file=sys.stderr)
+    except Exception as exc:
+        print(f"No se pudo terminar instancia fallida {LAUNCHED_ID}: {exc}", file=sys.stderr)
+    finally:
+        try:
+            os.remove(STATE)
+        except FileNotFoundError:
+            pass
 
 
 def main():
@@ -87,6 +117,7 @@ def main():
         print(f"Ya hay instancia: id={item['id']} status={item['status']} ip={ip}")
         return
 
+    ensure_capacity()
     print(f"Lanzando manualmente {INSTANCE_TYPE} en {REGION} sin user_data...")
     response = api("POST", "instance-operations/launch", {
         "region_name": REGION,
@@ -97,6 +128,8 @@ def main():
         "name": NAME,
     })
     instance_id = response["data"]["instance_ids"][0]
+    global LAUNCHED_ID
+    LAUNCHED_ID = instance_id
     print(f"Instancia lanzada: {instance_id}")
     ip = ""
     status = "booting"
@@ -149,4 +182,8 @@ sudo docker run -d --name vllm-qwen --gpus all --network host --ipc host \\
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        terminate_failed_launch()
+        raise SystemExit(f"ERROR: {exc}")
