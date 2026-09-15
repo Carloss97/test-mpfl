@@ -214,6 +214,9 @@ export default function LandingPage() {
             <img
               className="landing__hero-photo"
               src="/assets/hero-photo.webp"
+              width="1160"
+              height="1035"
+              fetchPriority="high"
               alt={t('Equipo utilizando la tecnología KRUMM', 'Team using KRUMM technology')}
             />
           </div>

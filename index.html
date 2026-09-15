@@ -18,6 +18,8 @@
     <link rel="preload" href="/fonts/Archivo-900-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/Archivo-600-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/Manrope-400-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Hero visible above the fold: reserve its intrinsic box and avoid a cold-image LCP. -->
+    <link rel="preload" href="/assets/hero-photo.webp" as="image" type="image/webp" fetchpriority="high" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>KRUMM · Evaluación Gamificada</title>
   </head>
