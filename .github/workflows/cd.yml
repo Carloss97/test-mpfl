@@ -41,8 +41,6 @@ jobs:
         if: github.ref == 'refs/heads/main'
         env:
           VITE_KRUMM_API_BASE: https://rwm08ik23m.execute-api.us-east-1.amazonaws.com/staging
-          # Task 7: branded Cognito managed-login domain, stage first.
-          VITE_KRUMM_COGNITO_HOST: acceso-stage.krumm.cl
           # F.1 (KRU-118): analytics PostHog opt-in (sin secret = analytics off)
           VITE_POSTHOG_API: ${{ secrets.POSTHOG_PROJECT_API_KEY }}
           VITE_POSTHOG_HOST: https://us.i.posthog.com
