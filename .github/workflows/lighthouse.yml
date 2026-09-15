@@ -62,6 +62,13 @@ jobs:
         run: |
           set -u
           BASE="${{ steps.base.outputs.url }}"
+          # Warm the CloudFront edge after CD invalidation. This does not reuse
+          # a browser cache; it removes only first-edge-fetch noise from the
+          # lab measurement while keeping Lighthouse's cold browser profile.
+          for warm_path in "" "portal" "candidato"; do
+            curl --fail --silent --show-error --retry 3 --max-time 30 \
+              "${BASE%/}/${warm_path}" -o /dev/null
+          done
           check_url() {
             local u="$1" f="$2"
             echo "=== Lighthouse $u"
