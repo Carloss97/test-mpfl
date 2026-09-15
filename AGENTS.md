@@ -43,15 +43,15 @@
 
 ## PENDIENTES (consolidado 2026-09-15)
 **Usuario (consola/UI):**
-1. **P0 — Rotar key Lambda GPU leakada** (commit `f44a7e4`, history público): consola cloud.lambda.ai (SSO) → API keys → rotar → actualizar `LAMBDA_API_KEY` en `~/.hermes/.env` (sin ruta API — verificado).
-2. **WAF CloudFront (G.3)**: [verificado vía API: ACL existe + asociado a ambas dists] Paso consola: CloudFront → dist `E2OPPVGDO8R75S` → pestaña **Web ACL** → confirmar `krumm-cf-waf` activo (procedimiento: `docs/security/security-waf-zap.md` §2). El edge aún no evalúa (migración service-side 2026).
+1. **P0 — Rotar key Lambda GPU leakada** (commit `f44a7e4`, history público): consola cloud.lambda.ai (SSO) → API keys → rotar → actualizar `LAMBDA_API_KEY` en `~/.hermes/.env` (la key actual ya autentica; sigue pendiente invalidar la anterior).
+2. **WAF CloudFront (G.3): CERRADO técnicamente 2026-09-15** — `krumm-cf-waf` existe, está asociado a stage `E2OPPVGDO8R75S` y prod `EDQ39PDNI931R`, y CloudWatch expone métricas `AllowedRequests`/`BlockedRequests`; la consola visual sigue siendo opcional.
 3. **Sentry**: [hecho por el usuario — IP Do Not Store + issue de prueba borrada].
-4. **PostHog (6 insights)**: proyecto 607324 (US Cloud) — funnel, trends, SQL duration_s, NPS, retention, conversión, analytics OFF en /postulaciones* — pasos exactos en `docs/ops/metrics.md`.
+4. **PostHog (6 insights): CERRADO técnicamente 2026-09-15** — IDs 11890439–11890444 activos en el proyecto 607324; queda solo la rutina semanal de revisión/capturas.
 5. **Email E2E**: cerrado 2026-09-14; login Cognito + dos invitaciones SES reales entregadas.
-6. **Rotar key personal PostHog `phx_`** (pasó por chat) → actualizar `POSTHOG_PERSONAL_API_KEY` en `~/.hermes/.env` (pitfall: nombre con KEY — verificar longitud post-write).
+6. **Rotar key personal PostHog `phx_`** (pasó por chat) → actualizar `POSTHOG_PERSONAL_API_KEY` en `~/.hermes/.env` (la key actual autentica; sigue pendiente invalidar la anterior).
 7. **Modo real krumm.cl**: [CERRADO — prod en v1.2.2 (run 34818083797 verde), modo real con el stack completo G.1-G.4 + A.1/A.2 + F].
 **Ambiental / por instrucción (sin acción):**
-8. **Lighthouse rojo** (`adff21c`/`10fe380`) — red de runners GH (scores 81-95 rotando); runs 34801839555/34802759851/34803884745 FAILED; CI+CD OK.
+8. **Lighthouse pendiente de ajuste de tooling** — rerun `34818149690` (2026-09-15) reproduce `FCP/LCP All Frames not implemented in lantern` en Lighthouse 12 + Chrome 151; no es un fallo de presupuesto del producto. Hay que ajustar la combinación Lighthouse/Chrome del workflow y repetir el gate.
 9. **B.7–B.12** — bloqueadas por instrucción (B.7 en triage `t_c07fe437`).
 10. **G.5** (multi-tenancy `companyId`) — post-pilot; sin card en kanban.
 ## Skills obligatorias según tarea

@@ -107,5 +107,8 @@ server-side).
 - F.1 (frontend + CSP m6): **verificado live 2026-09-13** (commit a43a8f9;
   KRU-118 Done).
 - F.2 (este doc): `invite_received` server + `duration_s` + NPS implementados
-  (2026-09-13). Pendiente de configurar: los insights 1–6 en el dashboard
-  (acción del usuario — cuenta PostHog) y la primera rutina semanal.
+  (2026-09-13). **Insights 1–6 creados y verificados activos 2026-09-15**
+  en el proyecto 607324 mediante la API: 11890439 (invitaciones), 11890440
+  (funnel base), 11890441 (duración), 11890442 (NPS), 11890443 (retención),
+  11890444 (conversión). La configuración detallada del funnel y p50/p95
+  queda documentada para el uso del dashboard; primera rutina semanal pendiente.

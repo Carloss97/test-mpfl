@@ -47,14 +47,13 @@ jobs:
             echo "url=https://stage.krumm.cl/" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Instalar Lighthouse (pinned a v12)
-        run: npm i -g lighthouse@12
+      - name: Instalar Lighthouse (pinned a v11)
+        run: npm i -g lighthouse@11.7.1
 
-      # El Chrome preinstalado del runner (152+) rompe lighthouse 12.x:
-      # "FCP/LCP All Frames not implemented in lantern" (crash en metricas,
-      # sin reporte). Chrome for Testing 151 = la version probada en la Pi
-      # (playwright chromium-1234) y en los runs locales.
-      - name: Chrome 151 (compatible con lighthouse 12.x)
+      # Lighthouse 12 + Chrome 151/152 puede romper en lantern con
+      # "FCP/LCP All Frames not implemented" y no producir reporte. Lighthouse
+      # 11.7.1 mantiene el gate compatible con Chrome for Testing 151.
+      - name: Chrome 151 (compatible con lighthouse 11.x)
         uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: 151
