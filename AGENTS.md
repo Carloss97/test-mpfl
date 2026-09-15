@@ -51,7 +51,7 @@
 6. **Rotar key personal PostHog `phx_`** (pasó por chat) → actualizar `POSTHOG_PERSONAL_API_KEY` en `~/.hermes/.env` (la key actual autentica; sigue pendiente invalidar la anterior).
 7. **Modo real krumm.cl**: [CERRADO — prod en v1.2.2 (run 34818083797 verde), modo real con el stack completo G.1-G.4 + A.1/A.2 + F].
 **Ambiental / por instrucción (sin acción):**
-8. **Lighthouse cerrado 2026-09-15** — `cde774d` fija Lighthouse `11.7.1` y tres passes con backoff sin cambiar budgets; run `34920469075` PASS en stage (performance/accessibility/best-practices/SEO). El run anterior `34818149690` quedó como evidencia del fallo de Lighthouse 12 + Chrome 151 (`FCP/LCP All Frames`).
+8. **Lighthouse tooling corregido, gate aún fluctuante** — `cde774d` fija Lighthouse `11.7.1` y tres passes con backoff sin cambiar budgets; run `34920469075` PASS en stage. El último run `34920873081` eliminó el crash fatal de Lighthouse 12, pero una medición quedó en performance 82 (las otras en 94–95) y persisten warnings `RootCauses/frame_sequence`; no es un cambio de producto. Requiere estabilizar la métrica/performance del runner antes de cerrar el gate definitivamente.
 9. **B.7–B.12** — bloqueadas por instrucción (B.7 en triage `t_c07fe437`).
 10. **G.5** (multi-tenancy `companyId`) — post-pilot; sin card en kanban.
 ## Skills obligatorias según tarea
