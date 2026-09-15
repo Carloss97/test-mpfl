@@ -94,9 +94,18 @@ Resources:
       AttributeDefinitions:
         - AttributeName: sessionId
           AttributeType: S
+        - AttributeName: companyId
+          AttributeType: S
       KeySchema:
         - AttributeName: sessionId
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: companyId-index
+          KeySchema:
+            - AttributeName: companyId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
 
   # --- DynamoDB: audit_log (append-only por API; acceso solo via Lambda) ---
   AuditLogTable:

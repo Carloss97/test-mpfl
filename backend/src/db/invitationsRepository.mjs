@@ -37,7 +37,7 @@ export function isValidEmail(email) {
  * ligada a la invitación): la misma invitación no puede abrir dos sesiones.
  * Devuelve el item persistido incluido el token (PK) y expiresAt.
  */
-export function createInvitation({ docClient, email, ttlSeconds = DEFAULT_TTL_HOURS * 3600, singleUse = true } = {}) {
+export function createInvitation({ docClient, email, companyId, ttlSeconds = DEFAULT_TTL_HOURS * 3600, singleUse = true } = {}) {
   if (!docClient) throw new Error('docClient_required');
   if (!isValidEmail(email)) {
     const err = new Error('invalid_email');
@@ -49,6 +49,7 @@ export function createInvitation({ docClient, email, ttlSeconds = DEFAULT_TTL_HO
   const expiresAt = createdAt + Math.max(1, Number(ttlSeconds));
   const item = {
     invitationId: token,
+    companyId: companyId ?? null,
     email: email.trim(),
     createdAt,
     expiresAt,

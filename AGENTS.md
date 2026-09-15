@@ -48,12 +48,12 @@
 3. **Sentry**: [hecho por el usuario — IP Do Not Store + issue de prueba borrada].
 4. **PostHog (6 insights): CERRADO técnicamente 2026-09-15** — IDs 11890439–11890444 activos en el proyecto 607324; queda solo la rutina semanal de revisión/capturas.
 5. **Email E2E**: cerrado 2026-09-14; login Cognito + dos invitaciones SES reales entregadas.
-6. **Rotar key personal PostHog `phx_`** (pasó por chat) → actualizar `POSTHOG_PERSONAL_API_KEY` en `~/.hermes/.env` (la key actual autentica; sigue pendiente invalidar la anterior).
+6. **Key personal PostHog `phx_`** — usuario confirmó 2026-09-15 que no requiere rotación; la key actual autentica y se usa solo para administración de insights.
 7. **Modo real krumm.cl**: [CERRADO — prod en v1.2.2 (run 34818083797 verde), modo real con el stack completo G.1-G.4 + A.1/A.2 + F].
 **Ambiental / por instrucción (sin acción):**
-8. **Lighthouse tooling corregido, gate aún fluctuante** — `cde774d` fija Lighthouse `11.7.1` y tres passes con backoff sin cambiar budgets; run `34920469075` PASS en stage. El último run `34920873081` eliminó el crash fatal de Lighthouse 12, pero una medición quedó en performance 82 (las otras en 94–95) y persisten warnings `RootCauses/frame_sequence`; no es un cambio de producto. Requiere estabilizar la métrica/performance del runner antes de cerrar el gate definitivamente.
+8. **Lighthouse tooling corregido, gate aún fluctuante** — `cde774d` fija Lighthouse `11.7.1` y tres passes con backoff; `6aeedea` fija Chrome 150 y `4e9a1a4` calienta CloudFront antes del lab, sin cambiar budgets. Run `34920469075` PASS en stage; `34923001134` sigue rojo (scores 79–95, LCP 3.9–4.3 s) y persiste `RootCauses/frame_sequence`. La próxima corrección debe optimizar LCP/carga inicial o ajustar el entorno de medición; no relajar el budget.
 9. **B.7–B.12** — bloqueadas por instrucción (B.7 en triage `t_c07fe437`).
-10. **G.5** (multi-tenancy `companyId`) — post-pilot; sin card en kanban.
+10. **G.5** (multi-tenancy `companyId`) — [~] implementación desplegada en staging 2026-09-15; tests locales de aislamiento A/B PASS; verificación con dos tenants Cognito reales pendiente por timeout del endpoint Cognito.
 ## Skills obligatorias según tarea
 
 Cargar antes de trabajar:

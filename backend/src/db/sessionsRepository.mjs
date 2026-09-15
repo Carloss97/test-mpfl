@@ -38,13 +38,13 @@ function assertPayloadSize(payload) {
   return size;
 }
 
-function sessionItem({ sessionId, payload, tenantId, invitationId, env }) {
+function sessionItem({ sessionId, payload, companyId, tenantId, invitationId, env }) {
   const createdAt = nowIso();
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
   const payloadBytes = assertPayloadSize(payload);
   const item = {
     sessionId,
-    tenantId: tenantId ?? null,
+    companyId: companyId ?? tenantId ?? null,
     invitationId: invitationId ?? null,
     payload,
     payloadBytes,
@@ -60,8 +60,8 @@ function sessionItem({ sessionId, payload, tenantId, invitationId, env }) {
   return item;
 }
 
-export function putSession({ docClient, sessionId, payload, tenantId, invitationId, env }) {
-  const item = sessionItem({ sessionId, payload, tenantId, invitationId, env });
+export function putSession({ docClient, sessionId, payload, companyId, tenantId, invitationId, env }) {
+  const item = sessionItem({ sessionId, payload, companyId, tenantId, invitationId, env });
   return docClient.put({
     TableName: SESSIONS_TABLE,
     Item: item,
@@ -101,56 +101,50 @@ export function appendAuditLog({ docClient, auditId, sessionId, actor = 'system'
   }).then(() => item);
 }
 
-export function listSessions({ docClient, limit = 50, cursor = null, statusFilter = null, batteryFilter = null, dateFrom = null, dateTo = null }) {
-  // Build the KeyConditionExpression and ExpressionAttributeValues dynamically.
-  // We query by sessionId (PK) and sort by createdAt descending.
-  // The table has PK=sessionId, no sort key, so we use a scan with filters.
-  // For efficiency, we keep the limit and optional filters.
-
-  let filterExpression = '#sts <> :revoked';
-  const exprAttrNames = { '#sts': 'status' };
-  const exprAttrValues = { ':revoked': 'revoked' };
-
+export function listSessions({ docClient, limit = 50, cursor = null, statusFilter = null, batteryFilter = null, dateFrom = null, dateTo = null, companyId = null }) {
+  if (!companyId) return Promise.resolve([]);
+  const exprAttrNames = { '#companyId': 'companyId', '#sts': 'status' };
+  const exprAttrValues = { ':companyId': companyId, ':revoked': 'revoked' };
+  let filterExpression = '#companyId = :companyId AND #sts <> :revoked';
   if (statusFilter) {
-    // Add status filter
-    filterExpression += ` AND #status = :status`;
+    filterExpression += ' AND #status = :status';
     exprAttrNames['#status'] = 'status';
     exprAttrValues[':status'] = statusFilter;
   }
-
   if (dateFrom) {
-    filterExpression += ` AND createdAt >= :dateFrom`;
+    filterExpression += ' AND createdAt >= :dateFrom';
     exprAttrValues[':dateFrom'] = dateFrom;
   }
-
   if (dateTo) {
-    filterExpression += ` AND createdAt <= :dateTo`;
+    filterExpression += ' AND createdAt <= :dateTo';
     exprAttrValues[':dateTo'] = dateTo;
   }
-
   if (batteryFilter) {
-    filterExpression += ` AND batteryId = :battery`;
+    filterExpression += ' AND batteryId = :battery';
     exprAttrValues[':battery'] = batteryFilter;
   }
 
-  // We'll use Query with a scan on sessionId-index if available, or just scan with limit.
-  // The table does have a GSI sessionId-index, but that's for listing audit entries per session,
-  // not for listing sessions. We'll do a simple Query with a PK range using begins_with.
-  // Since PK=sessionId is random UUID/sess-*, we can't use begins_with meaningfully.
-  // Fallback: use Query with a limit, reading all pages until we have enough.
+  const request = typeof docClient.query === 'function'
+    ? docClient.query({
+      TableName: SESSIONS_TABLE,
+      IndexName: 'companyId-index',
+      KeyConditionExpression: '#companyId = :companyId',
+      FilterExpression: filterExpression,
+      ExpressionAttributeNames: exprAttrNames,
+      ExpressionAttributeValues: exprAttrValues,
+      Limit: limit,
+      ExclusiveStartKey: cursor ? JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) : undefined,
+    })
+    : docClient.scan({
+      TableName: SESSIONS_TABLE,
+      Limit: limit,
+      FilterExpression: filterExpression,
+      ExpressionAttributeNames: exprAttrNames,
+      ExpressionAttributeValues: exprAttrValues,
+    });
 
-  // Actually, for a simple read-only list, let's scan with a limit.
-  // The table is expected to have moderate size (pilot scale), so a scan with Limit is OK.
-
-  return docClient.scan({
-    TableName: SESSIONS_TABLE,
-    Limit: limit,
-    FilterExpression: filterExpression,
-    ExpressionAttributeNames: exprAttrNames,
-    ExpressionAttributeValues: exprAttrValues,
-  }).then((out) => {
-    const items = out?.Items ?? [];
-    // Sort by createdAt descending (newest first)
+  return request.then((out) => {
+    const items = (out?.Items ?? []).filter((item) => item.companyId === companyId);
     items.sort((a, b) => new Date(b.createdAt).valueOf() - new Date(a.createdAt).valueOf());
     return items;
   });

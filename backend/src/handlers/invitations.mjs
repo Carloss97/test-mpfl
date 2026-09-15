@@ -21,6 +21,7 @@ import {
 } from '../db/invitationsRepository.mjs';
 import { makeAuditId, appendAuditLog } from '../db/sessionsRepository.mjs';
 import { sendPosthogEvent } from '../analytics/posthog.mjs';
+import { companyIdFromEvent } from '../auth/tenant.mjs';
 
 const CORS_HEADERS = {
   'content-type': 'application/json',
@@ -49,6 +50,10 @@ function unprocessable(message, violations = []) {
 
 function methodNotAllowed() {
   return json(405, { error: 'method_not_allowed' });
+}
+
+function forbidden(message = 'company_id_required') {
+  return json(403, { error: 'forbidden', code: message });
 }
 
 function parseBody(event) {
@@ -103,11 +108,14 @@ export async function handlePostInvitation(event, deps = {}) {
   }
 
   const language = body?.language === 'en' ? 'en' : 'es';
+  const companyId = companyIdFromEvent(event, { allowTestDemo: true });
+  if (!companyId) return forbidden();
 
   try {
     const item = await createInvitation({
       docClient: deps.docClient,
       email,
+      companyId,
       ttlSeconds: ttlHours * 3600,
       singleUse: body?.singleUse !== false,
     });
@@ -213,6 +221,8 @@ export async function handleRevokeInvitation(event, deps = {}) {
 
   const item = await getInvitationByToken({ docClient: deps.docClient, token });
   if (!item) return notFound();
+  const companyId = companyIdFromEvent(event, { allowTestDemo: true });
+  if (!companyId || (item.companyId && item.companyId !== companyId)) return notFound();
 
   await revokeInvitation({ docClient: deps.docClient, token });
   await appendAuditLog({

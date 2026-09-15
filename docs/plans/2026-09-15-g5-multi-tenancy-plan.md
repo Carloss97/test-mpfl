@@ -1,5 +1,7 @@
 # G.5 Multi-tenancy real — Plan de implementación
 
+**Estado:** [~] Implementación desplegada en staging; gate de dos tenants Cognito pendiente.
+
 > **Para Hermes:** ejecutar por tareas pequeñas con pruebas RED→GREEN y verificar el despliegue antes de cerrar.
 
 **Objetivo:** aislar sesiones e invitaciones por empresa (`companyId`) para que dos tenants en staging no puedan leer ni modificar datos cruzados.

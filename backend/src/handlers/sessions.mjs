@@ -9,6 +9,7 @@
 // No hay PII en logs de respuesta; el auditor log registra actor+acción+timestamp.
 
 import { validateSessionPayload, extractRunId } from '../privacy/validatePayload.mjs';
+import { companyIdFromEvent, sameCompany, DEMO_COMPANY_ID } from '../auth/tenant.mjs';
 import {
   putSession,
   getSession,
@@ -57,6 +58,10 @@ function unprocessable(message, violations = []) {
 
 function notFound(message = 'session_not_found') {
   return json(404, { error: message });
+}
+
+function forbidden(message = 'company_id_required') {
+  return json(403, { error: 'forbidden', code: message });
 }
 
 function methodNotAllowed() {
@@ -114,9 +119,11 @@ export async function consumeInvitation({ event, docClient, sessionId }) {
   if (status === 'used') return { error: 410, code: 'invitation_already_used' };
   if (status === 'expired') return { error: 410, code: 'invitation_expired' };
   if (status !== 'valid') return { error: 410, code: 'invitation_invalid' };
+  const companyId = item.companyId ?? (process.env.NODE_ENV === 'test' ? DEMO_COMPANY_ID : null);
+  if (!companyId) return { error: 403, code: 'invitation_company_missing' };
   await markInvitationUsed({ docClient, token: invitationId, sessionId });
-  await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId, actor: actorFrom(event), action: 'invitation.consume', detail: { invitationId } });
-  return { invitationId, sessionId };
+  await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId, actor: actorFrom(event), action: 'invitation.consume', detail: { invitationId, companyId } });
+  return { invitationId, sessionId, companyId };
 }
 
 function pathParam(event, key) {
@@ -153,8 +160,10 @@ export async function handleListSessions(event, { docClient, auditClient } = {})
   const batteryFilter = event?.queryStringParameters?.battery ?? null;
   const dateFrom = event?.queryStringParameters?.dateFrom ?? null;
   const dateTo = event?.queryStringParameters?.dateTo ?? null;
+  const companyId = companyIdFromEvent(event, { allowTestDemo: true });
+  if (!companyId) return forbidden();
 
-  const items = await listSessions({ docClient, limit, cursor, statusFilter, batteryFilter, dateFrom, dateTo });
+  const items = await listSessions({ docClient, limit, cursor, statusFilter, batteryFilter, dateFrom, dateTo, companyId });
 
   // Map each stored session item to a HR dashboard candidate summary.
   const candidates = items.map((item) => {
@@ -307,23 +316,27 @@ export async function handlePostSessions(event, { docClient } = {}) {
     const sessionId = makeSessionId();
     const consumed = await consumeInvitation({ event, docClient, sessionId });
     if (consumed?.error) return invitationActionResponse(consumed);
-    const item = await putSession({ docClient, sessionId, payload: body, tenantId: body?.participant?.aliasHash ?? null, invitationId: consumed.invitationId, env: stageFrom(event) });
-    await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId, actor: actorFrom(event), action: 'session.create' });
+    const companyId = consumed.companyId ?? companyIdFromEvent(event, { allowTestDemo: true });
+    if (!companyId) return forbidden();
+    const item = await putSession({ docClient, sessionId, payload: body, tenantId: companyId, invitationId: consumed.invitationId, env: stageFrom(event) });
+    await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId, actor: actorFrom(event), action: 'session.create', detail: { companyId } });
     return json(201, { id: item.sessionId, status: 'created', schemaVersion: item.schemaVersion });
   }
 
   if (!validation.ok) return unprocessable('payload_privacy_violation', validation.violations);
   const consumed = await consumeInvitation({ event, docClient, sessionId: runId });
   if (consumed?.error) return invitationActionResponse(consumed);
+  const companyId = consumed.companyId ?? companyIdFromEvent(event, { allowTestDemo: true });
+  if (!companyId) return forbidden();
   const item = await putSession({
     docClient,
     sessionId: runId,
     payload: body,
-    tenantId: body?.participant?.aliasHash ?? null,
+    tenantId: companyId,
     invitationId: consumed.invitationId,
     env: stageFrom(event),
   });
-  await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId: item.sessionId, actor: actorFrom(event), action: 'session.create' });
+  await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId: item.sessionId, actor: actorFrom(event), action: 'session.create', detail: { companyId } });
   return json(201, { id: item.sessionId, status: 'created', schemaVersion: item.schemaVersion });
 }
 
@@ -331,9 +344,11 @@ export async function handlePostSessions(event, { docClient } = {}) {
 export async function handleGetSession(event, { docClient } = {}) {
   const sessionId = pathParam(event, 'id');
   if (!sessionId) return badRequest('missing_session_id');
+  const companyId = companyIdFromEvent(event, { allowTestDemo: true });
+  if (!companyId) return forbidden();
   const item = await getSession({ docClient, sessionId });
-  if (!item) return notFound();
-  await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId, actor: actorFrom(event), action: 'session.read' });
+  if (!item || !sameCompany(item, companyId)) return notFound();
+  await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId, actor: actorFrom(event), action: 'session.read', detail: { companyId } });
   return json(200, { id: item.sessionId, payload: item.payload, createdAt: item.createdAt });
 }
 
@@ -341,10 +356,12 @@ export async function handleGetSession(event, { docClient } = {}) {
 export async function handleDeleteSession(event, { docClient } = {}) {
   const sessionId = pathParam(event, 'id');
   if (!sessionId) return badRequest('missing_session_id');
+  const companyId = companyIdFromEvent(event, { allowTestDemo: true });
+  if (!companyId) return forbidden();
   const item = await getSession({ docClient, sessionId });
-  if (!item) return notFound();
+  if (!item || !sameCompany(item, companyId)) return notFound();
   await deleteSession({ docClient, sessionId });
-  await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId, actor: actorFrom(event), action: 'session.delete' });
+  await appendAuditLog({ docClient, auditId: makeAuditId(), sessionId, actor: actorFrom(event), action: 'session.delete', detail: { companyId } });
   return noContent();
 }
 

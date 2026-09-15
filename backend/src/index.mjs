@@ -11,6 +11,7 @@ import {
   PutCommand,
   GetCommand,
   ScanCommand,
+  QueryCommand,
   DeleteCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
@@ -37,6 +38,7 @@ const productionDocClient = Object.freeze({
   put: (input) => docClient.send(new PutCommand(input)),
   get: (input) => docClient.send(new GetCommand(input)),
   scan: (input) => docClient.send(new ScanCommand(input)),
+  query: (input) => docClient.send(new QueryCommand(input)),
   delete: (input) => docClient.send(new DeleteCommand(input)),
   // G.3: incremento condicional del rate limit (tabla rate-limit).
   update: (input) => docClient.send(new UpdateCommand(input)),
