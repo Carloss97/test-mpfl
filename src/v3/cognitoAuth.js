@@ -276,8 +276,11 @@ export async function refreshStoredAuth(auth, { fetchImpl } = {}) {
 export async function resolveValidToken({ fetchImpl } = {}) {
   const authed = getStoredAuth();
   if (!authed) return null;
-  if (isTokenFresh(authed)) return authed.accessToken;
+  // API Gateway JWT authorizers validate Cognito's `aud` claim. That claim is
+  // present on the OIDC ID token; the access token carries `client_id` instead
+  // and is rejected at the gateway despite a successful PKCE exchange.
+  if (isTokenFresh(authed)) return authed.idToken ?? authed.accessToken;
   if (!authed.refreshToken) return null;
   const refreshed = await refreshStoredAuth(authed, { fetchImpl });
-  return refreshed?.accessToken ?? null;
+  return refreshed?.idToken ?? refreshed?.accessToken ?? null;
 }

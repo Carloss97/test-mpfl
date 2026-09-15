@@ -18,6 +18,8 @@ const STAGE = 'https://stage.krumm.cl';
 const tokenCalls = [];
 let finalUrl = null;
 let pageErrors = [];
+let consoleErrors = [];
+let sessionCalls = [];
 
 const browser = await chromium.launch({
   executablePath: '/home/sarlock/.cache/ms-playwright/chromium-1234/chrome-linux/chrome',
@@ -29,11 +31,23 @@ const context = await browser.newContext({
 });
 const page = await context.newPage();
 page.on('pageerror', (e) => pageErrors.push(String(e)));
+page.on('console', (msg) => {
+  if (msg.type() === 'error') consoleErrors.push(msg.text().slice(0, 300));
+});
 page.on('requestfailed', (req) => {
   console.error('REQUESTFAILED:', req.url().slice(0, 130), '|', req.failure()?.errorText);
 });
 page.on('request', (req) => {
   if (req.url().includes('/oauth2/token')) console.error('TOKEN REQUEST ENVIADO:', req.method());
+  if (req.url().includes('/sessions')) {
+    const token = req.headers().authorization?.replace(/^Bearer\s+/i, '');
+    try {
+      const payload = JSON.parse(Buffer.from(token?.split('.')[1] ?? '', 'base64url').toString('utf8'));
+      sessionCalls.push({ requestClaims: { hasToken: Boolean(token), groups: payload['cognito:groups'] ?? null, tokenUse: payload.token_use ?? null } });
+    } catch {
+      sessionCalls.push({ requestClaims: { hasToken: Boolean(token), decodeFailed: true } });
+    }
+  }
 });
 page.on('response', async (resp) => {
   const url = resp.url();
@@ -42,12 +56,21 @@ page.on('response', async (resp) => {
     // Status and origin are sufficient for the E2E diagnostic.
     tokenCalls.push({ status: resp.status(), origin: new URL(url).origin });
   }
+  if (url.includes('/sessions')) {
+    let error = null;
+    if (!resp.ok()) {
+      try { error = (await resp.json())?.error ?? null; } catch { error = 'unparseable'; }
+    }
+    sessionCalls.push({ status: resp.status(), origin: new URL(url).origin, error });
+  }
 });
 
 const fail = async (msg) => {
   console.error(`FAIL: ${msg}`);
   console.error('tokenCalls:', JSON.stringify(tokenCalls, null, 2));
+  console.error('sessionCalls:', JSON.stringify(sessionCalls));
   console.error('pageErrors:', JSON.stringify(pageErrors.slice(0, 5)));
+  console.error('consoleErrors:', JSON.stringify(consoleErrors.slice(0, 5)));
   try {
     const inputs = await page.$$eval('input', (els) =>
       els.map((e) => ({ id: e.id, type: e.type, name: e.name, placeholder: e.placeholder })),

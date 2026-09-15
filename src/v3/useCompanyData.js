@@ -41,10 +41,12 @@ function defaultNavigate(to) {
 
 async function resolveToken(authed, { fetchImpl }) {
   if (!authed) return null;
-  if (isTokenFresh(authed)) return authed.accessToken;
+  // API Gateway validates the OIDC `aud` claim, so prefer the ID token.
+  // Keep access-token fallback for local/test environments and legacy sessions.
+  if (isTokenFresh(authed)) return authed.idToken ?? authed.accessToken;
   if (!authed.refreshToken) return null;
   const refreshed = await refreshStoredAuth(authed, { fetchImpl });
-  return refreshed?.accessToken ?? null;
+  return refreshed?.idToken ?? refreshed?.accessToken ?? null;
 }
 
 export function useCompanyData({

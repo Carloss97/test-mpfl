@@ -78,12 +78,12 @@ describe('A.2 — useCompanyData: autenticación Cognito (Bearer / refresh / 401
     expect(calls.token).toHaveLength(0);
   });
 
-  it('authed con token fresco: Authorization Bearer en el fetch', async () => {
-    storeAuth({ access_token: 'at-1', refresh_token: 'rt-1', expires_in: 3600 });
+  it('authed con token fresco: usa ID token con aud para el JWT authorizer', async () => {
+    storeAuth({ access_token: 'at-1', id_token: 'id-1', refresh_token: 'rt-1', expires_in: 3600 });
     const { fetchImpl, calls } = makeFetch([{ ok: true, status: 200, body: okBody }]);
     renderProbe(fetchImpl, navigate());
     await waitFor(() => { expect(document.querySelector('[data-testid=probe-src]').textContent).toBe('real'); });
-    expect(calls.sessions[0].init.headers.Authorization).toBe(bearerOf('at-1'));
+    expect(calls.sessions[0].init.headers.Authorization).toBe(bearerOf('id-1'));
     expect(calls.token).toHaveLength(0);
   });
 
