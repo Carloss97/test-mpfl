@@ -99,12 +99,12 @@ jobs:
               process.exit(bad ? 1 : 0);
             ' "$f"
           }
-          # Tolerancia a lentitud transitoria de red del runner: si el pass 1
+          # Tolerancia a lentitud transitoria de red del runner: si un pass
           # falla por budget (TTFB sano pero FCP/LCP inflados por la red del
-          # runner — verificado en ventana 2026-09-14 00:20-01:00 UTC), espera
-          # 90 s y repite el pass completo. Crash (sin reporte) también
-          # reintenta el pass completo.
-          for pass in 1 2; do
+          # runner), espera 90 s y repite el pass completo. Crash (sin reporte)
+          # también reintenta el pass completo. Tres passes evitan declarar
+          # rojo por una sola medición fría, sin modificar los budgets.
+          for pass in 1 2 3; do
             fail=0
             for path in "" "portal" "candidato"; do
               check_url "${BASE%/}/${path}" "$PWD/lh-${path:-home}.json" || fail=1
@@ -113,12 +113,12 @@ jobs:
               echo "GATE PASS (pass $pass)"
               exit 0
             fi
-            if [ "$pass" = 1 ]; then
-              echo "Pass 1 falló — 90 s de backoff antes del pass 2 completo"
+            if [ "$pass" != 3 ]; then
+              echo "Pass $pass falló — 90 s de backoff antes del siguiente pass completo"
               sleep 90
             fi
           done
-          echo "GATE FAIL: 2 passes completos (ver scores arriba)"
+          echo "GATE FAIL: 3 passes completos (ver scores arriba)"
           exit 1
 
       - name: Subir reportes (solo en failure, para depurar)
