@@ -43,7 +43,7 @@
 
 ## PENDIENTES (consolidado 2026-09-15)
 **Usuario (consola/UI):**
-1. **P0 — Rotar key Lambda GPU leakada** (commit `f44a7e4`, history público): consola cloud.lambda.ai (SSO) → API keys → rotar → actualizar `LAMBDA_API_KEY` en `~/.hermes/.env` (la key actual ya autentica; sigue pendiente invalidar la anterior).
+1. **P0 — Rotar key Lambda GPU leakada: CERRADO 2026-09-15** — el usuario confirmó la invalidación de la key anterior; la key vigente autentica con HTTP 200 en los endpoints Lambda.
 2. **WAF CloudFront (G.3): CERRADO técnicamente 2026-09-15** — `krumm-cf-waf` existe, está asociado a stage `E2OPPVGDO8R75S` y prod `EDQ39PDNI931R`, y CloudWatch expone métricas `AllowedRequests`/`BlockedRequests`; la consola visual sigue siendo opcional.
 3. **Sentry**: [hecho por el usuario — IP Do Not Store + issue de prueba borrada].
 4. **PostHog (6 insights): CERRADO técnicamente 2026-09-15** — IDs 11890439–11890444 activos en el proyecto 607324; queda solo la rutina semanal de revisión/capturas.
