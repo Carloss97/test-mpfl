@@ -1,30 +1,22 @@
-// t_7aad621f (FASE A.3): spec del job board /empleos — JobsPage (listado) +
-// JobDetailPage (detalle) + jobsData.js. Criterios de aceptación:
-//   1. Listado renderiza N ofertas activas con tarjeta (título, meta, desc, CTA
-//      → /empleos/:slug) + back al hub (/candidato). Sin placeholder.
-//   2. Detalle por slug conocido → secciones (descripción, responsabilidades,
-//      requisitos, beneficios) + CTA postular deshabilitado (placeholder
-//      honesto "próxima iteración") + back.
-//   3. Slug desconocido → empty state "Oferta no encontrada".
-//   4. ES/EN: toggle traduce título, meta, secciones y CTA.
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, expect, it, afterEach } from 'vitest';
 import { LanguageProvider } from '../i18n/LanguageContext.jsx';
-import { V3_COPY } from './v3Copy.js';
-import { JOBS_DATA, getJobBySlug, getActiveJobs } from './jobsData.js';
+import { JOBS_DATA, getDemoJobs, getJobBySlug } from './jobsData.js';
 import V3RootApp from './V3RootApp.jsx';
 import JobsPage from './JobsPage.jsx';
 import JobDetailPage from './JobDetailPage.jsx';
 
 const storage = {};
-const localStorageMock = {
-  getItem: (key) => (key in storage ? storage[key] : null),
-  setItem: (key, value) => { storage[key] = String(value); },
-  removeItem: (key) => { delete storage[key]; },
-  clear: () => { for (const key of Object.keys(storage)) delete storage[key]; },
-};
-Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
+Object.defineProperty(window, 'localStorage', {
+  value: {
+    getItem: (key) => (key in storage ? storage[key] : null),
+    setItem: (key, value) => { storage[key] = String(value); },
+    removeItem: (key) => { delete storage[key]; },
+    clear: () => { for (const key of Object.keys(storage)) delete storage[key]; },
+  },
+  configurable: true,
+});
 
 function renderWithLanguage(ui) {
   return render(<LanguageProvider>{ui}</LanguageProvider>);
@@ -36,152 +28,100 @@ function renderV3Route(pathname) {
   return renderWithLanguage(<V3RootApp />);
 }
 
-function renderJobsPage() {
-  return renderWithLanguage(<JobsPage />);
-}
-
-function renderJobDetail(slug) {
-  return renderWithLanguage(<JobDetailPage params={{ slug }} />);
-}
-
 afterEach(() => {
   window.history.pushState({}, '', '/');
   localStorage.clear();
   document.body.innerHTML = '';
 });
 
-describe('jobsData.js', () => {
-  it('define 3-4 ofertas demo con slug únicos y el esquema completo en ES/EN', () => {
-    expect(JOBS_DATA.length).toBeGreaterThanOrEqual(3);
-    expect(JOBS_DATA.length).toBeLessThanOrEqual(4);
-    const slugs = new Set(JOBS_DATA.map((j) => j.slug));
-    expect(slugs.size).toBe(JOBS_DATA.length);
+describe('jobsData.js demonstration catalog', () => {
+  it('contains unique bilingual role examples without vacancy-specific claims', () => {
+    expect(JOBS_DATA).toHaveLength(4);
+    expect(new Set(JOBS_DATA.map((job) => job.slug)).size).toBe(JOBS_DATA.length);
+
     for (const job of JOBS_DATA) {
-      for (const field of ['slug', 'title', 'location', 'mode', 'department', 'type', 'description', 'responsibilities', 'requirements', 'benefits', 'postedAt', 'status']) {
-        expect(job[field], `${job.slug}.${field}`).toBeTruthy();
-      }
-      // campos i18n tienen {es, en}
-      for (const field of ['title', 'location', 'mode', 'department', 'type', 'description', 'responsibilities', 'requirements', 'benefits']) {
-        expect(job[field].es, `${job.slug}.${field}.es`).toBeTruthy();
-        expect(job[field].en, `${job.slug}.${field}.en`).toBeTruthy();
-      }
+      expect(job.title.es).toBeTruthy();
+      expect(job.title.en).toBeTruthy();
+      expect(job.description.es).toMatch(/ejemplo|demostración/i);
+      expect(job.description.en).toMatch(/example|demonstration/i);
+      expect(job.exampleStatus).toMatch(/^(active|paused|closed)$/);
+      expect(job).not.toHaveProperty('location');
+      expect(job).not.toHaveProperty('mode');
+      expect(job).not.toHaveProperty('type');
+      expect(job).not.toHaveProperty('benefits');
+      expect(job).not.toHaveProperty('postedAt');
     }
   });
 
-  it('getJobBySlug resuelve y devuelve null para slug desconocido', () => {
+  it('keeps active, paused and closed only as clearly illustrative states', () => {
+    expect(new Set(getDemoJobs().map((job) => job.exampleStatus))).toEqual(new Set(['active', 'paused', 'closed']));
     expect(getJobBySlug(JOBS_DATA[0].slug)).toBe(JOBS_DATA[0]);
     expect(getJobBySlug('no-existe')).toBeNull();
   });
-
-  it('getActiveJobs solo devuelve ofertas con status activo y consistentes entre ES/EN', () => {
-    const active = getActiveJobs();
-    expect(active.every((j) => j.status === 'active')).toBe(true);
-    for (const job of active) {
-      expect(job.responsibilities.es.length).toBe(job.responsibilities.en.length);
-      expect(job.requirements.es.length).toBe(job.requirements.en.length);
-      expect(job.benefits.es.length).toBe(job.benefits.en.length);
-    }
-  });
 });
 
-describe('JobsPage (/empleos — listado)', () => {
-  it('hero: eyebrow + h1 "Bolsa de empleos" + subtitle del hub', () => {
-    renderJobsPage();
-    expect(screen.getByText(V3_COPY.es.cp_eyebrow)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.pages.jobs.title })).toBeInTheDocument();
-    expect(screen.getByText(V3_COPY.es.cp_subtitle)).toBeInTheDocument();
+describe('JobsPage demonstration catalog', () => {
+  it('labels the catalog and every card as a demonstration role, not an open vacancy', () => {
+    renderWithLanguage(<JobsPage />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Catálogo de demostración' })).toBeInTheDocument();
+    expect(screen.getAllByText('Catálogo de demostración')).toHaveLength(3);
+    expect(screen.getByText(/no publica vacantes activas/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Ejemplo de rol')).toHaveLength(JOBS_DATA.length);
+    expect(document.querySelectorAll('.v3-job-card')).toHaveLength(JOBS_DATA.length);
   });
 
-  it('renderiza una card por oferta activa, cada una con CTA → /empleos/:slug', () => {
-    const { container } = renderJobsPage();
-    const cards = container.querySelectorAll('.v3-job-card');
-    const active = getActiveJobs();
-    expect(cards).toHaveLength(active.length);
-    for (const job of active) {
-      // cada card tiene su CTA con href al slug
-      const ctas = container.querySelectorAll('.v3-job-cta');
-      const hrefs = Array.from(ctas).map((c) => c.getAttribute('href'));
-      expect(hrefs).toContain(`/empleos/${job.slug}`);
+  it('links each role example to its detail with an accessible label', () => {
+    renderWithLanguage(<JobsPage />);
+    for (const job of JOBS_DATA) {
+      expect(screen.getByRole('link', { name: `Ver ejemplo de ${job.title.es}` }))
+        .toHaveAttribute('href', `/empleos/${job.slug}`);
     }
   });
 
-  it('every card shows título, meta (ubicación/modalidad/área), desc truncada y fecha', () => {
-    const { container } = renderJobsPage();
-    const cards = container.querySelectorAll('.v3-job-card');
-    expect(cards.length).toBeGreaterThan(0);
-    for (const card of cards) {
-      expect(card.className).toContain('v3-job-card');
-    }
-    for (const job of getActiveJobs()) {
-      expect(screen.getByText(job.title.es)).toBeInTheDocument();
-      expect(screen.getByText(job.location.es)).toBeInTheDocument();
-    }
-  });
-
-  it('back link al hub /candidato (sin placeholder)', () => {
-    renderJobsPage();
-    expect(screen.getByRole('link', { name: V3_COPY.es.cp_back })).toHaveAttribute('href', '/candidato');
-  });
-
-  it('i18n: click EN traduce h1, card title y CTA "View details"→href /empleos/:slug', () => {
-    // Need shell for the toggle; render job page inside candidate route... simpler:
-    // render the page inside LanguageProvider and click is only available via shell.
-    // Use V3RootApp at /empleos to access the shell toggle.
+  it('translates catalog labels, H1 and role CTAs to English', () => {
     renderV3Route('/empleos');
     fireEvent.click(screen.getByRole('button', { name: 'EN' }));
-    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toContain(V3_COPY.en.pages.jobs.title);
-    // slugs present regardless of language
-    for (const job of getActiveJobs()) {
-      expect(document.querySelector(`a[href="/empleos/${job.slug}"]`)).not.toBeNull();
-    }
+    expect(screen.getByRole('heading', { level: 1, name: 'Demonstration catalog' })).toBeInTheDocument();
+    expect(screen.getAllByText('Demonstration catalog')).toHaveLength(4);
+    expect(screen.getAllByText('Role example')).toHaveLength(JOBS_DATA.length);
+    expect(screen.getByRole('link', { name: `View example: ${JOBS_DATA[0].title.en}` })).toBeInTheDocument();
   });
 });
 
-describe('JobDetailPage (/empleos/:slug)', () => {
-  it('detalle conocido: h1 = título de la oferta, meta y secciones', () => {
-    const job = getActiveJobs()[0];
-    renderJobDetail(job.slug);
-    expect(screen.getByRole('heading', { level: 1, name: job.title.es })).toBeInTheDocument();
-    expect(screen.getByText(job.location.es)).toBeInTheDocument();
-    // secciones
-    expect(screen.getByRole('heading', { level: 3, name: 'Descripción del cargo' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: 'Responsabilidades' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: 'Requisitos' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: 'Beneficios' })).toBeInTheDocument();
-    // bullet lists renderizan el contenido ES
-    for (const req of job.requirements.es) {
-      expect(screen.getByText(req)).toBeInTheDocument();
-    }
+describe('JobDetailPage demonstration role', () => {
+  it.each([
+    ['active', 'Activo'],
+    ['paused', 'Pausado'],
+    ['closed', 'Cerrado'],
+  ])('renders %s only as a non-vacancy example state in Spanish', (status, label) => {
+    const job = JOBS_DATA.find((candidate) => candidate.exampleStatus === status);
+    renderWithLanguage(<JobDetailPage params={{ slug: job.slug }} />);
+    expect(screen.getByText('Ejemplo de rol')).toBeInTheDocument();
+    expect(screen.getByLabelText(`Estado de ejemplo: ${label}. No es una vacante.`)).toBeInTheDocument();
+    expect(screen.getByText(/no es una vacante y no recibe postulaciones/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /postular/i })).not.toBeInTheDocument();
   });
 
-  it('CTA postular: deshabilitado con placeholder honesto "próxima iteración"', () => {
-    const job = getActiveJobs()[0];
-    renderJobDetail(job.slug);
-    const apply = screen.getByRole('button', { name: /Postular \(próxima iteración\)/i });
-    expect(apply).toBeDisabled();
-    expect(apply).toHaveAttribute('aria-disabled', 'true');
+  it('uses informative navigation instead of an application CTA', () => {
+    const { container } = renderWithLanguage(<JobDetailPage params={{ slug: JOBS_DATA[0].slug }} />);
+    expect(screen.getByRole('link', { name: 'Explorar el portal candidato' })).toHaveAttribute('href', '/candidato');
+    expect(screen.getByRole('link', { name: 'Volver al catálogo de demostración' })).toHaveAttribute('href', '/empleos');
+    expect(container.querySelectorAll('.v3-job-section-icon')).toHaveLength(3);
+    expect(container.querySelectorAll('.v3-job-bullet-check')).toHaveLength(6);
   });
 
-  it('back link a la bolsa de empleos', () => {
-    const job = getActiveJobs()[0];
-    renderJobDetail(job.slug);
-    expect(screen.getByRole('link', { name: /Volver a la bolsa de empleos/i })).toHaveAttribute('href', '/empleos');
-  });
-
-  it('slug desconocido → empty state "Oferta no encontrada"', () => {
-    renderJobDetail('cargo-inexistente');
-    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toContain('Oferta no encontrada');
-    expect(screen.getByRole('link', { name: /Volver a la bolsa de empleos/i })).toHaveAttribute('href', '/empleos');
-  });
-
-  it('i18n: EN traduce h1, secciones y CTA', () => {
-    // Use the shell route to get the toggle
-    renderV3Route(`/empleos/${getActiveJobs()[0].slug}`);
+  it('translates the detail, state and informational CTA to English', () => {
+    renderV3Route(`/empleos/${JOBS_DATA[0].slug}`);
     fireEvent.click(screen.getByRole('button', { name: 'EN' }));
-    expect(screen.getByRole('heading', { level: 1, name: getActiveJobs()[0].title.en })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: 'Job Description' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: 'Responsibilities' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: 'Requirements' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: 'Benefits' })).toBeInTheDocument();
+    expect(screen.getByText('Role example')).toBeInTheDocument();
+    expect(screen.getByLabelText('Example state: Active. This is not a vacancy.')).toBeInTheDocument();
+    expect(screen.getByText(/not a vacancy and does not accept applications/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Explore the candidate portal' })).toHaveAttribute('href', '/candidato');
+  });
+
+  it('shows a localized not-found state with a catalog back link', () => {
+    renderWithLanguage(<JobDetailPage params={{ slug: 'cargo-inexistente' }} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Ejemplo no encontrado' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Volver al catálogo de demostración' })).toHaveAttribute('href', '/empleos');
   });
 });

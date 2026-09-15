@@ -28,10 +28,45 @@ export const FORBIDDEN_BREADCRUMB_CATEGORIES = new Set([
   'krumm-answer',
 ]);
 
+// This is intentionally route-specific rather than disabling global error
+// tracking: a public PII form must never send its typed values, URL, or crumbs.
+const PII_EXCLUDED_ROUTES = new Set(['/solicitar-demo']);
+
+// Keep exclusion checks exact after router-equivalent trailing-slash
+// normalization. This protects /solicitar-demo/ without suppressing sibling
+// paths such as /solicitar-demolition.
+function normalizeSentryPath(path = '') {
+  if (typeof path !== 'string') return '';
+  const pathname = path.split(/[?#]/, 1)[0];
+  return pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+}
+
+export function isSentryExcludedRoute(path = '') {
+  return PII_EXCLUDED_ROUTES.has(normalizeSentryPath(path));
+}
+
+function currentPath() {
+  return typeof window === 'undefined' ? '' : window.location.pathname;
+}
+
+function eventTargetsExcludedRoute(event) {
+  if (isSentryExcludedRoute(currentPath())) return true;
+  const url = event?.request?.url;
+  if (typeof url !== 'string') return false;
+  try {
+    return isSentryExcludedRoute(new URL(url, globalThis.location?.origin).pathname);
+  } catch {
+    // A malformed URL is still checked as an exact relative pathname; do not
+    // use prefix matching here because it would suppress sibling routes.
+    return isSentryExcludedRoute(url);
+  }
+}
+
 // Sanitización de breadcrumbs: descarta categorías prohibidas y limpia
 // `data` (solo strings ≤500 y números; nunca objetos/arrays anidados).
 export function sanitizeBreadcrumb(crumb) {
   if (!crumb) return null;
+  if (isSentryExcludedRoute(currentPath())) return null;
   if (FORBIDDEN_BREADCRUMB_CATEGORIES.has(crumb.category)) return null;
   if (crumb.data) {
     const clean = {};
@@ -46,7 +81,7 @@ export function sanitizeBreadcrumb(crumb) {
 
 // Filtro final de events: sin tags que contengan datos de sesión/bio/PII.
 export function sanitizeEvent(event) {
-  if (!event) return null;
+  if (!event || eventTargetsExcludedRoute(event)) return null;
   if (event.tags) {
     for (const k of Object.keys(event.tags)) {
       if (/session|payload|bio|landmark|frame|pose|keypoint|blendshape|answer|response|telemetry|invite|token|email|phone/i.test(k)) {

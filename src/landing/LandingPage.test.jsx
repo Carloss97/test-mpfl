@@ -69,7 +69,7 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
   });
 
   describe('Nav (jerarquía: brand + nav + actions con "Iniciar sesión" + idioma)', () => {
-    it('logo de marca, links de sección, Iniciar sesión en header-actions → accesos, CTA demo solo en cierre y toggle', () => {
+    it('logo de marca, links de sección, selector /portal y CTAs demo en topbar/cierre', () => {
       renderLanding();
       const logo = screen.getByRole('link', { name: /KRUMM - Inicio/i });
       expect(logo).toHaveAttribute('href', '/');
@@ -79,17 +79,16 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(screen.getByRole('link', { name: 'Tecnología' })).toHaveAttribute('href', '#tecnologia');
       expect(screen.getByRole('link', { name: 'Contacto' })).toHaveAttribute('href', '#contacto');
       const login = screen.getByRole('link', { name: 'Iniciar sesión' });
-      expect(login).toHaveAttribute('href', '#accesos');
-      // Fix 2026-09-11: el login ocupa el slot donde estaba "Solicitar demo".
+      expect(login).toHaveAttribute('href', '/portal');
       expect(login.closest('.landing__header-actions')).not.toBeNull();
-      // v2: estilo CTA gold completo (gradiente) + flecha SVG.
       expect(login).toHaveClass('landing__cta--gold');
       expect(login.querySelector('svg.landing__nav-login-arrow')).not.toBeNull();
-      // "Solicitar demo" eliminado de la topbar; queda solo el del cierre HABLEMOS.
       const demoLinks = screen.getAllByRole('link', { name: 'Solicitar demo' });
-      expect(demoLinks).toHaveLength(1);
+      expect(demoLinks).toHaveLength(2);
+      expect(demoLinks[0].closest('.landing__header-actions')).not.toBeNull();
+      expect(demoLinks[0]).toHaveClass('landing__cta--outline');
       for (const link of demoLinks) {
-        expect(link).toHaveAttribute('href', 'mailto:carlossaldivia@krumm.cl');
+        expect(link).toHaveAttribute('href', '/solicitar-demo');
       }
       expect(screen.getByRole('group', { name: /Idioma/i })).toBeInTheDocument();
     });
@@ -133,7 +132,7 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       const steps = section.querySelector('ol');
       expect(steps).not.toBeNull();
       expect(steps.querySelectorAll('li')).toHaveLength(4);
-      expect(screen.getByText(/batería de juegos gamificados/i)).toBeInTheDocument();
+      expect(screen.getByText('Resuelve desafíos interactivos y sus señales conductuales se procesan localmente.')).toBeInTheDocument();
     });
 
     it('02 · Tecnología: kicker y H2 de referencia (fórmula con +)', () => {
@@ -155,18 +154,13 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(screen.getByText(/Nada de “score confiable” sin evidencia ni contexto/i)).toBeInTheDocument();
     });
 
-    it('Accesos: 2 cards de referencia con CTAs a /empresa/acceso y /candidato (V5 cutover)', () => {
+    it('elimina el bloque de accesos de la landing: /portal queda como selector explícito', () => {
       renderLanding();
-      expect(document.getElementById('accesos')).not.toBeNull();
-      expect(screen.getByRole('heading', { name: '¿Dónde quieres ingresar?' })).toBeInTheDocument();
-      expect(screen.getByText('Accede a tu espacio KRUMM.')).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: 'Portal para empresas' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: 'Portal para candidatos' })).toBeInTheDocument();
-      const empresa = screen.getByRole('link', { name: /Ingresar como empresa/i });
-      expect(empresa).toHaveAttribute('href', '/empresa/acceso');
-      const candidato = screen.getByRole('link', { name: /Ingresar como candidato/i });
-      expect(candidato).toHaveAttribute('href', '/candidato');
-      expect(screen.getByRole('link', { name: /Volver a KRUMM/i })).toHaveAttribute('href', '/');
+      expect(document.getElementById('accesos')).toBeNull();
+      expect(screen.queryByRole('heading', { name: '¿Dónde quieres ingresar?' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Portal para empresas' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Portal para candidatos' })).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute('href', '/portal');
     });
 
     it('Cierre HABLEMOS + contacto actual: H2 de referencia, CTA demo, ambos emails y nota', () => {
@@ -194,10 +188,13 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       const h1 = screen.getByRole('heading', { level: 1 });
       expect(h1).toHaveTextContent("Talent isn't claimed.");
       expect(h1.querySelector('.landing__accent')).toHaveTextContent("It's proven.");
-      expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '#accesos');
-      expect(screen.getByRole('heading', { name: 'Where do you want to sign in?' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/portal');
+      expect(screen.queryByRole('heading', { name: 'Where do you want to sign in?' })).not.toBeInTheDocument();
+      expect(screen.getByText('Completes interactive challenges and behavioral signals are processed locally.')).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Discover what KRUMM can measure in your organization.' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Sign in as a company' })).toHaveAttribute('href', '/empresa/acceso');
+      const demoLinks = screen.getAllByRole('link', { name: 'Request a demo' });
+      expect(demoLinks).toHaveLength(2);
+      for (const link of demoLinks) expect(link).toHaveAttribute('href', '/solicitar-demo');
       expect(screen.getByRole('contentinfo')).toHaveTextContent('Technology for talent assessment');
     });
   });
@@ -210,6 +207,18 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       const skip = screen.getByRole('link', { name: /Saltar al contenido/i });
       expect(skip).toHaveAttribute('href', '#contenido');
       expect(screen.getByRole('main')).toBeInTheDocument();
+    });
+
+    it('conserva demo, login, idioma y menú en un topbar refluido a 320px', () => {
+      renderLanding();
+      const topbar = document.querySelector('.landing__topbar');
+      expect(topbar.querySelector('a[href="/solicitar-demo"]')).not.toBeNull();
+      expect(topbar.querySelector('a[href="/portal"]')).not.toBeNull();
+      expect(screen.getByRole('group', { name: /Idioma/i })).toBeInTheDocument();
+      expect(document.querySelector('.landing__menu-button')).not.toBeNull();
+
+      const css = readFileSync(path.resolve(process.cwd(), 'src/landing/landing.css'), 'utf8');
+      expect(css).toMatch(/@media \(max-width: 360px\)\s*{[\s\S]*?\.landing__topbar\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\) auto auto[\s\S]*?\.landing__header-actions\s*{[\s\S]*?grid-column:\s*1 \/ -1/);
     });
   });
 
@@ -241,12 +250,11 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       expect(css).toMatch(/\.landing__kicker--dark\s*\{[\s\S]*?color:\s*var\(--k-accent-sand\)/);
     });
 
-    it('card paragraph: texto siempre es un token con AA ≥4.5 sobre --k-card-cream y --k-card-sand', () => {
+    it('el CSS no conserva reglas muertas del bloque de accesos eliminado', () => {
       const css = readFileSync(path.resolve(process.cwd(), 'src/landing/landing.css'), 'utf8');
-      const m = css.match(/\.landing__acceso-card\s+p\s*\{[^}]*color:\s*(var\(--[a-z0-9-]+\))/);
-      expect(m).not.toBeNull();
-      // El token elegido debe pasar AA 4.5+ sobre el más claro (cream) y el más oscuro (sand).
-      expect(m[1]).toBe('var(--k-ink-medium)');
+      expect(css).not.toContain('landing__accesos');
+      expect(css).not.toContain('landing__acceso-');
+      expect(css).not.toContain('landing__volver');
     });
 
     it('favicon: SVG existente con un atributo data-favicon-retina + mask simplificado', () => {
@@ -295,6 +303,15 @@ describe('LandingPage (design de marca v2, 2026-09-07)', () => {
       const login = document.querySelector('.landing__header-actions .landing__cta--gold');
       expect(login).not.toBeNull();
       expect(getComputedStyle(login).color).toBe('var(--k-btn-gold-ink)');
+      remove();
+    });
+
+    it('CTA demo outline de la topbar conserva tinta crema sobre el hero oscuro', () => {
+      const remove = injectLandingStyles();
+      renderLanding();
+      const demo = document.querySelector('.landing__header-actions .landing__cta--outline');
+      expect(demo).not.toBeNull();
+      expect(getComputedStyle(demo).color).toBe('var(--k-text-cream)');
       remove();
     });
 

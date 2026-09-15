@@ -16,6 +16,7 @@ import {
   sentryConfig,
   sanitizeBreadcrumb,
   sanitizeEvent,
+  isSentryExcludedRoute,
   FORBIDDEN_BREADCRUMB_CATEGORIES,
   ErrorBoundary,
 } from './sentry.js';
@@ -23,6 +24,7 @@ import SentryFallback from './SentryFallback.jsx';
 
 describe('G.2 Sentry frontend', () => {
   afterEach(() => {
+    window.history.replaceState(null, '', '/');
     vi.unstubAllEnvs();
   });
 
@@ -37,6 +39,13 @@ describe('G.2 Sentry frontend', () => {
     const mod = await import('./sentry.js');
     expect(mod.sentryConfig.enabled).toBe(true);
     expect(mod.initSentry()).toBe(true);
+  });
+
+  it('normalizes the PII demo route trailing slash without excluding sibling routes', () => {
+    expect(isSentryExcludedRoute('/solicitar-demo')).toBe(true);
+    expect(isSentryExcludedRoute('/solicitar-demo/')).toBe(true);
+    expect(isSentryExcludedRoute('/solicitar-demolition')).toBe(false);
+    expect(isSentryExcludedRoute('/empresa')).toBe(false);
   });
 
   describe('sanitizeBreadcrumb', () => {
@@ -66,6 +75,14 @@ describe('G.2 Sentry frontend', () => {
       const crumb = { category: 'navigation', message: '/portal → /empresa' };
       expect(sanitizeBreadcrumb(crumb)).toEqual(crumb);
     });
+
+    it('on /solicitar-demo/ drops breadcrumbs that could contain form values', () => {
+      window.history.replaceState(null, '', '/solicitar-demo/');
+      expect(sanitizeBreadcrumb({
+        category: 'fetch',
+        data: { url: '/demo-requests?email=ada@example.test', body: 'Ada Lovelace' },
+      })).toBeNull();
+    });
   });
 
   describe('sanitizeEvent', () => {
@@ -86,6 +103,15 @@ describe('G.2 Sentry frontend', () => {
     it('event sin tags pasa intacto', () => {
       const event = { message: 'boom' };
       expect(sanitizeEvent(event)).toEqual(event);
+    });
+
+    it('on /solicitar-demo/ drops the entire event so request URL, extras, and input never reach Sentry', () => {
+      window.history.replaceState(null, '', '/solicitar-demo/');
+      expect(sanitizeEvent({
+        request: { url: 'https://krumm.test/solicitar-demo/?email=ada@example.test' },
+        extra: { formValues: { name: 'Ada Lovelace', workEmail: 'ada@example.test' } },
+        breadcrumbs: [{ message: 'Ada Lovelace' }],
+      })).toBeNull();
     });
   });
 

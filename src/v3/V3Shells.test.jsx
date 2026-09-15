@@ -268,7 +268,7 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
       const pathname = route.path
         .replace(':id', 'supervisor')
         .replace(':sessionId', 'ses-1')
-        .replace(':slug', 'analista-control-planta');
+        .replace(':slug', 'analista-control-procesos');
       const { container } = renderV3Route(pathname);
       expect(container.querySelector('h1'), pathname).not.toBeNull();
       // shell correcto según el registro
@@ -293,12 +293,24 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
           : route.page === 'jobs'
             ? V3_COPY.es.pages.jobs.title
             : route.page === 'jobDetail'
-              ? 'Analista de Control de Planta' // h1 del detalle = título de la oferta (slug analista-control-planta)
+              ? 'Analista de control de procesos' // h1 del detalle = título del ejemplo (slug analista-control-procesos)
               : route.page === 'processDetail'
                 ? V3_COPY.es.company_supervisor
                 : V3_COPY.es.pages[route.page].title;
       expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent), pathname).toContain(expectedTitle);
     }
+  });
+
+  it('traduce el H1 y breadcrumb de /empleos como catálogo de demostración', () => {
+    renderV3Route('/empleos');
+    const breadcrumb = screen.getByRole('navigation', { name: V3_COPY.es.cp_breadcrumb });
+    expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.pages.jobs.title })).toBeInTheDocument();
+    expect(within(breadcrumb).getByTestId('v3-breadcrumb-current')).toHaveTextContent(V3_COPY.es.cp_jobs);
+
+    fireEvent.click(screen.getByRole('button', { name: 'EN' }));
+    const englishBreadcrumb = screen.getByRole('navigation', { name: V3_COPY.en.cp_breadcrumb });
+    expect(screen.getByRole('heading', { level: 1, name: V3_COPY.en.pages.jobs.title })).toBeInTheDocument();
+    expect(within(englishBreadcrumb).getByTestId('v3-breadcrumb-current')).toHaveTextContent(V3_COPY.en.cp_jobs);
   });
 
   it('rutas candidato: /empleos job board real (lista de ofertas, sin placeholder); el hub ya no es placeholder', () => {
@@ -353,13 +365,23 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
     expect(screen.getByRole('link', { name: V3_COPY.es.common_backHome })).toHaveAttribute('href', '/');
   });
 
-  it('/empresa/acceso (A.2): login real + demo + back portals', () => {
-    renderV3Route('/empresa/acceso');
-    expect(screen.getByRole('heading', { level: 1, name: V3_COPY.es.pages.companyAccess.title })).toBeInTheDocument();
-    expect(screen.getByText(V3_COPY.es.pages.companyAccess.loginSubtitle)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: V3_COPY.es.pages.companyAccess.loginCta })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: V3_COPY.es.pages.companyAccess.demoCta })).toHaveAttribute('href', '/empresa');
-    expect(screen.getByRole('link', { name: V3_COPY.es.pages.companyAccess.backLabel })).toHaveAttribute('href', '/portal');
+  it('/empresa/acceso (A.2): bloque centrado y secuencial para login privado y demo pública', () => {
+    const { container } = renderV3Route('/empresa/acceso');
+    const page = V3_COPY.es.pages.companyAccess;
+    const access = container.querySelector('[data-testid="v3-company-login-content"]');
+    const login = screen.getByRole('button', { name: page.loginCta });
+    const separator = screen.getByRole('separator');
+    const demo = screen.getByRole('link', { name: page.demoCta });
+
+    expect(screen.getByRole('heading', { level: 1, name: page.title })).toBeInTheDocument();
+    expect(screen.getByText(page.loginSubtitle)).toBeInTheDocument();
+    expect(screen.getByText(page.loginPrivateSpace)).toBeInTheDocument();
+    expect(screen.getByText(page.demoNote)).toBeInTheDocument();
+    expect(demo).toHaveAttribute('href', '/empresa');
+    expect(screen.getByRole('link', { name: page.backLabel })).toHaveAttribute('href', '/portal');
+    expect([...access.querySelectorAll('button, a')]).toEqual([login, demo]);
+    expect(login.compareDocumentPosition(separator) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(separator.compareDocumentPosition(demo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('rutas dinámicas: el param no se expone como título; el placeholder es genérico', () => {
@@ -399,5 +421,17 @@ describe('Régimen de tokens (v3Shells.css — sin estilos ad-hoc)', () => {
     expect(css).toMatch(/:hover/);
     expect(css).toMatch(/:focus-visible/);
     expect(css).toContain('prefers-reduced-motion');
+  });
+
+  it('keeps job metadata readable and makes example navigation secondary', () => {
+    const jobsCss = css.slice(css.indexOf('/* ── FASE A.3'), css.indexOf('/* ── Shell empresa'));
+    expect(jobsCss).toMatch(/\.v3-jobs\s+\.v3-cp-eyebrow[\s\S]*font-size:\s*var\(--k-jobs-eyebrow-size\)/);
+    expect(jobsCss).toMatch(/\.v3-job-badge[\s\S]*font-size:\s*0\.75rem/);
+    expect(jobsCss).toMatch(/\.v3-job-card-meta[\s\S]*font-size:\s*0\.875rem/);
+    expect(jobsCss).toMatch(/\.v3-job-status[\s\S]*font-size:\s*0\.75rem/);
+    expect(jobsCss).toMatch(/\.v3-job-cta[\s\S]*background:\s*transparent/);
+    expect(jobsCss).toMatch(/\.v3-job-section-icon[\s\S]*width:\s*var\(--k-jobs-icon-size\)/);
+    expect(jobsCss).toMatch(/\.v3-job-bullet-check[\s\S]*width:\s*var\(--k-jobs-icon-size\)/);
+    expect(jobsCss).toMatch(/\.v3-jobs-grid[\s\S]*minmax\(min\(100%,\s*var\(--k-jobs-card-min\)\),\s*1fr\)/);
   });
 });

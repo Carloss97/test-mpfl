@@ -1,0 +1,703 @@
+{
+  "provenance": {
+    "captureStartedAtUtc": "2026-09-15T17:59:46.953Z",
+    "captureFinishedAtUtc": "2026-09-15T18:00:53.625Z",
+    "gitCommit": "0c7762920d35b138cb42d7ca1f90d4899921f477",
+    "script": {
+      "path": "/home/sarlock/krumm/test-mpfl/scripts/smoke-landing-company-jobs-2026-09-15.mjs",
+      "version": "2026-09-15.2",
+      "sha256": "6150b9efb20d75860b9642884429a687e80480874f715da073be694c606b22ef"
+    },
+    "playwrightVersion": "1.61.1",
+    "chromiumVersion": "151.0.7922.34",
+    "platform": {
+      "type": "Linux",
+      "platform": "linux",
+      "release": "6.18.34+rpt-rpi-v8",
+      "arch": "arm64"
+    }
+  },
+  "baseUrl": "https://stage.krumm.cl",
+  "activeJobPath": "/empleos/analista-control-planta",
+  "routes": [
+    "/",
+    "/portal",
+    "/empresa/acceso",
+    "/empleos",
+    "/empleos/analista-control-planta"
+  ],
+  "viewports": [
+    {
+      "name": "1440x900",
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 1
+    },
+    {
+      "name": "1280x720",
+      "width": 1280,
+      "height": 720,
+      "deviceScaleFactor": 1
+    },
+    {
+      "name": "390x844",
+      "width": 390,
+      "height": 844,
+      "isMobile": true,
+      "hasTouch": true,
+      "deviceScaleFactor": 2
+    }
+  ],
+  "knownBaselineOverflowTags": [
+    "portal-1280x720",
+    "company-access-1280x720",
+    "jobs-1280x720",
+    "job-detail-1280x720",
+    "portal-390x844",
+    "company-access-390x844",
+    "jobs-390x844",
+    "job-detail-390x844"
+  ],
+  "knownBaselineFindings": [
+    {
+      "kind": "horizontal-overflow",
+      "tag": "portal-1280x720",
+      "detail": "horizontal overflow: 1352 > 1280",
+      "overflow": {
+        "scrollWidth": 1352,
+        "viewportWidth": 1280,
+        "pageViewportWidth": 1280,
+        "hasHorizontalOverflow": true
+      }
+    },
+    {
+      "kind": "horizontal-overflow",
+      "tag": "company-access-1280x720",
+      "detail": "horizontal overflow: 1352 > 1280",
+      "overflow": {
+        "scrollWidth": 1352,
+        "viewportWidth": 1280,
+        "pageViewportWidth": 1280,
+        "hasHorizontalOverflow": true
+      }
+    },
+    {
+      "kind": "horizontal-overflow",
+      "tag": "jobs-1280x720",
+      "detail": "horizontal overflow: 1352 > 1280",
+      "overflow": {
+        "scrollWidth": 1352,
+        "viewportWidth": 1280,
+        "pageViewportWidth": 1280,
+        "hasHorizontalOverflow": true
+      }
+    },
+    {
+      "kind": "horizontal-overflow",
+      "tag": "job-detail-1280x720",
+      "detail": "horizontal overflow: 1352 > 1280",
+      "overflow": {
+        "scrollWidth": 1352,
+        "viewportWidth": 1280,
+        "pageViewportWidth": 1280,
+        "hasHorizontalOverflow": true
+      }
+    },
+    {
+      "kind": "horizontal-overflow",
+      "tag": "portal-390x844",
+      "detail": "horizontal overflow: 422 > 390",
+      "overflow": {
+        "scrollWidth": 422,
+        "viewportWidth": 390,
+        "pageViewportWidth": 422,
+        "hasHorizontalOverflow": true
+      }
+    },
+    {
+      "kind": "horizontal-overflow",
+      "tag": "company-access-390x844",
+      "detail": "horizontal overflow: 422 > 390",
+      "overflow": {
+        "scrollWidth": 422,
+        "viewportWidth": 390,
+        "pageViewportWidth": 422,
+        "hasHorizontalOverflow": true
+      }
+    },
+    {
+      "kind": "horizontal-overflow",
+      "tag": "jobs-390x844",
+      "detail": "horizontal overflow: 422 > 390",
+      "overflow": {
+        "scrollWidth": 422,
+        "viewportWidth": 390,
+        "pageViewportWidth": 422,
+        "hasHorizontalOverflow": true
+      }
+    },
+    {
+      "kind": "horizontal-overflow",
+      "tag": "job-detail-390x844",
+      "detail": "horizontal overflow: 422 > 390",
+      "overflow": {
+        "scrollWidth": 422,
+        "viewportWidth": 390,
+        "pageViewportWidth": 422,
+        "hasHorizontalOverflow": true
+      }
+    }
+  ],
+  "unexpectedFindings": [],
+  "consoleErrors": [],
+  "screenshots": [
+    "docs/qa/landing-company-jobs-2026-09-15/landing-1440x900.png",
+    "docs/qa/landing-company-jobs-2026-09-15/portal-1440x900.png",
+    "docs/qa/landing-company-jobs-2026-09-15/company-access-1440x900.png",
+    "docs/qa/landing-company-jobs-2026-09-15/jobs-1440x900.png",
+    "docs/qa/landing-company-jobs-2026-09-15/job-detail-1440x900.png",
+    "docs/qa/landing-company-jobs-2026-09-15/landing-1280x720.png",
+    "docs/qa/landing-company-jobs-2026-09-15/portal-1280x720.png",
+    "docs/qa/landing-company-jobs-2026-09-15/company-access-1280x720.png",
+    "docs/qa/landing-company-jobs-2026-09-15/jobs-1280x720.png",
+    "docs/qa/landing-company-jobs-2026-09-15/job-detail-1280x720.png",
+    "docs/qa/landing-company-jobs-2026-09-15/landing-390x844.png",
+    "docs/qa/landing-company-jobs-2026-09-15/portal-390x844.png",
+    "docs/qa/landing-company-jobs-2026-09-15/company-access-390x844.png",
+    "docs/qa/landing-company-jobs-2026-09-15/jobs-390x844.png",
+    "docs/qa/landing-company-jobs-2026-09-15/job-detail-390x844.png"
+  ],
+  "screenshotManifest": [
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/landing-1440x900.png",
+      "sha256": "a88637eb72b8eb29cf9c0a71497d0dce3c90d9945f7264fea9187c8873a8b68c"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/portal-1440x900.png",
+      "sha256": "471ef80e3340d7935ce82ca81f1a9551dfcf11613f442e866131c9f33a79a674"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/company-access-1440x900.png",
+      "sha256": "a25b347a54d60f834f84e32072ab742e85cbc1a82d74329f48fa0e5f089968a2"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/jobs-1440x900.png",
+      "sha256": "fbbf08d1936a29a28a9350196a57a5953b674e6972e56cb1e3d1ea2b9f44802c"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/job-detail-1440x900.png",
+      "sha256": "72b2666aa6728cd5ff982e607eaafe309b41e0ffde087d111bf5f6a5013c7e55"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/landing-1280x720.png",
+      "sha256": "7af3c07bea5dc3d62dcb9872c3afc8f1058a72bc4530ca6aaf048f6c8585af02"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/portal-1280x720.png",
+      "sha256": "1f1e73599ea7dbcdbd41ff84dc4c0534bec3185ffb00f125107a31c4d4b75366"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/company-access-1280x720.png",
+      "sha256": "9ec20899e6c63c98220e33ee19d525488591f6ea584a99437f62279df40b9cc2"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/jobs-1280x720.png",
+      "sha256": "0da62d868f832b31958d090f92606caa2d25c170a3ed09e6a9da677cdd2eef10"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/job-detail-1280x720.png",
+      "sha256": "83841e785dfbb6de42198e24d9e67bcf445e27dc1cf54dc7712e0b4294cf28d4"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/landing-390x844.png",
+      "sha256": "fd8035995326b481702ec393f80fec6ddebc70c1310f32f8e1abd5d7b49bc043"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/portal-390x844.png",
+      "sha256": "a7c45b4909486242fad8317ab3c82b3018c98585fab1fc048adc240732956d39"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/company-access-390x844.png",
+      "sha256": "7344a6b796a6b1de3ffc190b49e90e018b44fa037623e7750db9f3d189d96532"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/jobs-390x844.png",
+      "sha256": "f1374f1e7550934c50c88362f81ae52dfe7ab05eb3f0a2b2a6ba56e5c87e2a66"
+    },
+    {
+      "path": "docs/qa/landing-company-jobs-2026-09-15/job-detail-390x844.png",
+      "sha256": "5a5fc27ca3eac85f787013bc922ed0d13c59de5bdf1abcdb7b8f2478edd4679b"
+    }
+  ],
+  "measurements": [
+    {
+      "route": "/",
+      "viewport": "1440x900",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/landing-1440x900.png",
+      "overflow": {
+        "scrollWidth": 1440,
+        "viewportWidth": 1440,
+        "pageViewportWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "jobTypography": null,
+      "jobIcon": null,
+      "ctaContrast": {
+        "selector": ".landing__hero-buttons .landing__cta--gold",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(242, 232, 220)",
+        "ratio": 11.09,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".landing__hero-buttons .landing__cta--gold",
+        "focused": true,
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(16, 16, 16)",
+        "outlineOffset": "1px"
+      }
+    },
+    {
+      "route": "/portal",
+      "viewport": "1440x900",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/portal-1440x900.png",
+      "overflow": {
+        "scrollWidth": 1440,
+        "viewportWidth": 1440,
+        "pageViewportWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "jobTypography": null,
+      "jobIcon": null,
+      "ctaContrast": {
+        "selector": ".v3-portal-card",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(242, 232, 220)",
+        "ratio": 11.09,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-portal-card",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    },
+    {
+      "route": "/empresa/acceso",
+      "viewport": "1440x900",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/company-access-1440x900.png",
+      "overflow": {
+        "scrollWidth": 1440,
+        "viewportWidth": 1440,
+        "pageViewportWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "jobTypography": null,
+      "jobIcon": null,
+      "ctaContrast": {
+        "selector": ".v3-company-login-actions .v3-cta-gold",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(247, 239, 230)",
+        "ratio": 11.79,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-company-login-actions .v3-cta-gold",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    },
+    {
+      "route": "/empleos",
+      "viewport": "1440x900",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/jobs-1440x900.png",
+      "overflow": {
+        "scrollWidth": 1440,
+        "viewportWidth": 1440,
+        "pageViewportWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "jobTypography": {
+        "selector": ".v3-job-card-title",
+        "fontSize": "20px",
+        "lineHeight": "26px"
+      },
+      "jobIcon": {
+        "selector": ".v3-job-meta-item svg",
+        "width": "14px",
+        "height": "14px"
+      },
+      "ctaContrast": {
+        "selector": ".v3-job-cta",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(216, 179, 140)",
+        "ratio": 6.87,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-job-cta",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    },
+    {
+      "route": "/empleos/analista-control-planta",
+      "viewport": "1440x900",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/job-detail-1440x900.png",
+      "overflow": {
+        "scrollWidth": 1440,
+        "viewportWidth": 1440,
+        "pageViewportWidth": 1440,
+        "hasHorizontalOverflow": false
+      },
+      "jobTypography": {
+        "selector": ".v3-job-detail-title",
+        "fontSize": "36px",
+        "lineHeight": "43.2px"
+      },
+      "jobIcon": {
+        "selector": ".v3-job-meta-item svg",
+        "width": "16px",
+        "height": "16px"
+      },
+      "ctaContrast": {
+        "selector": ".v3-job-apply-btn",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(247, 239, 230)",
+        "ratio": 11.79,
+        "disabled": true
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-back",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    },
+    {
+      "route": "/",
+      "viewport": "1280x720",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/landing-1280x720.png",
+      "overflow": {
+        "scrollWidth": 1280,
+        "viewportWidth": 1280,
+        "pageViewportWidth": 1280,
+        "hasHorizontalOverflow": false
+      },
+      "jobTypography": null,
+      "jobIcon": null,
+      "ctaContrast": {
+        "selector": ".landing__hero-buttons .landing__cta--gold",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(242, 232, 220)",
+        "ratio": 11.09,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".landing__hero-buttons .landing__cta--gold",
+        "focused": true,
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(16, 16, 16)",
+        "outlineOffset": "1px"
+      }
+    },
+    {
+      "route": "/portal",
+      "viewport": "1280x720",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/portal-1280x720.png",
+      "overflow": {
+        "scrollWidth": 1352,
+        "viewportWidth": 1280,
+        "pageViewportWidth": 1280,
+        "hasHorizontalOverflow": true
+      },
+      "jobTypography": null,
+      "jobIcon": null,
+      "ctaContrast": {
+        "selector": ".v3-portal-card",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(242, 232, 220)",
+        "ratio": 11.09,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-portal-card",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    },
+    {
+      "route": "/empresa/acceso",
+      "viewport": "1280x720",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/company-access-1280x720.png",
+      "overflow": {
+        "scrollWidth": 1352,
+        "viewportWidth": 1280,
+        "pageViewportWidth": 1280,
+        "hasHorizontalOverflow": true
+      },
+      "jobTypography": null,
+      "jobIcon": null,
+      "ctaContrast": {
+        "selector": ".v3-company-login-actions .v3-cta-gold",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(247, 239, 230)",
+        "ratio": 11.79,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-company-login-actions .v3-cta-gold",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    },
+    {
+      "route": "/empleos",
+      "viewport": "1280x720",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/jobs-1280x720.png",
+      "overflow": {
+        "scrollWidth": 1352,
+        "viewportWidth": 1280,
+        "pageViewportWidth": 1280,
+        "hasHorizontalOverflow": true
+      },
+      "jobTypography": {
+        "selector": ".v3-job-card-title",
+        "fontSize": "20px",
+        "lineHeight": "26px"
+      },
+      "jobIcon": {
+        "selector": ".v3-job-meta-item svg",
+        "width": "14px",
+        "height": "14px"
+      },
+      "ctaContrast": {
+        "selector": ".v3-job-cta",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(216, 179, 140)",
+        "ratio": 6.87,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-job-cta",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    },
+    {
+      "route": "/empleos/analista-control-planta",
+      "viewport": "1280x720",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/job-detail-1280x720.png",
+      "overflow": {
+        "scrollWidth": 1352,
+        "viewportWidth": 1280,
+        "pageViewportWidth": 1280,
+        "hasHorizontalOverflow": true
+      },
+      "jobTypography": {
+        "selector": ".v3-job-detail-title",
+        "fontSize": "36px",
+        "lineHeight": "43.2px"
+      },
+      "jobIcon": {
+        "selector": ".v3-job-meta-item svg",
+        "width": "16px",
+        "height": "16px"
+      },
+      "ctaContrast": {
+        "selector": ".v3-job-apply-btn",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(247, 239, 230)",
+        "ratio": 11.79,
+        "disabled": true
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-back",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    },
+    {
+      "route": "/",
+      "viewport": "390x844",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/landing-390x844.png",
+      "overflow": {
+        "scrollWidth": 390,
+        "viewportWidth": 390,
+        "pageViewportWidth": 390,
+        "hasHorizontalOverflow": false
+      },
+      "jobTypography": null,
+      "jobIcon": null,
+      "ctaContrast": {
+        "selector": ".landing__hero-buttons .landing__cta--gold",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(242, 232, 220)",
+        "ratio": 11.09,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".landing__hero-buttons .landing__cta--gold",
+        "focused": true,
+        "outlineStyle": "auto",
+        "outlineWidth": "1px",
+        "outlineColor": "rgb(229, 151, 0)",
+        "outlineOffset": "1px"
+      }
+    },
+    {
+      "route": "/portal",
+      "viewport": "390x844",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/portal-390x844.png",
+      "overflow": {
+        "scrollWidth": 422,
+        "viewportWidth": 390,
+        "pageViewportWidth": 422,
+        "hasHorizontalOverflow": true
+      },
+      "jobTypography": null,
+      "jobIcon": null,
+      "ctaContrast": {
+        "selector": ".v3-portal-card",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(242, 232, 220)",
+        "ratio": 11.09,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-portal-card",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    },
+    {
+      "route": "/empresa/acceso",
+      "viewport": "390x844",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/company-access-390x844.png",
+      "overflow": {
+        "scrollWidth": 422,
+        "viewportWidth": 390,
+        "pageViewportWidth": 422,
+        "hasHorizontalOverflow": true
+      },
+      "jobTypography": null,
+      "jobIcon": null,
+      "ctaContrast": {
+        "selector": ".v3-company-login-actions .v3-cta-gold",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(247, 239, 230)",
+        "ratio": 11.79,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-company-login-actions .v3-cta-gold",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    },
+    {
+      "route": "/empleos",
+      "viewport": "390x844",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/jobs-390x844.png",
+      "overflow": {
+        "scrollWidth": 422,
+        "viewportWidth": 390,
+        "pageViewportWidth": 422,
+        "hasHorizontalOverflow": true
+      },
+      "jobTypography": {
+        "selector": ".v3-job-card-title",
+        "fontSize": "18px",
+        "lineHeight": "23.4px"
+      },
+      "jobIcon": {
+        "selector": ".v3-job-meta-item svg",
+        "width": "14px",
+        "height": "14px"
+      },
+      "ctaContrast": {
+        "selector": ".v3-job-cta",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(216, 179, 140)",
+        "ratio": 6.87,
+        "disabled": false
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-job-cta",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    },
+    {
+      "route": "/empleos/analista-control-planta",
+      "viewport": "390x844",
+      "screenshot": "docs/qa/landing-company-jobs-2026-09-15/job-detail-390x844.png",
+      "overflow": {
+        "scrollWidth": 422,
+        "viewportWidth": 390,
+        "pageViewportWidth": 422,
+        "hasHorizontalOverflow": true
+      },
+      "jobTypography": {
+        "selector": ".v3-job-detail-title",
+        "fontSize": "24px",
+        "lineHeight": "28.8px"
+      },
+      "jobIcon": {
+        "selector": ".v3-job-meta-item svg",
+        "width": "16px",
+        "height": "16px"
+      },
+      "ctaContrast": {
+        "selector": ".v3-job-apply-btn",
+        "foreground": "rgb(61, 43, 32)",
+        "background": "rgb(247, 239, 230)",
+        "ratio": 11.79,
+        "disabled": true
+      },
+      "focusComputedStyleProxy": {
+        "selector": ".v3-back",
+        "focused": true,
+        "outlineStyle": "solid",
+        "outlineWidth": "3px",
+        "outlineColor": "rgb(112, 79, 57)",
+        "outlineOffset": "2px"
+      }
+    }
+  ],
+  "ok": true
+}

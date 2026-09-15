@@ -18,27 +18,6 @@ const iconProps = {
   focusable: 'false',
 };
 
-function IconBuilding() {
-  return (
-    <svg {...iconProps}>
-      <path d="M4 21 V7.5 L10 4 V21" />
-      <path d="M10 21 V10.5 H20 V21" />
-      <path d="M3 21 H21" />
-      <path d="M6.7 10.5 H8.2 M6.7 14 H8.2" />
-      <path d="M13.4 13.6 H14.9 M16.8 13.6 H18.3 M13.4 17 H14.9 M16.8 17 H18.3" />
-    </svg>
-  );
-}
-
-function IconUser() {
-  return (
-    <svg {...iconProps}>
-      <circle cx="12" cy="8" r="3.6" />
-      <path d="M5.4 20 C5.4 15.9 8.4 14.3 12 14.3 C15.6 14.3 18.6 15.9 18.6 20" />
-    </svg>
-  );
-}
-
 function IconGamepad() {
   return (
     <svg {...iconProps}>
@@ -92,9 +71,8 @@ export default function LandingPage() {
   const year = new Date().getFullYear();
   const closeMenu = () => setMenuOpen(false);
 
-  // Scroll suave scoped a la ruta landing (anclas #producto, #contacto,
-  // #accesos, etc.). Se limpia en unmount para no afectar a otras rutas
-  // (2026-09-11).
+  // Scroll suave scoped a la ruta landing. Se limpia en unmount para no afectar
+  // a otras rutas (2026-09-11).
   useEffect(() => {
     const root = document.documentElement;
     root.style.scrollBehavior = 'smooth';
@@ -132,12 +110,11 @@ export default function LandingPage() {
           <a href="#contacto" onClick={closeMenu}>{t('Contacto', 'Contact')}</a>
         </nav>
 
-        {/* Fix 2026-09-11: "Iniciar sesión" ocupa el slot donde estaba el CTA
-            "Solicitar demo" (eliminado de la topbar; sigue en la sección
-            HABLEMOS/cierre). v2 (2026-09-11): estilo CTA gold completo
-            (gradiente + sombra + flecha), mismo lenguaje que el hero. */}
         <div className="landing__header-actions">
-          <a className="landing__cta landing__cta--gold landing__cta--sm landing__nav-login" href="#accesos" onClick={closeMenu}>
+          <a className="landing__cta landing__cta--outline landing__cta--sm" href="/solicitar-demo" onClick={closeMenu}>
+            {t('Solicitar demo', 'Request a demo')}
+          </a>
+          <a className="landing__cta landing__cta--gold landing__cta--sm landing__nav-login" href="/portal" onClick={closeMenu}>
             {t('Iniciar sesión', 'Log in')}
             <svg className="landing__nav-login-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M4 12h15M13 6l6 6-6 6" />
@@ -241,7 +218,7 @@ export default function LandingPage() {
             </div>
             <ol className="landing__steps">
               <li>{t('La persona accede al portal de evaluación y activa la cámara si es necesaria.', 'The person accesses the evaluation portal and enables the camera if needed.')}</li>
-              <li>{t('Juega a una batería de juegos gamificados; las métricas se recopilan localmente.', 'They play a battery of gamified games; metrics are gathered locally.')}</li>
+              <li>{t('Resuelve desafíos interactivos y sus señales conductuales se procesan localmente.', 'Completes interactive challenges and behavioral signals are processed locally.')}</li>
               <li>{t('KRUMM procesa en local → genera un reporte para revisión humana.', 'KRUMM processes locally → generates a report for human review.')}</li>
               <li>{t('El reclutador revisa en el workspace de empresa, ve la evidencia y toma una decisión contextualizada.', 'The recruiter reviews the company workspace, sees the evidence, and makes a grounded decision.')}</li>
             </ol>
@@ -307,39 +284,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── Accesos (oscuro: ¿Dónde quieres ingresar?) ── */}
-        <section id="accesos" className="landing__section landing__section--accesos" aria-labelledby="accesos-title">
-          <div className="landing__container">
-            <h2 id="accesos-title" className="landing__accesos-title">{t('¿Dónde quieres ingresar?', 'Where do you want to sign in?')}</h2>
-            <p className="landing__accesos-sub">{t('Accede a tu espacio KRUMM.', 'Access your KRUMM space.')}</p>
-            <div className="landing__accesos-grid">
-              <article className="landing__acceso-card landing__acceso-card--empresa">
-                <span className="landing__icon-box"><IconBuilding /></span>
-                <span className="landing__acceso-kicker">{t('EMPRESAS', 'COMPANIES')}</span>
-                <h3>{t('Portal para empresas', 'Portal for companies')}</h3>
-                <p>{t('Gestiona procesos de evaluación, candidatos, resultados y equipos.', 'Manage assessment processes, candidates, results, and teams.')}</p>
-                <span className="landing__acceso-divider" aria-hidden="true" />
-                <a className="landing__acceso-cta" href="/empresa/acceso">
-                  {t('Ingresar como empresa', 'Sign in as a company')} <span aria-hidden="true">→</span>
-                </a>
-              </article>
-              <article className="landing__acceso-card landing__acceso-card--candidato">
-                <span className="landing__icon-box"><IconUser /></span>
-                <span className="landing__acceso-kicker">{t('CANDIDATOS', 'CANDIDATES')}</span>
-                <h3>{t('Portal para candidatos', 'Portal for candidates')}</h3>
-                <p>{t('Accede a tus evaluaciones y experiencias KRUMM.', 'Access your assessments and KRUMM experiences.')}</p>
-                <span className="landing__acceso-divider" aria-hidden="true" />
-                <a className="landing__acceso-cta" href="/candidato">
-                  {t('Ingresar como candidato', 'Sign in as a candidate')} <span aria-hidden="true">→</span>
-                </a>
-              </article>
-            </div>
-            <a className="landing__volver" href="/">
-              <span aria-hidden="true">←</span> {t('Volver a KRUMM', 'Back to KRUMM')}
-            </a>
-          </div>
-        </section>
-
         {/* ── Cierre HABLEMOS + contacto (oscuro, CTA gold) ── */}
         <section id="contacto" className="landing__section landing__section--cierre" aria-labelledby="contacto-title">
           <div className="landing__container landing__cierre-grid">
@@ -360,7 +304,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="landing__cierre-cta">
-              <a className="landing__cta landing__cta--gold" href="mailto:carlossaldivia@krumm.cl">{t('Solicitar demo', 'Request a demo')}</a>
+              <a className="landing__cta landing__cta--gold" href="/solicitar-demo">{t('Solicitar demo', 'Request a demo')}</a>
             </div>
           </div>
         </section>

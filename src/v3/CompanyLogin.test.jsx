@@ -117,6 +117,7 @@ describe('A.2 — CompanyLoginPage (/empresa/acceso)', () => {
     renderRoute('/empresa/acceso');
     const btn = await screen.findByRole('button', { name: V3_COPY.es.pages.companyAccess.loginCta });
     fireEvent.click(btn);
+    expect(screen.getByRole('button', { name: V3_COPY.es.pages.companyAccess.loginBusy })).toBeDisabled();
     await waitFor(() => {
       const pending = getPendingAuth();
       expect(pending?.state).toBeTruthy();
@@ -124,4 +125,27 @@ describe('A.2 — CompanyLoginPage (/empresa/acceso)', () => {
       expect(pending?.redirectUri).toBe(`${window.location.origin}/empresa/acceso`);
     });
   }, 20000);
+
+  it('presenta un único bloque de acceso con ayuda expuesta antes de un separador vacío y la demo', () => {
+    const { container } = renderRoute('/empresa/acceso');
+    const access = container.querySelector('[data-testid="v3-company-login-content"]');
+    const login = screen.getByRole('button', { name: 'Iniciar sesión' });
+    const help = screen.getByText('Al iniciar sesión accederás a tu espacio privado de empresa.');
+    const separator = screen.getByRole('separator');
+    const demoNote = screen.getByText('La demo no requiere una cuenta.');
+    const demo = screen.getByRole('link', { name: 'Explorar demo de empresas' });
+
+    expect(access).toContainElement(login);
+    expect(access).toContainElement(help);
+    expect(access).toContainElement(separator);
+    expect(access).toContainElement(demo);
+    expect(help.tagName).toBe('P');
+    expect(help.closest('[aria-hidden="true"]')).toBeNull();
+    expect(separator).toBeEmptyDOMElement();
+    expect([...access.querySelectorAll('button, a')]).toEqual([login, demo]);
+    expect(login.compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(help.compareDocumentPosition(separator) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(separator.compareDocumentPosition(demoNote) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(separator.compareDocumentPosition(demo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });

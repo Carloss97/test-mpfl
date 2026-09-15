@@ -145,7 +145,7 @@ Resources:
           # + app.eu.posthog.com + eu-assets.i.posthog.com (y VITE_POSTHOG_HOST)
           # en la próxima versión.
           ContentSecurityPolicy:
-            ContentSecurityPolicy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://storage.googleapis.com https://rwm08ik23m.execute-api.us-east-1.amazonaws.com https://krumm-staging-recruiters.auth.us-east-1.amazoncognito.com https://us.i.posthog.com https://us.posthog.com https://us-assets.i.posthog.com https://o4512081787486208.ingest.us.sentry.io; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+            ContentSecurityPolicy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://storage.googleapis.com https://rwm08ik23m.execute-api.us-east-1.amazonaws.com https://krumm-staging-recruiters.auth.us-east-1.amazoncognito.com https://acceso-stage.krumm.cl https://us.i.posthog.com https://us.posthog.com https://us-assets.i.posthog.com https://o4512081787486208.ingest.us.sentry.io; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
             Override: true
           # X-Frame-Options: DENY (anti clickjacking)
           FrameOptions:

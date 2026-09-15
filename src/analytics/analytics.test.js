@@ -33,6 +33,7 @@ beforeEach(() => {
   document.cookie = 'cookie_consent=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
 });
 afterEach(() => {
+  window.history.replaceState(null, '', '/');
   vi.unstubAllEnvs();
 });
 
@@ -104,7 +105,7 @@ describe('cookie de consent (cookie_consent, 1 año)', () => {
   });
 });
 
-describe('rutas excluidas (/postulaciones* y /dev*)', () => {
+describe('rutas excluidas (/postulaciones*, /dev* y /solicitar-demo)', () => {
   async function active() {
     vi.stubEnv('VITE_POSTHOG_API', 'test_project_credential');
     await freshAnalytics();
@@ -112,11 +113,16 @@ describe('rutas excluidas (/postulaciones* y /dev*)', () => {
     return a;
   }
 
-  it('isExcludedRoute: /postulaciones, /postulaciones/x, /dev/bomb → true; el resto → false', async () => {
+  it('matches excluded route segments exactly and normalizes trailing slashes', async () => {
     await active();
     expect(a.isExcludedRoute('/postulaciones')).toBe(true);
     expect(a.isExcludedRoute('/postulaciones/123')).toBe(true);
     expect(a.isExcludedRoute('/dev/bomb')).toBe(true);
+    expect(a.isExcludedRoute('/solicitar-demo')).toBe(true);
+    expect(a.isExcludedRoute('/solicitar-demo/')).toBe(true);
+    expect(a.isExcludedRoute('/solicitar-demolition')).toBe(false);
+    expect(a.isExcludedRoute('/postulaciones-demo')).toBe(false);
+    expect(a.isExcludedRoute('/development')).toBe(false);
     expect(a.isExcludedRoute('/candidato')).toBe(false);
     expect(a.isExcludedRoute('/empresa')).toBe(false);
     expect(a.isExcludedRoute('/')).toBe(false);
@@ -130,6 +136,13 @@ describe('rutas excluidas (/postulaciones* y /dev*)', () => {
       expect(ph.page).not.toHaveBeenCalled();
       expect(ph.capture).not.toHaveBeenCalled();
     }
+  });
+
+  it('on /solicitar-demo/ blocks both pageviews and events', async () => {
+    await active();
+    expect(await a.trackPageView('/solicitar-demo/', '')).toBe(false);
+    expect(await a.track('demo_request_submitted', { email: 'pii@example.test' }, { path: '/solicitar-demo/', search: '' })).toBe(false);
+    expect(posthogState.mock.capture).not.toHaveBeenCalled();
   });
   it('en ruta excluida: whitelist de funnel SÍ pasa (consent_accepted, game_N_completed, report_viewed, invite_opened, nps_submitted)', async () => {
     await active();

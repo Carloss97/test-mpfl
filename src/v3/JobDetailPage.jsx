@@ -1,62 +1,31 @@
-// t_7aad621f (FASE A.3): Detalle de oferta de empleo (/empleos/:slug).
-// Shell candidato, i18n v3Copy, datos de jobsData.js (getJobBySlug).
-// Secciones: hero (título + meta), descripción, responsabilidades,
-// requisitos, beneficios, fecha + CTA postular (placeholder honesto).
-// Empty state (404) si slug no existe.
 import React from 'react';
+import { useV3Copy } from './v3Copy.js';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { getJobBySlug } from './jobsData.js';
 
-function IconLocation() {
+function IconBriefcase({ className }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  );
-}
-
-function IconBriefcase() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="3" y="7" width="18" height="14" rx="2" />
       <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12a23 23 0 0 0 18 0M12 11v4" />
     </svg>
   );
 }
 
-function IconClock() {
+function IconCheck({ className }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 6v6l4 2" />
-    </svg>
-  );
-}
-
-function IconCheck() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <polyline points="20 6 9 17 4 12" />
     </svg>
   );
 }
 
-function formatDate(dateStr, lang) {
-  const date = new Date(dateStr + 'T00:00:00');
-  return date.toLocaleDateString(lang === 'es' ? 'es-CL' : 'en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-}
-
-function Section({ title, icon: Icon, children, className }) {
+function Section({ id, title, children }) {
   return (
-    <section className={`v3-job-section ${className || ''}`} aria-labelledby={`${title.toLowerCase().replace(/\s+/g, '-')}-heading`}>
+    <section className="v3-job-section" aria-labelledby={id}>
       <header className="v3-job-section-header">
-        {Icon && <Icon className="v3-job-section-icon" aria-hidden="true" />}
-        <h3 id={`${title.toLowerCase().replace(/\s+/g, '-')}-heading`} className="v3-job-section-title">{title}</h3>
+        <IconBriefcase className="v3-job-section-icon" />
+        <h2 id={id} className="v3-job-section-title">{title}</h2>
       </header>
       <div className="v3-job-section-content">{children}</div>
     </section>
@@ -66,9 +35,9 @@ function Section({ title, icon: Icon, children, className }) {
 function BulletList({ items }) {
   return (
     <ul className="v3-job-bullet-list">
-      {items.map((item, idx) => (
-        <li key={idx} className="v3-job-bullet-item">
-          <IconCheck className="v3-job-bullet-check" aria-hidden="true" />
+      {items.map((item) => (
+        <li key={item} className="v3-job-bullet-item">
+          <IconCheck className="v3-job-bullet-check" />
           <span>{item}</span>
         </li>
       ))}
@@ -77,97 +46,50 @@ function BulletList({ items }) {
 }
 
 export default function JobDetailPage({ params }) {
+  const copy = useV3Copy();
   const { language } = useLanguage();
   const job = params?.slug ? getJobBySlug(params.slug) : null;
 
   if (!job) {
     return (
       <div className="v3-job-notfound">
-        <IconBriefcase className="v3-job-notfound-icon" aria-hidden="true" />
-        <h1>{language === 'es' ? 'Oferta no encontrada' : 'Job not found'}</h1>
-        <p>
-          {language === 'es'
-            ? 'La oferta que buscas no existe o ha sido cerrada.'
-            : 'The job you are looking for does not exist or has been closed.'}
-        </p>
-        <a className="v3-back" href="/empleos">
-          <span aria-hidden="true">←</span> {language === 'es' ? 'Volver a la bolsa de empleos' : 'Back to job board'}
-        </a>
+        <IconBriefcase className="v3-job-notfound-icon" />
+        <h1>{copy.jobs_notFound}</h1>
+        <p>{copy.jobs_notFoundText}</p>
+        <a className="v3-back" href="/empleos"><span aria-hidden="true">←</span> {copy.jobs_backCatalog}</a>
       </div>
     );
   }
 
+  const status = copy.jobs_statuses[job.exampleStatus];
+  const statusLabel = `${copy.jobs_exampleState} ${status}. ${copy.jobs_notVacancy}`;
+
   return (
     <article className="v3-job-detail">
       <header className="v3-job-detail-header">
-        {job.featured && (
-          <span className="v3-job-badge">{language === 'es' ? 'Destacada' : 'Featured'}</span>
-        )}
+        <span className="v3-job-badge">{copy.jobs_roleExample}</span>
         <h1 className="v3-job-detail-title">{job.title[language]}</h1>
         <div className="v3-job-detail-meta">
-          <div className="v3-job-meta-item">
-            <IconLocation aria-hidden="true" />
-            {job.location[language]}
-          </div>
-          <div className="v3-job-meta-item">
-            <IconBriefcase aria-hidden="true" />
-            {job.mode[language]} · {job.type[language]}
-          </div>
-          <div className="v3-job-meta-item">
-            {job.department[language]}
-          </div>
-          <div className="v3-job-meta-item">
-            <IconClock aria-hidden="true" />
-            {formatDate(job.postedAt, language)}
-          </div>
+          <span className="v3-job-meta-item">{job.area[language]}</span>
+          <span className={`v3-job-status v3-job-status--${job.exampleStatus}`} aria-label={statusLabel}>{status}</span>
         </div>
       </header>
 
-      <Section title={language === 'es' ? 'Descripción del cargo' : 'Job Description'} icon={IconBriefcase}>
+      <Section id="v3-job-overview" title={copy.jobs_sections.overview}>
         <p className="v3-job-detail-text">{job.description[language]}</p>
       </Section>
-
-      <Section title={language === 'es' ? 'Responsabilidades' : 'Responsibilities'} icon={IconBriefcase}>
-        <BulletList items={job.responsibilities[language]} />
+      <Section id="v3-job-focus" title={copy.jobs_sections.focus}>
+        <BulletList items={job.focus[language]} />
       </Section>
-
-      <Section title={language === 'es' ? 'Requisitos' : 'Requirements'} icon={IconBriefcase}>
-        <BulletList items={job.requirements[language]} />
-      </Section>
-
-      <Section title={language === 'es' ? 'Beneficios' : 'Benefits'} icon={IconBriefcase}>
-        <BulletList items={job.benefits[language]} />
+      <Section id="v3-job-competencies" title={copy.jobs_sections.competencies}>
+        <BulletList items={job.competencies[language]} />
       </Section>
 
       <footer className="v3-job-detail-footer">
-        <div className="v3-job-footer-info">
-          <p className="v3-job-footer-date">
-            <IconClock aria-hidden="true" />
-            {language === 'es' ? 'Publicada el ' : 'Posted on '}{formatDate(job.postedAt, language)}
-          </p>
-          <p className="v3-job-footer-status">
-            {language === 'es' ? 'Estado: ' : 'Status: '}
-            <span className={`v3-job-status v3-job-status--${job.status}`}>
-              {job.status === 'active'
-                ? (language === 'es' ? 'Activa' : 'Active')
-                : job.status === 'paused'
-                  ? (language === 'es' ? 'Pausada' : 'Paused')
-                  : (language === 'es' ? 'Cerrada' : 'Closed')}
-            </span>
-          </p>
-        </div>
+        <p className="v3-job-demo-notice" role="status">{copy.jobs_noApplications}</p>
         <div className="v3-job-footer-actions">
-          <button
-            type="button"
-            className="v3-cta-gold v3-job-apply-btn"
-            disabled
-            aria-disabled="true"
-          >
-            {language === 'es' ? 'Postular (próxima iteración)' : 'Apply (next iteration)'}
-          </button>
-          <a className="v3-back" href="/empleos">
-            <span aria-hidden="true">←</span> {language === 'es' ? 'Volver a la bolsa de empleos' : 'Back to job board'}
-          </a>
+          <a className="v3-job-cta" href="/candidato">{copy.jobs_exploreCandidatePortal}</a>
+          <a className="v3-back" href="/empleos"><span aria-hidden="true">←</span> {copy.jobs_backCatalog}</a>
         </div>
       </footer>
     </article>

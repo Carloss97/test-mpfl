@@ -33,6 +33,10 @@ free: 5,000 errores/mes, retención 30 días). Proyecto: "krumm" (org o451208178
 4. **Tokens/JWT** en breadcrumbs o URLs: la sanitización anterior lo impide;
    si se agrega instrumentación de fetch, los breadcrumbs solo llevan
    URL+status (sin body ni headers).
+5. **`/solicitar-demo`**: esta ruta pública contiene un formulario PII. El
+   filtro route-specific descarta todos sus breadcrumbs y eventos (incluidos
+   request URL, extras y valores de formulario), sin desactivar Sentry para el
+   resto de la aplicación.
 
 ## Qué SÍ se envía
 
@@ -52,9 +56,9 @@ free: 5,000 errores/mes, retención 30 días). Proyecto: "krumm" (org o451208178
 
 ## Tests
 
-- `src/observability/sentry.test.js` — sin DSN → no-op; con DSN → init;
+- `src/observability/sentry.test.jsx` — sin DSN → no-op; con DSN → init;
   `sanitizeBreadcrumb`/`sanitizeEvent` (categorías prohibidas, truncado,
-  tags); `ErrorBoundary` → fallback de marca.
+  tags y exclusión total de `/solicitar-demo`); `ErrorBoundary` → fallback de marca.
 - `backend/test/sentry.test.mjs` — 500 con DSN → `captureException` llamado
   con tag `code`; sin DSN → no llamado.
 

@@ -38,9 +38,9 @@ page.on('request', (req) => {
 page.on('response', async (resp) => {
   const url = resp.url();
   if (url.includes('/oauth2/token')) {
-    let body = '';
-    try { body = await resp.text(); } catch { body = '<no body>'; }
-    tokenCalls.push({ status: resp.status(), url, body: body.slice(0, 400) });
+    // Never log token/error response bodies: successful responses contain credentials.
+    // Status and origin are sufficient for the E2E diagnostic.
+    tokenCalls.push({ status: resp.status(), origin: new URL(url).origin });
   }
 });
 
@@ -77,14 +77,23 @@ try {
   await page.waitForURL('**/*.amazoncognito.com/**', { timeout: 30000 });
   console.log('2) hosted UI abierta:', page.url());
 
-  // 3) Formulario combinado clásico: email + password en la misma página.
-  //    La UI tiene un form duplicado oculto → :visible para no chocar en strict mode.
-  await page.fill('input#signInFormUsername:visible', EMAIL);
-  await page.fill('input#signInFormPassword:visible', PASSWORD);
-  console.log('3) credenciales ingresadas');
+  // 3) Cognito may serve either the legacy combined form or the managed
+  //    two-step UI. Select only visible controls and never print credential values.
+  const legacyUsername = page.locator('input#signInFormUsername:visible');
+  const managedUsername = page.locator('input[name="username"]:visible');
+  if (await legacyUsername.count()) {
+    await legacyUsername.fill(EMAIL);
+    await page.locator('input#signInFormPassword:visible').fill(PASSWORD);
+    await page.locator('input[type="submit"]:visible').click();
+  } else {
+    await managedUsername.fill(EMAIL);
+    await page.getByRole('button', { name: /next|siguiente|continue|continuar|sign in|iniciar sesi/i }).click();
+    await page.locator('input[type="password"]:visible').fill(PASSWORD);
+    await page.getByRole('button', { name: /sign in|iniciar sesi|continue|continuar/i }).click();
+  }
+  console.log('3) credenciales enviadas');
 
   // 4) Submit → Cognito redirige con code
-  await page.click('input[type="submit"]:visible');
   const callbackGlob = ['**/empresa/acceso?', 'code', '=', '*'].join('');
   await page.waitForURL(callbackGlob, { timeout: 30000 });
   console.log('4) retorno con code:', page.url().replace(/code=[^&]+/, 'code=***'));

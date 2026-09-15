@@ -18,9 +18,11 @@ export const V3_SHELLS = Object.freeze({
   PORTAL: 'portal',         // bare: brand+toggle (ref portal.html)
   COMPANY_LOGIN: 'companyLogin', // bare: brand+toggle (ref login-company.html)
   LEGAL: 'legal',           // bare: brand+toggle + documento canónico (FASE E.1, KRU-117)
+  DEMO_REQUEST: 'demoRequest', // bare public PII form; no dashboard/candidate shell
 });
 
 export const V3_ROUTES = Object.freeze([
+  Object.freeze({ path: '/solicitar-demo', shell: V3_SHELLS.DEMO_REQUEST, page: 'demoRequest' }),
   Object.freeze({ path: '/portal', shell: V3_SHELLS.PORTAL, page: 'portal' }),
   Object.freeze({ path: '/legal/terminos', shell: V3_SHELLS.LEGAL, page: 'terminos', docType: 'terminos' }),
   Object.freeze({ path: '/legal/privacidad', shell: V3_SHELLS.LEGAL, page: 'privacidad', docType: 'privacidad' }),

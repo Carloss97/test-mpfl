@@ -21,6 +21,22 @@ Parameters:
     Type: Number
     Default: 30
     Description: Días de retención antes del TTL (EventBridge Scheduler refuerza).
+  DemoRequestRetentionDays:
+    Type: Number
+    Default: 90
+    Description: Días de retención de solicitudes de demo antes del TTL de DynamoDB.
+  DemoRequestNotificationTo:
+    Type: String
+    Default: ''
+    NoEcho: true
+    Description: Destinatario interno de notificaciones de demo; vacío deshabilita el aviso SES.
+  DemoRateLimitIpSalt:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    AllowedPattern: '^\S+$'
+    ConstraintDescription: Provide a non-whitespace secret of at least 32 characters.
+    Description: Secreto para HMAC de IP en el rate limit de solicitudes de demo; nunca se persiste IP cruda.
   CognitoPoolId:
     Type: String
     Default: 'us-east-1_FX1VyzTTA'
@@ -74,6 +90,11 @@ Globals:
         # G.3 (KRU-138): tabla de rate limit per-IP (10 req/min en
         # invitations+sessions). Vacio/imposible: si faltara, no-op seguro.
         RATE_LIMIT_TABLE: !Ref RateLimitTable
+        # Public demo requests: private recipient/salt come only from NoEcho parameters.
+        DEMO_REQUESTS_TABLE: !Ref DemoRequestsTable
+        DEMO_REQUEST_RETENTION_DAYS: !Ref DemoRequestRetentionDays
+        DEMO_REQUEST_NOTIFICATION_TO: !Ref DemoRequestNotificationTo
+        DEMO_RATE_LIMIT_IP_SALT: !Ref DemoRateLimitIpSalt
 
 Resources:
   # --- DynamoDB: sessions (aggregate-only, TTL 30d) ---
@@ -157,6 +178,28 @@ Resources:
         - AttributeName: invitationId
           KeyType: HASH
 
+  # --- DynamoDB: demo requests (write-only from public API, TTL retention) ---
+  DemoRequestsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'krumm-${Environment}-demo-requests'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      AttributeDefinitions:
+        - AttributeName: requestId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: requestId
+          KeyType: HASH
+
   # --- Lambda rol mínimo privilegio (solo estas tablas) ---
   SessionsFunctionRole:
     Type: AWS::IAM::Role
@@ -192,6 +235,11 @@ Resources:
                   - !Sub '${AuditLogTable.Arn}/index/sessionId-index'
                   - !Sub '${InvitationsTable.Arn}'
                   - !Sub '${RateLimitTable.Arn}'  # G.3: rate limit per-IP
+              # Demo requests are write-only: no Scan, Query, GetItem, UpdateItem or DeleteItem.
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                Resource: !GetAtt DemoRequestsTable.Arn
               # A.1: envío de email de invitación (scoped al identity del dominio,
               # nunca ses:* global).
               - Effect: Allow
@@ -214,6 +262,13 @@ Resources:
             ApiId: !Ref SessionsApi
             Path: /sessions
             Method: POST
+        DemoRequests:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SessionsApi
+            Path: /demo-requests
+            Method: POST
+            # Public by design; body validation, HMAC rate limit, and write-only IAM apply in Lambda.
         InvitationItem:
           Type: HttpApi
           Properties:

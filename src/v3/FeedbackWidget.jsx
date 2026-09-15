@@ -221,7 +221,7 @@ export default function FeedbackWidget() {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .k-feedback-btn {
           position: fixed;
           bottom: var(--k-space-6, 24px);

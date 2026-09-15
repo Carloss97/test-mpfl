@@ -1,0 +1,45 @@
+/* Public PII route: only canonical --k-* visual tokens; no tracking UI. */
+.demo-request { background: var(--k-bg-beige); }
+.demo-request__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(calc(100% - (var(--k-gutter) * 2)), var(--k-container));
+  margin: 0 auto;
+  padding: var(--k-demo-header-padding-y) 0;
+  gap: var(--k-demo-header-gap);
+}
+.demo-request__brand { display: block; flex: 0 0 auto; }
+.demo-request__brand img { display: block; width: var(--k-demo-logo-width); height: var(--k-demo-logo-height); object-fit: contain; object-position: left center; }
+.demo-request__back { color: var(--k-ink-medium); font-size: var(--k-size-kicker); font-weight: var(--k-weight-semibold); }
+.demo-request__back:hover { color: var(--k-ink-espresso); text-decoration: underline; text-underline-offset: var(--k-demo-error-margin-bottom); }
+.demo-request__main { width: min(calc(100% - (var(--k-gutter) * 2)), var(--k-demo-max-width)); margin: 0 auto; padding: var(--k-demo-main-padding-top) 0 var(--k-demo-main-padding-bottom); }
+.demo-request__stack { display: flex; flex-direction: column; gap: var(--k-demo-stack-gap); }
+.demo-request__eyebrow { margin: 0 0 var(--k-space-item); color: var(--k-ink-terracotta); font-size: var(--k-size-kicker); font-weight: var(--k-weight-bold); letter-spacing: var(--k-tracking-kicker); }
+.demo-request h1 { margin: 0; color: var(--k-ink-espresso); font-family: var(--k-font-display); font-size: var(--k-demo-heading-size); font-weight: var(--k-weight-display); letter-spacing: var(--k-tracking-section); line-height: var(--k-demo-heading-leading); text-wrap: balance; }
+.demo-request__intro > p:not(.demo-request__eyebrow) { color: var(--k-ink-medium); font-size: var(--k-size-body); line-height: var(--k-demo-body-leading); }
+.demo-request__availability { font-size: var(--k-size-kicker) !important; font-weight: var(--k-weight-semibold); }
+.demo-request__form, .demo-request__success { padding: var(--k-demo-stack-gap); border: var(--k-demo-border-width) solid var(--k-line); border-radius: var(--k-radius-card); background: var(--k-bg-light); box-shadow: var(--k-shadow-soft); }
+.demo-request__form { display: grid; gap: var(--k-demo-form-gap); }
+.demo-request__form label { display: grid; gap: var(--k-demo-label-gap); color: var(--k-ink-espresso); font-size: var(--k-size-kicker); font-weight: var(--k-weight-semibold); }
+.demo-request__form :is(input:not([type="checkbox"]), select, textarea) { box-sizing: border-box; width: 100%; min-width: 0; border: var(--k-demo-border-width) solid var(--k-co-input-line); border-radius: var(--k-radius-btn); background: var(--k-co-surface); color: var(--k-ink-espresso); font: inherit; font-weight: var(--k-weight-regular); line-height: var(--k-demo-body-leading); padding: var(--k-demo-control-padding); }
+.demo-request__form textarea { resize: vertical; }
+.demo-request__form :is(input:not([type="checkbox"]), select, textarea):hover:not(:disabled) { border-color: var(--k-gold-dark); }
+.demo-request__form :is(input, select, textarea):focus-visible, .demo-request :is(a, button):focus-visible { outline: var(--k-demo-focus-width) solid var(--k-ink-terracotta); outline-offset: var(--k-demo-focus-offset); }
+.demo-request__form :is(input, select, textarea):disabled, .demo-request__button:disabled { cursor: not-allowed; opacity: var(--k-demo-disabled-opacity); }
+.demo-request__field-error, .demo-request__general-error { margin: var(--k-demo-error-margin-top) 0 var(--k-demo-error-margin-bottom); color: var(--k-status-error); font-size: var(--k-size-kicker); line-height: var(--k-demo-body-leading); }
+.demo-request__general-error { padding: var(--k-demo-control-padding); border-radius: var(--k-radius-btn); background: var(--k-status-error-soft); font-weight: var(--k-weight-semibold); }
+.demo-request__consent { display: flex !important; align-items: flex-start; gap: var(--k-demo-label-gap); margin-top: var(--k-demo-consent-margin-top); line-height: var(--k-demo-body-leading); }
+.demo-request__consent input { width: var(--k-demo-control-size); height: var(--k-demo-control-size); margin: 0; accent-color: var(--k-ink-terracotta); }
+.demo-request__button { display: inline-flex; align-items: center; justify-content: center; min-height: var(--k-demo-button-height); border: var(--k-demo-border-width) solid var(--k-gold-dark); border-radius: var(--k-radius-btn); background: linear-gradient(var(--k-demo-gradient-angle), var(--k-btn-gold-from), var(--k-btn-gold-to)); box-shadow: var(--k-shadow-gold); color: var(--k-btn-gold-ink); font: inherit; font-size: var(--k-size-body); font-weight: var(--k-weight-bold); padding: var(--k-demo-control-padding) var(--k-demo-button-padding-x); }
+.demo-request__button:hover:not(:disabled) { filter: brightness(var(--k-demo-button-hover-brightness)); transform: translateY(var(--k-demo-button-hover-translate-y)); }
+.demo-request__button--secondary { margin-top: var(--k-demo-button-secondary-margin-top); text-decoration: none; }
+.demo-request__support { margin: var(--k-demo-error-margin-bottom) 0 0; color: var(--k-ink-medium); font-size: var(--k-size-kicker); line-height: var(--k-demo-body-leading); }
+.demo-request__support a { color: var(--k-ink-terracotta); font-weight: var(--k-weight-semibold); text-decoration: underline; text-underline-offset: var(--k-demo-focus-offset); }
+.demo-request__success { max-width: var(--k-demo-content-width); margin: var(--k-demo-success-margin-y) auto; text-align: center; }
+.demo-request__success > p:not(.demo-request__eyebrow) { color: var(--k-ink-medium); line-height: var(--k-demo-success-leading); }
+@media (prefers-reduced-motion: no-preference) { .demo-request__button { transition: filter var(--k-demo-button-transition-duration) ease, transform var(--k-demo-button-transition-duration) ease; } }
+/* Canonical compact breakpoint: <900px (documented in krumm-tokens.css). */
+@media (max-width: 900px) { .demo-request__header, .demo-request__main { width: calc(100% - (var(--k-gutter-mobile) * 2)); } }
+/* Canonical handset breakpoint: <560px (documented in krumm-tokens.css). */
+@media (max-width: 560px) { .demo-request__header { padding: var(--k-demo-compact-header-padding-y) 0; gap: var(--k-demo-compact-header-gap); } .demo-request__brand img { width: var(--k-demo-compact-logo-width); height: var(--k-demo-compact-logo-height); } .demo-request__back { font-size: var(--k-size-micro); } .demo-request__main { padding: var(--k-demo-compact-main-padding-top) 0 var(--k-demo-compact-main-padding-bottom); } .demo-request__form, .demo-request__success { padding: var(--k-demo-compact-card-padding); } .demo-request h1 { font-size: var(--k-demo-compact-heading-size); } }

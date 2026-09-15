@@ -38,6 +38,16 @@ Puede contactar a nuestro Delegado de Protección de Datos (DPO) en: **privacy@k
 | Calidad de señal (opcional, solo si cámara activa) | Indicadores agregados de presencia, confianza, iluminación, postura y mirada, según disponibilidad del dispositivo y del módulo | Contexto de calidad, nunca inferencia de talento | Consentimiento explícito separado (opt-in granular) |
 | Metadatos de sesión | `sessionId`, `battery`, `startedAt`, `completedAt`, `deviceInfo` (UA, viewport), `locale` | Operación, debugging, facturación | Interés legítimo / Contrato |
 
+### 2.3 Solicitudes públicas de demo
+
+El formulario público de solicitud de demo recoge únicamente **nombre, correo laboral, empresa, cargo, tamaño de equipo, caso de uso y confirmación de consentimiento de contacto**. KRUMM usa esos datos exclusivamente para responder a la solicitud de demo.
+
+Los destinatarios son el personal interno de KRUMM autorizado para responder solicitudes comerciales y los proveedores de infraestructura necesarios para alojar la solicitud o, si se configura, enviar una notificación interna. No se recogen en este formulario datos de candidatos ni datos biométricos.
+
+Las solicitudes de demo se conservan durante **90 días** mediante el TTL `expiresAt` de DynamoDB. La eliminación por TTL es asíncrona y puede completarse después del vencimiento. Para consultas o solicitudes relativas a este formulario, contacte a **privacy@krumm.cl**.
+
+> Esta sección describe el alcance técnico actual del formulario y queda sujeta a revisión de DPO/asesoría legal antes de presentarse como texto jurídico definitivo.
+
 **Datos que NUNCA recopilamos ni almacenamos:**
 - Video, frames, imágenes de la cámara
 - Landmarks faciales crudos (468 puntos MediaPipe), blendshapes (52 coeficientes)
@@ -92,6 +102,7 @@ Nuestro backend se ejecuta en **AWS us-east-1 (Virginia, EE. UU.)**. Para usuari
 | Sesiones en DynamoDB (payload agregado) | 30 días (TTL automático `expiresAt`) | Auto-purga + entrada en audit_log |
 | Audit log (inmutable, append-only) | Según la política operativa vigente; la tabla actual no configura TTL automático | Supresión o conservación según obligación legal y política aplicable |
 | Invitaciones (tabla `invitations`) | Hasta expiración (máx 30 días) o uso | Auto-purga TTL |
+| Solicitudes públicas de demo | 90 días (`expiresAt`); el TTL de DynamoDB es asíncrono | Eliminación por TTL |
 | Cuenta Empresa / logs acceso | Mientras la cuenta esté activa + 2 años tras cierre | A petición o cierre cuenta |
 | Backups (PITR DynamoDB, S3 versioning) | PITR 35 días; las versiones S3 se conservan según la política de backups | Según política de retención de backups |
 

@@ -49,6 +49,7 @@ import CompanyRequestUploadPage from './CompanyRequestUploadPage.jsx';
 import { useCompanyData } from './useCompanyData.js';
 import JobsPage from './JobsPage.jsx';
 import JobDetailPage from './JobDetailPage.jsx';
+import DemoRequestPage from '../demo-request/DemoRequestPage.jsx';
 import './v3Shells.css';
 
 function IconBuilding() {
@@ -188,40 +189,44 @@ function CompanyLoginPage() {
         <LanguageToggle />
       </header>
       <main className="v3-bare-main" id="v3-company-login-main" tabIndex={-1}>
-        {authError ? (
-          <div className="v3-portal-intro" role="alert">
-            <h1>{page.errorTitle}</h1>
-            <p>{page.errorText}</p>
-            {authDetail ? (
-              <p className="v3-company-login-error-detail"><code>{authDetail}</code></p>
-            ) : null}
-          </div>
-        ) : (
-          <div className="v3-portal-intro">
-            <span className="v3-portal-label">{page.accessLabel}</span>
-            <h1>{page.title}</h1>
-            <p>{page.loginSubtitle}</p>
-          </div>
-        )}
-        <div className="v3-company-login-actions">
+        <section className="v3-company-login-content" data-testid="v3-company-login-content" aria-labelledby="v3-company-login-title">
+          {authError ? (
+            <div className="v3-company-login-intro" role="alert">
+              <span className="v3-portal-label">{page.accessLabel}</span>
+              <h1 id="v3-company-login-title">{page.errorTitle}</h1>
+              <p>{page.errorText}</p>
+              {authDetail ? (
+                <p className="v3-company-login-error-detail"><code>{authDetail}</code></p>
+              ) : null}
+            </div>
+          ) : (
+            <div className="v3-company-login-intro">
+              <span className="v3-portal-label">{page.accessLabel}</span>
+              <h1 id="v3-company-login-title">{page.title}</h1>
+              <p>{page.loginSubtitle}</p>
+            </div>
+          )}
           {authed && !authError ? (
-            <>
+            <div className="v3-company-login-actions">
               <a className="v3-cta-gold" href="/empresa" data-testid="v3-company-authed-cta">{page.authedCta}</a>
               <button type="button" className="v3-co-text-button" onClick={doLogout} data-testid="v3-company-logout">
                 <span>{page.logoutCta}</span>
               </button>
-            </>
+            </div>
           ) : (
-            <>
+            <div className="v3-company-login-actions">
               <button type="button" className="v3-cta-gold" onClick={startLogin} disabled={busy} data-testid="v3-company-login">
                 {busy ? page.loginBusy : page.loginCta}
               </button>
-              <a className="v3-co-text-button" href="/empresa" data-testid="v3-company-demo">
-                <span>{page.demoCta}</span>
-              </a>
-            </>
+              <p className="v3-company-login-help">{page.loginPrivateSpace}</p>
+              <div className="v3-company-login-separator" role="separator" aria-orientation="horizontal" />
+              <div className="v3-company-login-demo">
+                <p>{page.demoNote}</p>
+                <a className="v3-co-text-button" href="/empresa" data-testid="v3-company-demo">{page.demoCta}</a>
+              </div>
+            </div>
           )}
-        </div>
+        </section>
         <a className="v3-back v3-back--bare" href="/portal">{page.backLabel}</a>
       </main>
     </div>
@@ -349,6 +354,10 @@ export default function V3RootApp() {
 
   if (resolved.shell === V3_SHELLS.PORTAL) {
     return <PortalPage />;
+  }
+
+  if (resolved.shell === V3_SHELLS.DEMO_REQUEST) {
+    return <DemoRequestPage />;
   }
 
   if (resolved.shell === V3_SHELLS.LEGAL) {

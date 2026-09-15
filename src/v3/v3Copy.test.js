@@ -81,6 +81,13 @@ describe('v3Copy (fase v3 — i18n base)', () => {
     }
   });
 
+  it('nombra /empleos como catálogo de demostración en el H1 y breadcrumb de ambos idiomas', () => {
+    expect(V3_COPY.es.pages.jobs.title).toBe('Catálogo de demostración');
+    expect(V3_COPY.es.cp_jobs).toBe('Catálogo de demostración');
+    expect(V3_COPY.en.pages.jobs.title).toBe('Demonstration catalog');
+    expect(V3_COPY.en.cp_jobs).toBe('Demonstration catalog');
+  });
+
   it('chrome candidato: help/privacy/terms + footer + eyebrow bilingües', () => {
     for (const lang of ['en', 'es']) {
       const copy = V3_COPY[lang];

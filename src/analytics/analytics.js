@@ -29,7 +29,23 @@ const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.
 
 export const CONSENT_COOKIE = 'cookie_consent';
 const CONSENT_MAX_AGE_S = 60 * 60 * 24 * 365; // 1 año (tabla de cookies de la política)
-const EXCLUDED_PREFIXES = ['/postulaciones', '/dev/'];
+const EXCLUDED_PREFIXES = ['/postulaciones', '/dev'];
+// Public PII forms are excluded absolutely: unlike candidate routes, they have
+// no funnel-event exception because typed contact details must never be tracked.
+const PII_EXCLUDED_ROUTES = new Set(['/solicitar-demo']);
+
+// Browser routers resolve a trailing slash to the same page. Normalize only
+// route terminators before membership checks so exact PII exclusions stay exact:
+// /solicitar-demo/ is protected, while /solicitar-demolition is not suppressed.
+function normalizeAnalyticsPath(path = '') {
+  if (typeof path !== 'string') return '';
+  const pathname = path.split(/[?#]/, 1)[0];
+  return pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+}
+
+function matchesExcludedPrefix(path) {
+  return EXCLUDED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+}
 // Whitelist de eventos permitidos en rutas exclusas (funnel de candidato).
 // nps_submitted (F.2): encuesta opcional 1-10 al final del reporte; solo viaja
 // el score (métrica agregada, sin PII).
@@ -75,7 +91,12 @@ export function setConsent(granted) {
 }
 
 export function isExcludedRoute(path = '') {
-  return EXCLUDED_PREFIXES.some((prefix) => path === prefix || path.startsWith(prefix));
+  const normalizedPath = normalizeAnalyticsPath(path);
+  return PII_EXCLUDED_ROUTES.has(normalizedPath) || matchesExcludedPrefix(normalizedPath);
+}
+
+export function isPiiExcludedRoute(path = '') {
+  return PII_EXCLUDED_ROUTES.has(normalizeAnalyticsPath(path));
 }
 
 /** ¿Hay key de build? (false → no existe analytics para consentir). */
@@ -158,6 +179,7 @@ export async function track(event, properties = {}, context = {}) {
   const search = context.search ?? (typeof window !== 'undefined' ? window.location.search : '');
   if (typeof event !== 'string' || !event) return false;
   if (!isAnalyticsActive(path, search)) return false;
+  if (isPiiExcludedRoute(path)) return false;
   if (isExcludedRoute(path) && !(EXCLUDED_ROUTE_WHITELIST.has(event) || GAME_COMPLETED_RE.test(event))) {
     return false;
   }
@@ -195,6 +217,7 @@ export function startRouteObserver(onRoute) {
     return () => {};
   }
   let lastPath = window.location.pathname;
+  const originals = new Map();
   const report = () => {
     const current = window.location.pathname;
     if (current !== lastPath) {
@@ -205,6 +228,7 @@ export function startRouteObserver(onRoute) {
   for (const name of ['pushState', 'replaceState']) {
     const original = history[name];
     if (typeof original !== 'function') continue;
+    originals.set(name, original);
     history[name] = function patched(...args) {
       const result = original.apply(this, args);
       report();
@@ -213,7 +237,10 @@ export function startRouteObserver(onRoute) {
   }
   window.addEventListener('popstate', report);
   onRoute(lastPath); // pageview inicial
-  return () => window.removeEventListener('popstate', report);
+  return () => {
+    window.removeEventListener('popstate', report);
+    for (const [name, original] of originals) history[name] = original;
+  };
 }
 
 // Solo tests: restablece el estado módulo entre casos.

@@ -99,6 +99,14 @@
   --k-space-block: 40px;       /* entre bloques dentro de sección */
   --k-space-item: 16px;        /* ítem a ítem */
 
+  /* ── Catálogo de roles (Task 9) ─────────────────────────────── */
+  --k-jobs-card-min: 20rem;
+  --k-jobs-eyebrow-size: 0.75rem; /* 12px minimum for visible catalog context */
+  --k-jobs-reading-width: 42rem;
+  --k-jobs-compact-gap: 12px;
+  --k-jobs-card-padding-compact: 20px;
+  --k-jobs-icon-size: 16px;
+
   /* ── Estado semántico (H4.3/H4.4) — estados funcionales, no paleta de marca ──
    * Texto AA (≥4.5:1) sobre crema --k-bg-light / --k-card-cream. */
   --k-status-ok: #0f766e;              /* verde profundo: badges/pills ok */
@@ -222,7 +230,52 @@
   --k-size-micro: 0.8rem;              /* footer, chips, labels de stat */
   --k-weight-semibold: 600;            /* CTA (design-system §6: texto 600) */
   --k-tracking-wordmark: 0.14em;       /* wordmark KRUMM (tracking amplio, §6 logo) */
+
+  /* ── Public demo request ─────────────────────────────────────── */
+  /* Breakpoint conventions stay in the feature's @media rules: compact <900px,
+     handset <560px. CSS custom properties cannot be consumed by @media. */
+  --k-demo-max-width: 920px;
+  --k-demo-content-width: 620px;
+  --k-demo-header-padding-y: 20px;
+  --k-demo-header-gap: 24px;
+  --k-demo-logo-width: 82px;
+  --k-demo-logo-height: 54px;
+  --k-demo-main-padding-top: 56px;
+  --k-demo-main-padding-bottom: 80px;
+  --k-demo-stack-gap: 32px;
+  --k-demo-heading-size: clamp(2.5rem, 5vw, 4rem);
+  --k-demo-heading-leading: 1.04;
+  --k-demo-body-leading: 1.75;
+  --k-demo-form-gap: 10px;
+  --k-demo-label-gap: 8px;
+  --k-demo-control-padding: 12px;
+  --k-demo-border-width: 1px;
+  --k-demo-gradient-angle: 115deg;
+  --k-demo-focus-width: 3px;
+  --k-demo-focus-offset: 2px;
+  --k-demo-disabled-opacity: 0.62;
+  --k-demo-error-margin-top: -4px;
+  --k-demo-error-margin-bottom: 4px;
+  --k-demo-consent-margin-top: 6px;
+  --k-demo-control-size: 20px;
+  --k-demo-button-height: 48px;
+  --k-demo-button-padding-x: 18px;
+  --k-demo-button-hover-brightness: 1.04;
+  --k-demo-button-hover-translate-y: -1px;
+  --k-demo-button-transition-duration: 160ms;
+  --k-demo-button-secondary-margin-top: 18px;
+  --k-demo-success-margin-y: 48px;
+  --k-demo-success-leading: 1.7;
+  --k-demo-compact-header-padding-y: 14px;
+  --k-demo-compact-header-gap: 16px;
+  --k-demo-compact-logo-width: 66px;
+  --k-demo-compact-logo-height: 46px;
+  --k-demo-compact-main-padding-top: 32px;
+  --k-demo-compact-main-padding-bottom: 56px;
+  --k-demo-compact-card-padding: 20px;
+  --k-demo-compact-heading-size: clamp(2.25rem, 12vw, 3rem);
 }
+
 
 /* ── H3.2 (2026-09-07): language toggle compartido (todas las rutas) ──
  * Fuente única del pill ES/EN (componente: src/i18n/LanguageToggle.jsx).

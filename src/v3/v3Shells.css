@@ -312,6 +312,11 @@
   margin: 0 auto 42px;
 }
 
+/* Scoped: .v3-cp-eyebrow is also used on other candidate pages. */
+.v3-jobs .v3-cp-eyebrow {
+  font-size: var(--k-jobs-eyebrow-size);
+}
+
 .v3-jobs-subtitle {
   max-width: 630px;
   font-size: 0.9375rem;
@@ -323,12 +328,12 @@
 
 .v3-jobs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--k-jobs-card-min)), 1fr));
   gap: 24px;
 }
 
 .v3-job-card {
-  position: relative;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   padding: 28px;
@@ -343,20 +348,20 @@
 }
 
 .v3-job-badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
+  align-self: flex-start;
   padding: 4px 10px;
-  border-radius: 20px;
-  background: var(--k-gold);
+  margin-bottom: var(--k-space-item);
+  border-radius: var(--k-radius-pill);
+  background: var(--k-tint-gold-strong);
   color: var(--k-ink-espresso);
-  font-size: 0.5625rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+  font-weight: var(--k-weight-bold);
+  letter-spacing: 0.04em;
+  line-height: 1.4;
   text-transform: uppercase;
 }
 
-.v3-job-card-header { margin-bottom: 16px; }
+.v3-job-card-header { margin-bottom: var(--k-space-item); }
 
 .v3-job-card-title {
   font-family: var(--k-font-display);
@@ -370,8 +375,8 @@
 .v3-job-card-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 16px;
-  font-size: 0.6875rem;
+  gap: var(--k-jobs-compact-gap) var(--k-space-item);
+  font-size: 0.875rem;
   color: var(--k-ink-medium);
   line-height: 1.6;
 }
@@ -391,17 +396,20 @@
 
 .v3-job-card-desc {
   margin: 0 0 20px;
+  max-width: var(--k-jobs-reading-width);
   color: var(--k-ink-medium);
-  font-size: 0.8125rem;
-  line-height: 1.7;
+  font-size: var(--k-size-body);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
   flex: 1;
 }
 
 .v3-job-card-footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--k-jobs-compact-gap);
   padding-top: 16px;
   border-top: 1px solid var(--k-cp-card-line);
 }
@@ -415,14 +423,16 @@
 .v3-job-cta {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-height: 44px;
   gap: 8px;
-  padding: 10px 16px;
-  border: 1px solid var(--k-gold-dark);
-  border-radius: 8px;
-  background: var(--k-gold);
-  color: var(--k-ink-espresso);
-  font-size: 0.75rem;
-  font-weight: 800;
+  padding: 8px 12px;
+  border: 1px solid var(--k-cp-card-line-hover);
+  border-radius: var(--k-radius-btn);
+  background: transparent;
+  color: var(--k-co-text-button);
+  font-size: 0.8125rem;
+  font-weight: var(--k-weight-semibold);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -474,8 +484,8 @@
 
 .v3-job-detail-header {
   text-align: center;
-  margin-bottom: 40px;
-  padding-bottom: 32px;
+  margin-bottom: var(--k-space-block);
+  padding-bottom: var(--k-space-item);
   border-bottom: 1px solid var(--k-line);
 }
 
@@ -492,8 +502,8 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 16px 24px;
-  font-size: 0.8125rem;
+  gap: var(--k-jobs-compact-gap) var(--k-space-item);
+  font-size: 0.875rem;
   color: var(--k-ink-medium);
 }
 
@@ -522,8 +532,8 @@
 }
 
 .v3-job-section-icon {
-  width: 20px;
-  height: 20px;
+  width: var(--k-jobs-icon-size);
+  height: var(--k-jobs-icon-size);
   color: var(--k-ink-terracotta);
   flex-shrink: 0;
 }
@@ -537,13 +547,15 @@
 }
 
 .v3-job-section-content {
+  max-width: var(--k-jobs-reading-width);
   color: var(--k-ink-espresso);
-  font-size: 0.875rem;
-  line-height: 1.8;
+  font-size: var(--k-size-body);
+  line-height: 1.7;
 }
 
 .v3-job-detail-text {
   margin: 0;
+  overflow-wrap: anywhere;
   text-wrap: pretty;
 }
 
@@ -566,15 +578,23 @@
 }
 
 .v3-job-bullet-check {
-  width: 18px;
-  height: 18px;
+  width: var(--k-jobs-icon-size);
+  height: var(--k-jobs-icon-size);
   flex-shrink: 0;
   color: var(--k-status-ok);
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .v3-job-bullet-item span {
   line-height: 1.7;
+}
+
+.v3-job-demo-notice {
+  margin: 0;
+  max-width: var(--k-jobs-reading-width);
+  color: var(--k-ink-medium);
+  font-size: var(--k-size-kicker);
+  line-height: 1.6;
 }
 
 .v3-job-detail-footer {
@@ -610,12 +630,15 @@
 }
 
 .v3-job-status {
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-size: 0.625rem;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.75rem;
+  font-weight: var(--k-weight-bold);
+  line-height: 1.4;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
 }
 
 .v3-job-status--active {
@@ -736,6 +759,38 @@
   .v3-job-detail-title {
     font-size: 1.5rem;
   }
+}
+
+/* Candidate shell: width includes gutters; compact chrome keeps the catalog legible. */
+.v3-cp-header,
+.v3-cp-main { box-sizing: border-box; }
+.v3-cp-breadcrumb,
+.v3-cp-header-actions { min-width: 0; }
+
+@media (max-width: 560px) {
+  .v3-cp-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: var(--k-jobs-compact-gap) var(--k-gutter-mobile);
+    gap: var(--k-jobs-compact-gap);
+  }
+  .v3-cp-brand img { width: 48px; height: 48px; }
+  .v3-cp-header-actions { gap: var(--k-jobs-compact-gap); }
+  .v3-cp-breadcrumb {
+    grid-column: 1 / -1;
+    font-size: var(--k-size-kicker);
+    overflow-wrap: anywhere;
+  }
+  .v3-cp-main { padding: 28px var(--k-gutter-mobile) 48px; }
+  .v3-job-card { padding: var(--k-jobs-card-padding-compact); }
+  .v3-job-card-footer,
+  .v3-job-footer-actions {
+    align-items: stretch;
+    width: 100%;
+  }
+  .v3-job-cta { width: 100%; }
+  .v3-job-detail-meta { align-items: center; }
+  .v3-job-section-header { gap: var(--k-jobs-compact-gap); }
 }
 
 /* ── Shell empresa (ref company.html) ───────────────────────────────────── */
@@ -946,28 +1001,69 @@
   align-items: center;
 }
 .v3-portal-intro { margin-bottom: 40px; }
-/* A.2: acciones del login empresa (CTA real + demo + logout). Columna centrada;
-   en pantallas angostas los botones ocupan el ancho disponible. */
+/* A.2: acceso empresa — un único bloque centrado y secuencial. La demo no
+   compite con el inicio de sesión: queda después de la ayuda y el divisor. */
+.v3-company-login-content {
+  width: min(100%, 460px);
+  text-align: center;
+}
+.v3-company-login-intro { margin-bottom: 32px; }
+.v3-company-login-intro h1 {
+  font-family: var(--k-font-display);
+  font-weight: 600;
+  font-size: clamp(34px, 4.5vw, 52px);
+  line-height: 1.12;
+  letter-spacing: -1.8px;
+  margin: 0;
+  text-wrap: balance;
+}
+.v3-company-login-intro > p {
+  max-width: 40ch;
+  margin: 14px auto 0;
+  color: var(--k-ink-medium);
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  text-wrap: pretty;
+}
 .v3-company-login-actions {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 40px;
+  align-items: stretch;
+  gap: 16px;
   width: 100%;
-  max-width: 420px;
+}
+.v3-company-login-actions .v3-cta-gold {
+  width: 100%;
+  min-height: 52px;
+  margin: 0;
+}
+.v3-company-login-help,
+.v3-company-login-demo p {
+  max-width: 42ch;
+  margin: 0 auto;
+  color: var(--k-ink-medium);
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+.v3-company-login-separator {
+  width: 100%;
+  border-top: 1px solid var(--k-line);
+}
+.v3-company-login-demo {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+.v3-company-login-demo .v3-co-text-button,
+.v3-company-login-actions .v3-co-text-button {
+  width: auto;
+  min-height: 44px;
+  padding: 12px;
 }
 /* A.2: detalle de causa del fallo de login (código del exchange, p. ej.
    invalid_grant). Discreto pero legible — ayuda a diagnóstico remoto. */
 .v3-company-login-error-detail { margin: 10px 0 0; font-size: 0.6875rem; color: var(--k-ink-medium); }
 .v3-company-login-error-detail code { font-family: var(--k-font-mono, monospace); background: var(--k-status-error-soft); padding: 2px 6px; border-radius: 6px; color: var(--k-status-error); }
-.v3-company-login-actions .v3-cta-gold,
-.v3-company-login-actions .v3-co-text-button { width: 100%; }
-@media (min-width: 640px) {
-  .v3-company-login-actions { flex-direction: row; justify-content: center; max-width: none; }
-  .v3-company-login-actions .v3-cta-gold,
-  .v3-company-login-actions .v3-co-text-button { width: auto; }
-}
 .v3-portal-intro h1 {
   font-family: var(--k-font-display);
   font-weight: 600;

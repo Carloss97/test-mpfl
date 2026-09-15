@@ -21,12 +21,12 @@ function makeRateClient() {
       store.set(Item.key, { ...Item });
       return {};
     },
-    async update({ Key, ConditionExpression }) {
+    async update({ Key, ConditionExpression, ExpressionAttributeValues }) {
       const it = store.get(Key.key);
       if (!it) throw condFail;
-      if (/#c < :limit/.test(ConditionExpression || '') && it.count >= RATE_LIMIT) throw condFail;
+      if (/#c < :limit/.test(ConditionExpression || '') && it.count >= ExpressionAttributeValues[':limit']) throw condFail;
       it.count += 1;
-      return {};
+      return { Attributes: { count: it.count } };
     },
   };
 }
@@ -58,7 +58,7 @@ function makeUnifiedClient() {
         if (!it) throw condFail;
         if (it.count >= RATE_LIMIT) throw condFail;
         it.count += 1;
-        return {};
+        return { Attributes: { count: it.count } };
       },
       async get({ TableName, Key }) {
         if (TableName === 'krumm-invitations') { const item = invitations.get(Key.invitationId); return item ? { Item: item } : {}; }
@@ -87,11 +87,23 @@ describe('G.3 rate limit — checkRateLimit (unit)', () => {
   it('permite las primeras 10 y bloquea la 11ª (misma IP, bucket, minuto)', async () => {
     const c = makeRateClient();
     const args = { docClient: c, table: 't', ip: '1.1.1.1', bucket: 'invitations', now: () => 1700000000000 };
-    for (let i = 1; i <= 10; i++) expect((await checkRateLimit(args)).allowed).toBe(true);
+    for (let i = 1; i <= 10; i++) {
+      const result = await checkRateLimit(args);
+      expect(result).toMatchObject({ allowed: true, count: i, limit: RATE_LIMIT });
+    }
     const r11 = await checkRateLimit(args);
-    expect(r11.allowed).toBe(false);
+    expect(r11).toMatchObject({ allowed: false, limit: RATE_LIMIT });
     expect(r11.retryAfter).toBeGreaterThan(0);
     expect(r11.retryAfter).toBeLessThanOrEqual(60);
+  });
+
+  it('reports the actual count and configured limit from the conditional write', async () => {
+    const c = makeRateClient();
+    const args = { docClient: c, table: 't', ip: '1.1.1.1', bucket: 'demo-requests', limit: 2, now: () => 1700000000000 };
+
+    expect(await checkRateLimit(args)).toMatchObject({ allowed: true, count: 1, limit: 2 });
+    expect(await checkRateLimit(args)).toMatchObject({ allowed: true, count: 2, limit: 2 });
+    expect(await checkRateLimit(args)).toMatchObject({ allowed: false, limit: 2 });
   });
 
   it('IPs distintas son independientes', async () => {

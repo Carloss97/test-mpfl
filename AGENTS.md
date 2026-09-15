@@ -41,6 +41,15 @@
 
 - **ESTADO 2026-09-15 (incidente GPU):** tres lanzamientos nuevos de `gpu_2x_h100_sxm5` en `us-southeast-1` (dos con cloud-init, uno con flujo manual sin `user_data`) muestran `nvidia-smi`/driver propietario 580.105.08 y NVIDIA Docker correctos, pero vLLM 0.28.0-cu129 falla en `cudaGetDeviceCount()` con **CUDA Error 802**. Todas las instancias fueron terminadas para evitar costo. La diferencia frente al último éxito (`eb8c5f02` @ 68.209.75.69, 2026-09-14) no es el modelo, imagen ni driver: también se reprodujo con el flujo manual conocido como bueno; queda como sospecha principal un host/firmware/kernel Lambda actual o cambio de capacidad. El wrapper `~/bin/gpu.sh` ahora usa `scripts/launch_lambda_manual.py` (launch mínimo sin `user_data` → driver/reboot → vLLM), pero no debe marcar GPU lista sin `/health` + `/v1/models`.
 
+## Estado 2026-09-15 — landing/demo/auth/jobs (implementación local + stage backend)
+
+- Landing: acceso público simplificado (`/portal`), CTAs de demo a `/solicitar-demo`, copy paso 02 actualizado y topbar accesible hasta 320 px. QA reproducible local/stage con evidencia de rutas, viewports y checksums.
+- Demo: `POST /demo-requests` desplegado en staging con validación allowlist, rate limit HMAC fail-closed, DDB TTL/PITR/SSE y aviso SES best-effort configurado a destinatario interno; smoke HTTP 201 verificado. La UI `/solicitar-demo` no envía PII a URL, PostHog ni Sentry.
+- Auth: E2E de stage aisló token PKCE 200 pero retorno a `/empresa/acceso` en el bundle antes del próximo deploy. Dominio Cognito custom de stage `acceso-stage.krumm.cl` creado y ACTIVE (ACM wildcard); CD stage inyecta el host y CSP lo permite. Validar authorize → token → workspace → logout tras despliegue stage.
+- Empresa: `/empresa/acceso` reordenado como bloque secuencial accesible; no cambió la lógica Cognito.
+- Empleos: catálogo demo honesto ES/EN, sin vacantes simuladas; smoke 1440/1280/390 sin overflow, texto informativo >=12 px e iconos 16 px.
+- Gates locales de este changeset: frontend focal 142 tests, backend 113 tests, build y `git diff --check` verdes. Pendiente: commit/push, CD stage, smoke E2E auth branded y CI posterior.
+
 ## PENDIENTES (consolidado 2026-09-15)
 **Usuario (consola/UI):**
 1. **P0 — Rotar key Lambda GPU leakada: CERRADO 2026-09-15** — el usuario confirmó la invalidación de la key anterior; la key vigente autentica con HTTP 200 en los endpoints Lambda.

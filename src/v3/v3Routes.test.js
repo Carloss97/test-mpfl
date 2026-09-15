@@ -5,9 +5,9 @@ import { resolveV3Route, V3_ROUTES, V3_SHELLS } from './v3Routes.js';
 
 describe('v3Routes (fase v3 — registro de rutas)', () => {
   it('registra las rutas del plan maestro + legales E.1 + ayuda E.2', () => {
-    expect(V3_ROUTES).toHaveLength(16);
+    expect(V3_ROUTES).toHaveLength(17);
     const paths = V3_ROUTES.map((route) => route.path).sort();
-    expect(paths).toEqual([ '/ayuda', '/candidato', '/candidato/acceso', '/empleos', '/empleos/:slug', '/empresa', '/empresa/acceso', '/empresa/nueva-solicitud', '/empresa/nueva-solicitud/diseño', '/empresa/nueva-solicitud/subida', '/empresa/proceso/:id', '/empresa/proceso/:id/candidatos/:sessionId', '/empresa/procesos', '/legal/privacidad', '/legal/terminos', '/portal' ]);
+    expect(paths).toEqual([ '/ayuda', '/candidato', '/candidato/acceso', '/empleos', '/empleos/:slug', '/empresa', '/empresa/acceso', '/empresa/nueva-solicitud', '/empresa/nueva-solicitud/diseño', '/empresa/nueva-solicitud/subida', '/empresa/proceso/:id', '/empresa/proceso/:id/candidatos/:sessionId', '/empresa/procesos', '/legal/privacidad', '/legal/terminos', '/portal', '/solicitar-demo' ]);
   });
 
   it('cada ruta tiene shell, page y una sección nav válida', () => {
@@ -63,6 +63,7 @@ describe('v3Routes (fase v3 — registro de rutas)', () => {
     expect(resolveV3Route('/empresa/').page).toBe('dashboard');
     expect(resolveV3Route('/candidato/').page).toBe('candidateHome');
     expect(resolveV3Route('/portal/').page).toBe('portal');
+    expect(resolveV3Route('/solicitar-demo/')).toMatchObject({ page: 'demoRequest', shell: V3_SHELLS.DEMO_REQUEST });
   });
 
   it('decodifica percent-encoding UTF-8', () => {

@@ -4,6 +4,7 @@
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { SESv2Client } from '@aws-sdk/client-sesv2';
+import { createHmac } from 'node:crypto';
 // G.2 (KRU): error tracking — Sentry (init opcional: sin SENTRY_DSN no-op).
 import * as Sentry from '@sentry/node';
 import {
@@ -17,7 +18,9 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { routeSessions } from './handlers/sessions.mjs';
 import { routeInvitations } from './handlers/invitations.mjs';
+import { routeDemoRequests } from './handlers/demoRequests.mjs';
 import { sendInvitationEmail } from './email/invitationEmail.mjs';
+import { sendDemoRequestNotification } from './email/demoRequestNotification.mjs';
 import {
   checkRateLimit,
   clientIpFromEvent,
@@ -119,6 +122,20 @@ export function isProtectedRoute(event) {
   return false;
 }
 
+function hasValidDemoRateLimitSalt(salt) {
+  // Keep this runtime check aligned with the SAM parameter constraint: a
+  // non-whitespace secret of at least 32 characters is required for public writes.
+  return typeof salt === 'string' && salt.length >= 32 && !/\s/.test(salt);
+}
+
+function demoRateIdentity(event, bucket, salt) {
+  const ip = clientIpFromEvent(event);
+  if (bucket !== 'demo-requests') return ip;
+  // The rate-limit table receives only an HMAC, never a raw IP for this public form.
+  if (!ip || !hasValidDemoRateLimitSalt(salt)) return null;
+  return createHmac('sha256', salt).update(ip).digest('hex');
+}
+
 function forbiddenResponse() {
   return {
     statusCode: 403,
@@ -144,6 +161,11 @@ export async function handler(event, context = {}) {
     sendInvitationEmail: context.sendInvitationEmail ?? ((args) => sendInvitationEmail({ sesClient, ...args })),
     appBaseUrl,
     fromEmail: process.env.SES_FROM_EMAIL ?? null,
+    demoRequestsTable: context.demoRequestsTable ?? process.env.DEMO_REQUESTS_TABLE ?? null,
+    demoNotificationTo: context.demoNotificationTo ?? process.env.DEMO_REQUEST_NOTIFICATION_TO ?? null,
+    rateLimitIpSalt: context.rateLimitIpSalt ?? process.env.DEMO_RATE_LIMIT_IP_SALT ?? null,
+    sendDemoRequestNotification: context.sendDemoRequestNotification
+      ?? ((args) => sendDemoRequestNotification({ sesClient, ...args })),
     // F.2: eventos PostHog server-side (invite_received). En tests se inyecta
     // {apiKey, fetchImpl, log}; en Lambda usa env POSTHOG_API_KEY + fetch global.
     posthog: context.posthog ?? {},
@@ -152,11 +174,19 @@ export async function handler(event, context = {}) {
     // G.3 (KRU-138): rate limit 10 req/min/IP en invitations+sessions.
     // ANTES del gate de auth: se cuentan todas las peticiones que llegan a la
     // Lambda (brute force incluido). Sin tabla configurada = no-op.
+    const rateBucket = rateBucketForRoute(event?.routeKey ?? event?.resource ?? '');
+    // Public demo writes must never degrade to an unrestricted rate-limit key.
+    // Throw into the standard PII-minimized 500 path; clients receive no cause.
+    if (rateBucket === 'demo-requests' && !hasValidDemoRateLimitSalt(deps.rateLimitIpSalt)) {
+      const error = new Error('demo rate-limit configuration invalid');
+      error.code = 'demo_rate_limit_config_invalid';
+      throw error;
+    }
     const rl = await checkRateLimit({
       docClient: deps.docClient,
       table: context.rateLimitTable ?? process.env.RATE_LIMIT_TABLE ?? null,
-      ip: clientIpFromEvent(event),
-      bucket: rateBucketForRoute(event?.routeKey ?? event?.resource ?? ''),
+      ip: demoRateIdentity(event, rateBucket, deps.rateLimitIpSalt),
+      bucket: rateBucket,
     });
     if (!rl.allowed) {
       return {
@@ -176,6 +206,9 @@ export async function handler(event, context = {}) {
       return forbiddenResponse();
     }
     const routeKey = event?.routeKey ?? event?.resource ?? '';
+    if (routeKey.includes('/demo-requests')) {
+      return await routeDemoRequests(event, deps);
+    }
     if (routeKey.includes('/invitations')) {
       return await routeInvitations(event, deps);
     }
@@ -193,7 +226,7 @@ export async function handler(event, context = {}) {
     return {
       statusCode: 500,
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ error: 'internal_error', code }),
+      body: JSON.stringify({ error: 'internal_error' }),
     };
   }
 }

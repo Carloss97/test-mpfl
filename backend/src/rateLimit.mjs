@@ -12,14 +12,20 @@
 import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 export const RATE_LIMIT = 10;
+export const DEMO_REQUEST_RATE_LIMIT = 5;
 export const RATE_WINDOW_S = 60;
 const TTL_S = 180;
 
-// Bucket de ruta: 'invitations' | 'sessions' | null (sin rate limit).
+// Bucket de ruta: 'invitations' | 'sessions' | 'demo-requests' | null.
 export function rateBucketForRoute(routeKey) {
+  if (routeKey.includes('/demo-requests')) return 'demo-requests';
   if (routeKey.includes('/invitations')) return 'invitations';
   if (routeKey.includes('/sessions')) return 'sessions';
   return null;
+}
+
+export function rateLimitForBucket(bucket) {
+  return bucket === 'demo-requests' ? DEMO_REQUEST_RATE_LIMIT : RATE_LIMIT;
 }
 
 // IP cliente: payload 2.0 → requestContext.ip; payload 1.0 (rutas nativas HR)
@@ -36,8 +42,8 @@ function isConditionalCheckFailed(err) {
 }
 
 // devuelve {allowed: boolean, count?, limit, retryAfter?}
-export async function checkRateLimit({ docClient, table, ip, bucket, now = Date.now }) {
-  if (!docClient || !table || !ip || !bucket) return { allowed: true, limit: RATE_LIMIT };
+export async function checkRateLimit({ docClient, table, ip, bucket, limit = rateLimitForBucket(bucket), now = Date.now }) {
+  if (!docClient || !table || !ip || !bucket) return { allowed: true, limit };
   const ts = Math.floor(now() / 1000);
   const minute = Math.floor(ts / RATE_WINDOW_S);
   const key = `${bucket}:${minute}:${ip}`;
@@ -58,27 +64,31 @@ export async function checkRateLimit({ docClient, table, ip, bucket, now = Date.
       ConditionExpression: 'attribute_not_exists(#k)',
       ExpressionAttributeNames: keyEscape,
     });
-    return { allowed: true, count: 1, limit: RATE_LIMIT };
+    return { allowed: true, count: 1, limit };
   } catch (err) {
     if (!isConditionalCheckFailed(err)) throw err;
   }
 
   // 2) Peticiones siguientes: incremento condicional mientras count < límite.
+  // ReturnValues obtains the post-update count from the same write; do not add a read
+  // merely for diagnostics (which would increase handling cost and IP-key exposure).
   try {
-    await docClient.update({
+    const updated = await docClient.update({
       TableName: table,
       Key: { key },
       UpdateExpression: 'SET #c = #c + :i',
       ConditionExpression: '#c < :limit',
       ExpressionAttributeNames: countEscape,
-      ExpressionAttributeValues: { ':i': 1, ':limit': RATE_LIMIT },
+      ExpressionAttributeValues: { ':i': 1, ':limit': limit },
+      ReturnValues: 'UPDATED_NEW',
     });
-    return { allowed: true, count: RATE_LIMIT, limit: RATE_LIMIT };
+    const count = updated?.Attributes?.count;
+    return Number.isInteger(count) ? { allowed: true, count, limit } : { allowed: true, limit };
   } catch (err) {
     if (isConditionalCheckFailed(err)) {
       return {
         allowed: false,
-        limit: RATE_LIMIT,
+        limit,
         retryAfter: RATE_WINDOW_S - (ts % RATE_WINDOW_S),
       };
     }
