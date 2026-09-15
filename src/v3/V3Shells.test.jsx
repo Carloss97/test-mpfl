@@ -87,8 +87,8 @@ describe('CandidateShell (ref candidate.html)', () => {
     renderCandidate(<section>contenido</section>);
     const footer = screen.getByRole('contentinfo');
     expect(footer).toHaveTextContent(V3_COPY.es.common_footerYear);
-    expect(within(footer).getByRole('button', { name: V3_COPY.es.cp_privacy })).toBeInTheDocument();
-    expect(within(footer).getByRole('button', { name: V3_COPY.es.cp_terms })).toBeInTheDocument();
+    expect(within(footer).getByRole('link', { name: V3_COPY.es.cp_privacy })).toHaveAttribute('href', '/legal/privacidad');
+    expect(within(footer).getByRole('link', { name: V3_COPY.es.cp_terms })).toHaveAttribute('href', '/legal/terminos');
   });
 
   it('Help abre diálogo accesible; Cerrar y Escape lo cierran y devuelven focus al trigger', () => {
@@ -103,6 +103,7 @@ describe('CandidateShell (ref candidate.html)', () => {
     expect(dialog).toHaveAccessibleName(V3_COPY.es.cp_help);
     expect(within(dialog).getByRole('heading', { name: V3_COPY.es.cp_help })).toBeInTheDocument();
     expect(within(dialog).getByText(V3_COPY.es.cp_helpText)).toBeInTheDocument();
+    expect(within(dialog).getByRole('link', { name: V3_COPY.es.cp_helpOpen })).toHaveAttribute('href', '/ayuda');
     expect(document.activeElement).toBe(within(dialog).getByRole('button', { name: V3_COPY.es.common_close }));
     // Escape cierra y devuelve el focus al trigger
     fireEvent.keyDown(document, { key: 'Escape' });
@@ -115,17 +116,16 @@ describe('CandidateShell (ref candidate.html)', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('Privacy y Terms abren el diálogo con la nota de próxima iteración (placeholder honesto)', () => {
+  it('Privacy y Terms enlazan a las páginas legales reales (FASE E.1, no placeholder)', () => {
     renderCandidate(<section>contenido</section>);
     const footer = screen.getByRole('contentinfo');
-    fireEvent.click(within(footer).getByRole('button', { name: V3_COPY.es.cp_privacy }));
-    let dialog = screen.getByRole('dialog');
-    expect(within(dialog).getByRole('heading', { name: V3_COPY.es.cp_privacy })).toBeInTheDocument();
-    expect(within(dialog).getByText(V3_COPY.es.common_nextIteration)).toBeInTheDocument();
-    fireEvent.keyDown(document, { key: 'Escape' });
-    fireEvent.click(within(footer).getByRole('button', { name: V3_COPY.es.cp_terms }));
-    dialog = screen.getByRole('dialog');
-    expect(within(dialog).getByRole('heading', { name: V3_COPY.es.cp_terms })).toBeInTheDocument();
+    const privacy = within(footer).getByRole('link', { name: V3_COPY.es.cp_privacy });
+    const terms = within(footer).getByRole('link', { name: V3_COPY.es.cp_terms });
+    expect(privacy.getAttribute('href')).toBe('/legal/privacidad');
+    expect(terms.getAttribute('href')).toBe('/legal/terminos');
+    // Ya no abren un diálogo con nota de próxima iteración
+    fireEvent.click(privacy);
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('i18n: click EN traduce el chrome (skip, help, footer)', () => {
@@ -333,6 +333,15 @@ describe('V3RootApp (registro de rutas de la fase con placeholders)', () => {
     const { container: procsContainer } = renderV3Route('/empresa/procesos');
     expect(procsContainer.querySelector('.v3-back')).toBeNull();
     expect(procsContainer.querySelector('.v3-placeholder')).toBeNull();
+  });
+
+  it('/ayuda: contenido FAQ visible y soporte por email', () => {
+    const { container } = renderV3Route('/ayuda');
+    expect(container.querySelector('.v3-help-page')).not.toBeNull();
+    expect(screen.getByRole('heading', { name: V3_COPY.es.pages.help.title })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Contactar soporte' })).toHaveAttribute('href', 'mailto:soporte@krumm.cl');
+    expect(screen.getByText(/Preguntas frecuentes para candidatos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Preguntas frecuentes para empresas/i)).toBeInTheDocument();
   });
 
   it('/portal: 2 cards de la referencia con hrefs correctos + back home', () => {

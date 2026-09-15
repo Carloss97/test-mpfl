@@ -103,42 +103,47 @@ export function appendAuditLog({ docClient, auditId, sessionId, actor = 'system'
 
 export function listSessions({ docClient, limit = 50, cursor = null, statusFilter = null, batteryFilter = null, dateFrom = null, dateTo = null, companyId = null }) {
   if (!companyId) return Promise.resolve([]);
-  const exprAttrNames = { '#companyId': 'companyId', '#sts': 'status' };
-  const exprAttrValues = { ':companyId': companyId, ':revoked': 'revoked' };
-  let filterExpression = '#companyId = :companyId AND #sts <> :revoked';
+  const exprAttrNames = { '#companyId': 'companyId' };
+  const exprAttrValues = { ':companyId': companyId };
+  const filters = [];
   if (statusFilter) {
-    filterExpression += ' AND #status = :status';
+    filters.push('#status = :status');
     exprAttrNames['#status'] = 'status';
     exprAttrValues[':status'] = statusFilter;
   }
   if (dateFrom) {
-    filterExpression += ' AND createdAt >= :dateFrom';
+    filters.push('createdAt >= :dateFrom');
     exprAttrValues[':dateFrom'] = dateFrom;
   }
   if (dateTo) {
-    filterExpression += ' AND createdAt <= :dateTo';
+    filters.push('createdAt <= :dateTo');
     exprAttrValues[':dateTo'] = dateTo;
   }
   if (batteryFilter) {
-    filterExpression += ' AND batteryId = :battery';
+    filters.push('batteryId = :battery');
     exprAttrValues[':battery'] = batteryFilter;
   }
 
+  const queryInput = {
+    TableName: SESSIONS_TABLE,
+    IndexName: 'companyId-index',
+    KeyConditionExpression: '#companyId = :companyId',
+    ExpressionAttributeNames: exprAttrNames,
+    ExpressionAttributeValues: exprAttrValues,
+    Limit: limit,
+    ExclusiveStartKey: cursor ? JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) : undefined,
+  };
+  // DynamoDB prohíbe repetir atributos de la KeyCondition en FilterExpression.
+  // `companyId` define el tenant en la key; los filtros opcionales solo refinan
+  // el resultado del índice y no participan de la frontera de aislamiento.
+  if (filters.length) queryInput.FilterExpression = filters.join(' AND ');
+
   const request = typeof docClient.query === 'function'
-    ? docClient.query({
-      TableName: SESSIONS_TABLE,
-      IndexName: 'companyId-index',
-      KeyConditionExpression: '#companyId = :companyId',
-      FilterExpression: filterExpression,
-      ExpressionAttributeNames: exprAttrNames,
-      ExpressionAttributeValues: exprAttrValues,
-      Limit: limit,
-      ExclusiveStartKey: cursor ? JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) : undefined,
-    })
+    ? docClient.query(queryInput)
     : docClient.scan({
       TableName: SESSIONS_TABLE,
       Limit: limit,
-      FilterExpression: filterExpression,
+      ...(filters.length ? { FilterExpression: filters.join(' AND ') } : {}),
       ExpressionAttributeNames: exprAttrNames,
       ExpressionAttributeValues: exprAttrValues,
     });

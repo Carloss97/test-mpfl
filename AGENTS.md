@@ -198,6 +198,8 @@ Tras cambios con tests y build, entregar resumen de archivos/comandos/resultados
   4. `deepseek-ai/deepseek-v4-pro-0813`
 - Tier local (WAN down): `qwen2.5-coder:1.5b` vía Ollama (`http://127.0.0.1:11434/v1`).
 
+- **ESTADO 2026-09-15 — G.5 CERRADO EN STAGING:** Cognito pool `us-east-1_FX1VyzTTA` ahora declara `custom:companyId`; el cliente SPA expone el claim y conserva OAuth code+PKCE, callbacks stage/prod, logout, scopes e IdP `COGNITO` (las actualizaciones de client son full-replacement: siempre payload completo). Se corrigieron dos defectos reales de aislamiento: IAM Lambda no autorizaba el GSI `companyId-index`, y `listSessions` repetía la key `companyId` en `FilterExpression` (DynamoDB respondía ValidationException). SAM staging desplegado. Smoke live con dos identidades sintéticas sin PII: claims JWT distintos, 2 recursos propios, listas aisladas y detalle cruzado 404. Tests backend 39/39 PASS. Lighthouse queda pendiente por decisión del usuario.
+
 ## Credenciales e identidad en la Pi (2026-09-03)
 
 - **GitHub CLI**: `gh` autenticado como `Carloss97` (scopes `repo`, `gist`, `read:org`) — `~/.config/gh`. Renueva sin tty: `gh auth login --hostname github.com --git-protocol https --web < /dev/null` (imprime código one-time para https://github.com/login/device).

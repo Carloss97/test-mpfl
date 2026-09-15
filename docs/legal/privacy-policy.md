@@ -1,8 +1,8 @@
-# Política de Privacidad KRUMM — /postulaciones-demo
+# Política de Privacidad KRUMM — documento archivado
 
 **Fecha:** 2026-09-03  
 **Versión:** v1.0  
-**Estado:** Borrador (firma DPO/legal en paralelo, Fase M5)
+**Estado:** Borrador archivado; la versión pública vigente es [`politica-privacidad.md`](politica-privacidad.md) y requiere revisión de DPO/abogada.
 
 ## Principios Generales
 
@@ -26,7 +26,7 @@
 
 ## Flujo de Datos
 
-1. **Inicio.** El postulante ingresa a `/postulaciones-demo` y acepta consentimiento explícito.
+1. **Inicio.** El postulante ingresa a `/postulaciones` y acepta consentimiento explícito.
 2. **Cámara (opcional).** Si el usuario concede permiso, la cámara captura frames en el navegador. Solo se extraen AUs y métricas agregadas (no landmarks crudos).
 3. **Procesamiento local.** `edgeAiEngine.js` y `auProcessor.js` operan completamente en el browser. Se genera un `edgeAIResult` con canales calificados y confidence scores.
 4. **Reporte.** Al finalizar la batería, `reportGenerator.js` produce un JSON agregado con scores 0–100, caveats, y flags `privacyValidation.ok === true`.
@@ -35,14 +35,14 @@
 ## Derechos del Usuario
 
 - **Oponer cámara.** El postulante puede descartar el uso de cámara en cualquier momento; los juegos continúan sin telemetría facial; solo se registra un caveat `low_face_presence`.
-- **Acceso y rectificación.** El postulante puede solicitar la eliminación de su sesión vía `/postulaciones-demo/hr` (read-only) o contacto DPO.
+- **Acceso y rectificación.** El postulante puede solicitar la eliminación de su sesión mediante el canal de privacidad indicado por KRUMM; no existe una ruta pública de autoservicio para borrar sesiones.
 - **Limitaciones.** Los scores 0–100 son *provisionales* y sin baremos comparativos. No implican validez psicométrica ni decisiones automáticas.
 
 ## Contacto DPO / RGPD
 
-- **Delegado de Protección de Datos:** carlos.saldivia@sansano.usm.cl  
-- **Política de retención:** 30 días tras sesión completa (TTL DynamoDB + EventBridge Scheduler).  
-- **Eliminación bajo solicitud <24h:** ruta administrativa en `/postulaciones-demo/hr` → *Delete session*.
+- **Delegado de Protección de Datos:** privacy@krumm.cl
+- **Política de retención:** 30 días para sesiones (TTL de DynamoDB); este borrador no define un plazo para el audit log.
+- **Eliminación bajo solicitud:** se tramita por el canal de privacidad; no existe una ruta pública de autoservicio para borrar sesiones.
 
 ## Cambios Recientes
 
@@ -50,4 +50,4 @@
 
 ---
 
-*Esta política forma parte de la Fase M5 (Seguridad/privacidad/CI guards). Para la versión final firmada por DPO, ver `docs/legal/privacy-policy-final.md` después de firma.*
+*Esta política es un borrador archivado de la Fase M5. Para la versión vigente, consultar [`politica-privacidad.md`](politica-privacidad.md); ambos documentos requieren revisión de DPO/abogada antes de presentarse como texto jurídico definitivo.*

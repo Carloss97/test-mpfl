@@ -5,7 +5,7 @@
 // focus entra al botón de cierre y regresa al trigger al cerrar.
 import React, { useEffect, useRef } from 'react';
 
-export default function V3Dialog({ open, title, text, onClose, closeLabel = 'Close', labelId = 'v3-dialog-title', descId = 'v3-dialog-desc' }) {
+export default function V3Dialog({ open, title, text, linkHref, linkLabel, onClose, closeLabel = 'Close', labelId = 'v3-dialog-title', descId = 'v3-dialog-desc' }) {
   const closeButtonRef = useRef(null);
   const lastActiveRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -42,6 +42,7 @@ export default function V3Dialog({ open, title, text, onClose, closeLabel = 'Clo
       >
         <h2 id={labelId}>{title}</h2>
         <p id={descId}>{text}</p>
+        {linkHref && linkLabel ? <a className="v3-dialog__link" href={linkHref}>{linkLabel}</a> : null}
         <button
           type="button"
           className="v3-dialog__close"

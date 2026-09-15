@@ -175,7 +175,7 @@ export default function CompanyShell({ section, active, children, note } = {}) {
             <IconGear />
             <span>{copy.company_settings}</span>
           </button>
-          <button type="button" className="v3-co-nav-item" onClick={() => openDialog(copy.company_help, copy.company_previewText)}>
+          <button type="button" className="v3-co-nav-item" onClick={() => openDialog(copy.company_help, copy.company_helpText)}>
             <IconHelp />
             <span>{copy.company_help}</span>
           </button>
@@ -257,6 +257,8 @@ export default function CompanyShell({ section, active, children, note } = {}) {
         open={Boolean(dialog)}
         title={dialog?.title ?? ''}
         text={dialog?.text ?? ''}
+        linkHref="/ayuda"
+        linkLabel={copy.company_helpOpen}
         onClose={() => setDialog(null)}
         closeLabel={copy.common_close}
         labelId="v3-co-dialog-title"

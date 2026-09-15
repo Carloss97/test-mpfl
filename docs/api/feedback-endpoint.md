@@ -1,8 +1,10 @@
-# Feedback API Endpoint (Backend)
+# Feedback API Endpoint (especificación no desplegada)
 
-**Endpoint:** `POST /api/feedback`
-**Autenticación:** Ninguna (público, rate-limited 10 req/min/IP)
-**Destino:** Discord webhook `DISCORD_ALERTS_WEBHOOK_URL` + opcional Linear
+Este documento describe una propuesta de contrato para una futura API. No existe actualmente una ruta backend `/api/feedback` en este repositorio ni en el stack desplegado; el `FeedbackWidget` mostrará el contacto de soporte cuando el POST no esté disponible. No presentar este endpoint como operativo hasta implementar y verificar su infraestructura.
+
+**Endpoint propuesto:** `POST /api/feedback`
+**Autenticación propuesta:** Ninguna (público, con rate limit verificado)
+**Destino propuesto:** Discord webhook + opcional Linear; nunca persistir PII, tokens de invitación, video, imágenes o telemetría cruda.
 
 ---
 

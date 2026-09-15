@@ -62,7 +62,9 @@ try {
   }
 
   // 2) Retorno con code → SPA hace el exchange PKCE
-  await page.waitForURL('**/empresa/acceso?', { timeout: 30000 });
+  // La app consume el code y hace replaceState → /empresa/acceso sin query.
+  // Esperar la navegación al callback y luego la landing estable.
+  await page.waitForURL('**/empresa/acceso**', { timeout: 30000 });
   await page.waitForTimeout(10000);
   console.log('1) post-login URL:', page.url().slice(0, 80));
 

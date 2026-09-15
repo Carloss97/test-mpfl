@@ -4,10 +4,10 @@
 import { resolveV3Route, V3_ROUTES, V3_SHELLS } from './v3Routes.js';
 
 describe('v3Routes (fase v3 — registro de rutas)', () => {
-  it('registra las 13 rutas del plan maestro §2', () => {
-    expect(V3_ROUTES).toHaveLength(13);
+  it('registra las rutas del plan maestro + legales E.1 + ayuda E.2', () => {
+    expect(V3_ROUTES).toHaveLength(16);
     const paths = V3_ROUTES.map((route) => route.path).sort();
-    expect(paths).toEqual([ '/candidato', '/candidato/acceso', '/empleos', '/empleos/:slug', '/empresa', '/empresa/acceso', '/empresa/nueva-solicitud', '/empresa/nueva-solicitud/diseño', '/empresa/nueva-solicitud/subida', '/empresa/proceso/:id', '/empresa/proceso/:id/candidatos/:sessionId', '/empresa/procesos', '/portal' ]);
+    expect(paths).toEqual([ '/ayuda', '/candidato', '/candidato/acceso', '/empleos', '/empleos/:slug', '/empresa', '/empresa/acceso', '/empresa/nueva-solicitud', '/empresa/nueva-solicitud/diseño', '/empresa/nueva-solicitud/subida', '/empresa/proceso/:id', '/empresa/proceso/:id/candidatos/:sessionId', '/empresa/procesos', '/legal/privacidad', '/legal/terminos', '/portal' ]);
   });
 
   it('cada ruta tiene shell, page y una sección nav válida', () => {
@@ -35,6 +35,12 @@ describe('v3Routes (fase v3 — registro de rutas)', () => {
     expect(resolveV3Route('/empresa/nueva-solicitud').page).toBe('newRequest');
     expect(resolveV3Route('/empresa/nueva-solicitud/diseño').page).toBe('requestDesign');
     expect(resolveV3Route('/empresa/nueva-solicitud/subida').page).toBe('requestUpload');
+    expect(resolveV3Route('/legal/terminos').shell).toBe(V3_SHELLS.LEGAL);
+    expect(resolveV3Route('/legal/terminos').page).toBe('terminos');
+    expect(resolveV3Route('/legal/privacidad').shell).toBe(V3_SHELLS.LEGAL);
+    expect(resolveV3Route('/legal/privacidad').page).toBe('privacidad');
+    expect(resolveV3Route('/ayuda').shell).toBe(V3_SHELLS.CANDIDATE);
+    expect(resolveV3Route('/ayuda').page).toBe('help');
   });
 
   it('resuelve la ruta dinámica con :slug', () => {

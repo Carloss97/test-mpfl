@@ -35,7 +35,7 @@ Puede contactar a nuestro Delegado de Protección de Datos (DPO) en: **privacy@k
 | Invitación | Email (para envío), token único | Entregar invitación, validar acceso | Consentimiento explícito / Contrato (mandato empresa) |
 | Consentimiento | Timestamp, versión de política aceptada, alcance (cámara sí/no) | Registro de consentimiento informado | Consentimiento (Art. 6.1.a GDPR / Art. 4 Ley 19.628) |
 | Telemetría de juego (agregada) | Métricas por constructo: `processingSpeed`, `visuomotorPrecision`, `inhibitoryControl`, `interferenceControl`, `visualSearchEfficiency`, `riskIntelligence`, `spatialPlanning`, `operationalPlanning`, `spatialReasoning`, `proceduralWorkingMemory`, `appliedCommunication` + sub-dimensiones, quality flags, integrity flags | Generar Reporte descriptivo | Consentimiento / Interés legítimo (mejora servicio) |
-| Calidad de señal (opcional, solo si cámara activa) | `postureScore`, `blinkRate`, `PERCLOS`, `gazeAOI`, `rPPG_SQI` — **solo agregados, nunca crudos** | Contexto de calidad, nunca inferencia de talento | Consentimiento explícito separado (opt-in granular) |
+| Calidad de señal (opcional, solo si cámara activa) | Indicadores agregados de presencia, confianza, iluminación, postura y mirada, según disponibilidad del dispositivo y del módulo | Contexto de calidad, nunca inferencia de talento | Consentimiento explícito separado (opt-in granular) |
 | Metadatos de sesión | `sessionId`, `battery`, `startedAt`, `completedAt`, `deviceInfo` (UA, viewport), `locale` | Operación, debugging, facturación | Interés legítimo / Contrato |
 
 **Datos que NUNCA recopilamos ni almacenamos:**
@@ -90,13 +90,13 @@ Nuestro backend se ejecuta en **AWS us-east-1 (Virginia, EE. UU.)**. Para usuari
 | Dato | Retención | Supresión |
 |------|-----------|-----------|
 | Sesiones en DynamoDB (payload agregado) | 30 días (TTL automático `expiresAt`) | Auto-purga + entrada en audit_log |
-| Audit log (inmutable, append-only) | 13 meses (requisito auditoría) | Auto-purga tras 13 meses |
+| Audit log (inmutable, append-only) | Según la política operativa vigente; la tabla actual no configura TTL automático | Supresión o conservación según obligación legal y política aplicable |
 | Invitaciones (tabla `invitations`) | Hasta expiración (máx 30 días) o uso | Auto-purga TTL |
 | Cuenta Empresa / logs acceso | Mientras la cuenta esté activa + 2 años tras cierre | A petición o cierre cuenta |
-| Backups (PITR DynamoDB, S3 versioning) | 35 días (PITR) / indefinido (S3) | Según política de retención de backups |
+| Backups (PITR DynamoDB, S3 versioning) | PITR 35 días; las versiones S3 se conservan según la política de backups | Según política de retención de backups |
 
 **Derecho al olvido / supresión (Art. 17 GDPR / Art. 11 Ley 19.628):**
-- Candidato: solicitud a privacy@krumm.cl → supresión en **<24 h** (runbook `scripts/data-deletion-request.sh` probado).
+- Candidato: solicitud a privacy@krumm.cl → revisión y tramitación administrativa de la supresión conforme al procedimiento vigente y los plazos legales aplicables.
 - Empresa: cierre de cuenta → supresión en 30 días (salvo obligación legal).
 
 ---
@@ -105,7 +105,7 @@ Nuestro backend se ejecuta en **AWS us-east-1 (Virginia, EE. UU.)**. Para usuari
 
 - **Cifrado:** TLS 1.2+ en tránsito; AES-256 en reposo (DynamoDB SSE, S3 SSE, Lambda env vars).
 - **Autenticación:** Cognito User Pool (MFA opcional, rotación de tokens, rate limiting).
-- **API:** API Gateway HTTP + JWT authorizer + usage plans (10 req/min/IP) + WAF managed rules.
+- **API:** API Gateway HTTP + Cognito JWT authorizer; el límite de solicitudes de las rutas protegidas se aplica en Lambda (10 req/min/IP) y WAF managed rules protege las distribuciones CloudFront.
 - **Frontend:** CSP estricta (`script-src 'self'`, `connect-src` allowlist, `frame-ancestors 'none'`), HSTS, XFO, Referrer-Policy, COOP/COEP.
 - **CI/CD:** GitHub Actions OIDC (sin claves estáticas), gitleaks, npm audit, tests privacidad obligatorios en PR.
 - **Acceso interno:** Mínimo privilegio (IAM roles scoped), MFA obligatorio, logs CloudTrail.
@@ -145,12 +145,12 @@ Como titular de datos, usted tiene derecho a:
 
 ## 10. Evaluación de Impacto en Protección de Datos (DPIA)
 
-KRUMM ha realizado una **DPIA** (Data Protection Impact Assessment) conforme al Art. 35 GDPR y mejores prácticas, dado que:
-- Tratamiento a gran escala de datos de comportamiento (telemetría agregada).
-- Uso innovador de señales biométricas opcionales (cámara) como contexto de calidad.
-- Decisiones que afectan significativamente a personas (procesos de selección).
+KRUMM mantiene un **borrador de DPIA** (Data Protection Impact Assessment) para revisión de DPO y asesoría legal, conforme al Art. 35 GDPR y mejores prácticas, dado que considera:
+- Tratamiento de datos de comportamiento agregados.
+- Uso opcional de señales de cámara como contexto de calidad.
+- El contexto de procesos de selección, que requiere gobernanza reforzada.
 
-La DPIA está disponible a petición del DPO o Autoridad de Control. Conclusión: **riesgo residual medio-bajo** tras medidas implementadas (gobernanza `humanReviewOnly`, agregados only, minimización, cifrado, auditoría).
+El borrador de DPIA puede facilitarse al DPO o a la autoridad competente cuando corresponda. Su evaluación de riesgos y medidas quedará sujeta a revisión y aprobación humana; esta página no constituye una revisión jurídica.
 
 ---
 

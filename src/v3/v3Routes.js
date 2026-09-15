@@ -2,7 +2,7 @@
 // SPA actual sin react-router: main.jsx selecciona el RootApp por pathname
 // (mismo patrón que postulationDemoRoute.js). resolveV3Route es puro y testable.
 //
-// Las 13 rutas de la fase:
+// Las rutas públicas y de la fase (incluyen legales y ayuda):
 //   /portal, /candidato, /candidato/acceso, /empleos, /empleos/:slug,
 //   /empresa/acceso, /empresa, /empresa/procesos, /empresa/proceso/:id,
 //   /empresa/proceso/:id/candidatos/:sessionId, /empresa/nueva-solicitud,
@@ -17,10 +17,14 @@ export const V3_SHELLS = Object.freeze({
   COMPANY: 'company',       // sidebar+user chip+breadcrumb+banner demo (ref company.html)
   PORTAL: 'portal',         // bare: brand+toggle (ref portal.html)
   COMPANY_LOGIN: 'companyLogin', // bare: brand+toggle (ref login-company.html)
+  LEGAL: 'legal',           // bare: brand+toggle + documento canónico (FASE E.1, KRU-117)
 });
 
 export const V3_ROUTES = Object.freeze([
   Object.freeze({ path: '/portal', shell: V3_SHELLS.PORTAL, page: 'portal' }),
+  Object.freeze({ path: '/legal/terminos', shell: V3_SHELLS.LEGAL, page: 'terminos', docType: 'terminos' }),
+  Object.freeze({ path: '/legal/privacidad', shell: V3_SHELLS.LEGAL, page: 'privacidad', docType: 'privacidad' }),
+  Object.freeze({ path: '/ayuda', shell: V3_SHELLS.CANDIDATE, page: 'help', breadcrumbKey: 'cp_help' }),
   Object.freeze({ path: '/candidato', shell: V3_SHELLS.CANDIDATE, page: 'candidateHome', breadcrumbKey: 'cp_candidatePortal' }),
   Object.freeze({ path: '/candidato/acceso', shell: V3_SHELLS.CANDIDATE, page: 'candidateAccess', breadcrumbKey: 'cp_access' }),
   Object.freeze({ path: '/empleos', shell: V3_SHELLS.CANDIDATE, page: 'jobs', breadcrumbKey: 'cp_jobs' }),

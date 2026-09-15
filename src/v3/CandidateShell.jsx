@@ -45,12 +45,12 @@ export default function CandidateShell({ breadcrumb, children }) {
       <footer className="v3-cp-footer">
         <span>{copy.common_footerYear}</span>
         <div className="v3-cp-footer-links">
-          <button type="button" className="v3-text-button" onClick={() => openDialog(copy.cp_privacy, copy.common_nextIteration)}>
+          <a className="v3-text-button" href="/legal/privacidad" data-testid="v3-footer-privacy">
             {copy.cp_privacy}
-          </button>
-          <button type="button" className="v3-text-button" onClick={() => openDialog(copy.cp_terms, copy.common_nextIteration)}>
+          </a>
+          <a className="v3-text-button" href="/legal/terminos" data-testid="v3-footer-terms">
             {copy.cp_terms}
-          </button>
+          </a>
         </div>
       </footer>
 
@@ -58,6 +58,8 @@ export default function CandidateShell({ breadcrumb, children }) {
         open={Boolean(dialog)}
         title={dialog?.title ?? ''}
         text={dialog?.text ?? ''}
+        linkHref="/ayuda"
+        linkLabel={copy.cp_helpOpen}
         onClose={() => setDialog(null)}
         closeLabel={copy.common_close}
         labelId="v3-cp-dialog-title"

@@ -1,27 +1,27 @@
-# DPIA Borrador — KRUMM /postulaciones-demo
+# DPIA Borrador — KRUMM /postulaciones
 
 **Fecha:** 2026-09-03  
 **Versión:** v1.0  
-**Estado:** Borrador (firma DPO/legal en paralelo, Fase M5)  
-**Producto:** Postulación Demo — batería original + cámara opcional
+**Estado:** Borrador archivado; requiere revisión de DPO y abogada antes de presentarse como evaluación jurídica.
+**Producto:** Flujo de postulaciones — batería controlada + cámara opcional
 
 ## 1. Descripción del Tratamiento
 
 | Campo | Valor |
 |-------|-------|
-| **Responsable** | KRUMM (carlos.saldivia@krumm.cl) |
-| **Finalidad** | Evaluación de talento a través de juegos gamificados + telemetría facial opcional |
-| **Tipo de datos** | Datos biométricos faciales (AUs, gaze, head pose) — categoría especial Art. 9 GDPR; procesamiento sobre consentimiento explícito |
+| **Responsable** | KRUMM SpA (canal de privacidad: privacy@krumm.cl) |
+| **Finalidad** | Evaluación descriptiva de tareas gamificadas + señales opcionales de calidad |
+| **Tipo de datos** | Indicadores agregados de calidad de captura (si la cámara está activa); no se persisten video, frames ni landmarks crudos |
 | **Fuente** | Navegador del postulante (dispositivo propio) |
-| **Almacenamiento** | DynamoDB (sesión + audit_log), TTL 30 días; ningún video/frame crudo sale del browser |
+| **Almacenamiento** | DynamoDB para sesiones agregadas e invitaciones con TTL; el audit_log es append-only y actualmente no configura TTL |
 
 ## 2. Evaluación de Riesgo
 
 | Riesgo | Nivel | Descripción | Medida de Mitigación |
 |--------|-------|-------------|----------------------|
-| **R1: Exposición de datos biométricos** | Alto (mitigado) | Intercepción de transmisión en red | Todas las señales se agregan localmente; solo se POSTea JSON agregado con `privacyValidation.ok === true` |
-| **R2: Uso secundario sin consentimiento** | Alto (mitigado) | Usar AUs para inferencia de talento no validada | `humanReviewOnly`; scores 0–100 con caveat "Demo provisional · no comparables"; sin decisiones automáticas |
-| **R3: Retención indefinida** | Medio | Datos persisten >30d en DynamoDB | TTL automático + EventBridge Scheduler job de eliminación bajo solicitud <24h |
+| **R1: Exposición de señales de cámara** | Alto (mitigado) | Intercepción de transmisión en red | El procesamiento ocurre localmente; solo se POSTea JSON agregado con `privacyValidation.ok === true` |
+| **R2: Uso secundario sin consentimiento** | Alto (mitigado) | Reutilizar señales de calidad para inferencias no validadas | `humanReviewOnly`; scores 0–100 con caveat "Demo provisional · no comparables"; sin decisiones automáticas |
+| **R3: Retención indefinida** | Medio | Una retención mayor puede ocurrir en respaldos o registros de auditoría | TTL de sesiones/invitaciones; revisión y tramitación administrativa de solicitudes de supresión |
 | **R4: Fuga de keys prohibidas** | Medio | `video`, `landmarks`, `rawFrames` en payload | `ASSESSMENT_FORBIDDEN_KEYS` server-side en `validateSessionPayload`; bloques 422 si se detectan |
 | **R5: Consentimiento no informado** | Bajo | Usuario no consciente de alcance | Consentimiento explícito en pantalla separada antes de cámara; copy clara en `postulationDemoCopy.js` |
 
@@ -49,8 +49,8 @@
 
 ## 6. Derechos del Interesado
 
-- **Acceso:** Solicitar export JSON de propia sesión vía `/postulaciones-demo/hr` (read-only).
-- **Rectificación:** Solicitar eliminación sesión → admin borra de DynamoDB + audit_log (TTL + job <24h).
+- **Acceso:** Solicitar información de la propia sesión mediante el canal de privacidad; no existe una ruta pública de autoservicio.
+- **Rectificación:** Solicitar corrección o supresión por el canal de privacidad; la operación administrativa debe preservar el registro de auditoría cuando corresponda.
 - **Oposición:** Descartar cámara en cualquier momento; session continúa sin telemetría facial.
 - **Limitación:** Scores 0–100 son *provisionales* y no implican validez psicométrica ni decisiones automáticas.
 
@@ -64,7 +64,7 @@
 
 ## 8. Próximos Pasos
 
-- Firma DPO/legal en `docs/legal/privacy-policy-final.md`.
+- Revisión y aprobación de DPO/abogada para `docs/legal/politica-privacidad.md` y este borrador; no afirmar revisión jurídica hasta ese gate humano.
 - Actualizar `SECURITY.md` con hallazgos DPIA.
 - M5 gate: ZAP baseline + CI scan-forbidden-keys + workflow GitHub Actions.
 

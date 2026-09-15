@@ -1,7 +1,7 @@
 # Pitch Deck — KRUMM (Pre-Seed / Seed)
 
-**Versión:** 1.0 (Draft)
-**Fecha:** 2026-09-12
+**Versión:** 1.1 (Updated 2026-09-15)
+**Fecha:** 2026-09-15
 **Formato:** Markdown (convertir a Google Slides / Notion / Pitch.com)
 **Duración objetivo:** 12–15 min presentación + 15 min Q&A
 
@@ -44,7 +44,7 @@ Sep 2026 — Santiago, Chile / Remote-first
 - **NEW:** Procedural working memory (BOMB) + Applied communication (Control Room)
 
 **For Companies:** Dashboard with **descriptive, auditable reports**:
-- 8–10 constructs, each with metrics, caveats, governance badges
+- 10 constructs (8 stable_dg + 2 original), each with metrics, caveats, governance badges
 - `humanReviewOnly` • `noAutomatedDecision` • `descriptive_only` • `privacySafe`
 - Export CSV/MD → integrate with ATS / human review workflow
 
@@ -55,7 +55,7 @@ Sep 2026 — Santiago, Chile / Remote-first
 ## Slide 5: Product Demo (Screenshot / 30-sec video)
 [Insert: Landing → Invitation → 2 games → Report → Company Dashboard]
 
-*Live demo: stage.krumm.cl (ask for access)*
+*Live demo: stage.krumm.cl (ask for access) | Prod: krumm.cl (modo real v1.2.2)*
 
 ---
 
@@ -67,7 +67,7 @@ Sep 2026 — Santiago, Chile / Remote-first
 | **Governance** | `humanReviewOnly`, `descriptive_only`, `noAutomatedDecision` baked into every report & export | Often claim "AI recommends" / "ranking" |
 | **Privacy** | Aggregates allowlist-only; 30-day auto-purge; camera opt-in; DPIA done; no raw biometrics ever stored | Video recording, facial analysis, indefinite retention |
 | **Regulatory readiness** | NYC LL144 compliant (no automated decision), EU AI Act ready (low-risk, human-in-loop), Chile Ley 19.628 | High-risk classification likely |
-| **Data moat** | Each evaluation = 60+ versioned features × 7 games × N candidates → compounding dataset for R-7 validation (N=200) | Proprietary, siloed, not versioned |
+| **Data moat** | Each evaluation = 60 versioned features (v2.3.0) × 7 games × N candidates → compounding dataset for R-7 validation (N=200) | Proprietary, siloed, not versioned |
 | **IP** | Game designs (EXP-BOMB-001, EXP-COMM-001), telemetry schemas, feature vector versioning, governance framework | Generic game libraries |
 
 ---
@@ -85,26 +85,32 @@ Sep 2026 — Santiago, Chile / Remote-first
 ---
 
 ## Slide 8: Business Model
+
 | Model | Price | Target |
 |-------|-------|--------|
 | **Per Evaluation** | $150 USD / complete battery (5–7 games, report, exports) | SMB, project-based hiring |
 | **Annual Subscription** | $2,500 USD/yr (unlimited evals, up to 5 recruiter seats, API access) | Mid-market, recurring hiring |
 | **Enterprise** | Custom (SSO, dedicated tenant, SLA, ATS integration, custom battery) | 5000+ employees |
 
-**Unit Economics (est.):**
-- COGS/eval: ~$0.03 (Lambda + DynamoDB + CloudFront)
+**Unit Economics (verified 2026-09-13):**
+- COGS/eval: **$0.00078** (Lambda + DynamoDB + CloudFront + SES + APIGW) — *sub-cent, not ~$0.03*
 - CAC (inbound + referrals): ~$300
 - LTV (subscription): $7,500 (3 yr) → **LTV/CAC = 25x**
-- Gross margin: >99%
+- Gross margin: **>99.9%** (infra is negligible at scale)
 
 ---
 
 ## Slide 9: Traction & Milestones
-- ✅ **Product:** 12 games built, 2 novel (BOMB, Control Room), 1200+ tests passing, 0 critical bugs
-- ✅ **Infra:** AWS serverless (S3+CF, API Gateway+Lambda, DynamoDB, SES, Cognito) — CI/CD OIDC, zero static keys
-- ✅ **Compliance:** Privacy-by-design, DPIA, `humanReviewOnly` governance, SECURITY.md, CSP, WAF, PITR
-- ✅ **Pilot Ready:** Stage environment live, 2 companies in pipeline for beta (contracts drafted)
-- ✅ **Team:** Founder (CS, PhD-candidate, ML/HR-tech), Technical advisor (MLOps), Legal counsel (privacy)
+- ✅ **Product:** 12 games built (5 stable_dg + 2 novel BOMB/Control Room + 5 original-only), 1436+ tests passing, 0 critical bugs
+- ✅ **Infra:** AWS serverless (S3+CF, API Gateway+Lambda, DynamoDB, SES, Cognito) — CI/CD OIDC, zero static keys, **prod live v1.2.2**
+- ✅ **Compliance:** Privacy-by-design, DPIA, `humanReviewOnly` governance, SECURITY.md, CSP m7, WAF, PITR, DR runbook
+- ✅ **Auth/Email:** Cognito JWT authorizer + group gate (Lambda), SES production verified, email E2E live (2 invites delivered)
+- ✅ **Analytics:** PostHog live (funnel + NPS + server-side invite_received), CSP m6, opt-in only
+- ✅ **Observability:** Sentry cloud free (frontend + backend 500-only); Lighthouse CI budgets are configured at perf ≥90, a11y 100, BP 100, SEO ≥90. **Latest verified run:** perf 80, a11y 100, BP 100, SEO 92 — performance remediation remains open (`RootCauses/frame_sequence`).
+- ✅ **Security:** Rate limit 10 req/min/IP (Lambda), WAF CloudFront (CRS+KnownBadInputs), ZAP baseline 0 critical/high
+- ✅ **Backup/DR:** DynamoDB PITR 35d verified, S3 versioning, restore exercise PASS (RTO 223s < 1h target)
+- ✅ **Beta Ready:** Stage environment live with real sessions, multi-tenancy deployed (companyId isolation)
+- ✅ **Team:** Founder (CS, PhD-candidate, ML/Edge AI), Technical advisor (MLOps), Legal counsel (privacy)
 - 🎯 **Next 90 days:** Close 2 paid pilots → R-7 validation design (N=200) → Seed close
 
 ---
@@ -164,8 +170,8 @@ Sep 2026 — Santiago, Chile / Remote-first
 
 ## Slide 14: Team
 - **Carlos Saldivia** — Founder/CEO. PhD-candidate (Electronics, USM), 8y ML/Edge AI, built KRUMM end-to-end (infra, games, telemetry, compliance). Publications: IEEE, SPIE.
-- **[Advisor — ML/HR Tech]** — [Nombre], [Credenciales: ex-Pymetrics/Arctic Shores/Google People Analytics]
-- **[Legal Counsel]** — [Firma], especialista privacidad/datos Chile + GDPR.
+- **[Advisor — ML/HR Tech]** — [Nombre], [Credenciales: ex-Pymetrics/Arctic Shores/Google People Analytics] *(placeholder — to be confirmed)*
+- **[Legal Counsel]** — [Firma], especialista privacidad/datos Chile + GDPR *(placeholder — to be confirmed)*
 - **Hiring Plan:** Senior Fullstack (React/Node/AWS), ML Engineer (feature vector, validation), DevOps/SRE (AWS, observability).
 
 ---

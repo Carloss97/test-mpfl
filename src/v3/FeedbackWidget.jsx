@@ -18,7 +18,8 @@ export default function FeedbackWidget() {
 
   // Contexto automático (sin PII)
   const context = {
-    url: window.location.href,
+    // Never send query strings: invitation URLs contain single-use tokens.
+    url: window.location.pathname,
     pathname: window.location.pathname,
     battery: new URLSearchParams(window.location.search).get('battery') || 'unknown',
     gameId: (() => {
@@ -30,9 +31,8 @@ export default function FeedbackWidget() {
     locale: document.documentElement.lang || 'es',
     tenant: (() => {
       try {
-        // En modo real, el tenant viene del token Cognito custom:companyId
-        // En demo, siempre 'krumm-demo'
-        return 'krumm-demo'; // TODO: leer de auth context cuando esté listo
+        // El widget no recibe auth context; no adivinar ni enviar un tenant.
+        return 'unknown';
       } catch { return 'unknown'; }
     })(),
     timestamp: new Date().toISOString(),

@@ -81,7 +81,7 @@ Ciclo del candidato: abre el link → setup (consentimiento, cámara opcional) �
 |---|---|
 | El reclutador no llega el código de "olvidé password" | Re-disparar: `aws_v4only.py cognito-idp forgot_password '{"ClientId":"7vpliahah8jbc5fh0d59qbjgej","Username":"<email>"}'` y avisar a revisar SPAM |
 | Resetear password de un reclutador | `admin_set_user_password` (sección 2, paso 3) — invalida la sesión activa |
-| ¿Qué ve la empresa X? | Todas las sesiones del dataset compartido (ver §7) |
+| ¿Qué ve la empresa X? | Solo sesiones de su `companyId`; si el gate de dos tenants aún no está verificado, detener onboarding externo (ver §7) |
 | API 401 en el workspace | Sesión Cognito expirada → el frontend hace refresh solo; si persiste, volver a iniciar sesión |
 | API 403 | Token válido pero sin grupo recruiters/admins → agregar grupo (sección 2, paso 2) |
 | Revocar una invitación | API: `POST {api}/staging/invitations/<token>/revoke` con Bearer del reclutador (UI pendiente, KRU en fase A) |
@@ -90,13 +90,13 @@ Ciclo del candidato: abre el link → setup (consentimiento, cámara opcional) �
 
 ## 7. Límite conocido de la beta (gestionar expectativas)
 
-**Multi-tenancy aún no implementado (G.5, pendiente):** todas las sesiones de las
-2 empresas comparten el mismo dataset de backend. Para la beta de 2 empresas es
-aceptable **solo si** cada empresa invita candidatos propios y no le muestra a la
-otra empresa datos ajenos — hoy SÍ se comparten los listados. Mitigación operativa:
-- Beta cerrada entre las 2 empresas (sin candidatos cruzados).
-- Los reportes son agregados descriptivos (sin PII de terceros: alias hash).
-- G.5 (`companyId` en sesión + filtrado por empresa) se implementa antes del pilotaje abierto.
+**Estado G.5 (2026-09-15):** implementación y deploy staging verificados (`custom:companyId`, GSI `companyId-index`, migración legacy a `krumm-demo` y filtros de lectura/escritura). El gate de dos tenants Cognito reales sigue pendiente; no iniciar onboarding externo hasta demostrar que A no lista, lee ni revoca recursos de B.
+
+Mientras el gate esté pendiente:
+- Solo usar fixtures/demo o pruebas internas autorizadas.
+- No mezclar candidatos reales de dos empresas en el mismo proceso.
+- Mantener reportes agregados, `humanReviewOnly` y sin PII de terceros.
+- Registrar el resultado del smoke A/B en esta sección antes de abrir la beta.
 
 ## 8. Log de incidentes de infraestructura (2026-09-13, para referencia)
 

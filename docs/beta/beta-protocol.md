@@ -15,8 +15,8 @@
 | Legal/Soporte (Fase E) | ✅ Términos + Privacidad + Contrato firmado + FAQ + Widget feedback |
 | Analytics (Fase F) | ✅ PostHog funnel operativo |
 | Hardening (Fase G.1–G.4) | ✅ Lighthouse CI + Sentry + WAF + PITR |
-| Multi-tenancy (Fase G.5) | ✅ 2 tenants aislados en staging |
-| Contrato piloto firmado | ✅ Al menos 1 empresa (Anexo DPA) |
+| Multi-tenancy (Fase G.5) | 🟡 Implementación + deploy staging verificados; gate de 2 tenants reales pendiente |
+| Contrato piloto firmado | ⏳ Requiere firma humana de al menos 1 empresa (Anexo DPA) |
 
 **Go/No-Go:** Todos los criterios ✅ + 0 bugs severity 1/2 abiertos + smoke matriz 6/6 verde.
 
@@ -43,7 +43,7 @@
 3. Sesión de onboarding 30 min (screen share): crear proceso, invitar candidatos, ver reportes, exports.
 4. Empresa configura 1–2 procesos reales.
 
-> Nota (2026-09-13): multi-tenancy por empresa es G.5 (pendiente); en la beta cerrada de 2 empresas comparten dataset — mitigación operativa en el runbook §7.
+> Nota (2026-09-15): G.5 está implementado y desplegado en staging (`companyId`, GSI y filtros por tenant); falta únicamente el gate de dos tenants Cognito reales. No iniciar beta externa hasta verificar ese gate y firmar los contratos.
 
 ### 3.2 Invitación Candidatos (Semana 1–2)
 1. Empresa envía invitaciones desde dashboard (email real via SES).

@@ -37,6 +37,8 @@ import {
 } from './cognitoAuth.js';
 import CandidateHomePage from './CandidateHomePage.jsx';
 import CandidateAccessPage from './CandidateAccessPage.jsx';
+import LegalPage from './LegalPage.jsx';
+import HelpPage from './HelpPage.jsx';
 import CompanyDashboardPage from './CompanyDashboardPage.jsx';
 import CompanyProcessesPage from './CompanyProcessesPage.jsx';
 import CompanyProcessDetailPage from './CompanyProcessDetailPage.jsx';
@@ -317,6 +319,8 @@ export default function V3RootApp() {
       content = <JobsPage />;
     } else if (resolved.page === 'jobDetail') {
       content = <JobDetailPage params={resolved.params} />;
+    } else if (resolved.page === 'help') {
+      content = <HelpPage />;
     } else {
       content = (
         <V3Placeholder
@@ -345,6 +349,12 @@ export default function V3RootApp() {
 
   if (resolved.shell === V3_SHELLS.PORTAL) {
     return <PortalPage />;
+  }
+
+  if (resolved.shell === V3_SHELLS.LEGAL) {
+    // FASE E.1 (KRU-117): /legal/privacidad y /legal/terminos renderizan el
+    // documento canónico de docs/legal/*.md (single source of truth).
+    return <LegalPage docType={resolved.route.docType} />;
   }
 
   return <CompanyLoginPage />;

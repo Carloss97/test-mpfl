@@ -23,10 +23,17 @@ const EN = Object.freeze({
   common_nextIteration: 'This experience will be developed in the next iteration.',
   common_backHome: '← Back to KRUMM',
   common_backPortals: '← Choose another portal',
+  // ── páginas legales (FASE E.1, KRU-117) ──────────────────────────────────
+  legal_kicker: 'KRUMM · LEGAL',
+  // La versión con fuerza legal es el texto en español (ley chilena); la
+  // página conserva el documento canónico y no inventa una traducción oficial.
+  legal_governingNote: 'This page shows the governing Spanish version of the document (Chilean law). Official translations are pending legal review.',
+  legal_notLawyerReviewed: 'Review status: legal template — not yet reviewed by counsel. Applies after your company signs the B2B pilot agreement.',
   // ── chrome candidato (ref: candidate.html + candidate.js) ────────────────
   cp_breadcrumb: 'Breadcrumb',
   cp_help: 'Help',
-  cp_helpText: 'Choose “View opportunities” to explore available roles, or “Sign in” if you already have an invitation.',
+  cp_helpText: 'Find answers for the candidate portal, evaluations and technical issues.',
+  cp_helpOpen: 'Open help centre',
   cp_privacy: 'Privacy notice',
   cp_terms: 'Terms',
   cp_candidatePortal: 'Candidate portal',
@@ -60,6 +67,8 @@ const EN = Object.freeze({
   company_processes: 'Processes',
   company_settings: 'Settings',
   company_help: 'Help',
+  company_helpText: 'Find answers about the company workspace, invitations and reports.',
+  company_helpOpen: 'Open help centre',
   company_account: 'Account',
   company_notifications: 'Notifications',
   company_signOut: 'Sign out',
@@ -350,6 +359,9 @@ const EN = Object.freeze({
       title: 'Choose your portal',
       subtitle: 'Access your KRUMM workspace.',
     }),
+    help: Object.freeze({
+      title: 'Help centre',
+    }),
     companyAccess: Object.freeze({
       title: 'Company Portal',
       accessLabel: 'Company access',
@@ -362,6 +374,12 @@ const EN = Object.freeze({
       errorTitle: 'Sign-in incomplete',
       errorText: 'We could not complete your sign-in. Please try again.',
       backLabel: '← Choose another portal',
+    }),
+    terminos: Object.freeze({
+      title: 'Terms of Service',
+    }),
+    privacidad: Object.freeze({
+      title: 'Privacy Policy',
     }),
   }),
 });
@@ -377,10 +395,15 @@ const ES = Object.freeze({
   common_nextIteration: 'Esta experiencia será desarrollada en la siguiente iteración.',
   common_backHome: '← Volver a KRUMM',
   common_backPortals: '← Elegir otro portal',
+  // ── páginas legales (FASE E.1, KRU-117) ──────────────────────────────────
+  legal_kicker: 'KRUMM · LEGAL',
+  legal_governingNote: 'Esta página muestra la versión en español del documento, que es la que tiene fuerza legal (ley chilena). Las traducciones oficiales están pendientes de revisión legal.',
+  legal_notLawyerReviewed: 'Estado de revisión: plantilla legal — aún no revisada por abogados/as. Aplicará tras la firma del contrato piloto B2B.',
   // ── chrome candidato ─────────────────────────────────────────────────────
   cp_breadcrumb: 'Ruta de navegación',
   cp_help: 'Ayuda',
-  cp_helpText: 'Elige «Ver oportunidades» para explorar cargos disponibles o «Iniciar sesión» si ya tienes una invitación.',
+  cp_helpText: 'Encuentra respuestas sobre el portal candidato, la evaluación y problemas técnicos.',
+  cp_helpOpen: 'Abrir centro de ayuda',
   cp_privacy: 'Aviso de privacidad',
   cp_terms: 'Términos',
   cp_candidatePortal: 'Portal para candidatos',
@@ -413,6 +436,8 @@ const ES = Object.freeze({
   company_processes: 'Procesos',
   company_settings: 'Configuración',
   company_help: 'Ayuda',
+  company_helpText: 'Encuentra respuestas sobre el espacio de empresa, invitaciones e informes.',
+  company_helpOpen: 'Abrir centro de ayuda',
   company_account: 'Cuenta',
   company_notifications: 'Notificaciones',
   company_signOut: 'Cerrar sesión',
@@ -702,6 +727,9 @@ const ES = Object.freeze({
       title: 'Elige tu portal',
       subtitle: 'Accede a tu espacio KRUMM.',
     }),
+    help: Object.freeze({
+      title: 'Centro de ayuda',
+    }),
     companyAccess: Object.freeze({
       title: 'Portal para empresas',
       accessLabel: 'Acceso de empresa',
@@ -714,6 +742,12 @@ const ES = Object.freeze({
       errorTitle: 'Inicio de sesión incompleto',
       errorText: 'No pudimos completar tu inicio de sesión. Intenta nuevamente.',
       backLabel: '← Elegir otro portal',
+    }),
+    terminos: Object.freeze({
+      title: 'Términos de Servicio',
+    }),
+    privacidad: Object.freeze({
+      title: 'Política de Privacidad',
     }),
   }),
 });

@@ -185,6 +185,9 @@ Resources:
                   - dynamodb:UpdateItem  # G.3: incremento condicional rate limit
                 Resource:
                   - !Sub '${SessionsTable.Arn}'
+                  # G.5: DynamoDB exige autorizar explícitamente el ARN del GSI;
+                  # Query contra companyId-index no queda cubierto por el ARN de tabla.
+                  - !Sub '${SessionsTable.Arn}/index/companyId-index'
                   - !Sub '${AuditLogTable.Arn}'
                   - !Sub '${AuditLogTable.Arn}/index/sessionId-index'
                   - !Sub '${InvitationsTable.Arn}'
