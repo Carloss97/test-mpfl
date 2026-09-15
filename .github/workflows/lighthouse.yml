@@ -50,13 +50,13 @@ jobs:
       - name: Instalar Lighthouse (pinned a v11)
         run: npm i -g lighthouse@11.7.1
 
-      # Lighthouse 12 + Chrome 151/152 puede romper en lantern con
-      # "FCP/LCP All Frames not implemented" y no producir reporte. Lighthouse
-      # 11.7.1 mantiene el gate compatible con Chrome for Testing 151.
-      - name: Chrome 151 (compatible con lighthouse 11.x)
+      # Lighthouse 11.7.1 + Chrome 151 todavía emite warnings RootCauses
+      # (frame_sequence) en runners Ubuntu 24. Chrome for Testing 150 mantiene
+      # el gatherer compatible y evita contaminar LCP/CLS del gate.
+      - name: Chrome 150 (compatible con lighthouse 11.7.1)
         uses: browser-actions/setup-chrome@v1
         with:
-          chrome-version: 151
+          chrome-version: 150
 
       - name: Lighthouse budgets (/, /portal, /candidato)
         run: |
